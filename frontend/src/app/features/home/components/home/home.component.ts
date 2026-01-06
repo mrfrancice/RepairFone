@@ -80,6 +80,7 @@ interface QuickService {
                 <span class="status-dot"></span>
                 En ligne
               </span>
+              <span class="role-badge">{{ getRoleLabel() }}</span>
               <app-notification-bell />
             }
             <button class="profile-btn" (click)="goToProfile()">
