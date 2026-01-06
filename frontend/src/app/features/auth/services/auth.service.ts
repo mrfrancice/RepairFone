@@ -28,7 +28,7 @@ export class AuthService {
     // Store tokens BEFORE calling /users/me
     this.authStore.setToken(response.accessToken);
     if (response.refreshToken) {
-      this.authStore.setRefreshToken(response.refreshToken);
+      await this.authStore.setRefreshToken(response.refreshToken);
     }
 
     // Get user info (now with valid token in interceptor)
@@ -65,7 +65,7 @@ export class AuthService {
     // Store tokens BEFORE calling /users/me
     this.authStore.setToken(response.accessToken);
     if (response.refreshToken) {
-      this.authStore.setRefreshToken(response.refreshToken);
+      await this.authStore.setRefreshToken(response.refreshToken);
     }
 
     // Get user info (now with valid token in interceptor)
@@ -105,7 +105,7 @@ export class AuthService {
 
   // Refresh token
   async refreshToken(): Promise<void> {
-    const refreshToken = this.authStore.getRefreshToken();
+    const refreshToken = await this.authStore.getRefreshToken();
     if (!refreshToken) {
       throw new Error('No refresh token');
     }
@@ -116,7 +116,7 @@ export class AuthService {
 
     this.authStore.setToken(response.accessToken);
     if (response.refreshToken) {
-      this.authStore.setRefreshToken(response.refreshToken);
+      await this.authStore.setRefreshToken(response.refreshToken);
     }
   }
 }

@@ -7,6 +7,7 @@ import {
   Query,
   UseGuards,
   ParseUUIDPipe,
+  ForbiddenException,
 } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiBearerAuth, ApiQuery } from '@nestjs/swagger';
 import { PaymentsService, InitiatePaymentDto, PaymentFilters } from './payments.service';
@@ -40,8 +41,26 @@ export class PaymentsController {
 
   @Get('request/:requestId')
   @ApiOperation({ summary: 'Paiement d\'une demande' })
-  findByRequest(@Param('requestId', ParseUUIDPipe) requestId: string) {
-    return this.paymentsService.findByRequest(requestId);
+  async findByRequest(
+    @Param('requestId', ParseUUIDPipe) requestId: string,
+    @CurrentUser() user: User,
+  ) {
+    const payment = await this.paymentsService.findByRequest(requestId);
+
+    if (!payment) {
+      return null;
+    }
+
+    // Authorization: User must be the client, the repairer, or an admin
+    const isClient = payment.clientId === user.id;
+    const isRepairer = payment.repairer?.userId === user.id;
+    const isAdmin = user.role === 'admin';
+
+    if (!isClient && !isRepairer && !isAdmin) {
+      throw new ForbiddenException('Vous n\'avez pas accès à ce paiement');
+    }
+
+    return payment;
   }
 
   @Get(':id')
@@ -75,7 +94,15 @@ export class PaymentsController {
 
   @Post(':id/simulate-success')
   @ApiOperation({ summary: 'Simuler un paiement réussi (demo)' })
-  simulateSuccess(@Param('id', ParseUUIDPipe) id: string) {
+  async simulateSuccess(
+    @Param('id', ParseUUIDPipe) id: string,
+    @CurrentUser() user: User,
+  ) {
+    // CRITICAL: This endpoint should ONLY be accessible by the payment owner or admin
+    // First, fetch the payment to check ownership
+    const payment = await this.paymentsService.findOne(id, user.id, user.role);
+
+    // The findOne method already checks authorization, so if we get here, user has access
     return this.paymentsService.simulateSuccess(id);
   }
 }

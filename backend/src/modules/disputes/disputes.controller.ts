@@ -7,6 +7,7 @@ import {
   Query,
   UseGuards,
   ParseUUIDPipe,
+  ForbiddenException,
 } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiBearerAuth, ApiQuery } from '@nestjs/swagger';
 import { DisputesService, CreateDisputeDto, AddMessageDto, DisputeFilters } from './disputes.service';
@@ -39,8 +40,26 @@ export class DisputesController {
 
   @Get('request/:requestId')
   @ApiOperation({ summary: 'Litige d\'une demande' })
-  findByRequest(@Param('requestId', ParseUUIDPipe) requestId: string) {
-    return this.disputesService.findByRequest(requestId);
+  async findByRequest(
+    @Param('requestId', ParseUUIDPipe) requestId: string,
+    @CurrentUser() user: User,
+  ) {
+    const dispute = await this.disputesService.findByRequest(requestId);
+
+    if (!dispute) {
+      return null;
+    }
+
+    // Authorization: User must be the client, the repairer, or an admin
+    const isClient = dispute.clientId === user.id;
+    const isRepairer = dispute.repairer?.userId === user.id;
+    const isAdmin = user.role === 'admin';
+
+    if (!isClient && !isRepairer && !isAdmin) {
+      throw new ForbiddenException('Vous n\'avez pas accès à ce litige');
+    }
+
+    return dispute;
   }
 
   @Get(':id')

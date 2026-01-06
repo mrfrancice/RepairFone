@@ -1,6 +1,6 @@
 import { Component, inject, OnInit, signal, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { ActivatedRoute, Router, RouterLink } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 import { RepairerService, RepairerRequest, RequestFilterStatus } from '../../services/repairer.service';
 import { RepairerStore } from '../../stores/repairer.store';
 import { ChipVariant } from '../../../../shared/components/ui-chip/ui-chip.component';
@@ -13,7 +13,6 @@ import { HeaderSearchComponent } from '../../../../shared/components/header-sear
   standalone: true,
   imports: [
     CommonModule,
-    RouterLink,
     NotificationBellComponent,
     HeaderSearchComponent,
   ],

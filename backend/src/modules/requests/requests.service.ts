@@ -374,15 +374,37 @@ export class RequestsService {
       [RequestStatus.PENDING]: [
         { status: RequestStatus.ACCEPTED, roles: ['repairer'] },
         { status: RequestStatus.REJECTED, roles: ['repairer'] },
+        { status: RequestStatus.CANCELLED, roles: ['client', 'admin'] },
       ],
       [RequestStatus.ACCEPTED]: [
-        { status: RequestStatus.COMPLETED, roles: ['repairer'] },  // Réparation terminée
+        { status: RequestStatus.IN_PROGRESS, roles: ['repairer'] },
+        { status: RequestStatus.COMPLETED, roles: ['repairer'] },
+        { status: RequestStatus.CANCELLED, roles: ['client', 'admin'] },
+        { status: RequestStatus.DISPUTED, roles: ['client'] },
+      ],
+      [RequestStatus.IN_PROGRESS]: [
+        { status: RequestStatus.AWAITING_PARTS, roles: ['repairer'] },
+        { status: RequestStatus.COMPLETED, roles: ['repairer'] },
+        { status: RequestStatus.DISPUTED, roles: ['client'] },
+      ],
+      [RequestStatus.AWAITING_PARTS]: [
+        { status: RequestStatus.IN_PROGRESS, roles: ['repairer'] },
+        { status: RequestStatus.COMPLETED, roles: ['repairer'] },
+        { status: RequestStatus.DISPUTED, roles: ['client'] },
       ],
       [RequestStatus.REJECTED]: [],  // Statut final
       [RequestStatus.COMPLETED]: [
-        { status: RequestStatus.DELIVERED, roles: ['repairer'] },  // Appareil livré
+        { status: RequestStatus.DELIVERED, roles: ['repairer'] },
+        { status: RequestStatus.DISPUTED, roles: ['client'] },
       ],
-      [RequestStatus.DELIVERED]: [],  // Statut final
+      [RequestStatus.DELIVERED]: [
+        { status: RequestStatus.DISPUTED, roles: ['client'] },
+      ],
+      [RequestStatus.CANCELLED]: [],  // Statut final
+      [RequestStatus.DISPUTED]: [
+        { status: RequestStatus.COMPLETED, roles: ['admin'] },  // Admin can resolve dispute
+        { status: RequestStatus.CANCELLED, roles: ['admin'] },
+      ],
     };
 
     const allowedTransitions = validTransitions[currentStatus] || [];

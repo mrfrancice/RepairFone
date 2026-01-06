@@ -12,9 +12,21 @@ export default () => ({
   },
 
   jwt: {
-    secret: process.env.JWT_SECRET || 'change-this-secret-in-production',
+    secret: (() => {
+      const secret = process.env.JWT_SECRET;
+      if (!secret) {
+        throw new Error('JWT_SECRET environment variable is required');
+      }
+      return secret;
+    })(),
     expiresIn: process.env.JWT_EXPIRATION || '15m',
-    refreshSecret: process.env.JWT_REFRESH_SECRET || 'change-this-refresh-secret',
+    refreshSecret: (() => {
+      const refreshSecret = process.env.JWT_REFRESH_SECRET;
+      if (!refreshSecret) {
+        throw new Error('JWT_REFRESH_SECRET environment variable is required');
+      }
+      return refreshSecret;
+    })(),
     refreshExpiresIn: process.env.JWT_REFRESH_EXPIRATION || '7d',
   },
 

@@ -108,7 +108,7 @@ export class AuthStore {
         this.storage.set(StorageKeys.AUTH, {
           token: state.token,
           user: state.user,
-        });
+        }).catch(err => console.error('Failed to save auth state:', err));
       } else {
         this.storage.remove(StorageKeys.AUTH);
         this.storage.remove(StorageKeys.REFRESH_TOKEN);
@@ -160,21 +160,21 @@ export class AuthStore {
     this._state.update((s) => ({ ...s, token }));
   }
 
-  setRefreshToken(refreshToken: string): void {
-    this.storage.set(StorageKeys.REFRESH_TOKEN, refreshToken);
+  async setRefreshToken(refreshToken: string): Promise<void> {
+    await this.storage.set(StorageKeys.REFRESH_TOKEN, refreshToken);
   }
 
-  getRefreshToken(): string | null {
-    return this.storage.get<string>(StorageKeys.REFRESH_TOKEN);
+  async getRefreshToken(): Promise<string | null> {
+    return await this.storage.get<string>(StorageKeys.REFRESH_TOKEN);
   }
 
   clearError(): void {
     this._state.update((s) => ({ ...s, error: null }));
   }
 
-  private loadFromStorage(): void {
+  private async loadFromStorage(): Promise<void> {
     try {
-      const stored = this.storage.get<{ token: string; user: User }>(StorageKeys.AUTH);
+      const stored = await this.storage.get<{ token: string; user: User }>(StorageKeys.AUTH);
       if (stored?.token && stored?.user) {
         this._state.set({
           user: stored.user,

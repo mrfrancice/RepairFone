@@ -81,8 +81,9 @@ export class ReviewsService {
       throw new ForbiddenException('Vous ne pouvez noter que vos propres demandes');
     }
 
-    if (request.status !== RequestStatus.ACCEPTED) {
-      throw new BadRequestException('Vous ne pouvez noter que les demandes acceptées');
+    // Only allow reviews on completed or delivered repairs
+    if (request.status !== RequestStatus.COMPLETED && request.status !== RequestStatus.DELIVERED) {
+      throw new BadRequestException('Vous ne pouvez noter que les demandes terminées ou livrées');
     }
 
     // Check if already reviewed

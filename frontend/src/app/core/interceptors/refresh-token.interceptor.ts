@@ -29,8 +29,15 @@ export const refreshTokenInterceptor: HttpInterceptorFn = (req, next) => {
 
   return next(req).pipe(
     catchError((error: HttpErrorResponse) => {
-      if (error.status === 401 && authStore.getRefreshToken()) {
-        return handleTokenRefresh(req, next, authStore, api, router);
+      if (error.status === 401) {
+        return fromPromise(
+          authStore.getRefreshToken().then(refreshToken => {
+            if (refreshToken) {
+              return handleTokenRefresh(req, next, authStore, api, router);
+            }
+            return throwError(() => error);
+          })
+        ).pipe(switchMap(obs => obs));
       }
 
       return throwError(() => error);
@@ -49,13 +56,13 @@ function handleTokenRefresh(
     isRefreshing = true;
     refreshTokenSubject.next(null);
 
-    const refreshToken = authStore.getRefreshToken();
-    if (!refreshToken) {
-      return handleRefreshError(authStore, router);
-    }
-
     return fromPromise(
-      api.post<TokenResponse>('/auth/refresh', { refreshToken }).toPromise()
+      authStore.getRefreshToken().then(refreshToken => {
+        if (!refreshToken) {
+          throw new Error('No refresh token');
+        }
+        return api.post<TokenResponse>('/auth/refresh', { refreshToken }).toPromise();
+      })
     ).pipe(
       switchMap((response) => {
         isRefreshing = false;
@@ -63,7 +70,9 @@ function handleTokenRefresh(
         if (response?.accessToken) {
           authStore.setToken(response.accessToken);
           if (response.refreshToken) {
-            authStore.setRefreshToken(response.refreshToken);
+            authStore.setRefreshToken(response.refreshToken).catch(err =>
+              console.error('Failed to save refresh token:', err)
+            );
           }
           refreshTokenSubject.next(response.accessToken);
 

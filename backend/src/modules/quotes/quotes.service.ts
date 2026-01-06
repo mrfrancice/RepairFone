@@ -158,9 +158,9 @@ export class QuotesService {
 
     const savedQuote = await this.quoteRepo.save(quote);
 
-    // Update request status
+    // Update estimated price only - do NOT auto-accept the request
+    // The request should be accepted separately via acceptQuote method
     await this.requestRepo.update(dto.requestId, {
-      status: RequestStatus.ACCEPTED,
       estimatedPrice: totalAmount,
     });
 
@@ -272,8 +272,10 @@ export class QuotesService {
     quote.acceptedAt = new Date();
     await this.quoteRepo.save(quote);
 
-    // Update request final price (status remains ACCEPTED)
+    // Update request status to ACCEPTED and set final price
     await this.requestRepo.update(quote.requestId, {
+      status: RequestStatus.ACCEPTED,
+      acceptedAt: new Date(),
       finalPrice: quote.totalAmount,
     });
 

@@ -224,7 +224,6 @@ export class AuthService {
     const otp = await this.otpRepository.findOne({
       where: {
         phone,
-        code,
         isUsed: false,
         expiresAt: MoreThan(new Date()),
       },
@@ -235,8 +234,19 @@ export class AuthService {
     }
 
     const maxAttempts = this.configService.get<number>('otp.maxAttempts') || 3;
-    if (otp.attempts >= maxAttempts) {
+
+    // Increment attempts counter BEFORE verification
+    otp.attempts += 1;
+    await this.otpRepository.save(otp);
+
+    // Check if max attempts exceeded
+    if (otp.attempts > maxAttempts) {
       throw new BadRequestException('Nombre maximum de tentatives atteint');
+    }
+
+    // Verify the code matches
+    if (otp.code !== code) {
+      throw new BadRequestException('Code OTP invalide');
     }
 
     // Mark OTP as used
@@ -255,26 +265,34 @@ export class AuthService {
   }
 
   async refreshToken(refreshToken: string): Promise<AuthTokens> {
-    const tokenHash = await bcrypt.hash(refreshToken, 10);
-
-    const storedToken = await this.refreshTokenRepository.findOne({
+    // Find all non-revoked, non-expired tokens for comparison
+    const storedTokens = await this.refreshTokenRepository.find({
       where: {
-        tokenHash,
         isRevoked: false,
         expiresAt: MoreThan(new Date()),
       },
       relations: ['user'],
     });
 
-    if (!storedToken) {
+    // Compare the provided token against each stored hash
+    let validToken: RefreshToken | null = null;
+    for (const token of storedTokens) {
+      const isValid = await bcrypt.compare(refreshToken, token.tokenHash);
+      if (isValid) {
+        validToken = token;
+        break;
+      }
+    }
+
+    if (!validToken) {
       throw new UnauthorizedException('Token de rafraîchissement invalide');
     }
 
     // Revoke old token
-    storedToken.isRevoked = true;
-    await this.refreshTokenRepository.save(storedToken);
+    validToken.isRevoked = true;
+    await this.refreshTokenRepository.save(validToken);
 
-    return this.generateTokens(storedToken.user);
+    return this.generateTokens(validToken.user);
   }
 
   async logout(userId: string): Promise<void> {
@@ -295,7 +313,7 @@ export class AuthService {
 
     // Generate refresh token (7 days in seconds)
     const refreshToken = this.jwtService.sign(payload, {
-      secret: this.configService.get<string>('jwt.refreshSecret') ?? 'refresh-fallback-secret',
+      secret: this.configService.get<string>('jwt.refreshSecret'),
       expiresIn: 604800, // 7 days in seconds
     });
 

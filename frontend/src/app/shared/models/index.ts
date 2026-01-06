@@ -169,6 +169,7 @@ export type RequestStatus =
   | 'in_progress'
   | 'awaiting_parts'
   | 'completed'
+  | 'delivered'
   | 'cancelled'
   | 'disputed';
 
@@ -369,7 +370,7 @@ export interface Payment {
 }
 
 export type PaymentMethod = 'orange_money' | 'mtn_money' | 'wave' | 'cash' | 'card';
-export type PaymentStatus = 'pending' | 'processing' | 'paid' | 'failed' | 'refunded' | 'blocked' | 'released';
+export type PaymentStatus = 'pending' | 'processing' | 'completed' | 'failed' | 'refunded' | 'blocked' | 'cancelled';
 
 export interface CreatePaymentDto {
   requestId: string;

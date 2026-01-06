@@ -13,11 +13,15 @@ import { Device } from '../../devices/entities/device.entity';
 import { ServiceType } from '../../devices/entities/service-type.entity';
 
 export enum RequestStatus {
-  PENDING = 'pending',      // En cours d'analyse
-  ACCEPTED = 'accepted',    // Acceptée
-  REJECTED = 'rejected',    // Rejetée
-  COMPLETED = 'completed',  // Terminée
-  DELIVERED = 'delivered',  // Livrée
+  PENDING = 'pending',          // En cours d'analyse
+  ACCEPTED = 'accepted',        // Acceptée
+  REJECTED = 'rejected',        // Rejetée
+  IN_PROGRESS = 'in_progress',  // En cours de réparation
+  AWAITING_PARTS = 'awaiting_parts', // En attente de pièces
+  COMPLETED = 'completed',      // Terminée
+  DELIVERED = 'delivered',      // Livrée
+  CANCELLED = 'cancelled',      // Annulée
+  DISPUTED = 'disputed',        // Litigée
 }
 
 export enum DeliveryMode {

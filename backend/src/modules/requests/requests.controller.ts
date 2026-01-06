@@ -8,6 +8,7 @@ import {
   Query,
   UseGuards,
   ParseUUIDPipe,
+  ForbiddenException,
 } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiBearerAuth, ApiQuery } from '@nestjs/swagger';
 import { RequestsService, CreateRequestDto, UpdateRequestStatusDto, RequestFilters } from './requests.service';
@@ -48,8 +49,22 @@ export class RequestsController {
 
   @Get(':id')
   @ApiOperation({ summary: 'Détails d\'une demande' })
-  findOne(@Param('id', ParseUUIDPipe) id: string) {
-    return this.requestsService.findOne(id);
+  async findOne(
+    @Param('id', ParseUUIDPipe) id: string,
+    @CurrentUser() user: User,
+  ) {
+    const request = await this.requestsService.findOne(id);
+
+    // Authorization: User must be the client, the repairer, or an admin
+    const isClient = request.clientId === user.id;
+    const isRepairer = request.repairer?.userId === user.id;
+    const isAdmin = user.role === 'admin';
+
+    if (!isClient && !isRepairer && !isAdmin) {
+      throw new ForbiddenException('Vous n\'avez pas accès à cette demande');
+    }
+
+    return request;
   }
 
   @Put(':id/status')

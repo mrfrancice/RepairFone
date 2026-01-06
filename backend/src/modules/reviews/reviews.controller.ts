@@ -7,6 +7,7 @@ import {
   Query,
   UseGuards,
   ParseUUIDPipe,
+  ForbiddenException,
 } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiBearerAuth, ApiQuery } from '@nestjs/swagger';
 import { ReviewsService, CreateReviewDto, ReviewFilters, CreateStepRatingDto } from './reviews.service';
@@ -65,8 +66,27 @@ export class ReviewsController {
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Avis d\'une demande' })
-  findByRequest(@Param('requestId', ParseUUIDPipe) requestId: string) {
-    return this.reviewsService.findByRequest(requestId);
+  async findByRequest(
+    @Param('requestId', ParseUUIDPipe) requestId: string,
+    @CurrentUser() user: User,
+  ) {
+    const review = await this.reviewsService.findByRequest(requestId);
+
+    if (!review) {
+      return null;
+    }
+
+    // Authorization: User must be the client, the repairer, or an admin
+    // Need to fetch the request to check ownership
+    const isClient = review.clientId === user.id;
+    const isRepairer = review.repairer?.userId === user.id;
+    const isAdmin = user.role === 'admin';
+
+    if (!isClient && !isRepairer && !isAdmin) {
+      throw new ForbiddenException('Vous n\'avez pas accès à cet avis');
+    }
+
+    return review;
   }
 
   @Get(':id')
@@ -90,8 +110,27 @@ export class ReviewsController {
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Notes par étape d\'une demande' })
-  getStepRatingsForRequest(@Param('requestId', ParseUUIDPipe) requestId: string) {
-    return this.reviewsService.getStepRatingsForRequest(requestId);
+  async getStepRatingsForRequest(
+    @Param('requestId', ParseUUIDPipe) requestId: string,
+    @CurrentUser() user: User,
+  ) {
+    const result = await this.reviewsService.getStepRatingsForRequest(requestId);
+
+    if (!result.ratings || result.ratings.length === 0) {
+      return result;
+    }
+
+    // Authorization: User must be the client, the repairer, or an admin
+    const firstRating = result.ratings[0];
+    const isClient = firstRating.clientId === user.id;
+    const isRepairer = firstRating.repairerId === user.id;
+    const isAdmin = user.role === 'admin';
+
+    if (!isClient && !isRepairer && !isAdmin) {
+      throw new ForbiddenException('Vous n\'avez pas accès à ces notes');
+    }
+
+    return result;
   }
 
   @Get('step-ratings/can-rate/:requestId/:step')

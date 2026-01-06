@@ -754,10 +754,16 @@ export class OnboardingSlidesComponent implements OnInit, OnDestroy {
     this.completeOnboarding();
   }
 
-  private completeOnboarding(): void {
+  private async completeOnboarding(): Promise<void> {
     this.stopAutoPlay();
-    this.storage.set('rf_onboarding_completed', true);
-    this.router.navigate(['/home']);
+    try {
+      await this.storage.set('rf_onboarding_completed', true);
+      this.router.navigate(['/home']);
+    } catch (err) {
+      console.error('Failed to save onboarding state:', err);
+      // Navigate anyway as this is not critical
+      this.router.navigate(['/home']);
+    }
   }
 
   getIllustrationBg(slideId: number): string {

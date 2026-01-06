@@ -8,6 +8,7 @@ import {
   Query,
   UseGuards,
   ParseUUIDPipe,
+  ForbiddenException,
 } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiBearerAuth, ApiQuery } from '@nestjs/swagger';
 import { QuotesService, CreateQuoteDto, UpdateQuoteDto, QuoteFilters } from './quotes.service';
@@ -43,20 +44,71 @@ export class QuotesController {
 
   @Get('request/:requestId')
   @ApiOperation({ summary: 'Dernier devis d\'une demande' })
-  findByRequest(@Param('requestId', ParseUUIDPipe) requestId: string) {
-    return this.quotesService.findByRequest(requestId);
+  async findByRequest(
+    @Param('requestId', ParseUUIDPipe) requestId: string,
+    @CurrentUser() user: User,
+  ) {
+    const quote = await this.quotesService.findByRequest(requestId);
+
+    if (!quote) {
+      return null;
+    }
+
+    // Authorization: User must be the client, the repairer, or an admin
+    const isClient = quote.request.clientId === user.id;
+    const isRepairer = quote.repairer?.userId === user.id;
+    const isAdmin = user.role === 'admin';
+
+    if (!isClient && !isRepairer && !isAdmin) {
+      throw new ForbiddenException('Vous n\'avez pas accès à ce devis');
+    }
+
+    return quote;
   }
 
   @Get('request/:requestId/history')
   @ApiOperation({ summary: 'Historique des devis d\'une demande (négociation)' })
-  findHistoryByRequest(@Param('requestId', ParseUUIDPipe) requestId: string) {
-    return this.quotesService.findAllByRequest(requestId);
+  async findHistoryByRequest(
+    @Param('requestId', ParseUUIDPipe) requestId: string,
+    @CurrentUser() user: User,
+  ) {
+    const quotes = await this.quotesService.findAllByRequest(requestId);
+
+    if (!quotes || quotes.length === 0) {
+      return [];
+    }
+
+    // Authorization: User must be the client, the repairer, or an admin
+    const firstQuote = quotes[0];
+    const isClient = firstQuote.request.clientId === user.id;
+    const isRepairer = firstQuote.repairer?.userId === user.id;
+    const isAdmin = user.role === 'admin';
+
+    if (!isClient && !isRepairer && !isAdmin) {
+      throw new ForbiddenException('Vous n\'avez pas accès à l\'historique de ces devis');
+    }
+
+    return quotes;
   }
 
   @Get(':id')
   @ApiOperation({ summary: 'Détails d\'un devis' })
-  findOne(@Param('id', ParseUUIDPipe) id: string) {
-    return this.quotesService.findOne(id);
+  async findOne(
+    @Param('id', ParseUUIDPipe) id: string,
+    @CurrentUser() user: User,
+  ) {
+    const quote = await this.quotesService.findOne(id);
+
+    // Authorization: User must be the client, the repairer, or an admin
+    const isClient = quote.request.clientId === user.id;
+    const isRepairer = quote.repairer?.userId === user.id;
+    const isAdmin = user.role === 'admin';
+
+    if (!isClient && !isRepairer && !isAdmin) {
+      throw new ForbiddenException('Vous n\'avez pas accès à ce devis');
+    }
+
+    return quote;
   }
 
   @Put(':id')
