@@ -171,15 +171,51 @@ export class AuthService {
   }
 
   async login(dto: LoginDto): Promise<AuthTokens> {
+    const MAX_FAILED_ATTEMPTS = 5;
+    const LOCKOUT_DURATION_MINUTES = 30;
+
     const user = await this.usersService.findByPhone(dto.phone);
 
     if (!user) {
       throw new UnauthorizedException('Identifiants incorrects');
     }
 
+    // Check if account is locked
+    if (user.lockedUntil && new Date() < new Date(user.lockedUntil)) {
+      const remainingMinutes = Math.ceil(
+        (new Date(user.lockedUntil).getTime() - Date.now()) / (1000 * 60)
+      );
+      throw new UnauthorizedException(
+        `Compte temporairement verrouillé. Réessayez dans ${remainingMinutes} minute(s).`
+      );
+    }
+
+    // Reset lock if lockout period has passed
+    if (user.lockedUntil && new Date() >= new Date(user.lockedUntil)) {
+      await this.usersService.resetLoginAttempts(user.id);
+      user.failedLoginAttempts = 0;
+      user.lockedUntil = undefined;
+    }
+
     const isPasswordValid = await bcrypt.compare(dto.password, user.passwordHash);
     if (!isPasswordValid) {
-      throw new UnauthorizedException('Identifiants incorrects');
+      // Increment failed attempts
+      const newAttempts = (user.failedLoginAttempts || 0) + 1;
+
+      if (newAttempts >= MAX_FAILED_ATTEMPTS) {
+        // Lock the account
+        const lockUntil = new Date(Date.now() + LOCKOUT_DURATION_MINUTES * 60 * 1000);
+        await this.usersService.lockAccount(user.id, lockUntil, newAttempts);
+        throw new UnauthorizedException(
+          `Trop de tentatives échouées. Compte verrouillé pour ${LOCKOUT_DURATION_MINUTES} minutes.`
+        );
+      }
+
+      await this.usersService.incrementFailedAttempts(user.id, newAttempts);
+      const remainingAttempts = MAX_FAILED_ATTEMPTS - newAttempts;
+      throw new UnauthorizedException(
+        `Identifiants incorrects. ${remainingAttempts} tentative(s) restante(s).`
+      );
     }
 
     if (!user.isPhoneVerified) {
@@ -188,6 +224,11 @@ export class AuthService {
 
     if (user.status === 'suspended') {
       throw new UnauthorizedException('Votre compte est suspendu');
+    }
+
+    // Reset failed attempts on successful login
+    if (user.failedLoginAttempts > 0) {
+      await this.usersService.resetLoginAttempts(user.id);
     }
 
     // Update last login

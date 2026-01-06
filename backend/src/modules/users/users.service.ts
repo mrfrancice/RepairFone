@@ -73,6 +73,24 @@ export class UsersService {
     await this.userRepository.update(id, { lastLoginAt: new Date() });
   }
 
+  async incrementFailedAttempts(id: string, attempts: number): Promise<void> {
+    await this.userRepository.update(id, { failedLoginAttempts: attempts });
+  }
+
+  async lockAccount(id: string, lockedUntil: Date, attempts: number): Promise<void> {
+    await this.userRepository.update(id, {
+      failedLoginAttempts: attempts,
+      lockedUntil,
+    });
+  }
+
+  async resetLoginAttempts(id: string): Promise<void> {
+    await this.userRepository.update(id, {
+      failedLoginAttempts: 0,
+      lockedUntil: undefined as unknown as Date,
+    });
+  }
+
   async softDelete(id: string): Promise<void> {
     await this.userRepository.softDelete(id);
   }
