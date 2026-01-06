@@ -1,94 +1,15 @@
 import { Injectable, NotFoundException, BadRequestException, ForbiddenException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, In } from 'typeorm';
-import { IsOptional, IsString, IsNumber, IsUUID, IsEnum, IsDateString, IsArray, IsIn, IsNotEmpty, Min, Max } from 'class-validator';
-import { Type, Transform } from 'class-transformer';
+import { EventEmitter2 } from '@nestjs/event-emitter';
 import { RepairRequest, RequestStatus, DeliveryMode } from './entities/repair-request.entity';
 import { RequestStatusHistory } from './entities/request-status-history.entity';
 import { RepairerProfile } from '../users/entities/repairer-profile.entity';
+import { CreateRequestDto, UpdateRequestStatusDto, RequestFilters } from './dto';
+import { RequestStatusChangedEvent, EventNames } from '../../common/events';
 
-export class CreateRequestDto {
-  @IsUUID()
-  @IsNotEmpty()
-  repairerId: string;
-
-  @IsOptional()
-  @IsUUID()
-  deviceId?: string;
-
-  @IsOptional()
-  @IsUUID()
-  serviceTypeId?: string;
-
-  @IsString()
-  @IsNotEmpty()
-  description: string;
-
-  @IsOptional()
-  @IsString()
-  preferredDate?: string;
-
-  @IsOptional()
-  @IsString()
-  preferredTime?: string;
-
-  @IsOptional()
-  @IsNumber()
-  clientLatitude?: number;
-
-  @IsOptional()
-  @IsNumber()
-  clientLongitude?: number;
-
-  @IsOptional()
-  @IsString()
-  clientAddress?: string;
-
-  @IsOptional()
-  @IsEnum(DeliveryMode)
-  deliveryMode?: DeliveryMode;
-
-  @IsOptional()
-  @IsArray()
-  @IsString({ each: true })
-  images?: string[];
-
-  @IsOptional()
-  @IsIn(['normal', 'express'])
-  urgency?: 'normal' | 'express';
-}
-
-export class UpdateRequestStatusDto {
-  @IsEnum(RequestStatus)
-  @IsNotEmpty()
-  status: RequestStatus;
-
-  @IsOptional()
-  @IsString()
-  comment?: string;
-
-  @IsOptional()
-  @IsString()
-  rejectionReason?: string;  // Motif de rejet (obligatoire si status = rejected)
-}
-
-export class RequestFilters {
-  @IsOptional()
-  @IsString()
-  status?: string | string[];
-
-  @IsOptional()
-  @Type(() => Number)
-  @IsNumber()
-  @Min(1)
-  page?: number;
-
-  @IsOptional()
-  @Type(() => Number)
-  @IsNumber()
-  @Min(1)
-  limit?: number;
-}
+// Re-export DTOs for backward compatibility
+export { CreateRequestDto, UpdateRequestStatusDto, RequestFilters } from './dto';
 
 @Injectable()
 export class RequestsService {
@@ -99,6 +20,7 @@ export class RequestsService {
     private readonly statusHistoryRepository: Repository<RequestStatusHistory>,
     @InjectRepository(RepairerProfile)
     private readonly repairerProfileRepository: Repository<RepairerProfile>,
+    private readonly eventEmitter: EventEmitter2,
   ) {}
 
   async createRequest(clientId: string, dto: CreateRequestDto): Promise<RepairRequest> {
@@ -353,6 +275,9 @@ export class RequestsService {
       throw new BadRequestException('Le motif de rejet est obligatoire');
     }
 
+    // Store previous status for event
+    const previousStatus = request.status;
+
     // Update request
     request.status = dto.status;
 
@@ -370,6 +295,19 @@ export class RequestsService {
 
     // Add status history
     await this.addStatusHistory(id, dto.status, dto.comment, userId);
+
+    // Emit request status changed event
+    const statusChangedEvent = new RequestStatusChangedEvent(
+      request.id,
+      request.requestNumber,
+      request.clientId,
+      request.repairerId,
+      previousStatus,
+      dto.status,
+      userId,
+      dto.comment,
+    );
+    this.eventEmitter.emit(EventNames.REQUEST_STATUS_CHANGED, statusChangedEvent);
 
     return this.findOne(id);
   }

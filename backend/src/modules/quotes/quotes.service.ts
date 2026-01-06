@@ -1,101 +1,15 @@
 import { Injectable, NotFoundException, BadRequestException, ForbiddenException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, FindOptionsWhere, DataSource } from 'typeorm';
-import { IsUUID, IsNumber, IsString, IsOptional, IsArray, ValidateNested, Min, IsInt, IsEnum, IsNotEmpty } from 'class-validator';
-import { Type } from 'class-transformer';
+import { EventEmitter2 } from '@nestjs/event-emitter';
 import { Quote, QuoteStatus, QuotePart } from './entities/quote.entity';
 import { RepairRequest, RequestStatus } from '../requests/entities/repair-request.entity';
 import { RepairerProfile } from '../users/entities/repairer-profile.entity';
+import { CreateQuoteDto, UpdateQuoteDto, QuoteFilters } from './dto';
+import { QuoteAcceptedEvent, EventNames } from '../../common/events';
 
-export class CreateQuotePartDto {
-  @IsString()
-  @IsNotEmpty()
-  name: string;
-
-  @IsNumber()
-  @Min(0)
-  price: number;
-
-  @IsInt()
-  @Min(1)
-  quantity: number;
-
-  @IsOptional()
-  @IsString()
-  description?: string;
-}
-
-export class CreateQuoteDto {
-  @IsUUID()
-  @IsNotEmpty()
-  requestId: string;
-
-  @IsNumber()
-  @Min(0)
-  laborCost: number;
-
-  @IsOptional()
-  @IsArray()
-  @ValidateNested({ each: true })
-  @Type(() => CreateQuotePartDto)
-  parts?: CreateQuotePartDto[];
-
-  @IsString()
-  @IsNotEmpty()
-  estimatedDuration: string;
-
-  @IsOptional()
-  @IsInt()
-  @Min(1)
-  validDays?: number;
-
-  @IsOptional()
-  @IsString()
-  notes?: string;
-}
-
-export class UpdateQuoteDto {
-  @IsOptional()
-  @IsEnum(QuoteStatus)
-  status?: QuoteStatus;
-
-  @IsOptional()
-  @IsNumber()
-  @Min(0)
-  laborCost?: number;
-
-  @IsOptional()
-  @IsArray()
-  @ValidateNested({ each: true })
-  @Type(() => CreateQuotePartDto)
-  parts?: CreateQuotePartDto[];
-
-  @IsOptional()
-  @IsString()
-  estimatedDuration?: string;
-
-  @IsOptional()
-  @IsString()
-  notes?: string;
-}
-
-export class QuoteFilters {
-  @IsOptional()
-  @IsEnum(QuoteStatus)
-  status?: QuoteStatus;
-
-  @IsOptional()
-  @Type(() => Number)
-  @IsNumber()
-  @Min(1)
-  page?: number;
-
-  @IsOptional()
-  @Type(() => Number)
-  @IsNumber()
-  @Min(1)
-  limit?: number;
-}
+// Re-export DTOs for backward compatibility
+export { CreateQuotePartDto, CreateQuoteDto, UpdateQuoteDto, QuoteFilters } from './dto';
 
 @Injectable()
 export class QuotesService {
@@ -107,6 +21,7 @@ export class QuotesService {
     @InjectRepository(RepairerProfile)
     private readonly repairerRepo: Repository<RepairerProfile>,
     private readonly dataSource: DataSource,
+    private readonly eventEmitter: EventEmitter2,
   ) {}
 
   async createQuote(repairerId: string, dto: CreateQuoteDto): Promise<Quote> {
@@ -304,6 +219,19 @@ export class QuotesService {
 
       await queryRunner.commitTransaction();
 
+      // Emit quote accepted event
+      const quoteAcceptedEvent = new QuoteAcceptedEvent(
+        quote.id,
+        quote.requestId,
+        quote.request.clientId,
+        quote.repairerId,
+        Number(quote.totalAmount),
+        Number(quote.laborCost),
+        Number(quote.partsCost),
+        quote.estimatedDuration,
+      );
+      this.eventEmitter.emit(EventNames.QUOTE_ACCEPTED, quoteAcceptedEvent);
+
       return this.findOne(id);
     } catch (error) {
       await queryRunner.rollbackTransaction();
@@ -428,6 +356,19 @@ export class QuotesService {
     await this.requestRepo.update(rejectedQuote.requestId, {
       finalPrice: rejectedQuote.clientProposedPrice,
     });
+
+    // Emit quote accepted event for the counter-proposal
+    const quoteAcceptedEvent = new QuoteAcceptedEvent(
+      savedQuote.id,
+      savedQuote.requestId,
+      rejectedQuote.request.clientId,
+      savedQuote.repairerId,
+      Number(savedQuote.totalAmount),
+      Number(savedQuote.laborCost),
+      Number(savedQuote.partsCost),
+      savedQuote.estimatedDuration,
+    );
+    this.eventEmitter.emit(EventNames.QUOTE_ACCEPTED, quoteAcceptedEvent);
 
     return this.findOne(savedQuote.id);
   }

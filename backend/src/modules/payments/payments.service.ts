@@ -1,57 +1,17 @@
 import { Injectable, NotFoundException, ForbiddenException, BadRequestException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, FindOptionsWhere, DataSource } from 'typeorm';
-import { IsUUID, IsEnum, IsString, IsNotEmpty, IsOptional, IsNumber, Min } from 'class-validator';
-import { Type } from 'class-transformer';
+import { EventEmitter2 } from '@nestjs/event-emitter';
 import { Payment, PaymentStatus, PaymentMethod, PaymentType } from './entities/payment.entity';
 import { Quote } from '../quotes/entities/quote.entity';
 import { RepairRequest } from '../requests/entities/repair-request.entity';
 import { RepairerProfile } from '../users/entities/repairer-profile.entity';
 import { UserRole } from '../users/entities/user.entity';
+import { InitiatePaymentDto, PaymentFilters } from './dto';
+import { PaymentCompletedEvent, EventNames } from '../../common/events';
 
-export class InitiatePaymentDto {
-  @IsUUID()
-  @IsNotEmpty()
-  requestId: string;
-
-  @IsUUID()
-  @IsNotEmpty()
-  quoteId: string;
-
-  @IsEnum(PaymentMethod)
-  @IsNotEmpty()
-  paymentMethod: PaymentMethod;
-
-  @IsEnum(PaymentType)
-  @IsNotEmpty()
-  paymentType: PaymentType;
-
-  @IsString()
-  @IsNotEmpty()
-  phoneNumber: string;
-}
-
-export class PaymentFilters {
-  @IsOptional()
-  @IsEnum(PaymentStatus)
-  status?: PaymentStatus;
-
-  @IsOptional()
-  @IsEnum(PaymentType)
-  paymentType?: PaymentType;
-
-  @IsOptional()
-  @Type(() => Number)
-  @IsNumber()
-  @Min(1)
-  page?: number;
-
-  @IsOptional()
-  @Type(() => Number)
-  @IsNumber()
-  @Min(1)
-  limit?: number;
-}
+// Re-export DTOs for backward compatibility
+export { InitiatePaymentDto, PaymentFilters } from './dto';
 
 @Injectable()
 export class PaymentsService {
@@ -68,6 +28,7 @@ export class PaymentsService {
     @InjectRepository(RepairerProfile)
     private readonly repairerRepo: Repository<RepairerProfile>,
     private readonly dataSource: DataSource,
+    private readonly eventEmitter: EventEmitter2,
   ) {}
 
   private generatePaymentNumber(): string {
@@ -247,6 +208,23 @@ export class PaymentsService {
 
       await queryRunner.commitTransaction();
 
+      // Emit payment completed event
+      const paymentCompletedEvent = new PaymentCompletedEvent(
+        payment.id,
+        payment.paymentNumber,
+        payment.requestId,
+        payment.quoteId,
+        payment.clientId,
+        payment.repairerId,
+        Number(payment.amount),
+        Number(payment.platformFee),
+        Number(payment.repairerAmount),
+        payment.paymentType,
+        payment.paymentMethod,
+        payment.transactionRef,
+      );
+      this.eventEmitter.emit(EventNames.PAYMENT_COMPLETED, paymentCompletedEvent);
+
       return this.findOne(paymentId, clientId, UserRole.CLIENT);
     } catch (error) {
       await queryRunner.rollbackTransaction();
@@ -311,6 +289,23 @@ export class PaymentsService {
     payment.transactionRef = `TXN-${Date.now()}`;
 
     await this.paymentRepo.save(payment);
+
+    // Emit payment completed event
+    const paymentCompletedEvent = new PaymentCompletedEvent(
+      payment.id,
+      payment.paymentNumber,
+      payment.requestId,
+      payment.quoteId,
+      payment.clientId,
+      payment.repairerId,
+      Number(payment.amount),
+      Number(payment.platformFee),
+      Number(payment.repairerAmount),
+      payment.paymentType,
+      payment.paymentMethod,
+      payment.transactionRef,
+    );
+    this.eventEmitter.emit(EventNames.PAYMENT_COMPLETED, paymentCompletedEvent);
 
     return payment;
   }

@@ -1,76 +1,17 @@
 import { Injectable, NotFoundException, BadRequestException, ForbiddenException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { IsOptional, IsNumber, IsString, IsEnum, IsArray, ValidateNested, IsUUID, Min, Max, IsNotEmpty } from 'class-validator';
-import { Type } from 'class-transformer';
+import { EventEmitter2 } from '@nestjs/event-emitter';
 import { Review } from './entities/review.entity';
 import { StepRating, RatingStep, RatingCategory } from './entities/step-rating.entity';
 import { RequestsService } from '../requests/requests.service';
 import { RepairersService } from '../users/repairers.service';
 import { RequestStatus } from '../requests/entities/repair-request.entity';
+import { CreateReviewDto, ReviewFilters, CreateStepRatingDto } from './dto';
+import { ReviewCreatedEvent, EventNames } from '../../common/events';
 
-export class CreateReviewDto {
-  @IsUUID()
-  @IsNotEmpty()
-  requestId: string;
-
-  @IsNumber()
-  @Type(() => Number)
-  @Min(1)
-  @Max(5)
-  rating: number;
-
-  @IsOptional()
-  @IsString()
-  comment?: string;
-}
-
-export class ReviewFilters {
-  @IsOptional()
-  @Type(() => Number)
-  @IsNumber()
-  @Min(1)
-  page?: number;
-
-  @IsOptional()
-  @Type(() => Number)
-  @IsNumber()
-  @Min(1)
-  limit?: number;
-}
-
-// DTO pour une note individuelle par catégorie
-export class StepRatingItemDto {
-  @IsEnum(RatingCategory)
-  @IsNotEmpty()
-  category: RatingCategory;
-
-  @IsNumber()
-  @Type(() => Number)
-  @Min(-5)
-  @Max(5)
-  rating: number; // -5 a 5
-}
-
-// DTO pour creer des notes par etape
-export class CreateStepRatingDto {
-  @IsUUID()
-  @IsNotEmpty()
-  requestId: string;
-
-  @IsEnum(RatingStep)
-  @IsNotEmpty()
-  step: RatingStep;
-
-  @IsArray()
-  @ValidateNested({ each: true })
-  @Type(() => StepRatingItemDto)
-  ratings: StepRatingItemDto[];
-
-  @IsOptional()
-  @IsString()
-  comment?: string;
-}
+// Re-export DTOs for backward compatibility
+export { CreateReviewDto, ReviewFilters, StepRatingItemDto, CreateStepRatingDto } from './dto';
 
 @Injectable()
 export class ReviewsService {
@@ -81,6 +22,7 @@ export class ReviewsService {
     private readonly stepRatingRepository: Repository<StepRating>,
     private readonly requestsService: RequestsService,
     private readonly repairersService: RepairersService,
+    private readonly eventEmitter: EventEmitter2,
   ) {}
 
   async createReview(clientId: string, dto: CreateReviewDto): Promise<Review> {
@@ -125,6 +67,17 @@ export class ReviewsService {
     if (request.repairerId) {
       await this.updateRepairerRating(request.repairerId);
     }
+
+    // Emit review created event
+    const reviewCreatedEvent = new ReviewCreatedEvent(
+      savedReview.id,
+      savedReview.requestId,
+      savedReview.clientId,
+      savedReview.repairerId,
+      savedReview.rating,
+      savedReview.comment,
+    );
+    this.eventEmitter.emit(EventNames.REVIEW_CREATED, reviewCreatedEvent);
 
     return this.findOne(savedReview.id);
   }

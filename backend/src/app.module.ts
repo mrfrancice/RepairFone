@@ -3,6 +3,7 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { ThrottlerModule, ThrottlerGuard } from '@nestjs/throttler';
 import { ScheduleModule } from '@nestjs/schedule';
+import { EventEmitterModule } from '@nestjs/event-emitter';
 import { APP_GUARD, APP_INTERCEPTOR } from '@nestjs/core';
 
 import configuration from './config/configuration';
@@ -15,6 +16,7 @@ import { JwtAuthGuard } from './common/guards/jwt-auth.guard';
 import { RolesGuard } from './common/guards/roles.guard';
 import { AuditModule } from './common/audit/audit.module';
 import { AuditInterceptor } from './common/interceptors/audit.interceptor';
+import { ListenersModule } from './common/listeners/listeners.module';
 
 import { AuthModule } from './modules/auth/auth.module';
 import { UsersModule } from './modules/users/users.module';
@@ -62,8 +64,29 @@ import { SeederModule } from './database/seeders/seeder.module';
     // Scheduling
     ScheduleModule.forRoot(),
 
+    // Event Emitter
+    EventEmitterModule.forRoot({
+      // Set this to `true` to use wildcards
+      wildcard: false,
+      // The delimiter used to segment namespaces
+      delimiter: '.',
+      // Set this to `true` if you want to emit the newListener event
+      newListener: false,
+      // Set this to `true` if you want to emit the removeListener event
+      removeListener: false,
+      // The maximum amount of listeners that can be assigned to an event
+      maxListeners: 10,
+      // Show event name in memory leak message when more than maximum amount of listeners is assigned
+      verboseMemoryLeak: false,
+      // Disable throwing uncaughtException if an error event is emitted and it has no listeners
+      ignoreErrors: false,
+    }),
+
     // Audit Logging
     AuditModule,
+
+    // Event Listeners
+    ListenersModule,
 
     // Feature Modules
     AuthModule,

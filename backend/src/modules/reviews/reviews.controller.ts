@@ -10,7 +10,8 @@ import {
   ForbiddenException,
 } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiBearerAuth, ApiQuery } from '@nestjs/swagger';
-import { ReviewsService, CreateReviewDto, ReviewFilters, CreateStepRatingDto } from './reviews.service';
+import { ReviewsService } from './reviews.service';
+import { CreateReviewDto, ReviewFilters, CreateStepRatingDto } from './dto';
 import { RatingStep } from './entities/step-rating.entity';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';

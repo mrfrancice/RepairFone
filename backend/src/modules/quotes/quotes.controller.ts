@@ -11,7 +11,8 @@ import {
   ForbiddenException,
 } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiBearerAuth, ApiQuery } from '@nestjs/swagger';
-import { QuotesService, CreateQuoteDto, UpdateQuoteDto, QuoteFilters } from './quotes.service';
+import { QuotesService } from './quotes.service';
+import { CreateQuoteDto, UpdateQuoteDto, QuoteFilters } from './dto';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
 import { User } from '../users/entities/user.entity';

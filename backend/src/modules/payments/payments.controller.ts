@@ -10,7 +10,8 @@ import {
   ForbiddenException,
 } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiBearerAuth, ApiQuery } from '@nestjs/swagger';
-import { PaymentsService, InitiatePaymentDto, PaymentFilters } from './payments.service';
+import { PaymentsService } from './payments.service';
+import { InitiatePaymentDto, PaymentFilters } from './dto';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
 import { User } from '../users/entities/user.entity';
