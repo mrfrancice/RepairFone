@@ -1,10 +1,12 @@
-import { Component, inject, OnInit, signal } from '@angular/core';
+import { Component, inject, OnInit, signal, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { RepairerService, RepairerRequest, RequestFilterStatus } from '../../services/repairer.service';
 import { RepairerStore } from '../../stores/repairer.store';
 import { ChipVariant } from '../../../../shared/components/ui-chip/ui-chip.component';
-import { UiHeaderComponent } from '../../../../shared/components/ui-header/ui-header.component';
+import { AuthStore } from '../../../../core/stores/auth.store';
+import { NotificationBellComponent } from '../../../../shared/components/notification-bell/notification-bell.component';
+import { HeaderSearchComponent } from '../../../../shared/components/header-search/header-search.component';
 
 @Component({
   selector: 'app-request-management',
@@ -12,25 +14,73 @@ import { UiHeaderComponent } from '../../../../shared/components/ui-header/ui-he
   imports: [
     CommonModule,
     RouterLink,
-    UiHeaderComponent,
+    NotificationBellComponent,
+    HeaderSearchComponent,
   ],
   template: `
     <div class="request-management">
-      <!-- Header avec ui-header -->
-      <ui-header
-        title="Demandes reçues"
-        subtitle="Gérez vos réparations"
-        [showBack]="false"
-        [showProfile]="true"
-      >
-        <a header-actions routerLink="/requests" class="btn-main-dashboard">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
-            <polyline points="9 22 9 12 15 12 15 22"/>
+      <!-- Header like home -->
+      <header class="dashboard-header">
+        <div class="header-top">
+          <div class="header-left">
+            <div class="logo-section">
+              <div class="logo-icon">
+                <svg viewBox="0 0 32 32" fill="none">
+                  <path d="M16 4C9.373 4 4 9.373 4 16s5.373 12 12 12 12-5.373 12-12S22.627 4 16 4z" fill="white"/>
+                  <path d="M20 11l-2 2m0 0l-2-2m2 2v6m-4 2h8" stroke="#FF6B35" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+              </div>
+              <div class="header-titles">
+                <h1 class="app-title">RepairFone</h1>
+                <p class="welcome-msg">{{ getGreeting() }}, {{ getUserName() }}</p>
+              </div>
+            </div>
+          </div>
+          <div class="header-right">
+            <span class="status-online">
+              <span class="status-dot"></span>
+              En ligne
+            </span>
+            <span class="role-badge">{{ getRoleLabel() }}</span>
+            <app-notification-bell />
+            <button class="profile-btn" (click)="goToProfile()">
+              @if (authStore.user()?.avatarUrl) {
+                <img [src]="authStore.user()?.avatarUrl" alt="Profil" />
+              } @else {
+                <div class="profile-placeholder">
+                  {{ getInitialsUser() }}
+                </div>
+              }
+            </button>
+          </div>
+        </div>
+
+        <!-- Search Bar -->
+        <app-header-search
+          placeholder="Rechercher une demande..."
+          (search)="onSearchChange($event)"
+        />
+
+        <!-- Location indicator -->
+        <div class="location-bar" (click)="detectLocation()">
+          <div class="location-info">
+            <svg class="location-icon" width="16" height="16" viewBox="0 0 16 16" fill="none">
+              <path d="M8 8.667a2 2 0 100-4 2 2 0 000 4z" stroke="currentColor" stroke-width="1.5"/>
+              <path d="M8 14s5-3.5 5-7.333a5 5 0 10-10 0C3 10.5 8 14 8 14z" stroke="currentColor" stroke-width="1.5"/>
+            </svg>
+            @if (locationStatus() === 'loading') {
+              <span class="location-text">Detection en cours...</span>
+            } @else if (locationStatus() === 'success') {
+              <span class="location-text">{{ userAddress() }}</span>
+            } @else {
+              <span class="location-text">Activer la localisation</span>
+            }
+          </div>
+          <svg class="chevron" width="16" height="16" viewBox="0 0 16 16" fill="none">
+            <path d="M6 12l4-4-4-4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
           </svg>
-          <span>Dashboard</span>
-        </a>
-      </ui-header>
+        </div>
+      </header>
 
       <div class="page-content">
         <!-- Stats Cards -->
@@ -375,9 +425,202 @@ import { UiHeaderComponent } from '../../../../shared/components/ui-header/ui-he
       background: #f8fafc;
     }
 
+    /* Dashboard Header */
+    .dashboard-header {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      z-index: 100;
+      background: linear-gradient(135deg, #FF6B35 0%, #E85A24 100%);
+      padding: 1.25rem 1.25rem 1.75rem;
+      padding-top: calc(1.25rem + env(safe-area-inset-top, 0));
+      border-radius: 0 0 24px 24px;
+      box-shadow: 0 4px 20px rgba(255, 107, 53, 0.3);
+    }
+
+    .header-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 1.25rem;
+    }
+
+    .header-left {
+      display: flex;
+      align-items: center;
+    }
+
+    .logo-section {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+
+    .logo-icon {
+      width: 40px;
+      height: 40px;
+      background: rgba(255, 255, 255, 0.15);
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .logo-icon svg {
+      width: 28px;
+      height: 28px;
+    }
+
+    .header-titles {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .app-title {
+      font-size: 1.125rem;
+      font-weight: 700;
+      color: white;
+      margin: 0;
+      line-height: 1.2;
+    }
+
+    .welcome-msg {
+      font-size: 0.75rem;
+      color: rgba(255, 255, 255, 0.9);
+      margin: 0;
+    }
+
+    .header-right {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+
+    .status-online {
+      display: flex;
+      align-items: center;
+      gap: 0.375rem;
+      padding: 0.375rem 0.75rem;
+      background: rgba(16, 185, 129, 0.2);
+      border-radius: 20px;
+      font-size: 0.6875rem;
+      font-weight: 600;
+      color: #ecfdf5;
+      backdrop-filter: blur(4px);
+    }
+
+    .status-online .status-dot {
+      width: 8px;
+      height: 8px;
+      background: #10b981;
+      border-radius: 50%;
+      animation: pulse 2s infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.5; }
+    }
+
+    .platform-badge {
+      padding: 0.375rem 0.75rem;
+      background: white;
+      border-radius: 20px;
+      font-size: 0.6875rem;
+      font-weight: 700;
+      color: #FF6B35;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+    }
+
+    .role-badge {
+      padding: 0.375rem 0.75rem;
+      background: rgba(255, 255, 255, 0.2);
+      border-radius: 20px;
+      font-size: 0.6875rem;
+      font-weight: 600;
+      color: white;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      backdrop-filter: blur(4px);
+    }
+
+    .profile-btn {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      border: 2px solid rgba(255, 255, 255, 0.3);
+      background: rgba(255, 255, 255, 0.1);
+      overflow: hidden;
+      cursor: pointer;
+      padding: 0;
+      transition: all 0.2s;
+    }
+
+    .profile-btn:hover {
+      border-color: rgba(255, 255, 255, 0.5);
+      transform: scale(1.05);
+    }
+
+    .profile-btn img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    .profile-placeholder {
+      width: 100%;
+      height: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-weight: 600;
+      font-size: 0.875rem;
+      background: rgba(255, 255, 255, 0.15);
+    }
+
+    /* Location */
+    .location-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0.625rem 0.875rem;
+      background: rgba(255, 255, 255, 0.15);
+      border-radius: 10px;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+
+    .location-bar:hover {
+      background: rgba(255, 255, 255, 0.2);
+    }
+
+    .location-info {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      color: white;
+    }
+
+    .location-icon {
+      opacity: 0.9;
+    }
+
+    .location-text {
+      font-size: 0.8125rem;
+      font-weight: 500;
+    }
+
+    .chevron {
+      color: rgba(255, 255, 255, 0.7);
+    }
+
     .page-content {
       padding: 1rem;
-      padding-top: 110px;
+      padding-top: 220px;
       padding-bottom: 100px;
     }
 
@@ -456,32 +699,6 @@ import { UiHeaderComponent } from '../../../../shared/components/ui-header/ui-he
 
     .filters::-webkit-scrollbar {
       display: none;
-    }
-
-    .btn-main-dashboard {
-      display: flex;
-      align-items: center;
-      gap: 0.5rem;
-      padding: 0.5rem 1rem;
-      background: rgba(255, 255, 255, 0.2);
-      border-radius: 12px;
-      color: white;
-      text-decoration: none;
-      font-size: 0.875rem;
-      font-weight: 600;
-      transition: all 0.2s;
-      backdrop-filter: blur(4px);
-      border: 1px solid rgba(255, 255, 255, 0.3);
-    }
-
-    .btn-main-dashboard:hover {
-      background: rgba(255, 255, 255, 0.3);
-      transform: translateY(-1px);
-      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-    }
-
-    .btn-main-dashboard svg {
-      flex-shrink: 0;
     }
 
     .filter-chip {
@@ -1235,6 +1452,7 @@ import { UiHeaderComponent } from '../../../../shared/components/ui-header/ui-he
 export class RequestManagementComponent implements OnInit {
   readonly repairerService = inject(RepairerService);
   readonly store = inject(RepairerStore);
+  readonly authStore = inject(AuthStore);
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
 
@@ -1243,7 +1461,10 @@ export class RequestManagementComponent implements OnInit {
   readonly hasMore = signal(false);
   readonly selectedRequest = signal<RepairerRequest | null>(null);
   readonly selectedPhoto = signal<string | null>(null);
+  readonly locationStatus = signal<'idle' | 'loading' | 'success' | 'error'>('idle');
+  readonly userAddress = signal<string>('Abidjan, Cote d\'Ivoire');
 
+  searchQuery = '';
   private page = 1;
   private readonly limit = 10;
 
@@ -1263,6 +1484,7 @@ export class RequestManagementComponent implements OnInit {
       this.store.setRequestFilter(filterParam as RequestFilterStatus);
     }
     this.loadRequests();
+    this.detectLocation();
   }
 
   async loadRequests(): Promise<void> {
@@ -1490,5 +1712,69 @@ export class RequestManagementComponent implements OnInit {
       rejected: '❌',
     };
     return icons[filter] || '📋';
+  }
+
+  // Header methods
+  getGreeting(): string {
+    const hour = new Date().getHours();
+    if (hour < 12) return 'Bonjour';
+    if (hour < 18) return 'Bon apres-midi';
+    return 'Bonsoir';
+  }
+
+  getUserName(): string {
+    const user = this.authStore.user();
+    return user?.firstName || 'Reparateur';
+  }
+
+  getInitialsUser(): string {
+    const user = this.authStore.user();
+    const first = user?.firstName?.[0] || '';
+    const last = user?.lastName?.[0] || '';
+    return (first + last).toUpperCase() || 'R';
+  }
+
+  getRoleLabel(): string {
+    const role = this.authStore.user()?.role;
+    const labels: Record<string, string> = {
+      repairer: 'Réparateur',
+      client: 'Client',
+      admin: 'Admin',
+    };
+    return labels[role || ''] || 'Utilisateur';
+  }
+
+  goToProfile(): void {
+    this.router.navigate(['/profile']);
+  }
+
+  onSearchChange(query: string): void {
+    // Filtrer les demandes par recherche
+    this.searchQuery = query;
+    this.loadRequests();
+  }
+
+  detectLocation(): void {
+    this.locationStatus.set('loading');
+    if ('geolocation' in navigator) {
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          // En production, faire du reverse geocoding
+          const repairerProfile = this.authStore.user()?.repairerProfile;
+          if (repairerProfile?.address) {
+            this.userAddress.set(repairerProfile.address);
+          } else {
+            this.userAddress.set('Cocody, Abidjan');
+          }
+          this.locationStatus.set('success');
+        },
+        () => {
+          this.locationStatus.set('error');
+        },
+        { timeout: 10000 }
+      );
+    } else {
+      this.locationStatus.set('error');
+    }
   }
 }

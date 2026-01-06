@@ -13,8 +13,8 @@ import { AuthStore } from '../../../../core/stores/auth.store';
     <div class="requests-container">
       <!-- Header avec gradient orange -->
       <ui-header
-        [title]="isRepairer() ? 'Dashboard' : 'Mes demandes'"
-        [subtitle]="isRepairer() ? 'Tableau de bord réparateur' : 'Suivez vos réparations'"
+        [title]="isRepairer() ? 'Demandes reçues' : 'Mes demandes'"
+        [subtitle]="isRepairer() ? 'Gérez vos réparations' : 'Suivez vos réparations'"
         [showBack]="false"
         [showProfile]="true"
       >
@@ -27,25 +27,6 @@ import { AuthStore } from '../../../../core/stores/auth.store';
           </a>
         }
       </ui-header>
-
-      <!-- Welcome Banner for Repairer -->
-      @if (isRepairer()) {
-        <div class="welcome-banner">
-          <div class="welcome-icon">
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/>
-            </svg>
-          </div>
-          <div class="welcome-content">
-            <span class="welcome-title">Bienvenue sur votre espace</span>
-            <span class="welcome-text">Gerez vos demandes de reparation</span>
-          </div>
-          <div class="welcome-status">
-            <span class="status-dot"></span>
-            <span>En ligne</span>
-          </div>
-        </div>
-      }
 
       <!-- Stats -->
       @if (stats()) {
@@ -239,74 +220,6 @@ import { AuthStore } from '../../../../core/stores/auth.store';
 
     .btn-new-request:hover {
       background: rgba(255, 255, 255, 0.25);
-    }
-
-    /* Welcome Banner */
-    .welcome-banner {
-      display: flex;
-      align-items: center;
-      gap: 1rem;
-      margin: 1rem 1rem 0;
-      padding: 1rem;
-      background: linear-gradient(135deg, #ffffff, #f8fafc);
-      border-radius: 16px;
-      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
-      border: 1px solid #e2e8f0;
-    }
-
-    .welcome-icon {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      width: 48px;
-      height: 48px;
-      background: linear-gradient(135deg, #FF6B35, #FF9800);
-      border-radius: 12px;
-      color: white;
-      flex-shrink: 0;
-    }
-
-    .welcome-content {
-      flex: 1;
-      display: flex;
-      flex-direction: column;
-      gap: 0.125rem;
-    }
-
-    .welcome-title {
-      font-size: 0.9375rem;
-      font-weight: 700;
-      color: #1e293b;
-    }
-
-    .welcome-text {
-      font-size: 0.8125rem;
-      color: #64748b;
-    }
-
-    .welcome-status {
-      display: flex;
-      align-items: center;
-      gap: 0.375rem;
-      padding: 0.375rem 0.75rem;
-      background: #ecfdf5;
-      border-radius: 20px;
-      font-size: 0.75rem;
-      font-weight: 600;
-      color: #059669;
-    }
-
-    .welcome-status .status-dot {
-      width: 8px;
-      height: 8px;
-      background: #10b981;
-      border-radius: 50%;
-      animation: pulse 2s infinite;
-    }
-
-    @keyframes pulse {
-      0%, 100% { opacity: 1; }
-      50% { opacity: 0.5; }
     }
 
     /* Stats Section */

@@ -1,29 +1,61 @@
 import { Component, inject, signal, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { RouterLink } from '@angular/router';
+import { Router, RouterLink } from '@angular/router';
 import { AdminService, DashboardSummary, VerificationStats } from '../../services/admin.service';
-import { UiHeaderComponent } from '../../../../shared/components/ui-header/ui-header.component';
+import { AuthStore } from '../../../../core/stores/auth.store';
+import { NotificationBellComponent } from '../../../../shared/components/notification-bell/notification-bell.component';
+import { HeaderSearchComponent } from '../../../../shared/components/header-search/header-search.component';
 
 @Component({
   selector: 'app-admin-dashboard',
   standalone: true,
-  imports: [CommonModule, RouterLink, UiHeaderComponent],
+  imports: [CommonModule, RouterLink, NotificationBellComponent, HeaderSearchComponent],
   template: `
     <div class="admin-page">
-      <!-- Header Banner -->
-      <ui-header
-        title="Administration"
-        subtitle="Gérez votre plateforme RepairFone"
-        [showIcon]="true"
-        [showProfile]="true"
-      >
-        <svg header-icon width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <path d="M12 15C15.866 15 19 11.866 19 8C19 4.13401 15.866 1 12 1C8.13401 1 5 4.13401 5 8C5 11.866 8.13401 15 12 15Z"/>
-          <path d="M8.21 13.89L7 23L12 20L17 23L15.79 13.88" stroke-linecap="round" stroke-linejoin="round"/>
-        </svg>
-      </ui-header>
+      <!-- Header like home -->
+      <header class="admin-header">
+        <div class="header-top">
+          <div class="header-left">
+            <div class="logo-section">
+              <div class="logo-icon">
+                <svg viewBox="0 0 32 32" fill="none">
+                  <path d="M16 4C9.373 4 4 9.373 4 16s5.373 12 12 12 12-5.373 12-12S22.627 4 16 4z" fill="white"/>
+                  <path d="M20 11l-2 2m0 0l-2-2m2 2v6m-4 2h8" stroke="#FF6B35" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+              </div>
+              <div class="header-titles">
+                <h1 class="app-title">RepairFone</h1>
+                <p class="welcome-msg">{{ getGreeting() }}, {{ getUserName() }}</p>
+              </div>
+            </div>
+          </div>
+          <div class="header-right">
+            <span class="status-online">
+              <span class="status-dot"></span>
+              En ligne
+            </span>
+            <span class="role-badge">{{ getRoleLabel() }}</span>
+            <app-notification-bell />
+            <button class="profile-btn" (click)="goToProfile()">
+              @if (authStore.user()?.avatarUrl) {
+                <img [src]="authStore.user()?.avatarUrl" alt="Profil" />
+              } @else {
+                <div class="profile-placeholder">
+                  {{ getInitials() }}
+                </div>
+              }
+            </button>
+          </div>
+        </div>
 
-      <div class="admin-container">
+        <!-- Search Bar -->
+        <app-header-search
+          placeholder="Rechercher un utilisateur, réparateur..."
+          (search)="onSearchChange($event)"
+        />
+      </header>
+
+      <div class="page-content">
         @if (isLoading()) {
           <div class="loading-state">
             <div class="spinner"></div>
@@ -276,72 +308,154 @@ import { UiHeaderComponent } from '../../../../shared/components/ui-header/ui-he
 
     /* Header */
     .admin-header {
-      background: linear-gradient(135deg, #FF6B35 0%, #E85A24 50%, #FF9800 100%);
-      padding: 2rem 1rem;
-      padding-top: calc(2rem + env(safe-area-inset-top, 0));
-      position: relative;
-      overflow: hidden;
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      z-index: 100;
+      background: linear-gradient(135deg, #FF6B35 0%, #E85A24 100%);
+      padding: 1.25rem 1.25rem 1.75rem;
+      padding-top: calc(1.25rem + env(safe-area-inset-top, 0));
+      border-radius: 0 0 24px 24px;
+      box-shadow: 0 4px 20px rgba(255, 107, 53, 0.3);
     }
 
-    .header-content {
+    .header-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 1.25rem;
+    }
+
+    .header-left {
       display: flex;
       align-items: center;
-      gap: 1rem;
-      position: relative;
-      z-index: 1;
     }
 
-    .header-icon {
-      width: 56px;
-      height: 56px;
+    .logo-section {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+
+    .logo-icon {
+      width: 40px;
+      height: 40px;
+      background: rgba(255, 255, 255, 0.15);
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .logo-icon svg {
+      width: 28px;
+      height: 28px;
+    }
+
+    .header-titles {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .app-title {
+      font-size: 1.125rem;
+      font-weight: 700;
+      color: white;
+      margin: 0;
+      line-height: 1.2;
+    }
+
+    .welcome-msg {
+      font-size: 0.75rem;
+      color: rgba(255, 255, 255, 0.9);
+      margin: 0;
+    }
+
+    .header-right {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+
+    .status-online {
+      display: flex;
+      align-items: center;
+      gap: 0.375rem;
+      padding: 0.375rem 0.75rem;
+      background: rgba(16, 185, 129, 0.2);
+      border-radius: 20px;
+      font-size: 0.6875rem;
+      font-weight: 600;
+      color: #ecfdf5;
+      backdrop-filter: blur(4px);
+    }
+
+    .status-online .status-dot {
+      width: 8px;
+      height: 8px;
+      background: #10b981;
+      border-radius: 50%;
+      animation: statusPulse 2s infinite;
+    }
+
+    @keyframes statusPulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.5; }
+    }
+
+    .role-badge {
+      padding: 0.375rem 0.75rem;
       background: rgba(255, 255, 255, 0.2);
-      border-radius: 16px;
+      border-radius: 20px;
+      font-size: 0.6875rem;
+      font-weight: 600;
+      color: white;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      backdrop-filter: blur(4px);
+    }
+
+    .profile-btn {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      border: 2px solid rgba(255, 255, 255, 0.3);
+      background: rgba(255, 255, 255, 0.1);
+      overflow: hidden;
+      cursor: pointer;
+      padding: 0;
+      transition: all 0.2s;
+    }
+
+    .profile-btn:hover {
+      border-color: rgba(255, 255, 255, 0.5);
+      transform: scale(1.05);
+    }
+
+    .profile-btn img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    .profile-placeholder {
+      width: 100%;
+      height: 100%;
       display: flex;
       align-items: center;
       justify-content: center;
       color: white;
-      backdrop-filter: blur(10px);
-    }
-
-    .header-text h1 {
-      font-size: 1.75rem;
-      font-weight: 700;
-      color: white;
-      margin-bottom: 0.25rem;
-    }
-
-    .header-text p {
-      color: rgba(255, 255, 255, 0.9);
+      font-weight: 600;
       font-size: 0.875rem;
-    }
-
-    .header-decoration {
-      position: absolute;
-      top: -50%;
-      right: -10%;
-      width: 200px;
-      height: 200px;
-      background: rgba(255, 255, 255, 0.1);
-      border-radius: 50%;
-    }
-
-    .header-decoration::after {
-      content: '';
-      position: absolute;
-      top: 60%;
-      left: -30%;
-      width: 150px;
-      height: 150px;
-      background: rgba(255, 255, 255, 0.08);
-      border-radius: 50%;
+      background: rgba(255, 255, 255, 0.15);
     }
 
     /* Container */
-    .admin-container {
+    .page-content {
       padding: 1rem;
-      padding-top: 100px;
-      max-width: 1200px;
-      margin: 0 auto;
+      padding-top: 180px;
+      padding-bottom: 100px;
     }
 
     /* Loading & Error */
@@ -798,6 +912,8 @@ import { UiHeaderComponent } from '../../../../shared/components/ui-header/ui-he
 })
 export class AdminDashboardComponent implements OnInit {
   private readonly adminService = inject(AdminService);
+  private readonly router = inject(Router);
+  readonly authStore = inject(AuthStore);
 
   readonly isLoading = signal(true);
   readonly error = signal<string | null>(null);
@@ -806,6 +922,40 @@ export class AdminDashboardComponent implements OnInit {
 
   ngOnInit(): void {
     this.loadData();
+  }
+
+  // Header methods
+  getGreeting(): string {
+    const hour = new Date().getHours();
+    if (hour < 12) return 'Bonjour';
+    if (hour < 18) return 'Bon apres-midi';
+    return 'Bonsoir';
+  }
+
+  getUserName(): string {
+    const user = this.authStore.user();
+    return user?.firstName || 'Admin';
+  }
+
+  getInitials(): string {
+    const user = this.authStore.user();
+    const first = user?.firstName?.[0] || '';
+    const last = user?.lastName?.[0] || '';
+    return (first + last).toUpperCase() || 'A';
+  }
+
+  getRoleLabel(): string {
+    const role = this.authStore.user()?.role;
+    const labels: Record<string, string> = {
+      repairer: 'Réparateur',
+      client: 'Client',
+      admin: 'Admin',
+    };
+    return labels[role || ''] || 'Utilisateur';
+  }
+
+  goToProfile(): void {
+    this.router.navigate(['/profile']);
   }
 
   async loadData(): Promise<void> {
@@ -829,5 +979,12 @@ export class AdminDashboardComponent implements OnInit {
   getPercentage(value: number | undefined, total: number | undefined): number {
     if (!value || !total || total === 0) return 0;
     return Math.round((value / total) * 100);
+  }
+
+  onSearchChange(query: string): void {
+    // Naviguer vers la page de recherche admin ou filtrer
+    if (query) {
+      this.router.navigate(['/admin/users'], { queryParams: { search: query } });
+    }
   }
 }

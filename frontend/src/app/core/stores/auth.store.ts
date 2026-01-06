@@ -82,7 +82,7 @@ export class AuthStore {
   /**
    * Get the default redirect URL based on user role
    * - admin → /admin
-   * - repairer → /requests (dashboard des demandes reçues)
+   * - repairer → /repairer/requests (dashboard réparateur)
    * - client → /home
    */
   getDefaultRedirectUrl(): string {
@@ -91,7 +91,7 @@ export class AuthStore {
       case 'admin':
         return '/admin';
       case 'repairer':
-        return '/requests';
+        return '/repairer/requests';
       case 'client':
       default:
         return '/home';

@@ -3,53 +3,60 @@ import { CommonModule } from '@angular/common';
 import { ActivatedRoute, Router } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { AdminService, RepairerForVerification, VerificationStats } from '../../services/admin.service';
-import { UiHeaderComponent } from '../../../../shared/components/ui-header/ui-header.component';
+import { AuthStore } from '../../../../core/stores/auth.store';
+import { NotificationBellComponent } from '../../../../shared/components/notification-bell/notification-bell.component';
+import { HeaderSearchComponent } from '../../../../shared/components/header-search/header-search.component';
 
 type StatusFilter = 'all' | 'pending' | 'under_review' | 'verified' | 'rejected' | 'suspended';
 
 @Component({
   selector: 'app-repairers-verification',
   standalone: true,
-  imports: [CommonModule, FormsModule, UiHeaderComponent],
+  imports: [CommonModule, FormsModule, NotificationBellComponent, HeaderSearchComponent],
   template: `
     <div class="admin-page">
-      <!-- Header Banner -->
-      <ui-header
-        title="Vérification des réparateurs"
-        [subtitle]="total() + ' réparateur(s) au total'"
-        [showBack]="true"
-        [showIcon]="true"
-        [showProfile]="true"
-        backRoute="/admin"
-      >
-        <svg header-icon width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z" stroke-linecap="round" stroke-linejoin="round"/>
-        </svg>
-      </ui-header>
-
-      <div class="admin-container">
-        <!-- Search Bar -->
-        <div class="search-section">
-          <div class="search-bar">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
-              <path d="M21 21L15 15M17 10C17 13.866 13.866 17 10 17C6.13401 17 3 13.866 3 10C3 6.13401 6.13401 3 10 3C13.866 3 17 6.13401 17 10Z" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
-            </svg>
-            <input
-              type="text"
-              placeholder="Rechercher un reparateur..."
-              [(ngModel)]="searchQuery"
-              (input)="onSearch()"
-            />
-            @if (searchQuery) {
-              <button class="clear-search" (click)="clearSearch()">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
-                  <path d="M18 6L6 18M6 6L18 18" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
-                </svg>
-              </button>
-            }
+      <!-- Header like home -->
+      <header class="admin-header">
+        <div class="header-top">
+          <div class="header-left">
+            <button class="back-btn" (click)="goBack()">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M19 12H5M12 19l-7-7 7-7"/>
+              </svg>
+            </button>
+            <div class="header-titles">
+              <h1 class="app-title">Réparateurs</h1>
+              <p class="welcome-msg">{{ total() }} réparateur(s) au total</p>
+            </div>
+          </div>
+          <div class="header-right">
+            <span class="status-online">
+              <span class="status-dot"></span>
+              En ligne
+            </span>
+            <span class="role-badge">{{ getRoleLabel() }}</span>
+            <app-notification-bell />
+            <button class="profile-btn" (click)="goToProfile()">
+              @if (authStore.user()?.avatarUrl) {
+                <img [src]="authStore.user()?.avatarUrl" alt="Profil" />
+              } @else {
+                <div class="profile-placeholder">
+                  {{ getUserInitials() }}
+                </div>
+              }
+            </button>
           </div>
         </div>
 
+        <!-- Search Bar in Header -->
+        <app-header-search
+          placeholder="Rechercher un réparateur..."
+          (search)="onSearchChange($event)"
+          (cleared)="clearSearch()"
+        />
+      </header>
+
+      <div class="page-content">
         <!-- Status Tabs -->
         <div class="status-tabs-container">
           <div class="status-tabs">
@@ -614,137 +621,151 @@ type StatusFilter = 'all' | 'pending' | 'under_review' | 'verified' | 'rejected'
 
     /* Header */
     .admin-header {
-      background: linear-gradient(135deg, #FF6B35 0%, #E85A24 50%, #FF9800 100%);
-      padding: 1.5rem 1rem;
-      padding-top: calc(1.5rem + env(safe-area-inset-top, 0));
-      position: relative;
-      overflow: hidden;
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      z-index: 100;
+      background: linear-gradient(135deg, #FF6B35 0%, #E85A24 100%);
+      padding: 1.25rem;
+      padding-top: calc(1.25rem + env(safe-area-inset-top, 0));
+      border-radius: 0 0 24px 24px;
+      box-shadow: 0 4px 20px rgba(255, 107, 53, 0.3);
     }
 
-    .header-content {
+    .header-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .header-left {
       display: flex;
       align-items: center;
       gap: 0.75rem;
-      position: relative;
-      z-index: 1;
     }
 
     .back-btn {
       width: 40px;
       height: 40px;
       border-radius: 12px;
-      background: rgba(255, 255, 255, 0.2);
+      background: rgba(255, 255, 255, 0.15);
+      border: none;
       display: flex;
       align-items: center;
       justify-content: center;
       color: white;
-      text-decoration: none;
-      backdrop-filter: blur(10px);
+      cursor: pointer;
       transition: all 0.2s;
     }
 
     .back-btn:hover {
-      background: rgba(255, 255, 255, 0.3);
+      background: rgba(255, 255, 255, 0.25);
     }
 
-    .header-icon {
-      width: 48px;
-      height: 48px;
-      background: rgba(255, 255, 255, 0.2);
-      border-radius: 14px;
+    .header-titles {
       display: flex;
-      align-items: center;
-      justify-content: center;
-      color: white;
-      backdrop-filter: blur(10px);
+      flex-direction: column;
     }
 
-    .header-text h1 {
-      font-size: 1.375rem;
+    .app-title {
+      font-size: 1.125rem;
       font-weight: 700;
       color: white;
-      margin-bottom: 0.125rem;
+      margin: 0;
+      line-height: 1.2;
     }
 
-    .header-text p {
+    .welcome-msg {
+      font-size: 0.75rem;
       color: rgba(255, 255, 255, 0.9);
-      font-size: 0.8rem;
+      margin: 0;
     }
 
-    .header-decoration {
-      position: absolute;
-      top: -50%;
-      right: -10%;
-      width: 200px;
-      height: 200px;
-      background: rgba(255, 255, 255, 0.1);
-      border-radius: 50%;
-    }
-
-    /* Container */
-    .admin-container {
-      padding: 1rem;
-      padding-top: 100px;
-      max-width: 1200px;
-      margin: 0 auto;
-    }
-
-    /* Search Section */
-    .search-section {
-      margin-bottom: 1rem;
-    }
-
-    .search-bar {
+    .header-right {
       display: flex;
       align-items: center;
       gap: 0.75rem;
-      background: white;
-      border: 2px solid #e5e7eb;
-      border-radius: 16px;
-      padding: 0.875rem 1rem;
-      transition: all 0.2s;
-      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
     }
 
-    .search-bar:focus-within {
-      border-color: #FF6B35;
-      box-shadow: 0 0 0 4px rgba(255, 107, 53, 0.1);
+    .status-online {
+      display: flex;
+      align-items: center;
+      gap: 0.375rem;
+      padding: 0.375rem 0.75rem;
+      background: rgba(16, 185, 129, 0.2);
+      border-radius: 20px;
+      font-size: 0.6875rem;
+      font-weight: 600;
+      color: #ecfdf5;
+      backdrop-filter: blur(4px);
     }
 
-    .search-bar svg {
-      color: #9ca3af;
-      flex-shrink: 0;
+    .status-online .status-dot {
+      width: 8px;
+      height: 8px;
+      background: #10b981;
+      border-radius: 50%;
+      animation: statusPulse 2s infinite;
     }
 
-    .search-bar input {
-      flex: 1;
-      border: none;
-      outline: none;
-      font-size: 1rem;
-      color: #1f2937;
+    @keyframes statusPulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.5; }
     }
 
-    .search-bar input::placeholder {
-      color: #9ca3af;
+    .role-badge {
+      padding: 0.375rem 0.75rem;
+      background: rgba(255, 255, 255, 0.2);
+      border-radius: 20px;
+      font-size: 0.6875rem;
+      font-weight: 600;
+      color: white;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      backdrop-filter: blur(4px);
     }
 
-    .clear-search {
-      width: 28px;
-      height: 28px;
-      border-radius: 8px;
-      border: none;
-      background: #f3f4f6;
-      color: #6b7280;
+    .profile-btn {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      border: 2px solid rgba(255, 255, 255, 0.3);
+      background: rgba(255, 255, 255, 0.1);
+      overflow: hidden;
       cursor: pointer;
+      padding: 0;
+      transition: all 0.2s;
+    }
+
+    .profile-btn:hover {
+      border-color: rgba(255, 255, 255, 0.5);
+      transform: scale(1.05);
+    }
+
+    .profile-btn img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    .profile-placeholder {
+      width: 100%;
+      height: 100%;
       display: flex;
       align-items: center;
       justify-content: center;
-      transition: all 0.2s;
+      color: white;
+      font-weight: 600;
+      font-size: 0.875rem;
+      background: rgba(255, 255, 255, 0.15);
     }
 
-    .clear-search:hover {
-      background: #e5e7eb;
-      color: #374151;
+    /* Container */
+    .page-content {
+      padding: 1rem;
+      padding-top: 160px;
+      padding-bottom: 100px;
     }
 
     /* Status Tabs */
@@ -1545,6 +1566,7 @@ export class RepairersVerificationComponent implements OnInit {
   private readonly adminService = inject(AdminService);
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
+  readonly authStore = inject(AuthStore);
 
   readonly isLoading = signal(true);
   readonly isProcessing = signal(false);
@@ -1565,8 +1587,6 @@ export class RepairersVerificationComponent implements OnInit {
   searchQuery = '';
   verificationNotes = '';
   suspendReason = '';
-
-  private searchTimeout: any;
 
   ngOnInit(): void {
     this.route.queryParams.subscribe((params) => {
@@ -1609,12 +1629,10 @@ export class RepairersVerificationComponent implements OnInit {
     this.loadRepairers();
   }
 
-  onSearch(): void {
-    clearTimeout(this.searchTimeout);
-    this.searchTimeout = setTimeout(() => {
-      this.page.set(1);
-      this.loadRepairers();
-    }, 300);
+  onSearchChange(query: string): void {
+    this.searchQuery = query;
+    this.page.set(1);
+    this.loadRepairers();
   }
 
   clearSearch(): void {
@@ -1741,5 +1759,31 @@ export class RepairersVerificationComponent implements OnInit {
     } finally {
       this.isProcessing.set(false);
     }
+  }
+
+  // Header methods
+  getRoleLabel(): string {
+    const role = this.authStore.user()?.role;
+    const labels: Record<string, string> = {
+      repairer: 'Réparateur',
+      client: 'Client',
+      admin: 'Admin',
+    };
+    return labels[role || ''] || 'Utilisateur';
+  }
+
+  getUserInitials(): string {
+    const user = this.authStore.user();
+    const first = user?.firstName?.[0] || '';
+    const last = user?.lastName?.[0] || '';
+    return (first + last).toUpperCase() || 'A';
+  }
+
+  goToProfile(): void {
+    this.router.navigate(['/profile']);
+  }
+
+  goBack(): void {
+    this.router.navigate(['/admin']);
   }
 }

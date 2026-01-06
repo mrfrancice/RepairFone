@@ -4,7 +4,7 @@ import { Router, RouterLink } from '@angular/router';
 import { AuthStore } from '../../../../core/stores/auth.store';
 import { RequestsService } from '../../../requests/services/requests.service';
 import { SettingsService } from '../../../../core/services/settings.service';
-import { UiSearchBarComponent } from '../../../../shared/components/ui-search-bar/ui-search-bar.component';
+import { HeaderSearchComponent } from '../../../../shared/components/header-search/header-search.component';
 import { UiAvatarComponent } from '../../../../shared/components/ui-avatar/ui-avatar.component';
 import { BottomNavComponent } from '../../../../shared/components/bottom-nav/bottom-nav.component';
 import { NotificationBellComponent } from '../../../../shared/components/notification-bell/notification-bell.component';
@@ -37,7 +37,7 @@ interface QuickService {
   imports: [
     CommonModule,
     RouterLink,
-    UiSearchBarComponent,
+    HeaderSearchComponent,
     UiAvatarComponent,
     BottomNavComponent,
     NotificationBellComponent,
@@ -63,6 +63,11 @@ interface QuickService {
           </div>
           <div class="header-right">
             @if (authStore.isAuthenticated()) {
+              <span class="status-online">
+                <span class="status-dot"></span>
+                En ligne
+              </span>
+              <span class="role-badge">{{ getRoleLabel() }}</span>
               <app-notification-bell />
             }
             <button class="profile-btn" (click)="goToProfile()">
@@ -78,15 +83,10 @@ interface QuickService {
         </div>
 
         <!-- Search Bar -->
-        <div class="search-wrapper">
-          <ui-search-bar
-            placeholder="Rechercher un appareil, problème..."
-            size="lg"
-            [showActionButton]="false"
-            (search)="onSearch($event)"
-            (click)="goToSearch()"
-          />
-        </div>
+        <app-header-search
+          placeholder="Rechercher un appareil, problème..."
+          (search)="onSearch($event)"
+        />
 
         <!-- Location indicator -->
         <div class="location-bar" (click)="changeLocation()">
@@ -429,6 +429,56 @@ interface QuickService {
       gap: 0.75rem;
     }
 
+    .status-online {
+      display: flex;
+      align-items: center;
+      gap: 0.375rem;
+      padding: 0.375rem 0.75rem;
+      background: rgba(16, 185, 129, 0.2);
+      border-radius: 20px;
+      font-size: 0.6875rem;
+      font-weight: 600;
+      color: #ecfdf5;
+      backdrop-filter: blur(4px);
+    }
+
+    .status-online .status-dot {
+      width: 8px;
+      height: 8px;
+      background: #10b981;
+      border-radius: 50%;
+      animation: statusPulse 2s infinite;
+    }
+
+    @keyframes statusPulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.5; }
+    }
+
+    .platform-badge {
+      padding: 0.375rem 0.75rem;
+      background: white;
+      border-radius: 20px;
+      font-size: 0.6875rem;
+      font-weight: 700;
+      color: #FF6B35;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+    }
+
+    .role-badge {
+      padding: 0.375rem 0.75rem;
+      background: rgba(255, 255, 255, 0.2);
+      border-radius: 20px;
+      font-size: 0.6875rem;
+      font-weight: 600;
+      color: white;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      backdrop-filter: blur(4px);
+    }
+
     .profile-btn {
       width: 40px;
       height: 40px;
@@ -455,17 +505,6 @@ interface QuickService {
       color: white;
       font-weight: 600;
       font-size: 0.875rem;
-    }
-
-    /* Search */
-    .search-wrapper {
-      margin-bottom: 1rem;
-    }
-
-    .search-wrapper :deep(.search-input-wrapper) {
-      background: white;
-      border: none;
-      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
     }
 
     /* Location */
@@ -1124,6 +1163,16 @@ export class HomeComponent implements OnInit {
       return (first + last).toUpperCase() || 'U';
     }
     return 'U';
+  }
+
+  getRoleLabel(): string {
+    const role = this.authStore.user()?.role;
+    const labels: Record<string, string> = {
+      repairer: 'Réparateur',
+      client: 'Client',
+      admin: 'Admin',
+    };
+    return labels[role || ''] || 'Visiteur';
   }
 
   async detectLocation(): Promise<void> {
