@@ -1,9 +1,10 @@
-import { Component, inject, signal, OnInit } from '@angular/core';
+import { Component, inject, signal, OnInit, DestroyRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink, ActivatedRoute, Router } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { AdminService, UserForAdmin } from '../../services/admin.service';
 import { UiHeaderComponent } from '../../../../shared/components/ui-header/ui-header.component';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 
 type RoleFilter = 'all' | 'client' | 'repairer';
 type StatusFilter = 'all' | 'pending' | 'active' | 'suspended' | 'deactivated';
@@ -1139,6 +1140,7 @@ export class UsersManagementComponent implements OnInit {
   private readonly adminService = inject(AdminService);
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
+  private readonly destroyRef = inject(DestroyRef);
 
   readonly isLoading = signal(true);
   readonly isProcessing = signal(false);
@@ -1159,15 +1161,17 @@ export class UsersManagementComponent implements OnInit {
   private searchTimeout: any;
 
   ngOnInit(): void {
-    this.route.queryParams.subscribe((params) => {
-      if (params['role']) {
-        this.roleFilter.set(params['role'] as RoleFilter);
-      }
-      if (params['status']) {
-        this.statusFilter.set(params['status'] as StatusFilter);
-      }
-      this.loadUsers();
-    });
+    this.route.queryParams
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe((params) => {
+        if (params['role']) {
+          this.roleFilter.set(params['role'] as RoleFilter);
+        }
+        if (params['status']) {
+          this.statusFilter.set(params['status'] as StatusFilter);
+        }
+        this.loadUsers();
+      });
   }
 
   async loadUsers(): Promise<void> {

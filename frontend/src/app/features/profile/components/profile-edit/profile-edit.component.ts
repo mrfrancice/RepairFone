@@ -1,4 +1,4 @@
-import { Component, inject, signal, computed, OnInit, ViewChild, ElementRef } from '@angular/core';
+import { Component, inject, signal, computed, OnInit, ViewChild, ElementRef, DestroyRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule, ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
@@ -7,6 +7,7 @@ import { ProfileService, UpdateProfileDto, UpdateRepairerProfileDto } from '../.
 import { LocationService, City, Commune, Quarter } from '../../../../core/services/location.service';
 import { SettingsService } from '../../../../core/services/settings.service';
 import { UiHeaderComponent } from '../../../../shared/components/ui-header/ui-header.component';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 
 @Component({
   selector: 'app-profile-edit',
@@ -1275,6 +1276,7 @@ export class ProfileEditComponent implements OnInit {
   private readonly settingsService = inject(SettingsService);
   private readonly router = inject(Router);
   private readonly fb = inject(FormBuilder);
+  private readonly destroyRef = inject(DestroyRef);
 
   @ViewChild('avatarInput') avatarInput!: ElementRef<HTMLInputElement>;
   @ViewChild('shopPhotoInput') shopPhotoInput!: ElementRef<HTMLInputElement>;
@@ -1338,25 +1340,29 @@ export class ProfileEditComponent implements OnInit {
   constructor() {
     // Update communes when city changes
     let lastCity = '';
-    this.profileForm.get('city')?.valueChanges.subscribe(cityName => {
-      if (cityName && cityName !== lastCity) {
-        lastCity = cityName;
-        this.updateCommunesForCity(cityName);
-        // Don't reset commune/quarter when loading initial data
-        if (this.communes().length > 0) {
-          this.profileForm.patchValue({ commune: '', quarter: '' }, { emitEvent: false });
+    this.profileForm.get('city')?.valueChanges
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe(cityName => {
+        if (cityName && cityName !== lastCity) {
+          lastCity = cityName;
+          this.updateCommunesForCity(cityName);
+          // Don't reset commune/quarter when loading initial data
+          if (this.communes().length > 0) {
+            this.profileForm.patchValue({ commune: '', quarter: '' }, { emitEvent: false });
+          }
         }
-      }
-    });
+      });
 
     // Update quarters when commune changes
     let lastCommune = '';
-    this.profileForm.get('commune')?.valueChanges.subscribe(communeName => {
-      if (communeName !== lastCommune) {
-        lastCommune = communeName;
-        this.updateQuartersForCommune(communeName);
-      }
-    });
+    this.profileForm.get('commune')?.valueChanges
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe(communeName => {
+        if (communeName !== lastCommune) {
+          lastCommune = communeName;
+          this.updateQuartersForCommune(communeName);
+        }
+      });
   }
 
   ngOnInit(): void {

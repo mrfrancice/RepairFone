@@ -1,6 +1,8 @@
 import { Injectable, NotFoundException, ForbiddenException, BadRequestException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, FindOptionsWhere, DataSource } from 'typeorm';
+import { IsUUID, IsEnum, IsString, IsNotEmpty, IsOptional, IsNumber, Min } from 'class-validator';
+import { Type } from 'class-transformer';
 import { Payment, PaymentStatus, PaymentMethod, PaymentType } from './entities/payment.entity';
 import { Quote } from '../quotes/entities/quote.entity';
 import { RepairRequest } from '../requests/entities/repair-request.entity';
@@ -8,17 +10,46 @@ import { RepairerProfile } from '../users/entities/repairer-profile.entity';
 import { UserRole } from '../users/entities/user.entity';
 
 export class InitiatePaymentDto {
+  @IsUUID()
+  @IsNotEmpty()
   requestId: string;
+
+  @IsUUID()
+  @IsNotEmpty()
   quoteId: string;
+
+  @IsEnum(PaymentMethod)
+  @IsNotEmpty()
   paymentMethod: PaymentMethod;
+
+  @IsEnum(PaymentType)
+  @IsNotEmpty()
   paymentType: PaymentType;
+
+  @IsString()
+  @IsNotEmpty()
   phoneNumber: string;
 }
 
 export class PaymentFilters {
+  @IsOptional()
+  @IsEnum(PaymentStatus)
   status?: PaymentStatus;
+
+  @IsOptional()
+  @IsEnum(PaymentType)
   paymentType?: PaymentType;
+
+  @IsOptional()
+  @Type(() => Number)
+  @IsNumber()
+  @Min(1)
   page?: number;
+
+  @IsOptional()
+  @Type(() => Number)
+  @IsNumber()
+  @Min(1)
   limit?: number;
 }
 

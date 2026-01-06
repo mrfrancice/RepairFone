@@ -1,7 +1,7 @@
 import { Injectable, NotFoundException, BadRequestException, ForbiddenException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, In } from 'typeorm';
-import { IsOptional, IsString, IsNumber, IsUUID, IsEnum, IsDateString, IsArray, IsIn } from 'class-validator';
+import { IsOptional, IsString, IsNumber, IsUUID, IsEnum, IsDateString, IsArray, IsIn, IsNotEmpty, Min, Max } from 'class-validator';
 import { Type, Transform } from 'class-transformer';
 import { RepairRequest, RequestStatus, DeliveryMode } from './entities/repair-request.entity';
 import { RequestStatusHistory } from './entities/request-status-history.entity';
@@ -9,6 +9,7 @@ import { RepairerProfile } from '../users/entities/repairer-profile.entity';
 
 export class CreateRequestDto {
   @IsUUID()
+  @IsNotEmpty()
   repairerId: string;
 
   @IsOptional()
@@ -20,6 +21,7 @@ export class CreateRequestDto {
   serviceTypeId?: string;
 
   @IsString()
+  @IsNotEmpty()
   description: string;
 
   @IsOptional()
@@ -58,6 +60,7 @@ export class CreateRequestDto {
 
 export class UpdateRequestStatusDto {
   @IsEnum(RequestStatus)
+  @IsNotEmpty()
   status: RequestStatus;
 
   @IsOptional()
@@ -71,16 +74,19 @@ export class UpdateRequestStatusDto {
 
 export class RequestFilters {
   @IsOptional()
+  @IsString()
   status?: string | string[];
 
   @IsOptional()
   @Type(() => Number)
   @IsNumber()
+  @Min(1)
   page?: number;
 
   @IsOptional()
   @Type(() => Number)
   @IsNumber()
+  @Min(1)
   limit?: number;
 }
 

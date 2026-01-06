@@ -1,7 +1,7 @@
 import { Injectable, NotFoundException, BadRequestException, ForbiddenException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { IsOptional, IsNumber, IsString, IsEnum, IsArray, ValidateNested } from 'class-validator';
+import { IsOptional, IsNumber, IsString, IsEnum, IsArray, ValidateNested, IsUUID, Min, Max, IsNotEmpty } from 'class-validator';
 import { Type } from 'class-transformer';
 import { Review } from './entities/review.entity';
 import { StepRating, RatingStep, RatingCategory } from './entities/step-rating.entity';
@@ -10,11 +10,14 @@ import { RepairersService } from '../users/repairers.service';
 import { RequestStatus } from '../requests/entities/repair-request.entity';
 
 export class CreateReviewDto {
-  @IsString()
+  @IsUUID()
+  @IsNotEmpty()
   requestId: string;
 
   @IsNumber()
   @Type(() => Number)
+  @Min(1)
+  @Max(5)
   rating: number;
 
   @IsOptional()
@@ -26,30 +29,37 @@ export class ReviewFilters {
   @IsOptional()
   @Type(() => Number)
   @IsNumber()
+  @Min(1)
   page?: number;
 
   @IsOptional()
   @Type(() => Number)
   @IsNumber()
+  @Min(1)
   limit?: number;
 }
 
 // DTO pour une note individuelle par catégorie
 export class StepRatingItemDto {
   @IsEnum(RatingCategory)
+  @IsNotEmpty()
   category: RatingCategory;
 
   @IsNumber()
   @Type(() => Number)
-  rating: number; // -5 à 5
+  @Min(-5)
+  @Max(5)
+  rating: number; // -5 a 5
 }
 
-// DTO pour créer des notes par étape
+// DTO pour creer des notes par etape
 export class CreateStepRatingDto {
-  @IsString()
+  @IsUUID()
+  @IsNotEmpty()
   requestId: string;
 
   @IsEnum(RatingStep)
+  @IsNotEmpty()
   step: RatingStep;
 
   @IsArray()

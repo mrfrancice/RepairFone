@@ -8,10 +8,15 @@ import { AuthStore } from '../../../core/stores/auth.store';
   standalone: true,
   imports: [CommonModule, RouterLink, RouterLinkActive],
   template: `
-    <nav class="bottom-nav">
+    <nav class="bottom-nav" role="navigation" aria-label="Navigation principale">
       @if (!authStore.isAdmin() && !authStore.isRepairer()) {
-        <a routerLink="/search" routerLinkActive="active" class="nav-item nav-cta">
-          <span class="nav-icon-wrapper cta-search">
+        <a routerLink="/search"
+           routerLinkActive="active"
+           #searchLink="routerLinkActive"
+           class="nav-item nav-cta"
+           aria-label="Rechercher des reparateurs"
+           [attr.aria-current]="searchLink.isActive ? 'page' : null">
+          <span class="nav-icon-wrapper cta-search" aria-hidden="true">
             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
               <circle cx="11" cy="11" r="8"/>
               <path d="m21 21-4.35-4.35"/>
@@ -22,8 +27,13 @@ import { AuthStore } from '../../../core/stores/auth.store';
       }
 
       @if (!authStore.isAdmin()) {
-        <a routerLink="/requests" routerLinkActive="active" class="nav-item nav-cta">
-          <span class="nav-icon-wrapper cta-demande">
+        <a routerLink="/requests"
+           routerLinkActive="active"
+           #requestsLink="routerLinkActive"
+           class="nav-item nav-cta"
+           aria-label="Mes demandes de reparation"
+           [attr.aria-current]="requestsLink.isActive ? 'page' : null">
+          <span class="nav-icon-wrapper cta-demande" aria-hidden="true">
             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
               <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
               <polyline points="14 2 14 8 20 8"/>
@@ -36,8 +46,13 @@ import { AuthStore } from '../../../core/stores/auth.store';
       }
 
       @if (authStore.isAuthenticated()) {
-        <a routerLink="/profile" routerLinkActive="active" class="nav-item">
-          <span class="nav-icon-wrapper">
+        <a routerLink="/profile"
+           routerLinkActive="active"
+           #profileLink="routerLinkActive"
+           class="nav-item"
+           aria-label="Mon profil utilisateur"
+           [attr.aria-current]="profileLink.isActive ? 'page' : null">
+          <span class="nav-icon-wrapper" aria-hidden="true">
             <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
               <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
               <circle cx="12" cy="7" r="4"/>
@@ -46,8 +61,13 @@ import { AuthStore } from '../../../core/stores/auth.store';
           <span class="nav-label">Profil</span>
         </a>
       } @else {
-        <a routerLink="/auth/login" routerLinkActive="active" class="nav-item">
-          <span class="nav-icon-wrapper">
+        <a routerLink="/auth/login"
+           routerLinkActive="active"
+           #loginLink="routerLinkActive"
+           class="nav-item"
+           aria-label="Se connecter"
+           [attr.aria-current]="loginLink.isActive ? 'page' : null">
+          <span class="nav-icon-wrapper" aria-hidden="true">
             <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
               <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
               <path d="M7 11V7a5 5 0 0 1 10 0v4"/>

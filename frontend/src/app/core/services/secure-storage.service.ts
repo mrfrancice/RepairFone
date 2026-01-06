@@ -329,4 +329,5 @@ export enum StorageKeys {
   USER_PREFERENCES = 'prefs',
   RECENT_SEARCHES = 'searches',
   DEVICE_ID = 'device',
+  REMEMBER_PHONE = 'rememberPhone',
 }

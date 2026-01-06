@@ -5,13 +5,15 @@ import {
   EventEmitter,
   signal,
   OnInit,
-  OnDestroy,
   forwardRef,
   ChangeDetectionStrategy,
+  inject,
+  DestroyRef,
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule, ControlValueAccessor, NG_VALUE_ACCESSOR } from '@angular/forms';
-import { Subject, debounceTime, distinctUntilChanged, takeUntil } from 'rxjs';
+import { Subject, debounceTime, distinctUntilChanged } from 'rxjs';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 
 export interface SearchSuggestion {
   id: string;
@@ -393,7 +395,7 @@ export interface SearchSuggestion {
     }
   `],
 })
-export class UiSearchBarComponent implements OnInit, OnDestroy, ControlValueAccessor {
+export class UiSearchBarComponent implements OnInit, ControlValueAccessor {
   @Input() placeholder = 'Rechercher...';
   @Input() size: 'sm' | 'md' | 'lg' = 'md';
   @Input() disabled = false;
@@ -416,9 +418,10 @@ export class UiSearchBarComponent implements OnInit, OnDestroy, ControlValueAcce
   readonly isFocused = signal(false);
   readonly showDropdown = signal(false);
 
+  private readonly destroyRef = inject(DestroyRef);
+
   searchValue = '';
   private searchSubject = new Subject<string>();
-  private destroy$ = new Subject<void>();
   private onChange: (value: string) => void = () => {};
   private onTouched: () => void = () => {};
 
@@ -427,16 +430,11 @@ export class UiSearchBarComponent implements OnInit, OnDestroy, ControlValueAcce
       .pipe(
         debounceTime(this.debounceTime),
         distinctUntilChanged(),
-        takeUntil(this.destroy$)
+        takeUntilDestroyed(this.destroyRef)
       )
       .subscribe((value) => {
         this.search.emit(value);
       });
-  }
-
-  ngOnDestroy(): void {
-    this.destroy$.next();
-    this.destroy$.complete();
   }
 
   onInput(): void {

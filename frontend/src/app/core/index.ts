@@ -3,6 +3,7 @@ export * from './services/api.service';
 export * from './services/secure-storage.service';
 export * from './services/notification.service';
 export * from './services/toast.service';
+export * from './services/logger.service';
 
 // Core Stores
 export * from './stores/auth.store';

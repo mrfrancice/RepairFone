@@ -1,21 +1,49 @@
-import { Component, Input, Output, EventEmitter, ChangeDetectionStrategy } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import {
+  Component,
+  Input,
+  Output,
+  EventEmitter,
+  ChangeDetectionStrategy,
+  ElementRef,
+  OnChanges,
+  OnDestroy,
+  SimpleChanges,
+  ViewChild,
+  AfterViewInit,
+  inject,
+  PLATFORM_ID
+} from '@angular/core';
+import { CommonModule, isPlatformBrowser } from '@angular/common';
+import { A11yModule, FocusTrap, FocusTrapFactory } from '@angular/cdk/a11y';
 
 @Component({
   selector: 'ui-modal',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, A11yModule],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     @if (isOpen) {
-      <div class="modal-backdrop" (click)="onBackdropClick($event)">
-        <div class="modal" [class]="'modal-' + size" role="dialog" aria-modal="true">
+      <div class="modal-backdrop"
+           (click)="onBackdropClick($event)"
+           (keydown)="onKeyDown($event)"
+           role="presentation">
+        <div class="modal"
+             #modalElement
+             [class]="'modal-' + size"
+             role="dialog"
+             aria-modal="true"
+             [attr.aria-labelledby]="title ? modalTitleId : null"
+             [attr.aria-label]="!title ? ariaLabel : null"
+             tabindex="-1">
           <div class="modal-header">
             @if (title) {
-              <h2 class="modal-title">{{ title }}</h2>
+              <h2 class="modal-title" [id]="modalTitleId">{{ title }}</h2>
             }
             @if (closable) {
-              <button class="modal-close" (click)="close()">✕</button>
+              <button class="modal-close"
+                      (click)="close()"
+                      aria-label="Fermer la fenetre modale"
+                      type="button">✕</button>
             }
           </div>
 
@@ -125,14 +153,52 @@ import { CommonModule } from '@angular/common';
     }
   `]
 })
-export class UiModalComponent {
+export class UiModalComponent implements OnChanges, OnDestroy, AfterViewInit {
+  private readonly platformId = inject(PLATFORM_ID);
+  private readonly focusTrapFactory = inject(FocusTrapFactory);
+
   @Input() isOpen = false;
   @Input() title?: string;
   @Input() size: 'sm' | 'md' | 'lg' | 'xl' = 'md';
   @Input() closable = true;
   @Input() closeOnBackdrop = true;
+  @Input() ariaLabel = 'Fenetre modale';
 
   @Output() onClose = new EventEmitter<void>();
+
+  @ViewChild('modalElement') modalElement?: ElementRef<HTMLElement>;
+
+  /** Unique ID for the modal title element for aria-labelledby */
+  readonly modalTitleId = `modal-title-${Math.random().toString(36).substring(2, 9)}`;
+
+  private focusTrap: FocusTrap | null = null;
+  private previouslyFocusedElement: HTMLElement | null = null;
+
+  ngAfterViewInit(): void {
+    if (this.isOpen) {
+      this.setupFocusTrap();
+    }
+  }
+
+  ngOnChanges(changes: SimpleChanges): void {
+    if (changes['isOpen']) {
+      if (this.isOpen) {
+        // Store the currently focused element to restore later
+        if (isPlatformBrowser(this.platformId)) {
+          this.previouslyFocusedElement = document.activeElement as HTMLElement;
+        }
+        // Need to wait for the view to render before setting up focus trap
+        setTimeout(() => this.setupFocusTrap(), 0);
+      } else {
+        this.destroyFocusTrap();
+        this.restoreFocus();
+      }
+    }
+  }
+
+  ngOnDestroy(): void {
+    this.destroyFocusTrap();
+  }
 
   close(): void {
     this.onClose.emit();
@@ -141,6 +207,48 @@ export class UiModalComponent {
   onBackdropClick(event: MouseEvent): void {
     if (this.closeOnBackdrop && event.target === event.currentTarget) {
       this.close();
+    }
+  }
+
+  onKeyDown(event: KeyboardEvent): void {
+    if (event.key === 'Escape' && this.closable) {
+      event.preventDefault();
+      event.stopPropagation();
+      this.close();
+    }
+  }
+
+  private setupFocusTrap(): void {
+    if (!isPlatformBrowser(this.platformId) || !this.modalElement?.nativeElement) {
+      return;
+    }
+
+    // Create focus trap
+    this.focusTrap = this.focusTrapFactory.create(this.modalElement.nativeElement);
+
+    // Activate the focus trap and focus the first tabbable element
+    this.focusTrap.focusInitialElementWhenReady().then(focused => {
+      // If no focusable element was found, focus the modal container itself
+      if (!focused) {
+        this.modalElement?.nativeElement.focus();
+      }
+    });
+  }
+
+  private destroyFocusTrap(): void {
+    if (this.focusTrap) {
+      this.focusTrap.destroy();
+      this.focusTrap = null;
+    }
+  }
+
+  private restoreFocus(): void {
+    if (isPlatformBrowser(this.platformId) && this.previouslyFocusedElement) {
+      // Restore focus to the element that was focused before the modal opened
+      setTimeout(() => {
+        this.previouslyFocusedElement?.focus();
+        this.previouslyFocusedElement = null;
+      }, 0);
     }
   }
 }

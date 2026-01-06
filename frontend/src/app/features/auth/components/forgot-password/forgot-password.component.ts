@@ -1,9 +1,10 @@
-import { Component, inject, signal, ChangeDetectionStrategy } from '@angular/core';
+import { Component, inject, signal, ChangeDetectionStrategy, DestroyRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
 import { AuthService } from '../../services/auth.service';
 import { CustomValidators, getErrorMessage } from '../../../../shared/validators/custom-validators';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 
 type Step = 'phone' | 'otp' | 'password' | 'success';
 
@@ -569,6 +570,7 @@ export class ForgotPasswordComponent {
   private readonly authService = inject(AuthService);
   private readonly router = inject(Router);
   private readonly fb = inject(FormBuilder);
+  private readonly destroyRef = inject(DestroyRef);
 
   readonly currentStep = signal<Step>('phone');
   readonly isLoading = signal(false);
@@ -597,9 +599,11 @@ export class ForgotPasswordComponent {
   });
 
   constructor() {
-    this.passwordForm.get('password')?.valueChanges.subscribe(value => {
-      this.updatePasswordStrength(value);
-    });
+    this.passwordForm.get('password')?.valueChanges
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe(value => {
+        this.updatePasswordStrength(value);
+      });
   }
 
   isFieldInvalid(fieldName: string, form: FormGroup): boolean {

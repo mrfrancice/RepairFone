@@ -1,7 +1,7 @@
 import { Injectable, NotFoundException, BadRequestException, ForbiddenException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, FindOptionsWhere, DataSource } from 'typeorm';
-import { IsUUID, IsNumber, IsString, IsOptional, IsArray, ValidateNested, Min, IsInt } from 'class-validator';
+import { IsUUID, IsNumber, IsString, IsOptional, IsArray, ValidateNested, Min, IsInt, IsEnum, IsNotEmpty } from 'class-validator';
 import { Type } from 'class-transformer';
 import { Quote, QuoteStatus, QuotePart } from './entities/quote.entity';
 import { RepairRequest, RequestStatus } from '../requests/entities/repair-request.entity';
@@ -9,6 +9,7 @@ import { RepairerProfile } from '../users/entities/repairer-profile.entity';
 
 export class CreateQuotePartDto {
   @IsString()
+  @IsNotEmpty()
   name: string;
 
   @IsNumber()
@@ -26,6 +27,7 @@ export class CreateQuotePartDto {
 
 export class CreateQuoteDto {
   @IsUUID()
+  @IsNotEmpty()
   requestId: string;
 
   @IsNumber()
@@ -39,6 +41,7 @@ export class CreateQuoteDto {
   parts?: CreateQuotePartDto[];
 
   @IsString()
+  @IsNotEmpty()
   estimatedDuration: string;
 
   @IsOptional()
@@ -53,6 +56,7 @@ export class CreateQuoteDto {
 
 export class UpdateQuoteDto {
   @IsOptional()
+  @IsEnum(QuoteStatus)
   status?: QuoteStatus;
 
   @IsOptional()
@@ -77,14 +81,19 @@ export class UpdateQuoteDto {
 
 export class QuoteFilters {
   @IsOptional()
+  @IsEnum(QuoteStatus)
   status?: QuoteStatus;
 
   @IsOptional()
   @Type(() => Number)
+  @IsNumber()
+  @Min(1)
   page?: number;
 
   @IsOptional()
   @Type(() => Number)
+  @IsNumber()
+  @Min(1)
   limit?: number;
 }
 

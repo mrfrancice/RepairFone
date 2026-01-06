@@ -4,6 +4,7 @@ import { ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angula
 import { Router, RouterLink, ActivatedRoute } from '@angular/router';
 import { AuthService } from '../../services/auth.service';
 import { AuthStore } from '../../../../core/stores/auth.store';
+import { SecureStorageService, StorageKeys } from '../../../../core/services/secure-storage.service';
 import { CustomValidators, getErrorMessage } from '../../../../shared/validators/custom-validators';
 
 @Component({
@@ -436,6 +437,7 @@ export class LoginComponent implements OnInit {
   private readonly router = inject(Router);
   private readonly route = inject(ActivatedRoute);
   private readonly fb = inject(FormBuilder);
+  private readonly secureStorage = inject(SecureStorageService);
 
   readonly isLoading = this.authStore.isLoading;
   readonly error = signal<string | null>(null);
@@ -448,11 +450,33 @@ export class LoginComponent implements OnInit {
     rememberMe: [false]
   });
 
-  ngOnInit(): void {
+  async ngOnInit(): Promise<void> {
     // Check for success message from registration
     const message = this.route.snapshot.queryParams['message'];
     if (message) {
       this.successMessage.set(message);
+    }
+
+    // Load remembered phone number from secure storage
+    await this.loadRememberedPhone();
+  }
+
+  private async loadRememberedPhone(): Promise<void> {
+    try {
+      const rememberedPhone = await this.secureStorage.get<string>(StorageKeys.REMEMBER_PHONE);
+      if (rememberedPhone) {
+        // Format the phone number for display (XX XX XX XX XX)
+        let formatted = rememberedPhone;
+        if (formatted.length === 10) {
+          formatted = formatted.replace(/(\d{2})(\d{2})(\d{2})(\d{2})(\d{2})/, '$1 $2 $3 $4 $5');
+        }
+        this.loginForm.patchValue({
+          phone: formatted,
+          rememberMe: true
+        });
+      }
+    } catch (error) {
+      console.error('Failed to load remembered phone:', error);
     }
   }
 
@@ -520,11 +544,11 @@ export class LoginComponent implements OnInit {
 
       await this.authService.login(cleanPhone, password);
 
-      // Handle remember me
+      // Handle remember me with encrypted storage
       if (rememberMe) {
-        localStorage.setItem('rememberPhone', cleanPhone);
+        await this.secureStorage.set(StorageKeys.REMEMBER_PHONE, cleanPhone);
       } else {
-        localStorage.removeItem('rememberPhone');
+        this.secureStorage.remove(StorageKeys.REMEMBER_PHONE);
       }
 
       // Navigate to return URL or default based on role

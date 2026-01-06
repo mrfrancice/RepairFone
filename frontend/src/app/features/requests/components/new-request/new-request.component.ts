@@ -1,7 +1,8 @@
-import { Component, inject, signal, computed, OnInit } from '@angular/core';
+import { Component, inject, signal, computed, OnInit, OnDestroy, effect } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router, ActivatedRoute } from '@angular/router';
+import { Subject, debounceTime, takeUntil } from 'rxjs';
 import { RequestsService, CreateRequestDto, UrgencyLevel } from '../../services/requests.service';
 import { SearchService, Device, ServiceType, Repairer } from '../../../search/services/search.service';
 import { SearchStore } from '../../../search/stores/search.store';
@@ -9,6 +10,22 @@ import { UiImageUploadComponent, UploadedImage } from '../../../../shared/compon
 import { UiButtonComponent } from '../../../../shared/components/ui-button/ui-button.component';
 import { UiStepperComponent, StepConfig } from '../../../../shared/components/ui-stepper/ui-stepper.component';
 import { UiHeaderComponent } from '../../../../shared/components/ui-header/ui-header.component';
+
+interface DraftData {
+  step: number;
+  description: string;
+  preferredDate: string;
+  preferredTime: string;
+  clientAddress: string;
+  deliveryMode: 'in_shop' | 'at_home';
+  urgency: UrgencyLevel;
+  savedAt: string;
+  queryParams?: {
+    repairerId?: string;
+    serviceId?: string;
+    deviceId?: string;
+  };
+}
 
 interface RequestStep {
   id: string;
@@ -67,6 +84,7 @@ interface RequestStep {
                 <textarea
                   id="description"
                   [(ngModel)]="description"
+                  (ngModelChange)="onFormChange()"
                   placeholder="Ex: Mon écran est fissuré depuis une chute, l'écran tactile ne répond plus sur la partie droite..."
                   rows="5"
                   maxlength="1000"
@@ -109,13 +127,13 @@ interface RequestStep {
                 <label>Mode de service <span class="required">*</span></label>
                 <div class="option-cards">
                   <label class="option-card" [class.selected]="deliveryMode === 'in_shop'">
-                    <input type="radio" name="deliveryMode" value="in_shop" [(ngModel)]="deliveryMode" />
+                    <input type="radio" name="deliveryMode" value="in_shop" [(ngModel)]="deliveryMode" (ngModelChange)="onFormChange()" />
                     <span class="option-icon">🏪</span>
                     <span class="option-title">En boutique</span>
                     <span class="option-desc">Je me déplace chez le réparateur</span>
                   </label>
                   <label class="option-card" [class.selected]="deliveryMode === 'at_home'">
-                    <input type="radio" name="deliveryMode" value="at_home" [(ngModel)]="deliveryMode" />
+                    <input type="radio" name="deliveryMode" value="at_home" [(ngModel)]="deliveryMode" (ngModelChange)="onFormChange()" />
                     <span class="option-icon">🏠</span>
                     <span class="option-title">À domicile</span>
                     <span class="option-desc">Le réparateur vient chez moi</span>
@@ -135,6 +153,7 @@ interface RequestStep {
                       type="text"
                       id="address"
                       [(ngModel)]="clientAddress"
+                      (ngModelChange)="onFormChange()"
                       placeholder="Votre adresse complète"
                       class="form-input"
                       [class.invalid]="addressTouched && !clientAddress"
@@ -162,6 +181,7 @@ interface RequestStep {
                     type="date"
                     id="preferredDate"
                     [(ngModel)]="preferredDate"
+                    (ngModelChange)="onFormChange()"
                     [min]="minDate"
                     class="form-input"
                   />
@@ -169,7 +189,7 @@ interface RequestStep {
 
                 <div class="form-group">
                   <label for="preferredTime">Créneau horaire</label>
-                  <select id="preferredTime" [(ngModel)]="preferredTime" class="form-input">
+                  <select id="preferredTime" [(ngModel)]="preferredTime" (ngModelChange)="onFormChange()" class="form-input">
                     <option value="">Flexible</option>
                     <option value="08:00-10:00">08h00 - 10h00</option>
                     <option value="10:00-12:00">10h00 - 12h00</option>
@@ -185,7 +205,7 @@ interface RequestStep {
                 <label>Niveau d'urgence</label>
                 <div class="urgency-options">
                   <label class="urgency-option" [class.selected]="urgency === 'normal'">
-                    <input type="radio" name="urgency" value="normal" [(ngModel)]="urgency" />
+                    <input type="radio" name="urgency" value="normal" [(ngModel)]="urgency" (ngModelChange)="onFormChange()" />
                     <div class="urgency-content">
                       <span class="urgency-icon">🕐</span>
                       <div class="urgency-info">
@@ -196,7 +216,7 @@ interface RequestStep {
                     </div>
                   </label>
                   <label class="urgency-option express" [class.selected]="urgency === 'express'">
-                    <input type="radio" name="urgency" value="express" [(ngModel)]="urgency" />
+                    <input type="radio" name="urgency" value="express" [(ngModel)]="urgency" (ngModelChange)="onFormChange()" />
                     <div class="urgency-content">
                       <span class="urgency-icon">⚡</span>
                       <div class="urgency-info">
@@ -379,13 +399,33 @@ interface RequestStep {
         </div>
       }
 
+      <!-- Draft Resume Modal -->
+      @if (showDraftDialog()) {
+        <div class="modal-overlay" (click)="discardDraft()">
+          <div class="modal-content draft-modal" (click)="$event.stopPropagation()">
+            <div class="draft-icon">📝</div>
+            <h2>Reprendre le brouillon ?</h2>
+            <p>Vous avez un brouillon sauvegarde le {{ draftSavedAt() }}</p>
+            <p class="draft-hint">Souhaitez-vous reprendre votre demande ou recommencer ?</p>
+            <div class="modal-actions">
+              <ui-button variant="outline" (click)="discardDraft()">
+                Recommencer
+              </ui-button>
+              <ui-button variant="primary" (click)="loadDraft()">
+                Reprendre le brouillon
+              </ui-button>
+            </div>
+          </div>
+        </div>
+      }
+
       <!-- Success Modal -->
       @if (showSuccessModal()) {
         <div class="modal-overlay" (click)="closeSuccessModal()">
           <div class="modal-content success-modal" (click)="$event.stopPropagation()">
             <div class="success-icon">✅</div>
-            <h2>Demande envoyée !</h2>
-            <p>Pour suivre votre demande et sécuriser l'échange, entrez votre numéro</p>
+            <h2>Demande envoyee !</h2>
+            <p>Pour suivre votre demande et securiser l'echange, entrez votre numero</p>
             <div class="success-info">
               <div class="info-item">
                 <span class="info-icon">📱</span>
@@ -393,11 +433,11 @@ interface RequestStep {
               </div>
               <div class="info-item">
                 <span class="info-icon">🔒</span>
-                <span>Communication sécurisée</span>
+                <span>Communication securisee</span>
               </div>
               <div class="info-item">
                 <span class="info-icon">⏱️</span>
-                <span>Réponse sous 24-48h</span>
+                <span>Reponse sous 24-48h</span>
               </div>
             </div>
             <div class="modal-actions">
@@ -1053,14 +1093,49 @@ interface RequestStep {
     .modal-actions > * {
       flex: 1;
     }
+
+    /* Draft Modal */
+    .draft-modal {
+      text-align: center;
+    }
+
+    .draft-icon {
+      font-size: 3rem;
+      margin-bottom: 1rem;
+    }
+
+    .draft-modal h2 {
+      margin: 0 0 0.5rem;
+      font-size: 1.25rem;
+      color: #1f2937;
+    }
+
+    .draft-modal p {
+      margin: 0 0 0.5rem;
+      color: #666;
+      font-size: 0.875rem;
+    }
+
+    .draft-hint {
+      margin-bottom: 1.5rem !important;
+      color: #9ca3af !important;
+    }
   `],
 })
-export class NewRequestComponent implements OnInit {
+export class NewRequestComponent implements OnInit, OnDestroy {
   private readonly requestsService = inject(RequestsService);
   private readonly searchService = inject(SearchService);
   readonly store = inject(SearchStore);
   private readonly router = inject(Router);
   private readonly route = inject(ActivatedRoute);
+
+  // Draft auto-save
+  private readonly DRAFT_KEY = 'repair_request_draft';
+  private readonly DRAFT_MAX_AGE_HOURS = 24;
+  private readonly destroy$ = new Subject<void>();
+  private readonly saveSubject$ = new Subject<void>();
+  readonly showDraftDialog = signal(false);
+  readonly draftSavedAt = signal<string | null>(null);
 
   readonly device = signal<Device | null>(null);
   readonly serviceType = signal<ServiceType | null>(null);
@@ -1106,7 +1181,119 @@ export class NewRequestComponent implements OnInit {
   minDate = new Date().toISOString().split('T')[0];
 
   ngOnInit(): void {
+    // Setup debounced auto-save (1 second delay)
+    this.saveSubject$
+      .pipe(
+        debounceTime(1000),
+        takeUntil(this.destroy$)
+      )
+      .subscribe(() => this.saveDraft());
+
+    // Check for existing draft before loading data
+    this.checkForDraft();
     this.loadData();
+  }
+
+  ngOnDestroy(): void {
+    this.destroy$.next();
+    this.destroy$.complete();
+  }
+
+  // ===== Draft Management Methods =====
+
+  private checkForDraft(): void {
+    const savedDraft = localStorage.getItem(this.DRAFT_KEY);
+    if (savedDraft) {
+      try {
+        const draft: DraftData = JSON.parse(savedDraft);
+        const savedAt = new Date(draft.savedAt);
+        const now = new Date();
+        const hoursDiff = (now.getTime() - savedAt.getTime()) / (1000 * 60 * 60);
+
+        // Check if draft is less than 24 hours old
+        if (hoursDiff < this.DRAFT_MAX_AGE_HOURS) {
+          // Check if the draft matches current query params (same repairer/device/service)
+          const params = this.route.snapshot.queryParams;
+          const sameContext =
+            draft.queryParams?.repairerId === params['repairerId'] &&
+            draft.queryParams?.deviceId === params['deviceId'] &&
+            draft.queryParams?.serviceId === params['serviceId'];
+
+          if (sameContext && (draft.description || draft.clientAddress || draft.preferredDate)) {
+            this.draftSavedAt.set(this.formatDraftDate(savedAt));
+            this.showDraftDialog.set(true);
+          }
+        } else {
+          // Draft is too old, clear it
+          this.clearDraft();
+        }
+      } catch (e) {
+        console.error('Error parsing draft:', e);
+        this.clearDraft();
+      }
+    }
+  }
+
+  private formatDraftDate(date: Date): string {
+    return date.toLocaleString('fr-FR', {
+      day: 'numeric',
+      month: 'short',
+      hour: '2-digit',
+      minute: '2-digit'
+    });
+  }
+
+  private saveDraft(): void {
+    const params = this.route.snapshot.queryParams;
+    const draft: DraftData = {
+      step: this.currentStep(),
+      description: this.description,
+      preferredDate: this.preferredDate,
+      preferredTime: this.preferredTime,
+      clientAddress: this.clientAddress,
+      deliveryMode: this.deliveryMode,
+      urgency: this.urgency,
+      savedAt: new Date().toISOString(),
+      queryParams: {
+        repairerId: params['repairerId'],
+        deviceId: params['deviceId'],
+        serviceId: params['serviceId']
+      }
+    };
+    localStorage.setItem(this.DRAFT_KEY, JSON.stringify(draft));
+  }
+
+  loadDraft(): void {
+    const savedDraft = localStorage.getItem(this.DRAFT_KEY);
+    if (savedDraft) {
+      try {
+        const draft: DraftData = JSON.parse(savedDraft);
+        this.description = draft.description || '';
+        this.preferredDate = draft.preferredDate || '';
+        this.preferredTime = draft.preferredTime || '';
+        this.clientAddress = draft.clientAddress || '';
+        this.deliveryMode = draft.deliveryMode || 'in_shop';
+        this.urgency = draft.urgency || 'normal';
+        this.currentStep.set(draft.step || 0);
+      } catch (e) {
+        console.error('Error loading draft:', e);
+      }
+    }
+    this.showDraftDialog.set(false);
+  }
+
+  discardDraft(): void {
+    this.clearDraft();
+    this.showDraftDialog.set(false);
+  }
+
+  private clearDraft(): void {
+    localStorage.removeItem(this.DRAFT_KEY);
+  }
+
+  // Trigger debounced save on form input changes
+  onFormChange(): void {
+    this.saveSubject$.next();
   }
 
   async loadData(): Promise<void> {
@@ -1213,12 +1400,14 @@ export class NewRequestComponent implements OnInit {
   nextStep(): void {
     if (this.canProceed() && this.currentStep() < 2) {
       this.currentStep.update(s => s + 1);
+      this.saveDraft(); // Save draft on step change
     }
   }
 
   previousStep(): void {
     if (this.currentStep() > 0) {
       this.currentStep.update(s => s - 1);
+      this.saveDraft(); // Save draft on step change
     }
   }
 
@@ -1311,6 +1500,7 @@ export class NewRequestComponent implements OnInit {
 
       const request = await this.requestsService.createRequest(dto);
       this.createdRequestId = request.id;
+      this.clearDraft(); // Clear draft on successful submission
       this.showSuccessModal.set(true);
     } catch (err: any) {
       this.error.set(err.message || 'Erreur lors de l\'envoi de la demande');

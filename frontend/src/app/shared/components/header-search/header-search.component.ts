@@ -5,11 +5,13 @@ import {
   EventEmitter,
   signal,
   OnInit,
-  OnDestroy,
+  inject,
+  DestroyRef,
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { Subject, debounceTime, distinctUntilChanged, takeUntil } from 'rxjs';
+import { Subject, debounceTime, distinctUntilChanged } from 'rxjs';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 
 @Component({
   selector: 'app-header-search',
@@ -104,7 +106,7 @@ import { Subject, debounceTime, distinctUntilChanged, takeUntil } from 'rxjs';
     }
   `],
 })
-export class HeaderSearchComponent implements OnInit, OnDestroy {
+export class HeaderSearchComponent implements OnInit {
   @Input() placeholder = 'Rechercher...';
   @Input() debounceMs = 300;
 
@@ -114,25 +116,21 @@ export class HeaderSearchComponent implements OnInit, OnDestroy {
 
   readonly isFocused = signal(false);
 
+  private readonly destroyRef = inject(DestroyRef);
+
   searchValue = '';
   private searchSubject = new Subject<string>();
-  private destroy$ = new Subject<void>();
 
   ngOnInit(): void {
     this.searchSubject
       .pipe(
         debounceTime(this.debounceMs),
         distinctUntilChanged(),
-        takeUntil(this.destroy$)
+        takeUntilDestroyed(this.destroyRef)
       )
       .subscribe((value) => {
         this.search.emit(value);
       });
-  }
-
-  ngOnDestroy(): void {
-    this.destroy$.next();
-    this.destroy$.complete();
   }
 
   onInput(): void {

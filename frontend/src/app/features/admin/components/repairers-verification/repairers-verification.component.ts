@@ -1,4 +1,4 @@
-import { Component, inject, signal, OnInit } from '@angular/core';
+import { Component, inject, signal, OnInit, DestroyRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, Router } from '@angular/router';
 import { FormsModule } from '@angular/forms';
@@ -6,6 +6,7 @@ import { AdminService, RepairerForVerification, VerificationStats } from '../../
 import { AuthStore } from '../../../../core/stores/auth.store';
 import { NotificationBellComponent } from '../../../../shared/components/notification-bell/notification-bell.component';
 import { HeaderSearchComponent } from '../../../../shared/components/header-search/header-search.component';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 
 type StatusFilter = 'all' | 'pending' | 'under_review' | 'verified' | 'rejected' | 'suspended';
 
@@ -1566,6 +1567,7 @@ export class RepairersVerificationComponent implements OnInit {
   private readonly adminService = inject(AdminService);
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
+  private readonly destroyRef = inject(DestroyRef);
   readonly authStore = inject(AuthStore);
 
   readonly isLoading = signal(true);
@@ -1589,12 +1591,14 @@ export class RepairersVerificationComponent implements OnInit {
   suspendReason = '';
 
   ngOnInit(): void {
-    this.route.queryParams.subscribe((params) => {
-      if (params['status']) {
-        this.statusFilter.set(params['status'] as StatusFilter);
-      }
-      this.loadRepairers();
-    });
+    this.route.queryParams
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe((params) => {
+        if (params['status']) {
+          this.statusFilter.set(params['status'] as StatusFilter);
+        }
+        this.loadRepairers();
+      });
   }
 
   async loadRepairers(): Promise<void> {
