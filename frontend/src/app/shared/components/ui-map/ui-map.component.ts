@@ -10,7 +10,8 @@ import {
   ElementRef,
   ViewChild,
   AfterViewInit,
-  signal
+  signal,
+  ChangeDetectionStrategy
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 
@@ -36,6 +37,7 @@ export interface MapRoute {
   selector: 'ui-map',
   standalone: true,
   imports: [CommonModule],
+  changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <div class="map-wrapper" [style.height]="height">
       @if (isLoading()) {

@@ -1,4 +1,4 @@
-import { Component, inject, signal } from '@angular/core';
+import { Component, inject, signal, ChangeDetectionStrategy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
@@ -11,6 +11,7 @@ type Step = 'phone' | 'otp' | 'password' | 'success';
   selector: 'app-forgot-password',
   standalone: true,
   imports: [CommonModule, ReactiveFormsModule, RouterLink],
+  changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <div class="auth-container">
       <div class="auth-card">

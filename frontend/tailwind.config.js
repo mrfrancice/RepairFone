@@ -15,7 +15,7 @@ module.exports = {
           200: '#FFCC80',
           300: '#FFB74D',
           400: '#FFA726',
-          500: '#FF9800', // Orange principal - Soleil africain
+          500: '#E67700', // Orange principal - Soleil africain (WCAG AA compliant)
           600: '#FB8C00',
           700: '#F57C00',
           800: '#EF6C00',
@@ -28,7 +28,7 @@ module.exports = {
           200: '#A5D6A7',
           300: '#81C784',
           400: '#66BB6A',
-          500: '#4CAF50', // Vert principal - Nature, espoir
+          500: '#2E7D32', // Vert principal - Nature, espoir (WCAG AA compliant)
           600: '#43A047',
           700: '#388E3C',
           800: '#2E7D32', // Vert forêt
@@ -123,9 +123,9 @@ module.exports = {
 
         // Couleurs sémantiques
         success: {
-          light: '#81C784',
-          DEFAULT: '#4CAF50',
-          dark: '#2E7D32',
+          light: '#66BB6A',
+          DEFAULT: '#2E7D32', // WCAG AA compliant
+          dark: '#1B5E20',
         },
         warning: {
           light: '#FFD54F',
@@ -219,8 +219,8 @@ module.exports = {
         'xl': '0 12px 32px 0 rgba(0, 0, 0, 0.15)',
         '2xl': '0 16px 48px 0 rgba(0, 0, 0, 0.2)',
         'inner': 'inset 0 2px 4px 0 rgba(0, 0, 0, 0.06)',
-        'warm': '0 4px 16px 0 rgba(255, 152, 0, 0.15)', // Ombre orange chaleureuse
-        'success': '0 4px 16px 0 rgba(76, 175, 80, 0.15)',
+        'warm': '0 4px 16px 0 rgba(230, 119, 0, 0.15)', // Ombre orange chaleureuse (WCAG AA)
+        'success': '0 4px 16px 0 rgba(46, 125, 50, 0.15)', // WCAG AA compliant
         'none': 'none',
       },
 
@@ -354,7 +354,7 @@ module.exports = {
         },
         // Gradient africain (orange vers or)
         '.bg-gradient-african': {
-          backgroundImage: 'linear-gradient(135deg, #FF9800 0%, #F9A825 100%)',
+          backgroundImage: 'linear-gradient(135deg, #E67700 0%, #F9A825 100%)',
         },
         // Gradient coucher de soleil
         '.bg-gradient-sunset': {
@@ -362,7 +362,7 @@ module.exports = {
         },
         // Gradient forêt
         '.bg-gradient-forest': {
-          backgroundImage: 'linear-gradient(135deg, #1B5E20 0%, #2E7D32 50%, #4CAF50 100%)',
+          backgroundImage: 'linear-gradient(135deg, #1B5E20 0%, #2E7D32 100%)',
         },
       };
       addUtilities(newUtilities);

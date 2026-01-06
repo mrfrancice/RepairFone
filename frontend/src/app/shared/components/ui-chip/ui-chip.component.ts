@@ -3,6 +3,7 @@ import {
   Input,
   Output,
   EventEmitter,
+  ChangeDetectionStrategy,
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 

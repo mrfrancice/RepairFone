@@ -693,7 +693,6 @@ export class PaymentDetailComponent implements OnInit {
   }
 
   downloadReceipt(): void {
-    // In production, this would generate/download a PDF receipt
-    console.log('Downloading receipt for payment:', this.payment()?.id);
+    // TODO: In production, this would generate/download a PDF receipt
   }
 }

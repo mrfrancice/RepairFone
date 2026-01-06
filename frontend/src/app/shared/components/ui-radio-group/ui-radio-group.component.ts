@@ -6,6 +6,7 @@ import {
   forwardRef,
   signal,
   computed,
+  ChangeDetectionStrategy,
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ControlValueAccessor, NG_VALUE_ACCESSOR } from '@angular/forms';
@@ -25,6 +26,7 @@ export type RadioSize = 'sm' | 'md' | 'lg';
   selector: 'ui-radio-group',
   standalone: true,
   imports: [CommonModule],
+  changeDetection: ChangeDetectionStrategy.OnPush,
   providers: [
     {
       provide: NG_VALUE_ACCESSOR,

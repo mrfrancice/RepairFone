@@ -1,4 +1,4 @@
-import { Component, Input } from '@angular/core';
+import { Component, Input, ChangeDetectionStrategy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 
 export type BadgeVariant = 'default' | 'primary' | 'success' | 'warning' | 'danger' | 'info';
@@ -8,6 +8,7 @@ export type BadgeSize = 'sm' | 'md';
   selector: 'ui-badge',
   standalone: true,
   imports: [CommonModule],
+  changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <span class="badge" [class]="badgeClasses">
       @if (dot) {

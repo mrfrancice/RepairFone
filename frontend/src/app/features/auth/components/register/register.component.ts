@@ -2236,7 +2236,6 @@ export class RegisterComponent implements OnInit {
     let lastCity = this.registerForm.get('city')?.value || '';
     this.registerForm.get('city')?.valueChanges.subscribe(cityName => {
       if (cityName !== lastCity) {
-        console.log('City changed to:', cityName);
         lastCity = cityName;
         this.updateCommunesForCity(cityName);
         this.registerForm.patchValue({ commune: '', quarter: '' }, { emitEvent: false });
@@ -2247,7 +2246,6 @@ export class RegisterComponent implements OnInit {
     let lastCommune = '';
     this.registerForm.get('commune')?.valueChanges.subscribe(communeName => {
       if (communeName !== lastCommune) {
-        console.log('Commune changed to:', communeName);
         lastCommune = communeName;
         this.updateQuartersForCommune(communeName);
         this.registerForm.patchValue({ quarter: '' }, { emitEvent: false });
@@ -2386,8 +2384,6 @@ export class RegisterComponent implements OnInit {
   }
 
   getCurrentLocation(): void {
-    console.log('getCurrentLocation called');
-
     if (!navigator.geolocation) {
       this.locationError.set('La géolocalisation n\'est pas supportée par votre navigateur');
       console.error('Geolocation not supported');
@@ -2398,17 +2394,14 @@ export class RegisterComponent implements OnInit {
     const isSecure = window.location.protocol === 'https:' || window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
     if (!isSecure) {
       this.locationError.set('La géolocalisation nécessite une connexion sécurisée (HTTPS)');
-      console.error('Geolocation requires HTTPS');
       return;
     }
 
     this.isGettingLocation.set(true);
     this.locationError.set(null);
-    console.log('Requesting geolocation...');
 
     navigator.geolocation.getCurrentPosition(
       (position) => {
-        console.log('Geolocation success:', position.coords);
         this.registerForm.patchValue({
           latitude: position.coords.latitude,
           longitude: position.coords.longitude,

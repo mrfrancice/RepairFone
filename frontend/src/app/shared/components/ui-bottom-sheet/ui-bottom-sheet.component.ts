@@ -8,6 +8,7 @@ import {
   ElementRef,
   inject,
   OnDestroy,
+  ChangeDetectionStrategy,
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 
@@ -17,6 +18,7 @@ export type BottomSheetSize = 'auto' | 'half' | 'full';
   selector: 'ui-bottom-sheet',
   standalone: true,
   imports: [CommonModule],
+  changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     @if (isOpen) {
       <div class="bottom-sheet-overlay" (click)="onBackdropClick()" [@fadeIn]>

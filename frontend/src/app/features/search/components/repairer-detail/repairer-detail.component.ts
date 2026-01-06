@@ -1295,8 +1295,7 @@ export class RepairerDetailComponent implements OnInit {
   }
 
   contactRepairer(): void {
-    // In production, would open a chat or make a masked call
-    console.log('Contact repairer');
+    // TODO: In production, would open a chat or make a masked call
   }
 
   requestRepair(): void {

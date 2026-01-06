@@ -1309,8 +1309,6 @@ export class NewRequestComponent implements OnInit {
         dto.images = imageUrls;
       }
 
-      console.log('Sending DTO:', JSON.stringify(dto, null, 2));
-
       const request = await this.requestsService.createRequest(dto);
       this.createdRequestId = request.id;
       this.showSuccessModal.set(true);

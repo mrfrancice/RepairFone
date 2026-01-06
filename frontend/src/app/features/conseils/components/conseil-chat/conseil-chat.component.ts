@@ -504,7 +504,6 @@ export class ConseilChatComponent implements OnInit, AfterViewChecked {
 
   attachFile(): void {
     // TODO: Implement file attachment
-    console.log('Attach file clicked');
   }
 
   private scrollToBottom(): void {

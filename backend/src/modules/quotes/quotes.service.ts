@@ -1,6 +1,6 @@
 import { Injectable, NotFoundException, BadRequestException, ForbiddenException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository, FindOptionsWhere } from 'typeorm';
+import { Repository, FindOptionsWhere, DataSource } from 'typeorm';
 import { IsUUID, IsNumber, IsString, IsOptional, IsArray, ValidateNested, Min, IsInt } from 'class-validator';
 import { Type } from 'class-transformer';
 import { Quote, QuoteStatus, QuotePart } from './entities/quote.entity';
@@ -97,6 +97,7 @@ export class QuotesService {
     private readonly requestRepo: Repository<RepairRequest>,
     @InjectRepository(RepairerProfile)
     private readonly repairerRepo: Repository<RepairerProfile>,
+    private readonly dataSource: DataSource,
   ) {}
 
   async createQuote(repairerId: string, dto: CreateQuoteDto): Promise<Quote> {
@@ -252,34 +253,55 @@ export class QuotesService {
   }
 
   async acceptQuote(id: string, clientId: string): Promise<Quote> {
-    const quote = await this.findOne(id);
+    const queryRunner = this.dataSource.createQueryRunner();
+    await queryRunner.connect();
+    await queryRunner.startTransaction();
 
-    if (quote.request.clientId !== clientId) {
-      throw new ForbiddenException('Vous ne pouvez pas accepter ce devis');
+    try {
+      const quote = await queryRunner.manager.findOne(Quote, {
+        where: { id },
+        relations: ['request', 'request.client', 'request.device', 'request.serviceType', 'repairer', 'repairer.user'],
+      });
+
+      if (!quote) {
+        throw new NotFoundException('Devis non trouvé');
+      }
+
+      if (quote.request.clientId !== clientId) {
+        throw new ForbiddenException('Vous ne pouvez pas accepter ce devis');
+      }
+
+      if (quote.status !== QuoteStatus.PENDING) {
+        throw new BadRequestException('Ce devis ne peut plus être accepté');
+      }
+
+      if (new Date() > new Date(quote.validUntil)) {
+        quote.status = QuoteStatus.EXPIRED;
+        await queryRunner.manager.save(Quote, quote);
+        await queryRunner.commitTransaction();
+        throw new BadRequestException('Ce devis a expiré');
+      }
+
+      quote.status = QuoteStatus.ACCEPTED;
+      quote.acceptedAt = new Date();
+      await queryRunner.manager.save(Quote, quote);
+
+      // Update request status to ACCEPTED and set final price
+      await queryRunner.manager.update(RepairRequest, quote.requestId, {
+        status: RequestStatus.ACCEPTED,
+        acceptedAt: new Date(),
+        finalPrice: quote.totalAmount,
+      });
+
+      await queryRunner.commitTransaction();
+
+      return this.findOne(id);
+    } catch (error) {
+      await queryRunner.rollbackTransaction();
+      throw error;
+    } finally {
+      await queryRunner.release();
     }
-
-    if (quote.status !== QuoteStatus.PENDING) {
-      throw new BadRequestException('Ce devis ne peut plus être accepté');
-    }
-
-    if (new Date() > new Date(quote.validUntil)) {
-      quote.status = QuoteStatus.EXPIRED;
-      await this.quoteRepo.save(quote);
-      throw new BadRequestException('Ce devis a expiré');
-    }
-
-    quote.status = QuoteStatus.ACCEPTED;
-    quote.acceptedAt = new Date();
-    await this.quoteRepo.save(quote);
-
-    // Update request status to ACCEPTED and set final price
-    await this.requestRepo.update(quote.requestId, {
-      status: RequestStatus.ACCEPTED,
-      acceptedAt: new Date(),
-      finalPrice: quote.totalAmount,
-    });
-
-    return this.findOne(id);
   }
 
   async rejectQuote(

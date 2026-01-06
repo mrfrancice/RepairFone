@@ -1,6 +1,6 @@
 import { Injectable, NotFoundException, ForbiddenException, BadRequestException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository, FindOptionsWhere } from 'typeorm';
+import { Repository, FindOptionsWhere, DataSource } from 'typeorm';
 import { Payment, PaymentStatus, PaymentMethod, PaymentType } from './entities/payment.entity';
 import { Quote } from '../quotes/entities/quote.entity';
 import { RepairRequest } from '../requests/entities/repair-request.entity';
@@ -36,6 +36,7 @@ export class PaymentsService {
     private readonly requestRepo: Repository<RepairRequest>,
     @InjectRepository(RepairerProfile)
     private readonly repairerRepo: Repository<RepairerProfile>,
+    private readonly dataSource: DataSource,
   ) {}
 
   private generatePaymentNumber(): string {
@@ -45,65 +46,78 @@ export class PaymentsService {
   }
 
   async initiate(clientId: string, dto: InitiatePaymentDto): Promise<Payment> {
-    const quote = await this.quoteRepo.findOne({
-      where: { id: dto.quoteId },
-      relations: ['request'],
-    });
+    const queryRunner = this.dataSource.createQueryRunner();
+    await queryRunner.connect();
+    await queryRunner.startTransaction();
 
-    if (!quote) {
-      throw new NotFoundException('Devis non trouvé');
-    }
-
-    if (quote.request.clientId !== clientId) {
-      throw new ForbiddenException('Vous ne pouvez pas payer ce devis');
-    }
-
-    // Calculate amounts
-    const quoteAmount = Number(quote.totalAmount);
-    const platformFee = Math.round(quoteAmount * (this.PLATFORM_FEE_PERCENT / 100));
-    let amount: number;
-
-    if (dto.paymentType === PaymentType.DEPOSIT) {
-      amount = Math.round((quoteAmount + platformFee) * (this.DEPOSIT_PERCENT / 100));
-    } else if (dto.paymentType === PaymentType.BALANCE) {
-      // Get existing deposit payment
-      const depositPayment = await this.paymentRepo.findOne({
-        where: { quoteId: dto.quoteId, paymentType: PaymentType.DEPOSIT, status: PaymentStatus.COMPLETED },
+    try {
+      const quote = await queryRunner.manager.findOne(Quote, {
+        where: { id: dto.quoteId },
+        relations: ['request'],
       });
-      if (!depositPayment) {
-        throw new BadRequestException('Aucun acompte trouvé');
+
+      if (!quote) {
+        throw new NotFoundException('Devis non trouvé');
       }
-      amount = quoteAmount + platformFee - Number(depositPayment.amount);
-    } else {
-      amount = quoteAmount + platformFee;
+
+      if (quote.request.clientId !== clientId) {
+        throw new ForbiddenException('Vous ne pouvez pas payer ce devis');
+      }
+
+      // Calculate amounts
+      const quoteAmount = Number(quote.totalAmount);
+      const platformFee = Math.round(quoteAmount * (this.PLATFORM_FEE_PERCENT / 100));
+      let amount: number;
+
+      if (dto.paymentType === PaymentType.DEPOSIT) {
+        amount = Math.round((quoteAmount + platformFee) * (this.DEPOSIT_PERCENT / 100));
+      } else if (dto.paymentType === PaymentType.BALANCE) {
+        // Get existing deposit payment
+        const depositPayment = await queryRunner.manager.findOne(Payment, {
+          where: { quoteId: dto.quoteId, paymentType: PaymentType.DEPOSIT, status: PaymentStatus.COMPLETED },
+        });
+        if (!depositPayment) {
+          throw new BadRequestException('Aucun acompte trouvé');
+        }
+        amount = quoteAmount + platformFee - Number(depositPayment.amount);
+      } else {
+        amount = quoteAmount + platformFee;
+      }
+
+      const repairerAmount = quoteAmount - (dto.paymentType === PaymentType.FULL ? 0 : Math.round(platformFee * (dto.paymentType === PaymentType.DEPOSIT ? this.DEPOSIT_PERCENT / 100 : (100 - this.DEPOSIT_PERCENT) / 100)));
+
+      const payment = queryRunner.manager.create(Payment, {
+        paymentNumber: this.generatePaymentNumber(),
+        requestId: dto.requestId,
+        quoteId: dto.quoteId,
+        clientId,
+        repairerId: quote.repairerId,
+        amount,
+        platformFee,
+        platformFeePercent: this.PLATFORM_FEE_PERCENT,
+        repairerAmount: dto.paymentType === PaymentType.FULL ? quoteAmount : repairerAmount,
+        paymentType: dto.paymentType,
+        paymentMethod: dto.paymentMethod,
+        phoneNumber: dto.phoneNumber,
+        status: PaymentStatus.PENDING,
+      });
+
+      const savedPayment = await queryRunner.manager.save(Payment, payment);
+
+      // In production, here you would call the payment provider API
+      // For now, set to processing
+      savedPayment.status = PaymentStatus.PROCESSING;
+      await queryRunner.manager.save(Payment, savedPayment);
+
+      await queryRunner.commitTransaction();
+
+      return this.findOne(savedPayment.id, clientId, UserRole.CLIENT);
+    } catch (error) {
+      await queryRunner.rollbackTransaction();
+      throw error;
+    } finally {
+      await queryRunner.release();
     }
-
-    const repairerAmount = quoteAmount - (dto.paymentType === PaymentType.FULL ? 0 : Math.round(platformFee * (dto.paymentType === PaymentType.DEPOSIT ? this.DEPOSIT_PERCENT / 100 : (100 - this.DEPOSIT_PERCENT) / 100)));
-
-    const payment = this.paymentRepo.create({
-      paymentNumber: this.generatePaymentNumber(),
-      requestId: dto.requestId,
-      quoteId: dto.quoteId,
-      clientId,
-      repairerId: quote.repairerId,
-      amount,
-      platformFee,
-      platformFeePercent: this.PLATFORM_FEE_PERCENT,
-      repairerAmount: dto.paymentType === PaymentType.FULL ? quoteAmount : repairerAmount,
-      paymentType: dto.paymentType,
-      paymentMethod: dto.paymentMethod,
-      phoneNumber: dto.phoneNumber,
-      status: PaymentStatus.PENDING,
-    });
-
-    const savedPayment = await this.paymentRepo.save(payment);
-
-    // In production, here you would call the payment provider API
-    // For now, set to processing
-    savedPayment.status = PaymentStatus.PROCESSING;
-    await this.paymentRepo.save(savedPayment);
-
-    return this.findOne(savedPayment.id, clientId, UserRole.CLIENT);
   }
 
   async findOne(id: string, userId: string, userRole: UserRole): Promise<Payment> {
@@ -171,58 +185,84 @@ export class PaymentsService {
   }
 
   async verify(paymentId: string, clientId: string, otp?: string): Promise<Payment> {
-    const payment = await this.paymentRepo.findOne({
-      where: { id: paymentId },
-    });
+    const queryRunner = this.dataSource.createQueryRunner();
+    await queryRunner.connect();
+    await queryRunner.startTransaction();
 
-    if (!payment) {
-      throw new NotFoundException('Paiement non trouvé');
+    try {
+      const payment = await queryRunner.manager.findOne(Payment, {
+        where: { id: paymentId },
+      });
+
+      if (!payment) {
+        throw new NotFoundException('Paiement non trouvé');
+      }
+
+      if (payment.clientId !== clientId) {
+        throw new ForbiddenException('Accès non autorisé');
+      }
+
+      if (payment.status !== PaymentStatus.PROCESSING) {
+        throw new BadRequestException('Ce paiement ne peut pas être vérifié');
+      }
+
+      // In production, verify OTP with payment provider
+      // For demo, just mark as completed
+      payment.status = PaymentStatus.COMPLETED;
+      payment.paidAt = new Date();
+      payment.transactionRef = `TXN-${Date.now()}`;
+
+      await queryRunner.manager.save(Payment, payment);
+
+      await queryRunner.commitTransaction();
+
+      return this.findOne(paymentId, clientId, UserRole.CLIENT);
+    } catch (error) {
+      await queryRunner.rollbackTransaction();
+      throw error;
+    } finally {
+      await queryRunner.release();
     }
-
-    if (payment.clientId !== clientId) {
-      throw new ForbiddenException('Accès non autorisé');
-    }
-
-    if (payment.status !== PaymentStatus.PROCESSING) {
-      throw new BadRequestException('Ce paiement ne peut pas être vérifié');
-    }
-
-    // In production, verify OTP with payment provider
-    // For demo, just mark as completed
-    payment.status = PaymentStatus.COMPLETED;
-    payment.paidAt = new Date();
-    payment.transactionRef = `TXN-${Date.now()}`;
-
-    await this.paymentRepo.save(payment);
-
-    return this.findOne(paymentId, clientId, UserRole.CLIENT);
   }
 
   async requestRefund(paymentId: string, clientId: string, reason: string): Promise<Payment> {
-    const payment = await this.paymentRepo.findOne({
-      where: { id: paymentId },
-    });
+    const queryRunner = this.dataSource.createQueryRunner();
+    await queryRunner.connect();
+    await queryRunner.startTransaction();
 
-    if (!payment) {
-      throw new NotFoundException('Paiement non trouvé');
+    try {
+      const payment = await queryRunner.manager.findOne(Payment, {
+        where: { id: paymentId },
+      });
+
+      if (!payment) {
+        throw new NotFoundException('Paiement non trouvé');
+      }
+
+      if (payment.clientId !== clientId) {
+        throw new ForbiddenException('Accès non autorisé');
+      }
+
+      if (payment.status !== PaymentStatus.COMPLETED) {
+        throw new BadRequestException('Ce paiement ne peut pas être remboursé');
+      }
+
+      // Block payment pending refund review
+      payment.status = PaymentStatus.BLOCKED;
+      payment.blockedAt = new Date();
+      payment.blockReason = `Demande de remboursement: ${reason}`;
+
+      await queryRunner.manager.save(Payment, payment);
+
+      await queryRunner.commitTransaction();
+
+      return this.findOne(paymentId, clientId, UserRole.CLIENT);
+    } catch (error) {
+      await queryRunner.rollbackTransaction();
+      throw error;
+    } finally {
+      await queryRunner.release();
     }
-
-    if (payment.clientId !== clientId) {
-      throw new ForbiddenException('Accès non autorisé');
-    }
-
-    if (payment.status !== PaymentStatus.COMPLETED) {
-      throw new BadRequestException('Ce paiement ne peut pas être remboursé');
-    }
-
-    // Block payment pending refund review
-    payment.status = PaymentStatus.BLOCKED;
-    payment.blockedAt = new Date();
-    payment.blockReason = `Demande de remboursement: ${reason}`;
-
-    await this.paymentRepo.save(payment);
-
-    return this.findOne(paymentId, clientId, UserRole.CLIENT);
   }
 
   // Simulate successful payment (for demo purposes)

@@ -1,6 +1,7 @@
 import {
   Component,
   Input,
+  ChangeDetectionStrategy,
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 
@@ -11,6 +12,7 @@ export type PriceVariant = 'default' | 'primary' | 'success' | 'danger' | 'muted
   selector: 'ui-price-display',
   standalone: true,
   imports: [CommonModule],
+  changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <span
       class="price-display"

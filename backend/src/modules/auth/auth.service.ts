@@ -9,7 +9,8 @@ import { ConfigService } from '@nestjs/config';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, MoreThan } from 'typeorm';
 import * as bcrypt from 'bcrypt';
-import { IsString, IsNotEmpty, IsOptional, IsEnum, MinLength } from 'class-validator';
+import { IsString, IsNotEmpty, IsOptional, IsEnum } from 'class-validator';
+import { IsStrongPassword } from '../../common/validators/password.validator';
 import { UsersService } from '../users/users.service';
 import { RepairersService } from '../users/repairers.service';
 import { User, UserRole } from '../users/entities/user.entity';
@@ -60,7 +61,9 @@ export class RegisterDto {
 
   @IsString()
   @IsNotEmpty()
-  @MinLength(6)
+  @IsStrongPassword({
+    message: 'Le mot de passe doit contenir au moins 8 caractères, une majuscule, une minuscule, un chiffre et un caractère spécial',
+  })
   password: string;
 
   @IsString()

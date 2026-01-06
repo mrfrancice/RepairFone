@@ -256,8 +256,6 @@ export class NotificationService {
       await firstValueFrom(
         this.api.post<void>('/notifications/subscribe', payload)
       );
-
-      console.log('Push subscription successful');
     } catch (err) {
       console.error('Error subscribing to push:', err);
       throw err;
@@ -283,7 +281,6 @@ export class NotificationService {
       }
 
       this.pushEnabled.set(false);
-      console.log('Push unsubscription successful');
     } catch (err) {
       console.error('Error unsubscribing from push:', err);
     }

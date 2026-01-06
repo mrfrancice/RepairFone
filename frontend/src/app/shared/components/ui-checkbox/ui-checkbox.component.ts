@@ -4,6 +4,7 @@ import {
   Output,
   EventEmitter,
   forwardRef,
+  ChangeDetectionStrategy,
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ControlValueAccessor, NG_VALUE_ACCESSOR } from '@angular/forms';
@@ -14,6 +15,7 @@ export type CheckboxSize = 'sm' | 'md' | 'lg';
   selector: 'ui-checkbox',
   standalone: true,
   imports: [CommonModule],
+  changeDetection: ChangeDetectionStrategy.OnPush,
   providers: [
     {
       provide: NG_VALUE_ACCESSOR,

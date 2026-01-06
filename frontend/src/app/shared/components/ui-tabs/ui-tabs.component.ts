@@ -1,4 +1,4 @@
-import { Component, Input, Output, EventEmitter } from '@angular/core';
+import { Component, Input, Output, EventEmitter, ChangeDetectionStrategy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { TabItem } from '../../models';
 
@@ -6,6 +6,7 @@ import { TabItem } from '../../models';
   selector: 'ui-tabs',
   standalone: true,
   imports: [CommonModule],
+  changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <div class="tabs">
       @for (tab of tabs; track tab.id) {

@@ -98,7 +98,6 @@ export class ChatService implements OnDestroy {
       this.ws = new WebSocket(wsUrl);
 
       this.ws.onopen = () => {
-        console.log('WebSocket connected');
         this.isConnected.set(true);
         this.isConnecting.set(false);
         this.reconnectAttempts = 0;
@@ -117,7 +116,6 @@ export class ChatService implements OnDestroy {
       };
 
       this.ws.onclose = (event) => {
-        console.log('WebSocket closed:', event.code, event.reason);
         this.isConnected.set(false);
         this.isConnecting.set(false);
         this.stopPingInterval();
@@ -166,8 +164,6 @@ export class ChatService implements OnDestroy {
   private scheduleReconnect(token: string): void {
     this.reconnectAttempts++;
     const delay = Math.min(1000 * Math.pow(2, this.reconnectAttempts), 30000);
-
-    console.log(`Reconnecting in ${delay}ms (attempt ${this.reconnectAttempts})`);
 
     this.reconnectTimeout = setTimeout(() => {
       this.connect(token);

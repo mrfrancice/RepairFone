@@ -1,4 +1,4 @@
-import { Component, inject } from '@angular/core';
+import { Component, inject, ChangeDetectionStrategy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ToastService, Toast, ToastType } from '../../../core/services/toast.service';
 
@@ -6,6 +6,7 @@ import { ToastService, Toast, ToastType } from '../../../core/services/toast.ser
   selector: 'app-toast-container',
   standalone: true,
   imports: [CommonModule],
+  changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <div class="toast-container" aria-live="polite" aria-atomic="true">
       @for (toast of toastService.toasts(); track toast.id) {

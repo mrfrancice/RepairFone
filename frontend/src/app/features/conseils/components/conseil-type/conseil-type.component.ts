@@ -1,4 +1,4 @@
-import { Component, inject, signal } from '@angular/core';
+import { Component, inject, signal, ChangeDetectionStrategy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
 import { ConseilsService } from '../../services/conseils.service';
@@ -9,6 +9,7 @@ import { ConseilType, ConseilFormat } from '../../../../shared/models';
   selector: 'app-conseil-type',
   standalone: true,
   imports: [CommonModule],
+  changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <div class="conseil-container">
       <header class="conseil-header">

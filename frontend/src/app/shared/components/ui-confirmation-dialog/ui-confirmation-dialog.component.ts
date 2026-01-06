@@ -5,6 +5,7 @@ import {
   EventEmitter,
   Injectable,
   signal,
+  ChangeDetectionStrategy,
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 
@@ -53,6 +54,7 @@ export class ConfirmationService {
   selector: 'ui-confirmation-dialog',
   standalone: true,
   imports: [CommonModule],
+  changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     @if (isOpen()) {
       <div class="dialog-overlay" (click)="onBackdropClick()">

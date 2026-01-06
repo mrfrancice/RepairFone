@@ -7,6 +7,7 @@ import {
   UseGuards,
 } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
+import { Throttle } from '@nestjs/throttler';
 import { AuthService, RegisterDto, LoginDto } from './auth.service';
 import { Public } from '../../common/decorators/public.decorator';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
@@ -20,6 +21,7 @@ export class AuthController {
 
   @Post('register')
   @Public()
+  @Throttle({ default: { limit: 3, ttl: 60000 } })
   @ApiOperation({ summary: 'Register a new user' })
   async register(@Body() dto: RegisterDto) {
     return this.authService.register(dto);
@@ -27,6 +29,7 @@ export class AuthController {
 
   @Post('login')
   @Public()
+  @Throttle({ default: { limit: 5, ttl: 60000 } })
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'Login with phone and password' })
   async login(@Body() dto: LoginDto) {
@@ -35,6 +38,7 @@ export class AuthController {
 
   @Post('send-otp')
   @Public()
+  @Throttle({ default: { limit: 3, ttl: 60000 } })
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'Send OTP to phone number' })
   async sendOtp(@Body('phone') phone: string) {
@@ -43,6 +47,7 @@ export class AuthController {
 
   @Post('verify-otp')
   @Public()
+  @Throttle({ default: { limit: 5, ttl: 60000 } })
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'Verify OTP code' })
   async verifyOtp(

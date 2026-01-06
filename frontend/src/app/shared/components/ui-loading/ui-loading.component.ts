@@ -1,4 +1,4 @@
-import { Component, Input } from '@angular/core';
+import { Component, Input, ChangeDetectionStrategy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 
 export type LoadingSize = 'sm' | 'md' | 'lg';
@@ -7,6 +7,7 @@ export type LoadingSize = 'sm' | 'md' | 'lg';
   selector: 'ui-loading',
   standalone: true,
   imports: [CommonModule],
+  changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     @if (overlay) {
       <div class="loading-overlay">

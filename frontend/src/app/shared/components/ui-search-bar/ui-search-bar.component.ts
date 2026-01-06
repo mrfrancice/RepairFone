@@ -7,6 +7,7 @@ import {
   OnInit,
   OnDestroy,
   forwardRef,
+  ChangeDetectionStrategy,
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule, ControlValueAccessor, NG_VALUE_ACCESSOR } from '@angular/forms';
@@ -23,6 +24,7 @@ export interface SearchSuggestion {
   selector: 'ui-search-bar',
   standalone: true,
   imports: [CommonModule, FormsModule],
+  changeDetection: ChangeDetectionStrategy.OnPush,
   providers: [
     {
       provide: NG_VALUE_ACCESSOR,
