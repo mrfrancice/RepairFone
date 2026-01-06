@@ -1,0 +1,592 @@
+/**
+ * ============================================================================
+ * STYLES GLOBAUX - RepairFone
+ * ============================================================================
+ *
+ * Application de réparation de téléphones et ordinateurs
+ * Marché: Côte d'Ivoire (Abidjan)
+ * Design: Mobile-first, Touch-friendly, Couleurs africaines
+ * ============================================================================
+ */
+
+// ============================================================================
+// 1. IMPORTS SASS (@use doit être en premier)
+// ============================================================================
+
+@use 'styles/design-tokens.scss';
+@use 'styles/themes/repairfone-theme.scss';
+
+// ============================================================================
+// 2. IMPORTS TAILWIND CSS
+// ============================================================================
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+// ============================================================================
+// 4. IMPORTS GOOGLE FONTS
+// ============================================================================
+
+// Police principale: Inter (UI, corps de texte)
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+
+// Police titres: Poppins (headings)
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap');
+
+// Police monospace: JetBrains Mono (code, données)
+@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&display=swap');
+
+// Material Icons
+@import url('https://fonts.googleapis.com/icon?family=Material+Icons');
+
+// ============================================================================
+// 5. VARIABLES CSS GLOBALES
+// ============================================================================
+
+:root {
+  // Couleurs primaires
+  --color-primary: #FF9800;
+  --color-primary-dark: #E65100;
+  --color-primary-light: #FFB74D;
+
+  // Couleurs secondaires
+  --color-secondary: #4CAF50;
+  --color-secondary-dark: #2E7D32;
+  --color-secondary-light: #81C784;
+
+  // Couleurs tertiaires
+  --color-gold: #F9A825;
+  --color-ocean: #1565C0;
+  --color-terracotta: #C62828;
+  --color-mustard: #FFC107;
+
+  // Couleurs de fond (mode clair)
+  --bg-primary: #FAFAFA;
+  --bg-secondary: #FFF8E1;
+  --bg-surface: #FFFFFF;
+
+  // Couleurs de texte (mode clair)
+  --text-primary: rgba(0, 0, 0, 0.87);
+  --text-secondary: rgba(0, 0, 0, 0.60);
+  --text-disabled: rgba(0, 0, 0, 0.38);
+
+  // Bordures
+  --border-color: #E0E0E0;
+  --border-color-light: #EEEEEE;
+
+  // Ombres
+  --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+  --shadow: 0 2px 8px 0 rgba(0, 0, 0, 0.1);
+  --shadow-md: 0 4px 12px 0 rgba(0, 0, 0, 0.1);
+  --shadow-lg: 0 8px 24px 0 rgba(0, 0, 0, 0.12);
+
+  // Transitions
+  --transition-fast: 150ms cubic-bezier(0.4, 0, 0.2, 1);
+  --transition: 200ms cubic-bezier(0.4, 0, 0.2, 1);
+  --transition-slow: 300ms cubic-bezier(0.4, 0, 0.2, 1);
+
+  // Safe areas (pour notch)
+  --safe-area-inset-top: env(safe-area-inset-top, 0);
+  --safe-area-inset-bottom: env(safe-area-inset-bottom, 0);
+  --safe-area-inset-left: env(safe-area-inset-left, 0);
+  --safe-area-inset-right: env(safe-area-inset-right, 0);
+}
+
+// Variables mode sombre
+.dark {
+  --bg-primary: #1A1A2E;
+  --bg-secondary: #25293C;
+  --bg-surface: #2D3142;
+
+  --text-primary: rgba(255, 255, 255, 0.87);
+  --text-secondary: rgba(255, 255, 255, 0.60);
+  --text-disabled: rgba(255, 255, 255, 0.38);
+
+  --border-color: #424242;
+  --border-color-light: #2D3142;
+
+  --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.3);
+  --shadow: 0 2px 8px 0 rgba(0, 0, 0, 0.4);
+  --shadow-md: 0 4px 12px 0 rgba(0, 0, 0, 0.4);
+  --shadow-lg: 0 8px 24px 0 rgba(0, 0, 0, 0.5);
+}
+
+// ============================================================================
+// 6. RESET ET STYLES DE BASE
+// ============================================================================
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html {
+  font-size: 16px; // Base font size pour rem
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+}
+
+body {
+  font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  font-size: 1rem;
+  line-height: 1.5;
+  color: var(--text-primary);
+  background-color: var(--bg-primary);
+  overflow-x: hidden;
+  min-height: 100vh;
+  min-height: -webkit-fill-available;
+
+  // Optimisation tactile mobile
+  -webkit-tap-highlight-color: rgba(255, 152, 0, 0.1);
+  touch-action: manipulation;
+}
+
+// ============================================================================
+// 7. TYPOGRAPHIE
+// ============================================================================
+
+h1, h2, h3, h4, h5, h6 {
+  font-family: 'Poppins', 'Inter', sans-serif;
+  font-weight: 700;
+  line-height: 1.2;
+  color: var(--text-primary);
+  margin-bottom: 1rem;
+}
+
+h1 {
+  font-size: clamp(2rem, 5vw, 2.25rem);
+  letter-spacing: -0.025em;
+}
+
+h2 {
+  font-size: clamp(1.5rem, 4vw, 1.875rem);
+  letter-spacing: -0.02em;
+}
+
+h3 {
+  font-size: clamp(1.25rem, 3vw, 1.5rem);
+  letter-spacing: -0.015em;
+}
+
+h4 {
+  font-size: clamp(1.125rem, 2.5vw, 1.25rem);
+}
+
+h5 {
+  font-size: 1.125rem;
+}
+
+h6 {
+  font-size: 1rem;
+}
+
+p {
+  margin-bottom: 1rem;
+  line-height: 1.6;
+}
+
+a {
+  color: var(--color-primary);
+  text-decoration: none;
+  transition: color var(--transition-fast);
+
+  &:hover {
+    color: var(--color-primary-dark);
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--color-primary);
+    outline-offset: 2px;
+    border-radius: 0.25rem;
+  }
+}
+
+strong, b {
+  font-weight: 600;
+}
+
+small {
+  font-size: 0.875rem;
+}
+
+// ============================================================================
+// 8. CLASSES UTILITAIRES PERSONNALISÉES
+// ============================================================================
+
+// Container responsive
+.container {
+  width: 100%;
+  margin-left: auto;
+  margin-right: auto;
+  padding-left: 1rem;
+  padding-right: 1rem;
+
+  @media (min-width: 640px) {
+    max-width: 640px;
+    padding-left: 1.5rem;
+    padding-right: 1.5rem;
+  }
+
+  @media (min-width: 768px) {
+    max-width: 768px;
+  }
+
+  @media (min-width: 1024px) {
+    max-width: 1024px;
+  }
+
+  @media (min-width: 1280px) {
+    max-width: 1280px;
+  }
+}
+
+// Section avec safe areas
+.section {
+  padding: 2rem 1rem;
+  padding-top: calc(2rem + var(--safe-area-inset-top));
+  padding-bottom: calc(2rem + var(--safe-area-inset-bottom));
+
+  @media (min-width: 768px) {
+    padding: 3rem 1.5rem;
+  }
+}
+
+// Card moderne avec ombre africaine
+.card {
+  background-color: var(--bg-surface);
+  border-radius: 1rem;
+  padding: 1.5rem;
+  box-shadow: var(--shadow-md);
+  transition: box-shadow var(--transition);
+
+  &:hover {
+    box-shadow: var(--shadow-lg);
+  }
+}
+
+// Bouton touch-friendly
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 48px;
+  min-width: 48px;
+  padding: 0.75rem 1.5rem;
+  font-weight: 500;
+  font-size: 1rem;
+  line-height: 1.5;
+  text-align: center;
+  border-radius: 1rem;
+  border: none;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+
+  &:focus-visible {
+    outline: 2px solid var(--color-primary);
+    outline-offset: 2px;
+  }
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    pointer-events: none;
+  }
+}
+
+.btn-primary {
+  background-color: var(--color-primary);
+  color: white;
+
+  &:hover {
+    background-color: var(--color-primary-dark);
+    box-shadow: var(--shadow-md);
+  }
+
+  &:active {
+    transform: scale(0.98);
+  }
+}
+
+.btn-secondary {
+  background-color: var(--color-secondary);
+  color: white;
+
+  &:hover {
+    background-color: var(--color-secondary-dark);
+    box-shadow: var(--shadow-md);
+  }
+
+  &:active {
+    transform: scale(0.98);
+  }
+}
+
+.btn-outline {
+  background-color: transparent;
+  color: var(--color-primary);
+  border: 2px solid var(--color-primary);
+
+  &:hover {
+    background-color: var(--color-primary);
+    color: white;
+  }
+}
+
+// Gradient africain
+.gradient-african {
+  background: linear-gradient(135deg, #FF9800 0%, #F9A825 100%);
+}
+
+.gradient-sunset {
+  background: linear-gradient(135deg, #E65100 0%, #F9A825 50%, #FBC02D 100%);
+}
+
+.gradient-forest {
+  background: linear-gradient(135deg, #1B5E20 0%, #2E7D32 50%, #4CAF50 100%);
+}
+
+// Texte gradient
+.text-gradient-african {
+  background: linear-gradient(135deg, #FF9800 0%, #F9A825 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+// Badge
+.badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.25rem 0.75rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  border-radius: 9999px;
+  background-color: var(--color-primary);
+  color: white;
+}
+
+// Divider
+.divider {
+  height: 1px;
+  background-color: var(--border-color);
+  margin: 1.5rem 0;
+}
+
+// ============================================================================
+// 9. SCROLL OPTIMISÉ POUR MOBILE
+// ============================================================================
+
+.scroll-smooth {
+  scroll-behavior: smooth;
+  -webkit-overflow-scrolling: touch;
+}
+
+// Hide scrollbar mais garde la fonctionnalité
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+
+  &::-webkit-scrollbar {
+    display: none;
+  }
+}
+
+// Custom scrollbar (desktop)
+@media (min-width: 1024px) {
+  ::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+
+  ::-webkit-scrollbar-track {
+    background: var(--bg-secondary);
+  }
+
+  ::-webkit-scrollbar-thumb {
+    background: var(--color-primary);
+    border-radius: 9999px;
+
+    &:hover {
+      background: var(--color-primary-dark);
+    }
+  }
+}
+
+// ============================================================================
+// 10. ANIMATIONS
+// ============================================================================
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes slideUp {
+  from {
+    transform: translateY(20px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+@keyframes slideDown {
+  from {
+    transform: translateY(-20px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}
+
+.animate-fade-in {
+  animation: fadeIn 300ms ease-out;
+}
+
+.animate-slide-up {
+  animation: slideUp 300ms ease-out;
+}
+
+.animate-slide-down {
+  animation: slideDown 300ms ease-out;
+}
+
+.animate-pulse {
+  animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+// ============================================================================
+// 11. ACCESSIBILITÉ
+// ============================================================================
+
+// Focus visible pour le clavier
+*:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
+}
+
+// Screen reader only
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border-width: 0;
+}
+
+// Reduced motion pour accessibilité
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+// ============================================================================
+// 12. PRINT STYLES
+// ============================================================================
+
+@media print {
+  *,
+  *::before,
+  *::after {
+    background: transparent !important;
+    color: #000 !important;
+    box-shadow: none !important;
+    text-shadow: none !important;
+  }
+
+  a,
+  a:visited {
+    text-decoration: underline;
+  }
+
+  img {
+    page-break-inside: avoid;
+  }
+
+  p,
+  h2,
+  h3 {
+    orphans: 3;
+    widows: 3;
+  }
+
+  h2,
+  h3 {
+    page-break-after: avoid;
+  }
+}
+
+// ============================================================================
+// 13. RESPONSIVE HELPERS
+// ============================================================================
+
+.mobile-only {
+  @media (min-width: 768px) {
+    display: none !important;
+  }
+}
+
+.desktop-only {
+  @media (max-width: 767px) {
+    display: none !important;
+  }
+}
+
+// ============================================================================
+// 14. SAFE AREA UTILITIES
+// ============================================================================
+
+.safe-top {
+  padding-top: var(--safe-area-inset-top);
+}
+
+.safe-bottom {
+  padding-bottom: var(--safe-area-inset-bottom);
+}
+
+.safe-left {
+  padding-left: var(--safe-area-inset-left);
+}
+
+.safe-right {
+  padding-right: var(--safe-area-inset-right);
+}
+
+.safe-area {
+  padding-top: var(--safe-area-inset-top);
+  padding-bottom: var(--safe-area-inset-bottom);
+  padding-left: var(--safe-area-inset-left);
+  padding-right: var(--safe-area-inset-right);
+}
