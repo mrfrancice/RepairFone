@@ -324,10 +324,9 @@ export type QuoteStatus = 'pending' | 'accepted' | 'rejected' | 'expired' | 'rev
 
 export interface QuotePart {
   name: string;
+  description?: string;
+  price: number;
   quantity: number;
-  unitPrice: number;
-  totalPrice: number;
-  isOriginal?: boolean;
 }
 
 export interface CreateQuoteDto {

@@ -24,8 +24,11 @@ export { UiMapComponent } from './components/ui-map/ui-map.component';
 export { UiPriceDisplayComponent } from './components/ui-price-display/ui-price-display.component';
 export { UiRadioGroupComponent } from './components/ui-radio-group/ui-radio-group.component';
 export { UiSliderComponent } from './components/ui-slider/ui-slider.component';
+export { UiSkeletonComponent } from './components/ui-skeleton/ui-skeleton.component';
+export type { SkeletonVariant } from './components/ui-skeleton/ui-skeleton.component';
 export { ToastContainerComponent } from './components/toast/toast-container.component';
 export { NotificationBellComponent } from './components/notification-bell/notification-bell.component';
+export { NetworkStatusComponent } from './components/network-status/network-status.component';
 
 // Shared Pipes
 export { RelativeTimePipe } from './pipes/relative-time.pipe';

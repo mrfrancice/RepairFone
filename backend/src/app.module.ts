@@ -2,7 +2,8 @@ import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { ThrottlerModule, ThrottlerGuard } from '@nestjs/throttler';
-import { APP_GUARD } from '@nestjs/core';
+import { ScheduleModule } from '@nestjs/schedule';
+import { APP_GUARD, APP_INTERCEPTOR } from '@nestjs/core';
 
 import configuration from './config/configuration';
 import { getDatabaseConfig } from './config/database.config';
@@ -12,6 +13,8 @@ import { AppService } from './app.service';
 
 import { JwtAuthGuard } from './common/guards/jwt-auth.guard';
 import { RolesGuard } from './common/guards/roles.guard';
+import { AuditModule } from './common/audit/audit.module';
+import { AuditInterceptor } from './common/interceptors/audit.interceptor';
 
 import { AuthModule } from './modules/auth/auth.module';
 import { UsersModule } from './modules/users/users.module';
@@ -56,6 +59,12 @@ import { SeederModule } from './database/seeders/seeder.module';
       inject: [ConfigService],
     }),
 
+    // Scheduling
+    ScheduleModule.forRoot(),
+
+    // Audit Logging
+    AuditModule,
+
     // Feature Modules
     AuthModule,
     UsersModule,
@@ -90,6 +99,11 @@ import { SeederModule } from './database/seeders/seeder.module';
     {
       provide: APP_GUARD,
       useClass: RolesGuard,
+    },
+    // Global Interceptors
+    {
+      provide: APP_INTERCEPTOR,
+      useClass: AuditInterceptor,
     },
   ],
 })
