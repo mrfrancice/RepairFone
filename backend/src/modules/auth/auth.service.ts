@@ -1,0 +1,317 @@
+import {
+  Injectable,
+  UnauthorizedException,
+  BadRequestException,
+  ConflictException,
+} from '@nestjs/common';
+import { JwtService } from '@nestjs/jwt';
+import { ConfigService } from '@nestjs/config';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository, MoreThan } from 'typeorm';
+import * as bcrypt from 'bcrypt';
+import { IsString, IsNotEmpty, IsOptional, IsEnum, MinLength } from 'class-validator';
+import { UsersService } from '../users/users.service';
+import { RepairersService } from '../users/repairers.service';
+import { User, UserRole } from '../users/entities/user.entity';
+import { OtpCode } from './entities/otp.entity';
+import { RefreshToken } from './entities/refresh-token.entity';
+
+export interface AuthTokens {
+  accessToken: string;
+  refreshToken: string;
+  expiresIn: number;
+}
+
+export class RepairerProfileDto {
+  // Personal identification
+  dateOfBirth?: string;
+  nationalIdNumber?: string;
+  personalAddress?: string;
+
+  // Business information
+  businessName: string;
+  description?: string;
+  businessType?: string;
+  rccmNumber?: string;
+  taxId?: string;
+  businessPhone?: string;
+  businessEmail?: string;
+
+  // Shop location
+  address: string;
+  city?: string;
+  commune?: string;
+  quarter?: string;
+  landmark?: string;
+  latitude?: number;
+  longitude?: number;
+
+  // Shop details
+  specialties?: string[];
+  yearsOfExperience?: number;
+  acceptsHomeService?: boolean;
+  homeServiceRadiusKm?: number;
+}
+
+export class RegisterDto {
+  @IsString()
+  @IsNotEmpty()
+  phone: string;
+
+  @IsString()
+  @IsNotEmpty()
+  @MinLength(6)
+  password: string;
+
+  @IsString()
+  @IsOptional()
+  firstName?: string;
+
+  @IsString()
+  @IsOptional()
+  lastName?: string;
+
+  @IsEnum(UserRole)
+  @IsOptional()
+  role?: UserRole;
+
+  // Repairer profile data (only for repairer role)
+  @IsOptional()
+  repairerProfile?: RepairerProfileDto;
+}
+
+export class LoginDto {
+  @IsString()
+  @IsNotEmpty()
+  phone: string;
+
+  @IsString()
+  @IsNotEmpty()
+  password: string;
+}
+
+@Injectable()
+export class AuthService {
+  constructor(
+    private readonly usersService: UsersService,
+    private readonly repairersService: RepairersService,
+    private readonly jwtService: JwtService,
+    private readonly configService: ConfigService,
+    @InjectRepository(OtpCode)
+    private readonly otpRepository: Repository<OtpCode>,
+    @InjectRepository(RefreshToken)
+    private readonly refreshTokenRepository: Repository<RefreshToken>,
+  ) {}
+
+  async register(dto: RegisterDto): Promise<{ user: User; message: string; devCode?: string }> {
+    // Check if phone already exists
+    const existingUser = await this.usersService.findByPhone(dto.phone);
+    if (existingUser) {
+      throw new ConflictException('Ce numéro de téléphone est déjà utilisé');
+    }
+
+    // Hash password
+    const passwordHash = await bcrypt.hash(dto.password, 12);
+
+    // Create user
+    const user = await this.usersService.create({
+      phone: dto.phone,
+      passwordHash,
+      firstName: dto.firstName,
+      lastName: dto.lastName,
+      role: dto.role || UserRole.CLIENT,
+    });
+
+    // Create repairer profile if role is repairer
+    if (dto.role === UserRole.REPAIRER && dto.repairerProfile) {
+      const profileData = dto.repairerProfile;
+      await this.repairersService.create(user.id, {
+        // Personal identification
+        dateOfBirth: profileData.dateOfBirth ? new Date(profileData.dateOfBirth) : undefined,
+        nationalIdNumber: profileData.nationalIdNumber,
+        personalAddress: profileData.personalAddress,
+
+        // Business information
+        businessName: profileData.businessName,
+        description: profileData.description,
+        businessType: profileData.businessType,
+        rccmNumber: profileData.rccmNumber,
+        taxId: profileData.taxId,
+        businessPhone: profileData.businessPhone,
+        businessEmail: profileData.businessEmail,
+
+        // Shop location
+        address: profileData.address,
+        city: profileData.city || 'Abidjan',
+        commune: profileData.commune,
+        quarter: profileData.quarter,
+        landmark: profileData.landmark,
+        latitude: profileData.latitude,
+        longitude: profileData.longitude,
+
+        // Shop details
+        specialties: profileData.specialties || [],
+        yearsOfExperience: profileData.yearsOfExperience,
+        acceptsHomeService: profileData.acceptsHomeService || false,
+        homeServiceRadiusKm: profileData.homeServiceRadiusKm || 10,
+      });
+    }
+
+    // Generate and send OTP
+    const otpResult = await this.generateOtp(dto.phone);
+
+    return {
+      user,
+      message: 'Compte créé. Veuillez vérifier votre téléphone avec le code OTP envoyé.',
+      ...(otpResult.devCode && { devCode: otpResult.devCode }),
+    };
+  }
+
+  async login(dto: LoginDto): Promise<AuthTokens> {
+    const user = await this.usersService.findByPhone(dto.phone);
+
+    if (!user) {
+      throw new UnauthorizedException('Identifiants incorrects');
+    }
+
+    const isPasswordValid = await bcrypt.compare(dto.password, user.passwordHash);
+    if (!isPasswordValid) {
+      throw new UnauthorizedException('Identifiants incorrects');
+    }
+
+    if (!user.isPhoneVerified) {
+      throw new UnauthorizedException('Veuillez d\'abord vérifier votre numéro de téléphone');
+    }
+
+    if (user.status === 'suspended') {
+      throw new UnauthorizedException('Votre compte est suspendu');
+    }
+
+    // Update last login
+    await this.usersService.updateLastLogin(user.id);
+
+    return this.generateTokens(user);
+  }
+
+  async generateOtp(phone: string): Promise<{ message: string; devCode?: string }> {
+    // Generate 6-digit code
+    const code = Math.floor(100000 + Math.random() * 900000).toString();
+
+    // Delete existing OTP for this phone
+    await this.otpRepository.delete({ phone });
+
+    // Create new OTP
+    const expirationMinutes = this.configService.get<number>('otp.expirationMinutes') || 5;
+    const otp = this.otpRepository.create({
+      phone,
+      code,
+      expiresAt: new Date(Date.now() + expirationMinutes * 60 * 1000),
+    });
+    await this.otpRepository.save(otp);
+
+    // TODO: Send OTP via SMS (integrate with SMS provider)
+    const isDev = this.configService.get<string>('nodeEnv') === 'development';
+    console.log(`[DEV] OTP for ${phone}: ${code}`);
+
+    // Return OTP in development mode only
+    return {
+      message: 'Code OTP envoyé',
+      ...(isDev && { devCode: code }),
+    };
+  }
+
+  async verifyOtp(phone: string, code: string): Promise<AuthTokens> {
+    const otp = await this.otpRepository.findOne({
+      where: {
+        phone,
+        code,
+        isUsed: false,
+        expiresAt: MoreThan(new Date()),
+      },
+    });
+
+    if (!otp) {
+      throw new BadRequestException('Code OTP invalide ou expiré');
+    }
+
+    const maxAttempts = this.configService.get<number>('otp.maxAttempts') || 3;
+    if (otp.attempts >= maxAttempts) {
+      throw new BadRequestException('Nombre maximum de tentatives atteint');
+    }
+
+    // Mark OTP as used
+    otp.isUsed = true;
+    await this.otpRepository.save(otp);
+
+    // Find and verify user
+    const user = await this.usersService.findByPhone(phone);
+    if (!user) {
+      throw new BadRequestException('Utilisateur non trouvé');
+    }
+
+    await this.usersService.verifyPhone(user.id);
+
+    return this.generateTokens(user);
+  }
+
+  async refreshToken(refreshToken: string): Promise<AuthTokens> {
+    const tokenHash = await bcrypt.hash(refreshToken, 10);
+
+    const storedToken = await this.refreshTokenRepository.findOne({
+      where: {
+        tokenHash,
+        isRevoked: false,
+        expiresAt: MoreThan(new Date()),
+      },
+      relations: ['user'],
+    });
+
+    if (!storedToken) {
+      throw new UnauthorizedException('Token de rafraîchissement invalide');
+    }
+
+    // Revoke old token
+    storedToken.isRevoked = true;
+    await this.refreshTokenRepository.save(storedToken);
+
+    return this.generateTokens(storedToken.user);
+  }
+
+  async logout(userId: string): Promise<void> {
+    await this.refreshTokenRepository.update(
+      { userId, isRevoked: false },
+      { isRevoked: true },
+    );
+  }
+
+  private async generateTokens(user: User): Promise<AuthTokens> {
+    const payload = {
+      sub: user.id,
+      phone: user.phone,
+      role: user.role,
+    };
+
+    const accessToken = this.jwtService.sign(payload);
+
+    // Generate refresh token (7 days in seconds)
+    const refreshToken = this.jwtService.sign(payload, {
+      secret: this.configService.get<string>('jwt.refreshSecret') ?? 'refresh-fallback-secret',
+      expiresIn: 604800, // 7 days in seconds
+    });
+
+    // Store refresh token
+    const tokenHash = await bcrypt.hash(refreshToken, 10);
+    const refreshTokenEntity = this.refreshTokenRepository.create({
+      userId: user.id,
+      tokenHash,
+      expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), // 7 days
+    });
+    await this.refreshTokenRepository.save(refreshTokenEntity);
+
+    return {
+      accessToken,
+      refreshToken,
+      expiresIn: 900, // 15 minutes in seconds
+    };
+  }
+}

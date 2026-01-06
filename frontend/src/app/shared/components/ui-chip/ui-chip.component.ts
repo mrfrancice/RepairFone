@@ -1,0 +1,286 @@
+import {
+  Component,
+  Input,
+  Output,
+  EventEmitter,
+} from '@angular/core';
+import { CommonModule } from '@angular/common';
+
+export type ChipVariant = 'default' | 'primary' | 'success' | 'warning' | 'danger' | 'info';
+export type ChipSize = 'sm' | 'md' | 'lg';
+
+@Component({
+  selector: 'ui-chip',
+  standalone: true,
+  imports: [CommonModule],
+  template: `
+    <span
+      class="chip"
+      [class]="'chip-' + variant + ' size-' + size"
+      [class.clickable]="clickable"
+      [class.selected]="selected"
+      [class.disabled]="disabled"
+      [class.removable]="removable"
+      (click)="onClick($event)"
+      [attr.role]="clickable ? 'button' : null"
+      [attr.tabindex]="clickable && !disabled ? 0 : null"
+      (keydown.enter)="onClick($event)"
+      (keydown.space)="onClick($event); $event.preventDefault()"
+    >
+      @if (icon) {
+        <span class="chip-icon">{{ icon }}</span>
+      }
+      @if (avatar) {
+        <img [src]="avatar" alt="" class="chip-avatar" />
+      }
+      <span class="chip-label">
+        <ng-content></ng-content>
+        @if (!hasContent) {
+          {{ label }}
+        }
+      </span>
+      @if (count !== undefined) {
+        <span class="chip-count">{{ count }}</span>
+      }
+      @if (removable && !disabled) {
+        <button
+          class="chip-remove"
+          (click)="onRemove($event)"
+          aria-label="Supprimer"
+          type="button"
+        >
+          <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+            <path d="M10.5 3.5L3.5 10.5M3.5 3.5L10.5 10.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+          </svg>
+        </button>
+      }
+    </span>
+  `,
+  styles: [`
+    :host {
+      display: inline-flex;
+    }
+
+    .chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.375rem;
+      padding: 0.375rem 0.75rem;
+      border-radius: 9999px;
+      font-size: 0.8125rem;
+      font-weight: 500;
+      transition: all 0.2s ease;
+      border: 1px solid transparent;
+    }
+
+    .chip.clickable {
+      cursor: pointer;
+    }
+
+    .chip.clickable:focus {
+      outline: none;
+      box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.2);
+    }
+
+    .chip.disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    /* Variants */
+    .chip-default {
+      background: #f3f4f6;
+      color: #374151;
+    }
+
+    .chip-default.clickable:hover:not(.disabled) {
+      background: #e5e7eb;
+    }
+
+    .chip-default.selected {
+      background: #2563eb;
+      color: white;
+    }
+
+    .chip-primary {
+      background: #eff6ff;
+      color: #2563eb;
+    }
+
+    .chip-primary.clickable:hover:not(.disabled) {
+      background: #dbeafe;
+    }
+
+    .chip-primary.selected {
+      background: #2563eb;
+      color: white;
+    }
+
+    .chip-success {
+      background: #f0fdf4;
+      color: #16a34a;
+    }
+
+    .chip-success.clickable:hover:not(.disabled) {
+      background: #dcfce7;
+    }
+
+    .chip-success.selected {
+      background: #16a34a;
+      color: white;
+    }
+
+    .chip-warning {
+      background: #fffbeb;
+      color: #d97706;
+    }
+
+    .chip-warning.clickable:hover:not(.disabled) {
+      background: #fef3c7;
+    }
+
+    .chip-warning.selected {
+      background: #d97706;
+      color: white;
+    }
+
+    .chip-danger {
+      background: #fef2f2;
+      color: #dc2626;
+    }
+
+    .chip-danger.clickable:hover:not(.disabled) {
+      background: #fee2e2;
+    }
+
+    .chip-danger.selected {
+      background: #dc2626;
+      color: white;
+    }
+
+    .chip-info {
+      background: #f0f9ff;
+      color: #0284c7;
+    }
+
+    .chip-info.clickable:hover:not(.disabled) {
+      background: #e0f2fe;
+    }
+
+    .chip-info.selected {
+      background: #0284c7;
+      color: white;
+    }
+
+    /* Sizes */
+    .size-sm {
+      padding: 0.25rem 0.5rem;
+      font-size: 0.75rem;
+      gap: 0.25rem;
+    }
+
+    .size-lg {
+      padding: 0.5rem 1rem;
+      font-size: 0.875rem;
+      gap: 0.5rem;
+    }
+
+    /* Elements */
+    .chip-icon {
+      font-size: 1em;
+      line-height: 1;
+    }
+
+    .chip-avatar {
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      object-fit: cover;
+      margin-left: -0.25rem;
+    }
+
+    .size-sm .chip-avatar {
+      width: 16px;
+      height: 16px;
+    }
+
+    .size-lg .chip-avatar {
+      width: 24px;
+      height: 24px;
+    }
+
+    .chip-label {
+      white-space: nowrap;
+    }
+
+    .chip-count {
+      background: rgba(0, 0, 0, 0.1);
+      padding: 0.125rem 0.375rem;
+      border-radius: 9999px;
+      font-size: 0.75em;
+      min-width: 1.25rem;
+      text-align: center;
+    }
+
+    .chip.selected .chip-count {
+      background: rgba(255, 255, 255, 0.2);
+    }
+
+    .chip-remove {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: none;
+      border: none;
+      padding: 0.125rem;
+      margin: -0.125rem -0.25rem -0.125rem 0;
+      cursor: pointer;
+      color: currentColor;
+      opacity: 0.6;
+      border-radius: 50%;
+      transition: all 0.2s;
+    }
+
+    .chip-remove:hover {
+      opacity: 1;
+      background: rgba(0, 0, 0, 0.1);
+    }
+
+    .chip.selected .chip-remove:hover {
+      background: rgba(255, 255, 255, 0.2);
+    }
+  `],
+})
+export class UiChipComponent {
+  @Input() label?: string;
+  @Input() icon?: string;
+  @Input() avatar?: string;
+  @Input() count?: number;
+  @Input() variant: ChipVariant = 'default';
+  @Input() size: ChipSize = 'md';
+  @Input() clickable = false;
+  @Input() selected = false;
+  @Input() disabled = false;
+  @Input() removable = false;
+
+  // Alias for variant (used as color in some components)
+  @Input() set color(value: ChipVariant) {
+    this.variant = value;
+  }
+
+  @Output() chipClick = new EventEmitter<void>();
+  @Output() remove = new EventEmitter<void>();
+
+  hasContent = false;
+
+  onClick(event: Event): void {
+    if (this.disabled || !this.clickable) return;
+    this.chipClick.emit();
+  }
+
+  onRemove(event: Event): void {
+    event.stopPropagation();
+    if (this.disabled) return;
+    this.remove.emit();
+  }
+}

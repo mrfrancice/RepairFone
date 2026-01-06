@@ -1,0 +1,549 @@
+/**
+ * ============================================================================
+ * DESIGN TOKENS - RepairFone
+ * ============================================================================
+ *
+ * Ce fichier contient tous les tokens de design pour l'application RepairFone.
+ * Les tokens sont organisés par catégories et documentés pour faciliter
+ * la maintenance et la cohérence du système de design.
+ *
+ * Inspiration: Couleurs africaines et ivoiriennes
+ * - Orange: Soleil africain, énergie, chaleur, accueil
+ * - Vert: Forêts, nature, espoir, croissance
+ * - Or/Doré: Terre, sable, richesse culturelle
+ * - Bleu: Océan Atlantique, confiance, stabilité
+ * - Terre cuite: Terre africaine, authenticité
+ *
+ * Marché cible: Côte d'Ivoire (Abidjan)
+ * Utilisateurs: Jeunes 18-35 ans, Réparateurs professionnels
+ * Approche: Mobile-first, Touch-friendly, Accessible
+ * ============================================================================
+ */
+
+// ============================================================================
+// 1. COULEURS
+// ============================================================================
+
+/**
+ * PALETTE PRIMAIRE - ORANGE AFRICAIN
+ * Représente le soleil, l'énergie, la chaleur et l'accueil africain.
+ * Utilisée pour les actions principales, les CTA, et les éléments interactifs importants.
+ */
+$color-primary: (
+  50: #FFF3E0,   // Très clair - backgrounds subtils
+  100: #FFE0B2,  // Clair - hover states
+  200: #FFCC80,  // Clair médium
+  300: #FFB74D,  // Médium clair
+  400: #FFA726,  // Médium
+  500: #FF9800,  // BASE - Couleur principale
+  600: #FB8C00,  // Médium foncé
+  700: #F57C00,  // Foncé
+  800: #EF6C00,  // Très foncé
+  900: #E65100,  // Ultra foncé - texte sur fond clair
+  950: #BF360C,  // Extrême - accents forts
+);
+
+/**
+ * PALETTE SECONDAIRE - VERT FORÊT
+ * Symbolise la nature luxuriante, l'espoir et la croissance.
+ * Utilisée pour les messages de succès, les indicateurs positifs.
+ */
+$color-secondary: (
+  50: #E8F5E9,   // Très clair - backgrounds subtils
+  100: #C8E6C9,  // Clair
+  200: #A5D6A7,  // Clair médium
+  300: #81C784,  // Médium clair
+  400: #66BB6A,  // Médium
+  500: #4CAF50,  // BASE - Couleur principale
+  600: #43A047,  // Médium foncé
+  700: #388E3C,  // Foncé
+  800: #2E7D32,  // Très foncé - Forêt tropicale
+  900: #1B5E20,  // Ultra foncé
+  950: #0D3F10,  // Extrême
+);
+
+/**
+ * PALETTE TERTIAIRE - OR/DORÉ
+ * Évoque le sable, la terre et la richesse culturelle africaine.
+ * Utilisée pour les highlights, les badges premium, les récompenses.
+ */
+$color-gold: (
+  50: #FFFDE7,   // Très clair
+  100: #FFF9C4,  // Clair
+  200: #FFF59D,  // Clair médium
+  300: #FFF176,  // Médium clair
+  400: #FFEE58,  // Médium
+  500: #FFEB3B,  // BASE - Jaune or
+  600: #FDD835,  // Médium foncé
+  700: #FBC02D,  // Or/Doré - Soleil couchant
+  800: #F9A825,  // Très foncé
+  900: #F57F17,  // Ultra foncé
+  950: #E65100,  // Extrême
+);
+
+/**
+ * PALETTE TERTIAIRE - BLEU OCÉAN
+ * Représente l'océan Atlantique, la confiance et la stabilité.
+ * Utilisée pour les informations, les liens, les éléments informatifs.
+ */
+$color-ocean: (
+  50: #E3F2FD,   // Très clair
+  100: #BBDEFB,  // Clair
+  200: #90CAF9,  // Clair médium
+  300: #64B5F6,  // Médium clair
+  400: #42A5F5,  // Médium
+  500: #2196F3,  // BASE - Bleu océan
+  600: #1E88E5,  // Médium foncé
+  700: #1976D2,  // Foncé
+  800: #1565C0,  // Très foncé - Bleu confiance
+  900: #0D47A1,  // Ultra foncé
+  950: #01579B,  // Extrême
+);
+
+/**
+ * PALETTE D'ACCENT - TERRE CUITE
+ * Symbolise la terre africaine et l'authenticité.
+ * Utilisée pour les alertes, les erreurs, les avertissements critiques.
+ */
+$color-terracotta: (
+  50: #FFEBEE,   // Très clair
+  100: #FFCDD2,  // Clair
+  200: #EF9A9A,  // Clair médium
+  300: #E57373,  // Médium clair
+  400: #EF5350,  // Médium
+  500: #F44336,  // BASE - Rouge terre cuite
+  600: #E53935,  // Médium foncé
+  700: #D32F2F,  // Foncé
+  800: #C62828,  // Très foncé
+  900: #B71C1C,  // Ultra foncé
+  950: #8B0000,  // Extrême
+);
+
+/**
+ * PALETTE D'ACCENT - JAUNE MOUTARDE
+ * Évoque les épices et la chaleur du soleil africain.
+ * Utilisée pour les avertissements, les notifications importantes.
+ */
+$color-mustard: (
+  50: #FFFBF0,   // Très clair
+  100: #FFF4D5,  // Clair
+  200: #FFECB3,  // Clair médium
+  300: #FFE082,  // Médium clair
+  400: #FFD54F,  // Médium
+  500: #FFCA28,  // BASE
+  600: #FFC107,  // Jaune moutarde - Couleur principale
+  700: #FFB300,  // Foncé
+  800: #FFA000,  // Très foncé
+  900: #FF8F00,  // Ultra foncé
+  950: #FF6F00,  // Extrême
+);
+
+/**
+ * PALETTE NEUTRE - GRIS CHAUDS
+ * Couleurs neutres avec une légère nuance chaude pour adoucir l'interface.
+ * Utilisée pour les textes, les bordures, les backgrounds secondaires.
+ */
+$color-neutral: (
+  50: #FAFAFA,   // Presque blanc - backgrounds
+  100: #F5F5F5,  // Très clair - surfaces
+  200: #EEEEEE,  // Clair - dividers
+  300: #E0E0E0,  // Clair médium - borders
+  400: #BDBDBD,  // Médium clair - disabled
+  500: #9E9E9E,  // Médium - icons secondaires
+  600: #757575,  // Médium foncé - texte secondaire
+  700: #616161,  // Foncé - texte primaire sur clair
+  800: #424242,  // Très foncé - texte important
+  900: #212121,  // Ultra foncé - texte emphase
+  950: #0A0A0A,  // Presque noir
+);
+
+/**
+ * COULEURS DE FOND - MODE CLAIR
+ * Backgrounds optimisés pour le mode jour avec une légère chaleur dorée.
+ */
+$background-light: (
+  default: #FAFAFA,      // Background principal
+  warm: #FFF8E1,         // Background avec teinte dorée (sections spéciales)
+  paper: #FFFFFF,        // Cartes, modals, surfaces élevées
+  elevated: #FFFFFF,     // Surfaces au-dessus du background
+);
+
+/**
+ * COULEURS DE FOND - MODE SOMBRE
+ * Backgrounds optimisés pour le mode nuit avec contraste suffisant.
+ */
+$background-dark: (
+  default: #1A1A2E,      // Background principal - Nuit africaine
+  elevated: #25293C,     // Surfaces élevées
+  paper: #2D3142,        // Cartes, modals
+  variant: #25293C,      // Variante pour sections alternées
+);
+
+/**
+ * COULEURS SÉMANTIQUES
+ * Couleurs avec signification universelle pour les états et feedback.
+ */
+$semantic-colors: (
+  // Succès - Opération réussie, état positif
+  success: (
+    light: #81C784,
+    default: #4CAF50,
+    dark: #2E7D32,
+  ),
+  // Avertissement - Attention requise, information importante
+  warning: (
+    light: #FFD54F,
+    default: #FFC107,
+    dark: #F57C00,
+  ),
+  // Erreur - Problème, échec, action destructive
+  error: (
+    light: #EF5350,
+    default: #F44336,
+    dark: #C62828,
+  ),
+  // Information - Détails, aide, guidance
+  info: (
+    light: #64B5F6,
+    default: #2196F3,
+    dark: #1565C0,
+  ),
+);
+
+// ============================================================================
+// 2. TYPOGRAPHIE
+// ============================================================================
+
+/**
+ * FAMILLES DE POLICES
+ * Polices optimisées pour la lisibilité mobile et l'accessibilité.
+ */
+$font-family: (
+  // Police principale - Corps de texte, UI
+  sans: ('Inter', 'system-ui', '-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'Roboto', 'Helvetica Neue', 'Arial', 'sans-serif'),
+  // Police pour les titres - Plus expressive
+  heading: ('Poppins', 'Inter', 'system-ui', 'sans-serif'),
+  // Police monospace - Code, données techniques
+  mono: ('JetBrains Mono', 'Fira Code', 'Courier New', 'monospace'),
+);
+
+/**
+ * ÉCHELLE TYPOGRAPHIQUE
+ * Tailles de police optimisées pour la hiérarchie visuelle et la lisibilité mobile.
+ * Format: [font-size, line-height]
+ */
+$font-size: (
+  xs: (0.75rem, 1rem),       // 12px - Très petit texte, labels
+  sm: (0.875rem, 1.25rem),   // 14px - Texte secondaire, captions
+  base: (1rem, 1.5rem),      // 16px - Texte principal (optimal mobile)
+  lg: (1.125rem, 1.75rem),   // 18px - Texte important, sous-titres
+  xl: (1.25rem, 1.75rem),    // 20px - Titres H4
+  2xl: (1.5rem, 2rem),       // 24px - Titres H3
+  3xl: (1.875rem, 2.25rem),  // 30px - Titres H2
+  4xl: (2.25rem, 2.5rem),    // 36px - Titres H1
+  5xl: (3rem, 1),            // 48px - Hero titles
+  6xl: (3.75rem, 1),         // 60px - Display titles
+);
+
+/**
+ * POIDS DE POLICE
+ * Variation de poids pour créer la hiérarchie et l'emphase.
+ */
+$font-weight: (
+  light: 300,
+  regular: 400,
+  medium: 500,
+  semibold: 600,
+  bold: 700,
+  extrabold: 800,
+);
+
+/**
+ * HAUTEUR DE LIGNE
+ * Pour différents contextes de texte.
+ */
+$line-height: (
+  none: 1,
+  tight: 1.25,
+  snug: 1.375,
+  normal: 1.5,
+  relaxed: 1.625,
+  loose: 2,
+);
+
+/**
+ * ESPACEMENT DES LETTRES
+ * Tracking pour améliorer la lisibilité.
+ */
+$letter-spacing: (
+  tighter: -0.05em,
+  tight: -0.025em,
+  normal: 0,
+  wide: 0.025em,
+  wider: 0.05em,
+  widest: 0.1em,
+);
+
+// ============================================================================
+// 3. ESPACEMENTS
+// ============================================================================
+
+/**
+ * ÉCHELLE D'ESPACEMENT
+ * Basée sur un système de 4px (0.25rem) pour la cohérence.
+ * Optimisée pour les interfaces mobiles touch-friendly.
+ */
+$spacing: (
+  0: 0,
+  1: 0.25rem,    // 4px
+  2: 0.5rem,     // 8px
+  3: 0.75rem,    // 12px
+  4: 1rem,       // 16px - Base
+  5: 1.25rem,    // 20px
+  6: 1.5rem,     // 24px
+  8: 2rem,       // 32px
+  10: 2.5rem,    // 40px
+  12: 3rem,      // 48px
+  16: 4rem,      // 64px
+  20: 5rem,      // 80px
+  24: 6rem,      // 96px
+  32: 8rem,      // 128px
+  40: 10rem,     // 160px
+  48: 12rem,     // 192px
+  56: 14rem,     // 224px
+  64: 16rem,     // 256px
+);
+
+/**
+ * ESPACEMENTS POUR ZONES TACTILES
+ * Dimensions minimales recommandées pour les éléments interactifs.
+ */
+$touch-target: (
+  ios: 44px,        // Recommandation Apple iOS
+  android: 48px,    // Recommandation Google Android
+  optimal: 48px,    // Optimal pour la majorité des utilisateurs
+);
+
+/**
+ * SAFE AREA (pour devices avec notch)
+ * Utilisation des variables CSS natives.
+ */
+$safe-area: (
+  top: env(safe-area-inset-top),
+  bottom: env(safe-area-inset-bottom),
+  left: env(safe-area-inset-left),
+  right: env(safe-area-inset-right),
+);
+
+// ============================================================================
+// 4. BORDURES ET RAYONS
+// ============================================================================
+
+/**
+ * RAYONS DE BORDURE
+ * Design moderne africain avec coins arrondis.
+ */
+$border-radius: (
+  none: 0,
+  sm: 0.25rem,     // 4px - Subtil
+  default: 0.5rem, // 8px - Standard
+  md: 0.75rem,     // 12px - Médium
+  lg: 1rem,        // 16px - Large (boutons, cartes)
+  xl: 1.25rem,     // 20px - Très large
+  2xl: 1.5rem,     // 24px - Extra large (modals)
+  3xl: 2rem,       // 32px - Extremement large
+  full: 9999px,    // Circulaire (avatars, badges)
+);
+
+/**
+ * LARGEURS DE BORDURE
+ */
+$border-width: (
+  0: 0,
+  1: 1px,
+  2: 2px,
+  4: 4px,
+  8: 8px,
+);
+
+// ============================================================================
+// 5. OMBRES
+// ============================================================================
+
+/**
+ * SYSTÈME D'OMBRES
+ * Ombres adaptées au design africain (légèrement plus prononcées).
+ * Créent la profondeur et la hiérarchie visuelle.
+ */
+$box-shadow: (
+  // Ombres standard
+  sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05),
+  default: 0 2px 8px 0 rgba(0, 0, 0, 0.1),
+  md: 0 4px 12px 0 rgba(0, 0, 0, 0.1),
+  lg: 0 8px 24px 0 rgba(0, 0, 0, 0.12),
+  xl: 0 12px 32px 0 rgba(0, 0, 0, 0.15),
+  2xl: 0 16px 48px 0 rgba(0, 0, 0, 0.2),
+
+  // Ombres spéciales
+  inner: inset 0 2px 4px 0 rgba(0, 0, 0, 0.06),
+  warm: 0 4px 16px 0 rgba(255, 152, 0, 0.15),      // Ombre orange chaleureuse
+  success: 0 4px 16px 0 rgba(76, 175, 80, 0.15),   // Ombre verte
+  none: none,
+);
+
+/**
+ * OMBRES MODE SOMBRE
+ * Ombres plus prononcées pour le mode nuit.
+ */
+$box-shadow-dark: (
+  sm: 0 1px 2px 0 rgba(0, 0, 0, 0.3),
+  default: 0 2px 8px 0 rgba(0, 0, 0, 0.4),
+  md: 0 4px 12px 0 rgba(0, 0, 0, 0.4),
+  lg: 0 8px 24px 0 rgba(0, 0, 0, 0.5),
+  xl: 0 12px 32px 0 rgba(0, 0, 0, 0.6),
+  2xl: 0 16px 48px 0 rgba(0, 0, 0, 0.7),
+);
+
+// ============================================================================
+// 6. TRANSITIONS ET ANIMATIONS
+// ============================================================================
+
+/**
+ * DURÉES DE TRANSITION
+ * Basées sur Material Design et optimisées pour mobile.
+ */
+$transition-duration: (
+  instant: 0ms,
+  fast: 150ms,       // Interactions rapides (hover, focus)
+  base: 200ms,       // Transitions standard
+  slow: 300ms,       // Transitions complexes
+  slower: 500ms,     // Animations élaborées
+  slowest: 700ms,    // Animations très élaborées
+);
+
+/**
+ * FONCTIONS D'ACCÉLÉRATION
+ * Courbes d'animation pour des mouvements naturels.
+ */
+$transition-timing: (
+  linear: linear,
+  ease: ease,
+  ease-in: cubic-bezier(0.4, 0, 1, 1),
+  ease-out: cubic-bezier(0, 0, 0.2, 1),
+  ease-in-out: cubic-bezier(0.4, 0, 0.2, 1),
+  bounce: cubic-bezier(0.68, -0.55, 0.265, 1.55),
+);
+
+// ============================================================================
+// 7. Z-INDEX
+// ============================================================================
+
+/**
+ * ÉCHELLE Z-INDEX
+ * Gestion des couches d'élément pour éviter les conflits.
+ */
+$z-index: (
+  base: 0,
+  dropdown: 1000,
+  sticky: 1020,
+  fixed: 1030,
+  modal-backdrop: 1040,
+  modal: 1050,
+  popover: 1060,
+  tooltip: 1070,
+  notification: 1080,
+);
+
+// ============================================================================
+// 8. BREAKPOINTS
+// ============================================================================
+
+/**
+ * POINTS DE RUPTURE RESPONSIVE
+ * Approche mobile-first adaptée au marché africain.
+ */
+$breakpoints: (
+  xs: 375px,      // Petits smartphones
+  sm: 640px,      // Smartphones standards
+  md: 768px,      // Tablettes portrait
+  lg: 1024px,     // Tablettes landscape / Desktop
+  xl: 1280px,     // Desktop large
+  2xl: 1536px,    // Desktop très large
+);
+
+// ============================================================================
+// 9. LARGEURS MAX DE CONTENU
+// ============================================================================
+
+/**
+ * LARGEURS MAXIMALES
+ * Pour contrôler la largeur du contenu et améliorer la lisibilité.
+ */
+$max-width: (
+  xs: 20rem,      // 320px
+  sm: 24rem,      // 384px
+  md: 28rem,      // 448px
+  lg: 32rem,      // 512px
+  xl: 36rem,      // 576px
+  2xl: 42rem,     // 672px
+  3xl: 48rem,     // 768px
+  4xl: 56rem,     // 896px
+  5xl: 64rem,     // 1024px
+  6xl: 72rem,     // 1152px
+  7xl: 80rem,     // 1280px
+  full: 100%,
+);
+
+// ============================================================================
+// 10. OPACITÉ
+// ============================================================================
+
+/**
+ * NIVEAUX D'OPACITÉ
+ * Pour créer des variations subtiles et des états désactivés.
+ */
+$opacity: (
+  0: 0,
+  5: 0.05,
+  10: 0.1,
+  20: 0.2,
+  25: 0.25,
+  30: 0.3,
+  40: 0.4,
+  50: 0.5,
+  60: 0.6,
+  70: 0.7,
+  75: 0.75,
+  80: 0.8,
+  90: 0.9,
+  95: 0.95,
+  100: 1,
+);
+
+// ============================================================================
+// UTILISATION DES TOKENS
+// ============================================================================
+
+/**
+ * EXEMPLES D'UTILISATION:
+ *
+ * // Couleur
+ * color: map-get($color-primary, 500);
+ *
+ * // Typographie
+ * font-family: map-get($font-family, sans);
+ * font-size: nth(map-get($font-size, base), 1);
+ * line-height: nth(map-get($font-size, base), 2);
+ *
+ * // Espacement
+ * padding: map-get($spacing, 4);
+ *
+ * // Bordures
+ * border-radius: map-get($border-radius, lg);
+ *
+ * // Ombres
+ * box-shadow: map-get($box-shadow, md);
+ *
+ * // Transitions
+ * transition: all map-get($transition-duration, base) map-get($transition-timing, ease-out);
+ */

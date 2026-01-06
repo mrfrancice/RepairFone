@@ -1,0 +1,37 @@
+# Dossiers exclus
+.claude/
+documents_projet/
+
+# Dependencies
+node_modules/
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Build outputs
+dist/
+build/
+.angular/
+
+# Environment files
+.env
+.env.local
+.env.*.local
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Angular cache
+.angular/cache/
+
+# TypeScript cache
+*.tsbuildinfo
