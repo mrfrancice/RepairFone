@@ -63,11 +63,23 @@ interface QuickService {
           </div>
           <div class="header-right">
             @if (authStore.isAuthenticated()) {
+              <button class="location-chip" (click)="changeLocation(); $event.stopPropagation()">
+                <svg width="14" height="14" viewBox="0 0 16 16" fill="none">
+                  <path d="M8 8.667a2 2 0 100-4 2 2 0 000 4z" stroke="currentColor" stroke-width="1.5"/>
+                  <path d="M8 14s5-3.5 5-7.333a5 5 0 10-10 0C3 10.5 8 14 8 14z" stroke="currentColor" stroke-width="1.5"/>
+                </svg>
+                @if (locationStatus() === 'loading') {
+                  <span>...</span>
+                } @else if (locationStatus() === 'success') {
+                  <span>{{ getShortAddress() }}</span>
+                } @else {
+                  <span>Localiser</span>
+                }
+              </button>
               <span class="status-online">
                 <span class="status-dot"></span>
                 En ligne
               </span>
-              <span class="role-badge">{{ getRoleLabel() }}</span>
               <app-notification-bell />
             }
             <button class="profile-btn" (click)="goToProfile()">
@@ -87,26 +99,6 @@ interface QuickService {
           placeholder="Rechercher un appareil, problème..."
           (search)="onSearch($event)"
         />
-
-        <!-- Location indicator -->
-        <div class="location-bar" (click)="changeLocation()">
-          <div class="location-info">
-            <svg class="location-icon" width="16" height="16" viewBox="0 0 16 16" fill="none">
-              <path d="M8 8.667a2 2 0 100-4 2 2 0 000 4z" stroke="currentColor" stroke-width="1.5"/>
-              <path d="M8 14s5-3.5 5-7.333a5 5 0 10-10 0C3 10.5 8 14 8 14z" stroke="currentColor" stroke-width="1.5"/>
-            </svg>
-            @if (locationStatus() === 'loading') {
-              <span class="location-text">Détection en cours...</span>
-            } @else if (locationStatus() === 'success') {
-              <span class="location-text">{{ userAddress() }}</span>
-            } @else {
-              <span class="location-text">Activer la localisation</span>
-            }
-          </div>
-          <svg class="chevron" width="16" height="16" viewBox="0 0 16 16" fill="none">
-            <path d="M6 12l4-4-4-4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-          </svg>
-        </div>
       </header>
 
       <!-- Main Content -->
@@ -507,40 +499,36 @@ interface QuickService {
       font-size: 0.875rem;
     }
 
-    /* Location */
-    .location-bar {
+    /* Location Chip */
+    .location-chip {
       display: flex;
       align-items: center;
-      justify-content: space-between;
-      padding: 0.625rem 0.875rem;
+      gap: 0.375rem;
+      padding: 0.375rem 0.625rem;
       background: rgba(255, 255, 255, 0.15);
-      border-radius: 10px;
-      cursor: pointer;
-      transition: background 0.2s;
-    }
-
-    .location-bar:hover {
-      background: rgba(255, 255, 255, 0.2);
-    }
-
-    .location-info {
-      display: flex;
-      align-items: center;
-      gap: 0.5rem;
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      border-radius: 20px;
       color: white;
+      font-size: 0.6875rem;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.2s;
+      white-space: nowrap;
+      max-width: 120px;
     }
 
-    .location-icon {
+    .location-chip:hover {
+      background: rgba(255, 255, 255, 0.25);
+    }
+
+    .location-chip svg {
+      flex-shrink: 0;
       opacity: 0.9;
     }
 
-    .location-text {
-      font-size: 0.8125rem;
-      font-weight: 500;
-    }
-
-    .chevron {
-      color: rgba(255, 255, 255, 0.7);
+    .location-chip span {
+      overflow: hidden;
+      text-overflow: ellipsis;
     }
 
     /* ============================================
@@ -548,7 +536,7 @@ interface QuickService {
     ============================================ */
     .home-content {
       padding: 1.25rem;
-      margin-top: 220px;
+      margin-top: 180px;
       position: relative;
       z-index: 1;
     }
@@ -1296,6 +1284,16 @@ export class HomeComponent implements OnInit {
   changeLocation(): void {
     // Open location picker or re-detect
     this.detectLocation();
+  }
+
+  getShortAddress(): string {
+    const address = this.userAddress();
+    // Retourne juste la ville ou les premiers mots
+    if (address.includes(',')) {
+      return address.split(',')[0].trim();
+    }
+    // Limiter à 15 caractères
+    return address.length > 15 ? address.substring(0, 12) + '...' : address;
   }
 
   selectService(serviceId: string): void {
