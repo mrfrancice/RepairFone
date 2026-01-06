@@ -33,3 +33,9 @@ export { ThemeToggleComponent } from './components/theme-toggle/theme-toggle.com
 
 // Shared Pipes
 export { RelativeTimePipe } from './pipes/relative-time.pipe';
+
+// Shared Directives
+export { PullToRefreshDirective } from './directives/pull-to-refresh.directive';
+export { SwipeDirective } from './directives/swipe.directive';
+export type { PullToRefreshConfig } from './directives/pull-to-refresh.directive';
+export type { SwipeDirection, SwipeEvent } from './directives/swipe.directive';

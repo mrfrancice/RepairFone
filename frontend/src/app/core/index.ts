@@ -5,6 +5,8 @@ export * from './services/notification.service';
 export * from './services/toast.service';
 export * from './services/logger.service';
 export * from './services/theme.service';
+export * from './services/biometric.service';
+export * from './services/haptic.service';
 
 // Core Stores
 export * from './stores/auth.store';

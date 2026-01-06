@@ -1,0 +1,406 @@
+# SEC-015: Security CI/CD Pipeline
+# This workflow performs security scanning for the RepairFone project
+# Runs on push to main branches and weekly schedule
+
+name: Security Scan
+
+on:
+  push:
+    branches:
+      - main
+      - master
+      - develop
+      - RepairFoneDev
+    paths:
+      - 'backend/**'
+      - 'frontend/**'
+      - 'package*.json'
+      - '.github/workflows/security.yml'
+  pull_request:
+    branches:
+      - main
+      - master
+      - develop
+  schedule:
+    # Run weekly on Sunday at 00:00 UTC
+    - cron: '0 0 * * 0'
+  workflow_dispatch:
+    # Allow manual trigger
+
+# Cancel in-progress runs for the same branch
+concurrency:
+  group: security-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  NODE_VERSION: '20.x'
+
+jobs:
+  # Job 1: NPM Audit for Backend
+  backend-audit:
+    name: Backend npm audit
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./backend
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+          cache-dependency-path: './backend/package-lock.json'
+
+      - name: Install dependencies
+        run: npm ci --ignore-scripts
+
+      - name: Run npm audit
+        run: |
+          echo "## Backend npm audit results" >> $GITHUB_STEP_SUMMARY
+          npm audit --audit-level=moderate 2>&1 | tee audit-results.txt || true
+
+          # Check for critical or high vulnerabilities
+          if npm audit --audit-level=high 2>&1 | grep -q "found [1-9]"; then
+            echo "::error::High or critical vulnerabilities found in backend dependencies"
+            echo "HIGH or CRITICAL vulnerabilities detected. Please review and fix." >> $GITHUB_STEP_SUMMARY
+            exit 1
+          fi
+
+          echo "No high or critical vulnerabilities found." >> $GITHUB_STEP_SUMMARY
+
+      - name: Upload audit results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: backend-audit-results
+          path: ./backend/audit-results.txt
+          retention-days: 30
+
+  # Job 2: NPM Audit for Frontend
+  frontend-audit:
+    name: Frontend npm audit
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./frontend
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+          cache-dependency-path: './frontend/package-lock.json'
+
+      - name: Install dependencies
+        run: npm ci --ignore-scripts
+
+      - name: Run npm audit
+        run: |
+          echo "## Frontend npm audit results" >> $GITHUB_STEP_SUMMARY
+          npm audit --audit-level=moderate 2>&1 | tee audit-results.txt || true
+
+          # Check for critical or high vulnerabilities
+          if npm audit --audit-level=high 2>&1 | grep -q "found [1-9]"; then
+            echo "::error::High or critical vulnerabilities found in frontend dependencies"
+            echo "HIGH or CRITICAL vulnerabilities detected. Please review and fix." >> $GITHUB_STEP_SUMMARY
+            exit 1
+          fi
+
+          echo "No high or critical vulnerabilities found." >> $GITHUB_STEP_SUMMARY
+
+      - name: Upload audit results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: frontend-audit-results
+          path: ./frontend/audit-results.txt
+          retention-days: 30
+
+  # Job 3: Dependency Review (for PRs)
+  dependency-review:
+    name: Dependency vulnerability review
+    runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request'
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Dependency Review
+        uses: actions/dependency-review-action@v4
+        with:
+          fail-on-severity: high
+          deny-licenses: GPL-3.0, AGPL-3.0
+          allow-ghsas: false
+          comment-summary-in-pr: always
+
+  # Job 4: Secret Scanning Prevention
+  secret-scanning:
+    name: Secret scanning prevention
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Install Gitleaks
+        run: |
+          wget -O gitleaks.tar.gz https://github.com/gitleaks/gitleaks/releases/download/v8.18.4/gitleaks_8.18.4_linux_x64.tar.gz
+          tar -xzf gitleaks.tar.gz
+          chmod +x gitleaks
+          sudo mv gitleaks /usr/local/bin/
+
+      - name: Create Gitleaks config
+        run: |
+          cat > .gitleaks.toml << 'EOF'
+          title = "RepairFone Gitleaks Configuration"
+
+          [extend]
+          useDefault = true
+
+          # Custom rules for RepairFone
+          [[rules]]
+          id = "jwt-secret"
+          description = "JWT Secret"
+          regex = '''(?i)(jwt[_-]?secret|jwt[_-]?key)\s*[=:]\s*['"](.[^'"]{8,})['"']'''
+          tags = ["secret", "jwt"]
+
+          [[rules]]
+          id = "database-password"
+          description = "Database Password"
+          regex = '''(?i)(db[_-]?password|database[_-]?password)\s*[=:]\s*['"](.[^'"]{4,})['"']'''
+          tags = ["secret", "database"]
+
+          [[rules]]
+          id = "api-key"
+          description = "Generic API Key"
+          regex = '''(?i)(api[_-]?key|apikey)\s*[=:]\s*['"](.[^'"]{16,})['"']'''
+          tags = ["secret", "api"]
+
+          # Allow list for common false positives
+          [allowlist]
+          description = "Allow list for false positives"
+          paths = [
+            '''\.env\.example$''',
+            '''\.env\.sample$''',
+            '''\.env\.template$''',
+            '''docs/.*\.md$''',
+            '''.*\.test\.ts$''',
+            '''.*\.spec\.ts$''',
+            '''.*mock.*'''
+          ]
+          regexes = [
+            '''your_.*_key''',
+            '''change_in_production''',
+            '''example_.*''',
+            '''test_.*'''
+          ]
+          EOF
+
+      - name: Run Gitleaks scan
+        run: |
+          echo "## Secret Scanning Results" >> $GITHUB_STEP_SUMMARY
+
+          if gitleaks detect --source . --config .gitleaks.toml --verbose 2>&1 | tee gitleaks-results.txt; then
+            echo "No secrets detected." >> $GITHUB_STEP_SUMMARY
+          else
+            echo "::error::Potential secrets detected in repository!"
+            echo "SECRETS DETECTED! Please review and remove any exposed credentials." >> $GITHUB_STEP_SUMMARY
+            cat gitleaks-results.txt >> $GITHUB_STEP_SUMMARY
+            exit 1
+          fi
+
+      - name: Upload Gitleaks results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: gitleaks-results
+          path: gitleaks-results.txt
+          retention-days: 30
+
+  # Job 5: CodeQL Analysis
+  codeql-analysis:
+    name: CodeQL security analysis
+    runs-on: ubuntu-latest
+    permissions:
+      actions: read
+      contents: read
+      security-events: write
+
+    strategy:
+      fail-fast: false
+      matrix:
+        language: ['javascript-typescript']
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Initialize CodeQL
+        uses: github/codeql-action/init@v3
+        with:
+          languages: ${{ matrix.language }}
+          queries: security-extended,security-and-quality
+
+      - name: Autobuild
+        uses: github/codeql-action/autobuild@v3
+
+      - name: Perform CodeQL Analysis
+        uses: github/codeql-action/analyze@v3
+        with:
+          category: "/language:${{ matrix.language }}"
+
+  # Job 6: SAST with Semgrep
+  semgrep-scan:
+    name: Semgrep SAST scan
+    runs-on: ubuntu-latest
+    container:
+      image: semgrep/semgrep
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Run Semgrep
+        run: |
+          echo "## Semgrep SAST Results" >> $GITHUB_STEP_SUMMARY
+          semgrep scan \
+            --config auto \
+            --config p/security-audit \
+            --config p/secrets \
+            --config p/owasp-top-ten \
+            --config p/typescript \
+            --sarif \
+            --output semgrep-results.sarif \
+            --error \
+            --severity ERROR \
+            . 2>&1 | tee semgrep-output.txt || true
+
+          # Check for high severity findings
+          if grep -q "severity: ERROR" semgrep-output.txt 2>/dev/null; then
+            echo "::warning::Semgrep found security issues"
+            echo "Security issues detected. Please review." >> $GITHUB_STEP_SUMMARY
+          else
+            echo "No critical security issues found." >> $GITHUB_STEP_SUMMARY
+          fi
+
+      - name: Upload Semgrep results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: semgrep-results
+          path: |
+            semgrep-results.sarif
+            semgrep-output.txt
+          retention-days: 30
+
+      - name: Upload SARIF to GitHub Security
+        if: always()
+        uses: github/codeql-action/upload-sarif@v3
+        with:
+          sarif_file: semgrep-results.sarif
+        continue-on-error: true
+
+  # Job 7: License Compliance Check
+  license-check:
+    name: License compliance check
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: Install license-checker
+        run: npm install -g license-checker
+
+      - name: Check backend licenses
+        working-directory: ./backend
+        run: |
+          npm ci --ignore-scripts
+          echo "## Backend License Check" >> $GITHUB_STEP_SUMMARY
+          license-checker --summary --failOn "GPL-3.0;AGPL-3.0;GPL-2.0" 2>&1 | tee ../backend-licenses.txt || {
+            echo "::error::Incompatible license found in backend dependencies"
+            exit 1
+          }
+          echo "All backend licenses are compliant." >> $GITHUB_STEP_SUMMARY
+
+      - name: Check frontend licenses
+        working-directory: ./frontend
+        run: |
+          npm ci --ignore-scripts
+          echo "## Frontend License Check" >> $GITHUB_STEP_SUMMARY
+          license-checker --summary --failOn "GPL-3.0;AGPL-3.0;GPL-2.0" 2>&1 | tee ../frontend-licenses.txt || {
+            echo "::error::Incompatible license found in frontend dependencies"
+            exit 1
+          }
+          echo "All frontend licenses are compliant." >> $GITHUB_STEP_SUMMARY
+
+      - name: Upload license reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: license-reports
+          path: |
+            backend-licenses.txt
+            frontend-licenses.txt
+          retention-days: 30
+
+  # Job 8: Security Summary
+  security-summary:
+    name: Security scan summary
+    runs-on: ubuntu-latest
+    needs:
+      - backend-audit
+      - frontend-audit
+      - secret-scanning
+      - codeql-analysis
+      - semgrep-scan
+      - license-check
+    if: always()
+
+    steps:
+      - name: Generate security summary
+        run: |
+          echo "# Security Scan Summary" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "| Check | Status |" >> $GITHUB_STEP_SUMMARY
+          echo "|-------|--------|" >> $GITHUB_STEP_SUMMARY
+          echo "| Backend npm audit | ${{ needs.backend-audit.result == 'success' && 'Passed' || 'Failed' }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Frontend npm audit | ${{ needs.frontend-audit.result == 'success' && 'Passed' || 'Failed' }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Secret scanning | ${{ needs.secret-scanning.result == 'success' && 'Passed' || 'Failed' }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| CodeQL analysis | ${{ needs.codeql-analysis.result == 'success' && 'Passed' || 'Failed' }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Semgrep SAST | ${{ needs.semgrep-scan.result == 'success' && 'Passed' || 'Failed' }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| License compliance | ${{ needs.license-check.result == 'success' && 'Passed' || 'Failed' }} |" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "Scan completed at: $(date -u +"%Y-%m-%d %H:%M:%S UTC")" >> $GITHUB_STEP_SUMMARY
+
+      - name: Check overall status
+        if: |
+          needs.backend-audit.result == 'failure' ||
+          needs.frontend-audit.result == 'failure' ||
+          needs.secret-scanning.result == 'failure'
+        run: |
+          echo "::error::One or more critical security checks failed"
+          exit 1
+
+      - name: Notify on scheduled run failure
+        if: github.event_name == 'schedule' && failure()
+        run: |
+          echo "::warning::Weekly security scan detected issues. Please review the security scan results."
+          # Add notification integration here (Slack, email, etc.)
+          # Example: curl -X POST -H 'Content-type: application/json' --data '{"text":"Security scan failed!"}' $SLACK_WEBHOOK_URL

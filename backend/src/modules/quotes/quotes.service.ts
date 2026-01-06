@@ -176,34 +176,68 @@ export class QuotesService {
     return { data, total };
   }
 
+
+  /**
+   * BIZ-011: Accept a quote with pessimistic locking to prevent race conditions
+   *
+   * This method uses pessimistic_write lock to ensure that only one user
+   * can accept a quote at a time, preventing race conditions when multiple
+   * users try to accept the same quote simultaneously.
+   */
   async acceptQuote(id: string, clientId: string): Promise<Quote> {
     const queryRunner = this.dataSource.createQueryRunner();
     await queryRunner.connect();
     await queryRunner.startTransaction();
 
     try {
-      const quote = await queryRunner.manager.findOne(Quote, {
-        where: { id },
-        relations: ['request', 'request.client', 'request.device', 'request.serviceType', 'repairer', 'repairer.user'],
-      });
+      // BIZ-011: Use pessimistic lock to prevent race conditions
+      // This acquires a row-level exclusive lock on the quote
+      const quote = await queryRunner.manager
+        .createQueryBuilder(Quote, 'quote')
+        .setLock('pessimistic_write')
+        .leftJoinAndSelect('quote.request', 'request')
+        .leftJoinAndSelect('request.client', 'client')
+        .leftJoinAndSelect('request.device', 'device')
+        .leftJoinAndSelect('request.serviceType', 'serviceType')
+        .leftJoinAndSelect('quote.repairer', 'repairer')
+        .leftJoinAndSelect('repairer.user', 'repairerUser')
+        .where('quote.id = :id', { id })
+        .getOne();
 
       if (!quote) {
-        throw new NotFoundException('Devis non trouvé');
+        throw new NotFoundException('Devis non trouve');
       }
 
       if (quote.request.clientId !== clientId) {
         throw new ForbiddenException('Vous ne pouvez pas accepter ce devis');
       }
 
+      // Re-check status after acquiring lock to handle race conditions
       if (quote.status !== QuoteStatus.PENDING) {
-        throw new BadRequestException('Ce devis ne peut plus être accepté');
+        throw new BadRequestException('Ce devis ne peut plus etre accepte (deja traite)');
       }
 
       if (new Date() > new Date(quote.validUntil)) {
         quote.status = QuoteStatus.EXPIRED;
         await queryRunner.manager.save(Quote, quote);
         await queryRunner.commitTransaction();
-        throw new BadRequestException('Ce devis a expiré');
+        throw new BadRequestException('Ce devis a expire');
+      }
+
+      // Also lock the request to prevent concurrent modifications
+      const request = await queryRunner.manager
+        .createQueryBuilder(RepairRequest, 'request')
+        .setLock('pessimistic_write')
+        .where('request.id = :requestId', { requestId: quote.requestId })
+        .getOne();
+
+      if (!request) {
+        throw new NotFoundException('Demande associee non trouvee');
+      }
+
+      // Check if request already has an accepted quote
+      if (request.status === RequestStatus.ACCEPTED || request.status === RequestStatus.IN_PROGRESS) {
+        throw new BadRequestException('Cette demande a deja un devis accepte');
       }
 
       quote.status = QuoteStatus.ACCEPTED;
@@ -216,6 +250,20 @@ export class QuotesService {
         acceptedAt: new Date(),
         finalPrice: quote.totalAmount,
       });
+
+      // Reject any other pending quotes for this request
+      await queryRunner.manager
+        .createQueryBuilder()
+        .update(Quote)
+        .set({
+          status: QuoteStatus.REJECTED,
+          rejectedAt: new Date(),
+          rejectionReason: 'Autre devis accepte pour cette demande',
+        })
+        .where('requestId = :requestId', { requestId: quote.requestId })
+        .andWhere('id != :quoteId', { quoteId: quote.id })
+        .andWhere('status = :pendingStatus', { pendingStatus: QuoteStatus.PENDING })
+        .execute();
 
       await queryRunner.commitTransaction();
 

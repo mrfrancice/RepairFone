@@ -1,6 +1,6 @@
 import { Injectable, NotFoundException, BadRequestException, ForbiddenException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository, In } from 'typeorm';
+import { Repository, In, DataSource } from 'typeorm';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { RepairRequest, RequestStatus, DeliveryMode } from './entities/repair-request.entity';
 import { RequestStatusHistory } from './entities/request-status-history.entity';
@@ -21,6 +21,7 @@ export class RequestsService {
     @InjectRepository(RepairerProfile)
     private readonly repairerProfileRepository: Repository<RepairerProfile>,
     private readonly eventEmitter: EventEmitter2,
+    private readonly dataSource: DataSource,
   ) {}
 
   async createRequest(clientId: string, dto: CreateRequestDto): Promise<RepairRequest> {
@@ -449,24 +450,33 @@ export class RequestsService {
     return stats;
   }
 
+
+  /**
+   * BIZ-012: Generate unique request number using PostgreSQL sequence
+   *
+   * Uses database sequence for thread-safe, unique request number generation.
+   * Format: RF{YY}{MM}{SEQ} where SEQ is a 4-digit padded sequence number.
+   *
+   * Benefits over COUNT-based approach:
+   * 1. Thread-safe: No race conditions under high concurrency
+   * 2. Guaranteed unique: Sequence values are never reused
+   * 3. Performance: Single query vs. counting records
+   * 4. Reliability: Numbers persist even if requests are deleted
+   */
   private async generateRequestNumber(): Promise<string> {
     const prefix = 'RF';
     const date = new Date();
     const year = date.getFullYear().toString().slice(-2);
     const month = (date.getMonth() + 1).toString().padStart(2, '0');
 
-    // Compter les demandes du mois en cours pour générer un numéro séquentiel
-    const startOfMonth = new Date(date.getFullYear(), date.getMonth(), 1);
-    const endOfMonth = new Date(date.getFullYear(), date.getMonth() + 1, 0, 23, 59, 59);
+    // BIZ-012: Use PostgreSQL sequence for thread-safe number generation
+    const result = await this.dataSource.query(
+      "SELECT nextval('request_number_seq') as seq_value"
+    );
 
-    const count = await this.requestRepository
-      .createQueryBuilder('request')
-      .where('request.createdAt >= :start', { start: startOfMonth })
-      .andWhere('request.createdAt <= :end', { end: endOfMonth })
-      .getCount();
+    const sequenceValue = result[0]?.seq_value || 1;
+    const sequence = sequenceValue.toString().padStart(4, '0');
 
-    const sequence = (count + 1).toString().padStart(4, '0');
-
-    return `${prefix}${year}${month}${sequence}`;
+    return prefix + year + month + sequence;
   }
 }
