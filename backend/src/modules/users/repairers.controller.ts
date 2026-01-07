@@ -19,8 +19,8 @@ import { CurrentUser } from '../../common/decorators/current-user.decorator';
 import { RepairerProfile } from './entities/repairer-profile.entity';
 import { User } from './entities/user.entity';
 
-@ApiTags('Repairer')
-@Controller('repairer')
+@ApiTags('Repairers')
+@Controller('repairers')
 export class RepairersController {
   constructor(private readonly repairersService: RepairersService) {}
 

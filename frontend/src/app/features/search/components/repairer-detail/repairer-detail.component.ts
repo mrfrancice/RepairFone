@@ -1,10 +1,13 @@
 import { Component, inject, signal, OnInit, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
-import { SearchService, Repairer, ServiceType, RepairerReview } from '../../services/search.service';
+import { SearchService, Repairer, ServiceType, RepairerReview, Device } from '../../services/search.service';
 import { SearchStore } from '../../stores/search.store';
 import { AuthStore } from '../../../../core/stores/auth.store';
 import { ReviewsService, StepRatingStats, RatingCategory } from '../../../reviews/services/reviews.service';
+import { RequestsService, CreateRequestDto } from '../../../requests/services/requests.service';
+import { UiHeaderComponent } from '../../../../shared/components/ui-header/ui-header.component';
 
 interface QualityScore {
   label: string;
@@ -16,7 +19,7 @@ interface QualityScore {
 @Component({
   selector: 'app-repairer-detail',
   standalone: true,
-  imports: [CommonModule, RouterLink],
+  imports: [CommonModule, RouterLink, FormsModule, UiHeaderComponent],
   template: `
     <div class="detail-container">
       @if (isLoading()) {
@@ -25,23 +28,23 @@ interface QualityScore {
           <p>Chargement...</p>
         </div>
       } @else if (repairer()) {
-        <!-- Header -->
-        <header class="detail-header">
-          <div class="header-actions">
-            <button class="action-btn" (click)="goBack()">
-              <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
-                <path d="M15 18L9 12L15 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-              </svg>
-            </button>
-            <button class="action-btn" (click)="shareProfile()">
-              <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
-                <path d="M4 12V20C4 20.5304 4.21071 21.0391 4.58579 21.4142C4.96086 21.7893 5.46957 22 6 22H18C18.5304 22 19.0391 21.7893 19.4142 21.4142C19.7893 21.0391 20 20.5304 20 20V12" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                <polyline points="16,6 12,2 8,6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                <line x1="12" y1="2" x2="12" y2="15" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-              </svg>
-            </button>
-          </div>
+        <!-- Header with ui-header -->
+        <ui-header
+          [title]="repairer()?.repairerProfile?.businessName || getRepairerName()"
+          [showBack]="true"
+          backRoute="/search"
+          [showProfile]="true"
+        >
+          <!-- Share button in header-actions -->
+          <button header-actions class="share-btn" (click)="shareProfile()">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+              <path d="M4 12V20C4 20.5304 4.21071 21.0391 4.58579 21.4142C4.96086 21.7893 5.46957 22 6 22H18C18.5304 22 19.0391 21.7893 19.4142 21.4142C19.7893 21.0391 20 20.5304 20 20V12" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+              <polyline points="16,6 12,2 8,6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+              <line x1="12" y1="2" x2="12" y2="15" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </button>
 
+          <!-- Repairer Hero Info inside header -->
           <div class="repairer-hero">
             <div class="repairer-avatar">
               @if (repairer()?.avatarUrl) {
@@ -55,8 +58,6 @@ interface QualityScore {
                 <span class="verified-badge">✓</span>
               }
             </div>
-
-            <h1>{{ repairer()?.repairerProfile?.businessName || getRepairerName() }}</h1>
 
             <div class="badges-row">
               @if (repairer()?.repairerProfile?.isAvailable) {
@@ -84,27 +85,366 @@ interface QualityScore {
 
             <div class="stats-row">
               <div class="stat">
-                <span class="stat-value">{{ repairer()?.repairerProfile?.completedRepairs || 0 }}</span>
+                <span class="stat-value">{{ repairer()?.repairerProfile?.completedRepairs ?? 0 }}</span>
                 <span class="stat-label">Réparations</span>
               </div>
               <div class="stat-divider"></div>
               <div class="stat">
-                <span class="stat-value">{{ repairer()?.repairerProfile?.yearsOfExperience || 1 }} ans</span>
+                <span class="stat-value">{{ repairer()?.repairerProfile?.yearsOfExperience ?? 0 }} ans</span>
                 <span class="stat-label">Expérience</span>
               </div>
               <div class="stat-divider"></div>
               <div class="stat">
-                <span class="stat-value">{{ repairer()?.repairerProfile?.acceptanceRate || 95 }}%</span>
+                <span class="stat-value">{{ repairer()?.repairerProfile?.acceptanceRate ?? 0 }}%</span>
                 <span class="stat-label">Acceptation</span>
               </div>
             </div>
           </div>
-        </header>
+        </ui-header>
 
         <!-- Content -->
         <div class="detail-content">
-          <!-- Gallery -->
-          @if (galleryPhotos().length > 0) {
+          <!-- 1. Repair Request Form Section (FIRST) -->
+          <section class="section request-form-section">
+            <div class="section-header">
+              <h2>🔧 Demander une réparation</h2>
+            </div>
+
+            @if (!showConfirmation()) {
+              <!-- Step 1: Device Selection -->
+              <div class="search-step" [class.completed]="currentStep() > 1">
+                <div class="step-header">
+                  <span class="step-indicator" [class.active]="currentStep() === 1">
+                    @if (currentStep() > 1) {
+                      <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                        <path d="M13.3 4.3L6 11.6L2.7 8.3" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                      </svg>
+                    } @else {
+                      1
+                    }
+                  </span>
+                  <h3>Type d'appareil</h3>
+                </div>
+
+                @if (currentStep() === 1) {
+                  <div class="category-grid">
+                    @for (cat of categories(); track cat) {
+                      <button
+                        type="button"
+                        class="category-btn"
+                        [class.active]="selectedCategory() === cat"
+                        (click)="selectCategory(cat)"
+                      >
+                        <span class="category-icon">{{ getCategoryIcon(cat) }}</span>
+                        <span class="category-label">{{ getCategoryLabel(cat) }}</span>
+                      </button>
+                    }
+                  </div>
+
+                  <!-- Brand Selection -->
+                  @if (selectedCategory() && brands().length > 0) {
+                    <div class="brand-section">
+                      <label class="section-label">Marque</label>
+                      @if (isLoadingBrands()) {
+                        <div class="loading-inline">Chargement...</div>
+                      } @else {
+                        <div class="brand-grid">
+                          @for (brand of brands(); track brand) {
+                            <button
+                              type="button"
+                              class="brand-btn"
+                              [class.active]="selectedBrand() === brand"
+                              (click)="selectBrand(brand)"
+                            >
+                              <span class="brand-icon">{{ getBrandIcon(brand) }}</span>
+                              <span>{{ brand }}</span>
+                            </button>
+                          }
+                        </div>
+                      }
+                    </div>
+                  }
+
+                  <!-- Model Selection -->
+                  @if (selectedBrand() && devices().length > 0) {
+                    <div class="device-section">
+                      <label class="section-label">Modèle</label>
+                      @if (isLoadingModels()) {
+                        <div class="loading-inline">Chargement...</div>
+                      } @else {
+                        <div class="device-list">
+                          @for (device of devices(); track device.id) {
+                            <button
+                              type="button"
+                              class="device-btn"
+                              [class.active]="selectedDevice()?.id === device.id"
+                              (click)="selectDeviceDirectly(device)"
+                            >
+                              <span class="device-name">{{ device.brand }} {{ device.model }}</span>
+                              @if (selectedDevice()?.id === device.id) {
+                                <span class="check">✓</span>
+                              }
+                            </button>
+                          }
+                        </div>
+                      }
+                    </div>
+                  }
+
+                  <div class="form-actions">
+                    <button
+                      class="btn btn-primary btn-block btn-large"
+                      [disabled]="!selectedDevice()"
+                      (click)="nextStep()"
+                    >
+                      Continuer
+                    </button>
+                  </div>
+                } @else {
+                  <!-- Collapsed view -->
+                  <div class="step-summary" (click)="goToStep(1)">
+                    <span class="summary-icon">{{ getCategoryIcon(selectedCategory() || '') }}</span>
+                    <span class="summary-text">{{ selectedDevice()?.brand }} {{ selectedDevice()?.model }}</span>
+                    <button class="btn-text">Modifier</button>
+                  </div>
+                }
+              </div>
+
+              <!-- Step 2: Service Selection -->
+              @if (currentStep() >= 2) {
+                <div class="search-step" [class.completed]="currentStep() > 2" [class.disabled]="currentStep() < 2">
+                  <div class="step-header">
+                    <span class="step-indicator" [class.active]="currentStep() === 2">
+                      @if (currentStep() > 2) {
+                        <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                          <path d="M13.3 4.3L6 11.6L2.7 8.3" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                        </svg>
+                      } @else {
+                        2
+                      }
+                    </span>
+                    <h3>Problème rencontré</h3>
+                  </div>
+
+                  @if (currentStep() === 2) {
+                    @if (isLoadingServices()) {
+                      <div class="loading-inline">Chargement des services...</div>
+                    } @else {
+                      <div class="problems-list">
+                        @for (service of formServiceTypes(); track service.id) {
+                          <button
+                            type="button"
+                            class="problem-btn"
+                            [class.active]="formSelectedService()?.id === service.id"
+                            (click)="selectFormService(service)"
+                          >
+                            <span class="problem-icon">🔧</span>
+                            <div class="problem-info">
+                              <span class="problem-name">{{ service.name }}</span>
+                              @if (service.basePrice) {
+                                <span class="problem-price">{{ service.basePrice | number }} FCFA</span>
+                              }
+                            </div>
+                            @if (formSelectedService()?.id === service.id) {
+                              <span class="check">✓</span>
+                            }
+                          </button>
+                        }
+                      </div>
+
+                      <!-- Problem Description -->
+                      <div class="other-problem-input">
+                        <textarea
+                          [(ngModel)]="problemDescription"
+                          placeholder="Décrivez votre problème (optionnel)..."
+                          rows="3"
+                        ></textarea>
+                      </div>
+                    }
+
+                    <div class="form-actions">
+                      <button class="btn btn-secondary" (click)="prevStep()">Retour</button>
+                      <button
+                        class="btn btn-primary btn-large"
+                        [disabled]="!formSelectedService()"
+                        (click)="nextStep()"
+                      >
+                        Continuer
+                      </button>
+                    </div>
+                  } @else if (currentStep() > 2) {
+                    <!-- Collapsed view -->
+                    <div class="step-summary" (click)="goToStep(2)">
+                      <span class="summary-icon">🔧</span>
+                      <span class="summary-text">{{ formSelectedService()?.name }}</span>
+                      <button class="btn-text">Modifier</button>
+                    </div>
+                  }
+                </div>
+              }
+
+              <!-- Step 3: Delivery Mode -->
+              @if (currentStep() >= 3) {
+                <div class="search-step">
+                  <div class="step-header">
+                    <span class="step-indicator" [class.active]="currentStep() === 3">3</span>
+                    <h3>Mode de service</h3>
+                  </div>
+
+                  <div class="service-mode-grid">
+                    <button
+                      type="button"
+                      class="service-mode-btn"
+                      [class.active]="deliveryMode() === 'in_shop'"
+                      (click)="deliveryMode.set('in_shop')"
+                    >
+                      <span class="mode-icon">🏪</span>
+                      <span class="mode-label">En boutique</span>
+                      <span class="mode-desc">Je me déplace</span>
+                    </button>
+                    <button
+                      type="button"
+                      class="service-mode-btn"
+                      [class.active]="deliveryMode() === 'at_home'"
+                      (click)="deliveryMode.set('at_home')"
+                    >
+                      <span class="mode-icon">🏠</span>
+                      <span class="mode-label">À domicile</span>
+                      <span class="mode-desc">Le réparateur vient</span>
+                    </button>
+                  </div>
+
+                  <!-- Urgency -->
+                  <div class="urgency-section">
+                    <label class="section-label">Urgence</label>
+                    <div class="service-mode-grid">
+                      <button
+                        type="button"
+                        class="service-mode-btn"
+                        [class.active]="urgencyLevel() === 'normal'"
+                        (click)="urgencyLevel.set('normal')"
+                      >
+                        <span class="mode-icon">🕐</span>
+                        <span class="mode-label">Normal</span>
+                      </button>
+                      <button
+                        type="button"
+                        class="service-mode-btn express-mode"
+                        [class.active]="urgencyLevel() === 'express'"
+                        (click)="urgencyLevel.set('express')"
+                      >
+                        <span class="mode-icon">⚡</span>
+                        <span class="mode-label">Express</span>
+                        <span class="mode-desc">+30%</span>
+                      </button>
+                    </div>
+                  </div>
+
+                  <!-- Price Suggestion -->
+                  @if (formSelectedService()) {
+                    <div class="price-suggestion">
+                      <span class="suggestion-icon">💡</span>
+                      <div class="suggestion-content">
+                        <span class="suggestion-label">Prix estimé</span>
+                        <span class="suggestion-price">
+                          {{ formSelectedService()!.name }} : {{ getTotalPrice() | number }} FCFA
+                        </span>
+                      </div>
+                    </div>
+                  }
+
+                  <div class="form-actions">
+                    <button class="btn btn-secondary" (click)="prevStep()">Retour</button>
+                    <button
+                      class="btn btn-primary btn-large"
+                      [disabled]="!deliveryMode()"
+                      (click)="showRequestConfirmation()"
+                    >
+                      Voir le récapitulatif
+                    </button>
+                  </div>
+                </div>
+              }
+            } @else {
+              <!-- Confirmation View -->
+              <div class="confirmation-view">
+                <div class="confirmation-header">
+                  <span class="confirmation-icon">📋</span>
+                  <h3>Récapitulatif de votre demande</h3>
+                </div>
+
+                <div class="recap-card">
+                  <div class="recap-item">
+                    <span class="recap-label">Réparateur</span>
+                    <span class="recap-value">{{ repairer()?.repairerProfile?.businessName || getRepairerName() }}</span>
+                  </div>
+                  <div class="recap-item">
+                    <span class="recap-label">Appareil</span>
+                    <span class="recap-value">{{ selectedDevice()?.brand }} {{ selectedDevice()?.model }}</span>
+                  </div>
+                  <div class="recap-item">
+                    <span class="recap-label">Service</span>
+                    <span class="recap-value">{{ formSelectedService()?.name }}</span>
+                  </div>
+                  <div class="recap-item">
+                    <span class="recap-label">Mode</span>
+                    <span class="recap-value">{{ getDeliveryModeLabel(deliveryMode()) }}</span>
+                  </div>
+                  <div class="recap-item">
+                    <span class="recap-label">Urgence</span>
+                    <span class="recap-value" [class.express]="urgencyLevel() === 'express'">
+                      {{ urgencyLevel() === 'express' ? '⚡ Express' : '🕐 Normal' }}
+                    </span>
+                  </div>
+                  @if (problemDescription) {
+                    <div class="recap-item description">
+                      <span class="recap-label">Description</span>
+                      <span class="recap-value">{{ problemDescription }}</span>
+                    </div>
+                  }
+                </div>
+
+                <div class="price-summary">
+                  <div class="price-row">
+                    <span>Prix estimé</span>
+                    <span class="price-value">{{ formSelectedService()?.basePrice | number }} FCFA</span>
+                  </div>
+                  @if (urgencyLevel() === 'express') {
+                    <div class="price-row supplement">
+                      <span>Supplément express (+30%)</span>
+                      <span class="price-value">{{ (formSelectedService()?.basePrice || 0) * 0.3 | number }} FCFA</span>
+                    </div>
+                    <div class="price-row total">
+                      <span>Total estimé</span>
+                      <span class="price-value">{{ getTotalPrice() | number }} FCFA</span>
+                    </div>
+                  }
+                </div>
+
+                <p class="price-note">
+                  * Le prix final sera confirmé par le réparateur après diagnostic
+                </p>
+
+                <div class="form-actions confirmation-actions">
+                  <button class="btn btn-secondary" (click)="editRequest()">Modifier</button>
+                  <button
+                    class="btn btn-primary"
+                    [disabled]="isSubmitting()"
+                    (click)="submitRequest()"
+                  >
+                    @if (isSubmitting()) {
+                      Envoi en cours...
+                    } @else {
+                      Envoyer la demande
+                    }
+                  </button>
+                </div>
+              </div>
+            }
+          </section>
+
+          <!-- 2. Gallery Section (hidden from step 2) -->
+          @if (galleryPhotos().length > 0 && currentStep() === 1 && !showConfirmation()) {
             <section class="section gallery-section">
               <h2>Photos de l'atelier</h2>
               <div class="gallery-scroll">
@@ -117,82 +457,7 @@ interface QualityScore {
             </section>
           }
 
-          <!-- Quality Scores (Step Ratings) -->
-          <section class="section">
-            <div class="section-header">
-              <h2>Score qualité</h2>
-              @if (stepRatingStats()?.overall?.count) {
-                <span class="rating-count-badge">{{ stepRatingStats()?.overall?.count }} notes</span>
-              }
-            </div>
-
-            @if (stepRatingStats()?.overall?.count) {
-              <!-- Overall Score -->
-              <div class="overall-score-card">
-                <div class="overall-value" [style.color]="reviewsService.getStepRatingColor(stepRatingStats()?.overall?.average || 0)">
-                  {{ reviewsService.formatStepRating(Math.round(stepRatingStats()?.overall?.average || 0)) }}
-                </div>
-                <div class="overall-info">
-                  <span class="overall-label">Score global</span>
-                  <span class="overall-desc">{{ reviewsService.getStepRatingLabel(stepRatingStats()?.overall?.average || 0) }}</span>
-                </div>
-              </div>
-
-              <!-- Category Scores -->
-              <div class="quality-scores">
-                @for (score of qualityScores(); track score.label) {
-                  <div class="quality-item">
-                    <div class="quality-header">
-                      <span class="quality-icon">{{ score.icon }}</span>
-                      <span class="quality-label">{{ score.label }}</span>
-                    </div>
-                    <div class="quality-bar-container">
-                      <div class="quality-bar">
-                        <div
-                          class="quality-fill"
-                          [style.width.%]="score.value"
-                          [style.background]="getQualityBarGradient(score.rawRating || 0)"
-                        ></div>
-                      </div>
-                    </div>
-                    <span
-                      class="quality-value"
-                      [style.color]="reviewsService.getStepRatingColor(score.rawRating || 0)"
-                    >
-                      {{ reviewsService.formatStepRating(score.rawRating || 0) }}
-                    </span>
-                  </div>
-                }
-              </div>
-            } @else {
-              <div class="no-ratings-message">
-                <span class="no-ratings-icon">📊</span>
-                <p>Pas encore de notes pour ce réparateur</p>
-              </div>
-            }
-          </section>
-
-          <!-- Description -->
-          @if (repairer()?.repairerProfile?.description) {
-            <section class="section">
-              <h2>À propos</h2>
-              <p class="description">{{ repairer()?.repairerProfile?.description }}</p>
-            </section>
-          }
-
-          <!-- Specialties -->
-          @if (repairer()?.repairerProfile?.specialties?.length) {
-            <section class="section">
-              <h2>Spécialités</h2>
-              <div class="specialties-list">
-                @for (specialty of repairer()?.repairerProfile?.specialties || []; track specialty) {
-                  <span class="specialty-chip">{{ specialty }}</span>
-                }
-              </div>
-            </section>
-          }
-
-          <!-- Location & Zone -->
+          <!-- 3. Location & Zone d'intervention -->
           @if (repairer()?.repairerProfile?.address) {
             <section class="section">
               <h2>Zone d'intervention</h2>
@@ -222,6 +487,83 @@ interface QualityScore {
                   <path d="M7.5 15L12.5 10L7.5 5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
                 </svg>
               </button>
+            </section>
+          }
+
+          <!-- 4. Quality Scores (Step Ratings) - hidden from step 2 -->
+          @if (currentStep() === 1 && !showConfirmation()) {
+            <section class="section">
+              <div class="section-header">
+                <h2>Score qualité</h2>
+                @if (stepRatingStats()?.overall?.count) {
+                  <span class="rating-count-badge">{{ stepRatingStats()?.overall?.count }} notes</span>
+                }
+              </div>
+
+              @if (stepRatingStats()?.overall?.count) {
+                <!-- Overall Score -->
+                <div class="overall-score-card">
+                  <div class="overall-value" [style.color]="reviewsService.getStepRatingColor(stepRatingStats()?.overall?.average || 0)">
+                    {{ reviewsService.formatStepRating(Math.round(stepRatingStats()?.overall?.average || 0)) }}
+                  </div>
+                  <div class="overall-info">
+                    <span class="overall-label">Score global</span>
+                    <span class="overall-desc">{{ reviewsService.getStepRatingLabel(stepRatingStats()?.overall?.average || 0) }}</span>
+                  </div>
+                </div>
+
+                <!-- Category Scores -->
+                <div class="quality-scores">
+                  @for (score of qualityScores(); track score.label) {
+                    <div class="quality-item">
+                      <div class="quality-header">
+                        <span class="quality-icon">{{ score.icon }}</span>
+                        <span class="quality-label">{{ score.label }}</span>
+                      </div>
+                      <div class="quality-bar-container">
+                        <div class="quality-bar">
+                          <div
+                            class="quality-fill"
+                            [style.width.%]="score.value"
+                            [style.background]="getQualityBarGradient(score.rawRating || 0)"
+                          ></div>
+                        </div>
+                      </div>
+                      <span
+                        class="quality-value"
+                        [style.color]="reviewsService.getStepRatingColor(score.rawRating || 0)"
+                      >
+                        {{ reviewsService.formatStepRating(score.rawRating || 0) }}
+                      </span>
+                    </div>
+                  }
+                </div>
+              } @else {
+                <div class="no-ratings-message">
+                  <span class="no-ratings-icon">📊</span>
+                  <p>Pas encore de notes pour ce réparateur</p>
+                </div>
+              }
+            </section>
+          }
+
+          <!-- Description - hidden from step 2 -->
+          @if (repairer()?.repairerProfile?.description && currentStep() === 1 && !showConfirmation()) {
+            <section class="section">
+              <h2>À propos</h2>
+              <p class="description">{{ repairer()?.repairerProfile?.description }}</p>
+            </section>
+          }
+
+          <!-- Specialties -->
+          @if (repairer()?.repairerProfile?.specialties?.length) {
+            <section class="section">
+              <h2>Spécialités</h2>
+              <div class="specialties-list">
+                @for (specialty of repairer()?.repairerProfile?.specialties || []; track specialty) {
+                  <span class="specialty-chip">{{ specialty }}</span>
+                }
+              </div>
             </section>
           }
 
@@ -257,51 +599,53 @@ interface QualityScore {
             }
           </section>
 
-          <!-- Reviews -->
-          <section class="section">
-            <div class="section-header">
-              <h2>Avis clients</h2>
-              @if (reviews().length > 0) {
-                <span class="review-summary">{{ reviews().length }} avis</span>
-              }
-            </div>
-
-            @if (reviews().length > 0) {
-              <div class="reviews-list">
-                @for (review of reviews().slice(0, showAllReviews() ? 999 : 3); track review.id) {
-                  <div class="review-item">
-                    <div class="review-header">
-                      <div class="reviewer-info">
-                        <div class="reviewer-avatar">
-                          {{ review.client.firstName?.[0] || 'C' }}
-                        </div>
-                        <span class="reviewer-name">
-                          {{ review.client.firstName || 'Client' }}
-                        </span>
-                      </div>
-                      <div class="review-rating">
-                        @for (star of [1, 2, 3, 4, 5]; track star) {
-                          <span class="star-small" [class.filled]="star <= review.rating">★</span>
-                        }
-                      </div>
-                    </div>
-                    @if (review.comment) {
-                      <p class="review-comment">{{ review.comment }}</p>
-                    }
-                    <span class="review-date">{{ formatDate(review.createdAt) }}</span>
-                  </div>
+          <!-- Reviews - hidden from step 2 -->
+          @if (currentStep() === 1 && !showConfirmation()) {
+            <section class="section">
+              <div class="section-header">
+                <h2>Avis clients</h2>
+                @if (reviews().length > 0) {
+                  <span class="review-summary">{{ reviews().length }} avis</span>
                 }
               </div>
 
-              @if (reviews().length > 3 && !showAllReviews()) {
-                <button class="btn-show-more" (click)="showAllReviews.set(true)">
-                  Voir tous les avis ({{ reviews().length }})
-                </button>
+              @if (reviews().length > 0) {
+                <div class="reviews-list">
+                  @for (review of reviews().slice(0, showAllReviews() ? 999 : 3); track review.id) {
+                    <div class="review-item">
+                      <div class="review-header">
+                        <div class="reviewer-info">
+                          <div class="reviewer-avatar">
+                            {{ review.client.firstName?.[0] || 'C' }}
+                          </div>
+                          <span class="reviewer-name">
+                            {{ review.client.firstName || 'Client' }}
+                          </span>
+                        </div>
+                        <div class="review-rating">
+                          @for (star of [1, 2, 3, 4, 5]; track star) {
+                            <span class="star-small" [class.filled]="star <= review.rating">★</span>
+                          }
+                        </div>
+                      </div>
+                      @if (review.comment) {
+                        <p class="review-comment">{{ review.comment }}</p>
+                      }
+                      <span class="review-date">{{ formatDate(review.createdAt) }}</span>
+                    </div>
+                  }
+                </div>
+
+                @if (reviews().length > 3 && !showAllReviews()) {
+                  <button class="btn-show-more" (click)="showAllReviews.set(true)">
+                    Voir tous les avis ({{ reviews().length }})
+                  </button>
+                }
+              } @else {
+                <p class="no-reviews">Aucun avis pour le moment</p>
               }
-            } @else {
-              <p class="no-reviews">Aucun avis pour le moment</p>
-            }
-          </section>
+            </section>
+          }
         </div>
 
         <!-- Footer CTA -->
@@ -383,26 +727,13 @@ interface QualityScore {
       to { transform: rotate(360deg); }
     }
 
-    .detail-header {
-      background: linear-gradient(135deg, #FF6B35 0%, #E85A24 100%);
-      color: white;
-      padding: 1rem;
-      padding-top: calc(1rem + env(safe-area-inset-top, 0));
-      padding-bottom: 2rem;
-    }
-
-    .header-actions {
-      display: flex;
-      justify-content: space-between;
-      margin-bottom: 1rem;
-    }
-
-    .action-btn {
-      background: rgba(255, 255, 255, 0.2);
+    /* Share button in header */
+    .share-btn {
+      background: rgba(255, 255, 255, 0.15);
       border: none;
       color: white;
-      min-width: 48px;
-      min-height: 48px;
+      width: 40px;
+      height: 40px;
       border-radius: 12px;
       display: flex;
       align-items: center;
@@ -411,13 +742,16 @@ interface QualityScore {
       transition: all 0.2s;
     }
 
-    .action-btn:hover {
-      background: rgba(255, 255, 255, 0.3);
+    .share-btn:hover {
+      background: rgba(255, 255, 255, 0.25);
       transform: scale(1.05);
     }
 
+    /* Repairer Hero inside ui-header */
     .repairer-hero {
       text-align: center;
+      padding-top: 1rem;
+      color: white;
     }
 
     .repairer-avatar {
@@ -574,6 +908,7 @@ interface QualityScore {
 
     .detail-content {
       padding: 1rem;
+      padding-top: 420px; /* Space for fixed ui-header with repairer hero */
     }
 
     .section {
@@ -1168,12 +1503,599 @@ interface QualityScore {
       color: white;
       font-size: 0.875rem;
     }
+
+    /* Request Form Section */
+    .request-form-section {
+      background: linear-gradient(135deg, #FFF9F5 0%, #FFF4ED 100%);
+      border: 2px solid rgba(255, 107, 53, 0.15);
+    }
+
+    .request-form-section h2 {
+      color: #FF6B35;
+    }
+
+    /* Search Step - matching /search page */
+    .search-step {
+      margin-bottom: 1.5rem;
+      padding-bottom: 1.5rem;
+      border-bottom: 1px solid #f3f4f6;
+    }
+
+    .search-step:last-of-type {
+      border-bottom: none;
+    }
+
+    .search-step.disabled {
+      opacity: 0.5;
+      pointer-events: none;
+    }
+
+    .search-step.completed .step-indicator {
+      background: #10b981;
+    }
+
+    .step-header {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      margin-bottom: 1rem;
+    }
+
+    .step-header h3 {
+      font-size: 1rem;
+      font-weight: 600;
+      color: #1f2937;
+      margin: 0;
+    }
+
+    .step-indicator {
+      width: 28px;
+      height: 28px;
+      background: #e5e7eb;
+      color: #6b7280;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 600;
+      font-size: 0.875rem;
+      transition: all 0.3s;
+    }
+
+    .step-indicator.active {
+      background: #FF6B35;
+      color: white;
+    }
+
+    .step-indicator svg {
+      color: white;
+    }
+
+    /* Category Grid */
+    .category-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 0.75rem;
+    }
+
+    .category-btn {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0.375rem;
+      padding: 1rem 0.5rem;
+      background: #f9fafb;
+      border: 2px solid #e5e7eb;
+      border-radius: 12px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .category-btn:hover:not(:disabled) {
+      border-color: #FF6B35;
+      background: #FFF4E6;
+      transform: translateY(-2px);
+    }
+
+    .category-btn.active {
+      background: linear-gradient(135deg, #FF6B35 0%, #FF9800 100%);
+      border-color: #FF6B35;
+      color: white;
+    }
+
+    .category-btn.active .category-label {
+      color: white;
+    }
+
+    .category-btn:disabled {
+      cursor: not-allowed;
+      opacity: 0.5;
+    }
+
+    .category-icon {
+      font-size: 1.75rem;
+    }
+
+    .category-label {
+      font-size: 0.75rem;
+      font-weight: 500;
+      color: #374151;
+    }
+
+    /* Section Label */
+    .section-label {
+      display: block;
+      font-weight: 500;
+      color: #374151;
+      margin: 1rem 0 0.5rem;
+      font-size: 0.875rem;
+    }
+
+    /* Brand Section */
+    .brand-section {
+      margin-top: 1rem;
+    }
+
+    .brand-grid {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+    }
+
+    .brand-btn {
+      display: flex;
+      align-items: center;
+      gap: 0.375rem;
+      padding: 0.5rem 0.75rem;
+      background: #f9fafb;
+      border: 1px solid #e5e7eb;
+      border-radius: 20px;
+      cursor: pointer;
+      transition: all 0.2s;
+      font-size: 0.875rem;
+      color: #1f2937;
+    }
+
+    .brand-btn:hover {
+      border-color: #FF6B35;
+      transform: translateY(-1px);
+    }
+
+    .brand-btn.active {
+      background: #FFF4E6;
+      border-color: #FF6B35;
+      color: #FF6B35;
+      font-weight: 600;
+    }
+
+    .brand-icon {
+      font-size: 1rem;
+    }
+
+    /* Device Section */
+    .device-section {
+      margin-top: 1rem;
+    }
+
+    .device-list {
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+    }
+
+    .device-btn {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0.75rem 1rem;
+      background: #f9fafb;
+      border: 1px solid #e5e7eb;
+      border-radius: 10px;
+      cursor: pointer;
+      transition: all 0.2s;
+      text-align: left;
+    }
+
+    .device-btn:hover {
+      border-color: #FF6B35;
+      transform: translateX(4px);
+    }
+
+    .device-btn.active {
+      background: #FFF4E6;
+      border-color: #FF6B35;
+    }
+
+    .device-name {
+      font-weight: 500;
+      color: #1f2937;
+    }
+
+    .check {
+      color: #4CAF50;
+      font-weight: 700;
+      font-size: 1.125rem;
+    }
+
+    /* Problems List */
+    .problems-list {
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+    }
+
+    .problem-btn {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      padding: 0.875rem 1rem;
+      background: #f9fafb;
+      border: 2px solid #e5e7eb;
+      border-radius: 12px;
+      cursor: pointer;
+      transition: all 0.2s;
+      text-align: left;
+    }
+
+    .problem-btn:hover {
+      border-color: #FF6B35;
+      transform: translateX(4px);
+    }
+
+    .problem-btn.active {
+      background: linear-gradient(135deg, #FFF4E6 0%, #FFE8CC 100%);
+      border-color: #FF6B35;
+      border-width: 2px;
+    }
+
+    .problem-icon {
+      font-size: 1.5rem;
+      flex-shrink: 0;
+    }
+
+    .problem-info {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 0.125rem;
+    }
+
+    .problem-name {
+      font-weight: 500;
+      color: #1f2937;
+    }
+
+    .problem-price {
+      font-size: 0.75rem;
+      color: #4CAF50;
+      font-weight: 600;
+      background: rgba(76, 175, 80, 0.1);
+      padding: 0.125rem 0.5rem;
+      border-radius: 12px;
+      display: inline-block;
+      margin-top: 0.25rem;
+    }
+
+    /* Other Problem Input */
+    .other-problem-input {
+      margin-top: 0.75rem;
+    }
+
+    .other-problem-input textarea {
+      width: 100%;
+      padding: 0.75rem 1rem;
+      border: 1px solid #d1d5db;
+      border-radius: 10px;
+      font-size: 1rem;
+      resize: vertical;
+      font-family: inherit;
+    }
+
+    .other-problem-input textarea:focus {
+      outline: none;
+      border-color: #FF6B35;
+      box-shadow: 0 0 0 3px rgba(255, 107, 53, 0.1);
+    }
+
+    /* Service Mode Grid */
+    .service-mode-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 0.75rem;
+    }
+
+    .service-mode-btn {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+      padding: 1.25rem 0.75rem;
+      background: #f9fafb;
+      border: 2px solid #e5e7eb;
+      border-radius: 16px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .service-mode-btn:hover {
+      border-color: #FF6B35;
+      transform: translateY(-4px);
+      box-shadow: 0 4px 12px rgba(255, 107, 53, 0.15);
+    }
+
+    .service-mode-btn.active {
+      background: linear-gradient(135deg, #FF6B35 0%, #FF9800 100%);
+      border-color: #FF6B35;
+      color: white;
+    }
+
+    .service-mode-btn.active .mode-label,
+    .service-mode-btn.active .mode-desc {
+      color: white;
+    }
+
+    .service-mode-btn.express-mode.active {
+      background: linear-gradient(135deg, #f59e0b 0%, #fbbf24 100%);
+      border-color: #f59e0b;
+    }
+
+    .mode-icon {
+      font-size: 1.75rem;
+      margin-bottom: 0.375rem;
+    }
+
+    .mode-label {
+      font-weight: 600;
+      color: #1f2937;
+      font-size: 0.9375rem;
+    }
+
+    .mode-desc {
+      font-size: 0.75rem;
+      color: #6b7280;
+      margin-top: 0.125rem;
+    }
+
+    /* Urgency Section */
+    .urgency-section {
+      margin-top: 1.25rem;
+    }
+
+    /* Price Suggestion */
+    .price-suggestion {
+      display: flex;
+      align-items: flex-start;
+      gap: 0.75rem;
+      padding: 1rem;
+      background: linear-gradient(135deg, #FFF4E6 0%, #FFE8CC 100%);
+      border-left: 4px solid #F9A825;
+      border-radius: 12px;
+      margin-top: 1rem;
+    }
+
+    .suggestion-icon {
+      font-size: 1.5rem;
+      flex-shrink: 0;
+    }
+
+    .suggestion-content {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 0.25rem;
+    }
+
+    .suggestion-label {
+      font-size: 0.75rem;
+      font-weight: 600;
+      color: #7C5800;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .suggestion-price {
+      font-size: 0.875rem;
+      color: #5A4200;
+      font-weight: 500;
+      line-height: 1.4;
+    }
+
+    /* Step Summary (collapsed view) */
+    .step-summary {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      padding: 0.875rem 1rem;
+      background: #f0fdf4;
+      border-radius: 12px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .step-summary:hover {
+      background: #dcfce7;
+    }
+
+    .summary-icon {
+      font-size: 1.25rem;
+    }
+
+    .summary-text {
+      flex: 1;
+      font-weight: 500;
+      color: #166534;
+    }
+
+    .btn-text {
+      background: none;
+      border: none;
+      color: #2563eb;
+      font-weight: 500;
+      cursor: pointer;
+      padding: 0.5rem;
+    }
+
+    .btn-text:hover {
+      color: #1d4ed8;
+    }
+
+    /* Form Actions */
+    .form-actions {
+      display: flex;
+      gap: 0.75rem;
+      margin-top: 1.5rem;
+    }
+
+    .form-actions .btn {
+      flex: 1;
+    }
+
+    .btn-block {
+      width: 100%;
+    }
+
+    .btn-large {
+      padding: 1rem 1.5rem;
+      font-size: 1rem;
+    }
+
+    /* Loading Inline */
+    .loading-inline {
+      text-align: center;
+      color: #6b7280;
+      padding: 1rem;
+      font-style: italic;
+    }
+
+    /* Confirmation View */
+    .confirmation-view {
+      animation: fadeIn 0.3s ease;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .confirmation-header {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      margin-bottom: 1rem;
+    }
+
+    .confirmation-icon {
+      font-size: 1.5rem;
+    }
+
+    .confirmation-header h3 {
+      font-size: 1.125rem;
+      font-weight: 600;
+      color: #1f2937;
+      margin: 0;
+    }
+
+    .recap-card {
+      background: white;
+      border-radius: 12px;
+      padding: 1rem;
+      margin-bottom: 1rem;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+    }
+
+    .recap-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      padding: 0.75rem 0;
+      border-bottom: 1px solid #f3f4f6;
+    }
+
+    .recap-item:last-child {
+      border-bottom: none;
+    }
+
+    .recap-item.description {
+      flex-direction: column;
+      gap: 0.5rem;
+    }
+
+    .recap-label {
+      font-size: 0.875rem;
+      color: #6b7280;
+    }
+
+    .recap-value {
+      font-weight: 600;
+      color: #1f2937;
+      text-align: right;
+    }
+
+    .recap-value.express {
+      color: #f59e0b;
+    }
+
+    .recap-item.description .recap-value {
+      text-align: left;
+      font-weight: 400;
+      font-size: 0.875rem;
+    }
+
+    /* Price Summary */
+    .price-summary {
+      background: white;
+      border-radius: 12px;
+      padding: 1rem;
+      margin-bottom: 0.75rem;
+    }
+
+    .price-row {
+      display: flex;
+      justify-content: space-between;
+      padding: 0.5rem 0;
+      color: #4b5563;
+    }
+
+    .price-row.supplement {
+      color: #f59e0b;
+      font-size: 0.875rem;
+    }
+
+    .price-row.total {
+      border-top: 2px solid #e5e7eb;
+      margin-top: 0.5rem;
+      padding-top: 0.75rem;
+      font-weight: 700;
+      color: #1f2937;
+    }
+
+    .price-value {
+      font-weight: 600;
+    }
+
+    .price-row.total .price-value {
+      color: #FF6B35;
+      font-size: 1.125rem;
+    }
+
+    .price-note {
+      font-size: 0.75rem;
+      color: #6b7280;
+      text-align: center;
+      margin-bottom: 1rem;
+      font-style: italic;
+    }
+
+    .confirmation-actions {
+      margin-top: 1rem;
+    }
   `],
 })
 export class RepairerDetailComponent implements OnInit {
   private readonly searchService = inject(SearchService);
   private readonly searchStore = inject(SearchStore);
   private readonly authStore = inject(AuthStore);
+  private readonly requestsService = inject(RequestsService);
   readonly reviewsService = inject(ReviewsService);
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
@@ -1189,6 +2111,25 @@ export class RepairerDetailComponent implements OnInit {
   readonly showGalleryModal = signal(false);
   readonly currentPhotoIndex = signal(0);
   readonly stepRatingStats = signal<StepRatingStats | null>(null);
+
+  // Repair Request Form Signals
+  readonly currentStep = signal(1);
+  readonly showConfirmation = signal(false);
+  readonly categories = signal<string[]>(['smartphone', 'computer']);
+  readonly selectedCategory = signal<string | null>(null);
+  readonly brands = signal<string[]>([]);
+  readonly selectedBrand = signal<string | null>(null);
+  readonly devices = signal<Device[]>([]);
+  readonly selectedDevice = signal<Device | null>(null);
+  readonly formServiceTypes = signal<ServiceType[]>([]);
+  readonly formSelectedService = signal<ServiceType | null>(null);
+  readonly deliveryMode = signal<'in_shop' | 'at_home' | null>(null);
+  readonly urgencyLevel = signal<'normal' | 'express'>('normal');
+  readonly isLoadingBrands = signal(false);
+  readonly isLoadingModels = signal(false);
+  readonly isLoadingServices = signal(false);
+  readonly isSubmitting = signal(false);
+  problemDescription = '';
 
   readonly galleryPhotos = signal<string[]>([
     'https://images.unsplash.com/photo-1581092921461-eab62e97a780?w=400',
@@ -1230,6 +2171,19 @@ export class RepairerDetailComponent implements OnInit {
     const id = this.route.snapshot.paramMap.get('id');
     if (id) {
       this.loadRepairer(id);
+    }
+    this.loadCategories();
+  }
+
+  private async loadCategories(): Promise<void> {
+    try {
+      const categories = await this.searchService.getDeviceCategories();
+      if (categories && categories.length > 0) {
+        this.categories.set(categories);
+      }
+    } catch (err) {
+      // Keep default categories ['smartphone', 'computer']
+      console.error('Error loading categories:', err);
     }
   }
 
@@ -1422,5 +2376,193 @@ export class RepairerDetailComponent implements OnInit {
       month: 'short',
       year: 'numeric',
     });
+  }
+
+  // ==========================================
+  // REPAIR REQUEST FORM METHODS
+  // ==========================================
+
+  getCategoryIcon(category: string): string {
+    const icons: Record<string, string> = {
+      smartphone: '📱',
+      computer: '💻',
+      tablet: '📋',
+    };
+    return icons[category] || '📱';
+  }
+
+  getCategoryLabel(category: string): string {
+    const labels: Record<string, string> = {
+      smartphone: 'Téléphone',
+      computer: 'Ordinateur',
+      tablet: 'Tablette',
+    };
+    return labels[category] || category;
+  }
+
+  getBrandIcon(brand: string): string {
+    // Return icon based on selected category
+    const category = this.selectedCategory();
+    if (category === 'computer') {
+      return '💻';
+    }
+    if (category === 'tablet') {
+      return '📋';
+    }
+    // Default to phone icon for smartphones
+    return '📱';
+  }
+
+  async selectCategory(category: string): Promise<void> {
+    this.selectedCategory.set(category);
+    this.selectedBrand.set(null);
+    this.selectedDevice.set(null);
+    this.devices.set([]);
+
+    this.isLoadingBrands.set(true);
+    try {
+      const brands = await this.searchService.getDeviceBrands(category);
+      this.brands.set(brands);
+    } catch (err) {
+      console.error('Error loading brands:', err);
+      this.brands.set([]);
+    } finally {
+      this.isLoadingBrands.set(false);
+    }
+  }
+
+  async selectBrand(brand: string): Promise<void> {
+    this.selectedBrand.set(brand);
+    this.selectedDevice.set(null);
+
+    this.isLoadingModels.set(true);
+    try {
+      const result = await this.searchService.getDevices({
+        category: this.selectedCategory() || undefined,
+        brand: brand,
+      });
+      this.devices.set(result.data);
+    } catch (err) {
+      console.error('Error loading devices:', err);
+      this.devices.set([]);
+    } finally {
+      this.isLoadingModels.set(false);
+    }
+  }
+
+  selectDevice(deviceId: string): void {
+    const device = this.devices().find(d => d.id === deviceId);
+    this.selectedDevice.set(device || null);
+  }
+
+  selectDeviceDirectly(device: Device): void {
+    this.selectedDevice.set(device);
+  }
+
+  goToStep(step: number): void {
+    this.currentStep.set(step);
+  }
+
+  async nextStep(): Promise<void> {
+    const current = this.currentStep();
+
+    if (current === 1 && this.selectedDevice()) {
+      // Load service types for step 2
+      this.isLoadingServices.set(true);
+      try {
+        const services = await this.searchService.getServiceTypes(this.selectedDevice()!.id);
+        this.formServiceTypes.set(services);
+      } catch (err) {
+        console.error('Error loading services:', err);
+        this.formServiceTypes.set([]);
+      } finally {
+        this.isLoadingServices.set(false);
+      }
+      this.currentStep.set(2);
+    } else if (current === 2 && this.formSelectedService()) {
+      this.currentStep.set(3);
+    }
+  }
+
+  prevStep(): void {
+    const current = this.currentStep();
+    if (current > 1) {
+      this.currentStep.set(current - 1);
+    }
+  }
+
+  selectFormService(service: ServiceType): void {
+    if (this.formSelectedService()?.id === service.id) {
+      this.formSelectedService.set(null);
+    } else {
+      this.formSelectedService.set(service);
+    }
+  }
+
+  showRequestConfirmation(): void {
+    this.showConfirmation.set(true);
+  }
+
+  editRequest(): void {
+    this.showConfirmation.set(false);
+  }
+
+  getDeliveryModeLabel(mode: string | null): string {
+    const labels: Record<string, string> = {
+      in_shop: 'En boutique',
+      at_home: 'À domicile',
+    };
+    return mode ? labels[mode] || mode : '';
+  }
+
+  getTotalPrice(): number {
+    const basePrice = this.formSelectedService()?.basePrice || 0;
+    if (this.urgencyLevel() === 'express') {
+      return Math.round(basePrice * 1.3);
+    }
+    return basePrice;
+  }
+
+  async submitRequest(): Promise<void> {
+    if (!this.authStore.isAuthenticated()) {
+      this.router.navigate(['/auth/login'], {
+        queryParams: { returnUrl: this.router.url },
+      });
+      return;
+    }
+
+    const repairer = this.repairer();
+    const device = this.selectedDevice();
+    const service = this.formSelectedService();
+    const mode = this.deliveryMode();
+
+    if (!repairer || !device || !service || !mode) {
+      return;
+    }
+
+    this.isSubmitting.set(true);
+
+    try {
+      const dto: CreateRequestDto = {
+        repairerId: repairer.id,
+        deviceId: device.id,
+        serviceTypeId: service.id,
+        description: this.problemDescription || `Demande de ${service.name} pour ${device.brand} ${device.model}`,
+        deliveryMode: mode,
+        urgency: this.urgencyLevel(),
+      };
+
+      const result = await this.requestsService.createRequest(dto);
+
+      // Navigate to request detail or success page
+      this.router.navigate(['/requests', result.id], {
+        queryParams: { success: 'true' },
+      });
+    } catch (err) {
+      console.error('Error creating request:', err);
+      alert('Erreur lors de l\'envoi de la demande. Veuillez réessayer.');
+    } finally {
+      this.isSubmitting.set(false);
+    }
   }
 }

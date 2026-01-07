@@ -4,6 +4,7 @@ import { Router, RouterLink } from '@angular/router';
 import { AuthStore } from '../../../../core/stores/auth.store';
 import { RequestsService } from '../../../requests/services/requests.service';
 import { SettingsService } from '../../../../core/services/settings.service';
+import { SearchService } from '../../../search/services/search.service';
 import { UiSearchBarComponent } from '@app/shared';
 import { UiAvatarComponent } from '../../../../shared/components/ui-avatar/ui-avatar.component';
 import { BottomNavComponent } from '../../../../shared/components/bottom-nav/bottom-nav.component';
@@ -1109,6 +1110,7 @@ export class HomeComponent implements OnInit {
   private readonly router = inject(Router);
   private readonly requestsService = inject(RequestsService);
   private readonly settingsService = inject(SettingsService);
+  private readonly searchService = inject(SearchService);
 
   readonly locationStatus = signal<'idle' | 'loading' | 'success' | 'error'>('idle');
   readonly userAddress = signal<string>('Abidjan, Cote d\'Ivoire');
@@ -1187,53 +1189,42 @@ export class HomeComponent implements OnInit {
     }
   }
 
-  loadNearbyRepairers(): void {
+  async loadNearbyRepairers(): Promise<void> {
     this.isLoadingRepairers.set(true);
-    // Simulated data - in production, this would call an API
-    setTimeout(() => {
-      this.nearbyRepairers.set([
-        {
-          id: '1',
-          name: 'Kouame Jean',
-          businessName: 'Tech Repair Pro',
-          rating: 4.8,
-          reviewCount: 127,
-          specialty: 'iPhone & Samsung',
-          isVerified: true,
-          isAvailable: true,
-          responseTime: 10,
-          distance: 1.2,
-          completedRepairs: 245,
-        },
-        {
-          id: '2',
-          name: 'Yao Sylvain',
-          businessName: 'Mobile Fix CI',
-          rating: 4.6,
-          reviewCount: 89,
-          specialty: 'Tous smartphones',
-          isVerified: true,
-          isAvailable: true,
-          responseTime: 20,
-          distance: 2.5,
-          completedRepairs: 156,
-        },
-        {
-          id: '3',
-          name: 'Koffi Ange',
-          businessName: 'PhoneDoc Abidjan',
-          rating: 4.9,
-          reviewCount: 203,
-          specialty: 'Réparation express',
-          isVerified: true,
-          isAvailable: false,
-          responseTime: 5,
-          distance: 0.8,
-          completedRepairs: 312,
-        },
-      ]);
+    try {
+      // Default location for Abidjan if geolocation not available
+      const defaultLat = 5.3600;
+      const defaultLng = -4.0083;
+
+      const result = await this.searchService.searchRepairers({
+        latitude: defaultLat,
+        longitude: defaultLng,
+        radius: 50, // 50km radius
+        limit: 5,
+      });
+
+      const repairers: NearbyRepairer[] = result.data.map(r => ({
+        id: r.id,
+        name: r.firstName && r.lastName ? `${r.firstName} ${r.lastName}` : 'Réparateur',
+        businessName: r.repairerProfile?.businessName,
+        avatarUrl: r.avatarUrl,
+        rating: r.repairerProfile?.rating || 0,
+        reviewCount: r.repairerProfile?.reviewCount || 0,
+        specialty: r.repairerProfile?.specialties?.join(', ') || 'Réparation mobile',
+        isVerified: r.repairerProfile?.isVerified || false,
+        isAvailable: r.repairerProfile?.isAvailable || false,
+        responseTime: r.repairerProfile?.responseTime || 30,
+        distance: r.distance || 0,
+        completedRepairs: r.repairerProfile?.completedRepairs || 0,
+      }));
+
+      this.nearbyRepairers.set(repairers);
+    } catch (err) {
+      console.error('Error loading nearby repairers:', err);
+      this.nearbyRepairers.set([]);
+    } finally {
       this.isLoadingRepairers.set(false);
-    }, 1000);
+    }
   }
 
   async loadActiveRequests(): Promise<void> {
