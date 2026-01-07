@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException, Inject, forwardRef } from '@nestjs/common';
+import { Injectable, NotFoundException, Inject, forwardRef, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, Like, ILike } from 'typeorm';
 import { IsString, IsOptional, IsNumber, IsBoolean, Min } from 'class-validator';
@@ -71,6 +71,8 @@ export class SearchDevicesDto {
 
 @Injectable()
 export class DevicesService {
+  private readonly logger = new Logger(DevicesService.name);
+
   constructor(
     @InjectRepository(Device)
     private readonly deviceRepository: Repository<Device>,
@@ -555,7 +557,7 @@ export class DevicesService {
         created++;
       } catch (err) {
         // Skip duplicates
-        console.log(`Skipped duplicate: ${deviceDto.brand} ${deviceDto.model}`);
+        this.logger.debug(`Skipped duplicate: ${deviceDto.brand} ${deviceDto.model}`);
       }
     }
 

@@ -7,6 +7,7 @@ import { EventEmitterModule } from '@nestjs/event-emitter';
 import { APP_GUARD, APP_INTERCEPTOR } from '@nestjs/core';
 
 import configuration from './config/configuration';
+import { validate } from './config/env.validation';
 import { getDatabaseConfig } from './config/database.config';
 
 import { AppController } from './app.controller';
@@ -36,10 +37,11 @@ import { SeederModule } from './database/seeders/seeder.module';
 
 @Module({
   imports: [
-    // Configuration
+    // Configuration with validation
     ConfigModule.forRoot({
       isGlobal: true,
       load: [configuration],
+      validate,
     }),
 
     // Database

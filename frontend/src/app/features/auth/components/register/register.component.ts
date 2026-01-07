@@ -1,4 +1,5 @@
-import { Component, inject, signal, computed, ViewChild, ElementRef, OnInit } from '@angular/core';
+import { Component, inject, signal, computed, ViewChild, ElementRef, OnInit, DestroyRef } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
@@ -2102,6 +2103,7 @@ export class RegisterComponent implements OnInit {
   private readonly fb = inject(FormBuilder);
   private readonly locationService = inject(LocationService);
   private readonly settingsService = inject(SettingsService);
+  private readonly destroyRef = inject(DestroyRef);
 
   readonly currentStep = signal(1);
   readonly isLoading = signal(false);
@@ -2224,17 +2226,23 @@ export class RegisterComponent implements OnInit {
 
   constructor() {
     // Update isRepairer signal when role changes
-    this.registerForm.get('role')?.valueChanges.subscribe(value => {
+    this.registerForm.get('role')?.valueChanges.pipe(
+      takeUntilDestroyed(this.destroyRef)
+    ).subscribe(value => {
       this.isRepairer.set(value === 'repairer');
     });
 
-    this.registerForm.get('password')?.valueChanges.subscribe(value => {
+    this.registerForm.get('password')?.valueChanges.pipe(
+      takeUntilDestroyed(this.destroyRef)
+    ).subscribe(value => {
       this.updatePasswordStrength(value);
     });
 
     // Update communes when city changes - only if actually different
     let lastCity = this.registerForm.get('city')?.value || '';
-    this.registerForm.get('city')?.valueChanges.subscribe(cityName => {
+    this.registerForm.get('city')?.valueChanges.pipe(
+      takeUntilDestroyed(this.destroyRef)
+    ).subscribe(cityName => {
       if (cityName !== lastCity) {
         lastCity = cityName;
         this.updateCommunesForCity(cityName);
@@ -2244,7 +2252,9 @@ export class RegisterComponent implements OnInit {
 
     // Update quarters when commune changes - only if actually different
     let lastCommune = '';
-    this.registerForm.get('commune')?.valueChanges.subscribe(communeName => {
+    this.registerForm.get('commune')?.valueChanges.pipe(
+      takeUntilDestroyed(this.destroyRef)
+    ).subscribe(communeName => {
       if (communeName !== lastCommune) {
         lastCommune = communeName;
         this.updateQuartersForCommune(communeName);

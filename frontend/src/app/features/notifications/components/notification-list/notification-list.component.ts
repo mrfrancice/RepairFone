@@ -1,4 +1,4 @@
-import { Component, inject, OnInit, signal } from '@angular/core';
+import { Component, inject, OnInit, signal, ChangeDetectionStrategy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
 import { NotificationService, AppNotification } from '../../../../core/services/notification.service';
@@ -9,6 +9,7 @@ import { UiHeaderComponent } from '../../../../shared/components/ui-header/ui-he
 @Component({
   selector: 'app-notification-list',
   standalone: true,
+  changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
     CommonModule,
     UiLoadingComponent,

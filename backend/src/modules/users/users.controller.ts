@@ -60,7 +60,7 @@ export class UsersController {
   @ApiOperation({ summary: 'Upload user avatar' })
   async uploadAvatar(
     @CurrentUser() user: User,
-    @UploadedFile() file: any,
+    @UploadedFile() file: { originalname: string; buffer: Buffer; mimetype: string } | undefined,
   ): Promise<{ avatarUrl: string }> {
     // For now, just return a placeholder - in production, upload to cloud storage
     const avatarUrl = file ? `/uploads/avatars/${user.id}.jpg` : null;

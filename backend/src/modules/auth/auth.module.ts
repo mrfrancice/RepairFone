@@ -9,6 +9,7 @@ import { JwtStrategy } from './strategies/jwt.strategy';
 import { OtpCode } from './entities/otp.entity';
 import { RefreshToken } from './entities/refresh-token.entity';
 import { UsersModule } from '../users/users.module';
+import { SmsService } from '../../common/services/sms.service';
 
 @Module({
   imports: [
@@ -17,7 +18,7 @@ import { UsersModule } from '../users/users.module';
     JwtModule.registerAsync({
       imports: [ConfigModule],
       useFactory: (configService: ConfigService): JwtModuleOptions => ({
-        secret: configService.get<string>('jwt.secret') ?? 'fallback-secret',
+        secret: configService.get<string>('jwt.secret'),
         signOptions: {
           expiresIn: 900, // 15 minutes in seconds
         },
@@ -27,7 +28,7 @@ import { UsersModule } from '../users/users.module';
     TypeOrmModule.forFeature([OtpCode, RefreshToken]),
   ],
   controllers: [AuthController],
-  providers: [AuthService, JwtStrategy],
+  providers: [AuthService, JwtStrategy, SmsService],
   exports: [AuthService],
 })
 export class AuthModule {}

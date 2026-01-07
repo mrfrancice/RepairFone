@@ -1,4 +1,4 @@
-import { Component, inject, signal, OnInit, computed } from '@angular/core';
+import { Component, inject, signal, OnInit, computed, ChangeDetectionStrategy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { RequestsService, RepairRequest, RequestStatus, RequestStats } from '../../services/requests.service';
@@ -8,6 +8,7 @@ import { AuthStore } from '../../../../core/stores/auth.store';
 @Component({
   selector: 'app-request-list',
   standalone: true,
+  changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [CommonModule, RouterLink, UiHeaderComponent],
   template: `
     <div class="requests-container">

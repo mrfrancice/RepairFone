@@ -1,4 +1,4 @@
-import { Injectable, OnModuleInit } from '@nestjs/common';
+import { Injectable, OnModuleInit, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, IsNull } from 'typeorm';
 import { Location, LocationType } from './entities/location.entity';
@@ -145,6 +145,8 @@ const IVORY_COAST_DATA = {
 
 @Injectable()
 export class LocationsService implements OnModuleInit {
+  private readonly logger = new Logger(LocationsService.name);
+
   constructor(
     @InjectRepository(Location)
     private readonly locationRepository: Repository<Location>,
@@ -159,7 +161,7 @@ export class LocationsService implements OnModuleInit {
   }
 
   private async seedLocations(): Promise<void> {
-    console.log('Seeding locations...');
+    this.logger.log('Seeding locations...');
 
     // Create country
     const country = this.locationRepository.create({
@@ -209,7 +211,7 @@ export class LocationsService implements OnModuleInit {
       }
     }
 
-    console.log('Locations seeded successfully!');
+    this.logger.log('Locations seeded successfully!');
   }
 
   async getCities(): Promise<Location[]> {
@@ -246,7 +248,7 @@ export class LocationsService implements OnModuleInit {
   }
 
   async getQuartersByCommuneName(communeName: string, cityName?: string): Promise<Location[]> {
-    let communeQuery: any = { type: LocationType.COMMUNE, name: communeName, isActive: true };
+    let communeQuery: { type: LocationType; name: string; isActive: boolean; parentId?: string } = { type: LocationType.COMMUNE, name: communeName, isActive: true };
 
     // If cityName is provided, find the commune within that city
     if (cityName) {
@@ -288,7 +290,7 @@ export class LocationsService implements OnModuleInit {
       return {};
     }
 
-    const result: any = {};
+    const result: { country?: Location; city?: Location; commune?: Location; quarter?: Location } = {};
 
     let current: Location | null = location;
     while (current) {
@@ -332,15 +334,22 @@ export class LocationsService implements OnModuleInit {
     }>;
   }> {
     const cities = await this.getCities();
-    const result: any = { cities: [] };
+    type CityData = {
+      id: string;
+      name: string;
+      latitude: number | null;
+      longitude: number | null;
+      communes: Array<{ id: string; name: string; quarters: Array<{ id: string; name: string }> }>;
+    };
+    const result: { cities: CityData[] } = { cities: [] };
 
     for (const city of cities) {
       const communes = await this.getCommunesByCity(city.id);
-      const cityData: any = {
+      const cityData: CityData = {
         id: city.id,
         name: city.name,
-        latitude: city.latitude,
-        longitude: city.longitude,
+        latitude: city.latitude ?? null,
+        longitude: city.longitude ?? null,
         communes: [],
       };
 

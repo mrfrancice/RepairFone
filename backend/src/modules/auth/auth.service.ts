@@ -16,6 +16,7 @@ import { RepairersService } from '../users/repairers.service';
 import { User, UserRole } from '../users/entities/user.entity';
 import { OtpCode } from './entities/otp.entity';
 import { RefreshToken } from './entities/refresh-token.entity';
+import { SmsService } from '../../common/services/sms.service';
 
 export interface AuthTokens {
   accessToken: string;
@@ -100,6 +101,7 @@ export class AuthService {
     private readonly repairersService: RepairersService,
     private readonly jwtService: JwtService,
     private readonly configService: ConfigService,
+    private readonly smsService: SmsService,
     @InjectRepository(OtpCode)
     private readonly otpRepository: Repository<OtpCode>,
     @InjectRepository(RefreshToken)
@@ -253,11 +255,15 @@ export class AuthService {
     });
     await this.otpRepository.save(otp);
 
-    // TODO: Send OTP via SMS (integrate with SMS provider)
+    // Send OTP via SMS
     const isDev = this.configService.get<string>('nodeEnv') === 'development';
-    console.log(`[DEV] OTP for ${phone}: ${code}`);
+    const smsResult = await this.smsService.sendOtp(phone, code);
 
-    // Return OTP in development mode only
+    if (!smsResult.success && !isDev) {
+      throw new BadRequestException('Erreur lors de l\'envoi du SMS. Veuillez réessayer.');
+    }
+
+    // Return OTP in development mode only (for testing)
     return {
       message: 'Code OTP envoyé',
       ...(isDev && { devCode: code }),

@@ -1,4 +1,4 @@
-import { Component, inject, OnInit, OnDestroy, signal, ElementRef, ViewChild, AfterViewChecked } from '@angular/core';
+import { Component, inject, OnInit, OnDestroy, signal, ElementRef, ViewChild, AfterViewChecked, ChangeDetectionStrategy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
@@ -10,6 +10,7 @@ import { UiLoadingComponent } from '../../../../shared/components/ui-loading/ui-
 @Component({
   selector: 'app-chat-room',
   standalone: true,
+  changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
     CommonModule,
     FormsModule,
