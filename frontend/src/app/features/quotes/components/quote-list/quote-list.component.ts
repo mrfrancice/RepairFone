@@ -4,12 +4,15 @@ import { Router, RouterLink } from '@angular/router';
 import { QuotesService, Quote, QuoteStatus } from '../../services/quotes.service';
 import { QuotesStore } from '../../stores/quotes.store';
 import { UiButtonComponent } from '../../../../shared/components/ui-button/ui-button.component';
-import { UiLoadingComponent } from '../../../../shared/components/ui-loading/ui-loading.component';
+import { UiTabsComponent } from '../../../../shared/components/ui-tabs/ui-tabs.component';
+import { UiBadgeComponent } from '../../../../shared/components/ui-badge/ui-badge.component';
+import { UiSkeletonComponent } from '../../../../shared/components/ui-skeleton/ui-skeleton.component';
+import { TabItem } from '../../../../shared/models';
 
 @Component({
   selector: 'app-quote-list',
   standalone: true,
-  imports: [CommonModule, RouterLink, UiButtonComponent, UiLoadingComponent],
+  imports: [CommonModule, RouterLink, UiButtonComponent, UiTabsComponent, UiBadgeComponent, UiSkeletonComponent],
   template: `
     <div class="quotes-container">
       <!-- Header -->
@@ -25,43 +28,29 @@ import { UiLoadingComponent } from '../../../../shared/components/ui-loading/ui-
 
       <!-- Filters -->
       <div class="filters-section">
-        <div class="filter-tabs">
-          <button
-            class="filter-tab"
-            [class.active]="!store.filterStatus()"
-            (click)="setFilter(null)"
-          >
-            Tous
-          </button>
-          <button
-            class="filter-tab"
-            [class.active]="store.filterStatus() === 'pending'"
-            (click)="setFilter('pending')"
-          >
-            En attente
-          </button>
-          <button
-            class="filter-tab"
-            [class.active]="store.filterStatus() === 'accepted'"
-            (click)="setFilter('accepted')"
-          >
-            Acceptés
-          </button>
-          <button
-            class="filter-tab"
-            [class.active]="store.filterStatus() === 'rejected'"
-            (click)="setFilter('rejected')"
-          >
-            Refusés
-          </button>
-        </div>
+        <ui-tabs
+          [tabs]="filterTabs"
+          [activeTab]="store.filterStatus() || 'all'"
+          (tabChange)="onTabChange($event)"
+        />
       </div>
 
       <!-- Content -->
       @if (isLoading()) {
-        <div class="loading-state">
-          <ui-loading size="lg" />
-          <p>Chargement des devis...</p>
+        <div class="skeleton-list">
+          @for (item of [1, 2, 3]; track item) {
+            <div class="skeleton-card">
+              <ui-skeleton variant="text" width="80px" height="24px" />
+              <div class="skeleton-header">
+                <ui-skeleton variant="avatar" width="48px" height="48px" />
+                <div class="skeleton-info">
+                  <ui-skeleton variant="text" width="60%" />
+                  <ui-skeleton variant="text" width="40%" height="12px" />
+                </div>
+              </div>
+              <ui-skeleton variant="text" [count]="2" />
+            </div>
+          }
         </div>
       } @else if (store.filteredQuotes().length === 0) {
         <div class="empty-state">
@@ -83,9 +72,9 @@ import { UiLoadingComponent } from '../../../../shared/components/ui-loading/ui-
           @for (quote of store.filteredQuotes(); track quote.id) {
             <div class="quote-card" (click)="viewQuote(quote.id)">
               <!-- Status Badge -->
-              <div class="quote-status" [style.background]="quotesService.getStatusColor(quote.status)">
+              <ui-badge [variant]="getStatusVariant(quote.status)" size="sm">
                 {{ quotesService.getStatusLabel(quote.status) }}
-              </div>
+              </ui-badge>
 
               <!-- Quote Header -->
               <div class="quote-header">
@@ -246,6 +235,35 @@ import { UiLoadingComponent } from '../../../../shared/components/ui-loading/ui-
       padding: 4rem 2rem;
       text-align: center;
       gap: 1rem;
+    }
+
+    .skeleton-list {
+      padding: 1rem;
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+    }
+
+    .skeleton-card {
+      background: white;
+      border-radius: 12px;
+      padding: 1rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.75rem;
+    }
+
+    .skeleton-header {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+
+    .skeleton-info {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 0.375rem;
     }
 
     .empty-icon {
@@ -430,6 +448,13 @@ export class QuoteListComponent implements OnInit {
 
   readonly isLoading = signal(true);
 
+  readonly filterTabs: TabItem[] = [
+    { id: 'all', label: 'Tous' },
+    { id: 'pending', label: 'En attente' },
+    { id: 'accepted', label: 'Acceptés' },
+    { id: 'rejected', label: 'Refusés' },
+  ];
+
   async ngOnInit(): Promise<void> {
     await this.loadQuotes();
   }
@@ -448,6 +473,21 @@ export class QuoteListComponent implements OnInit {
 
   setFilter(status: QuoteStatus | null): void {
     this.store.setFilterStatus(status);
+  }
+
+  onTabChange(tabId: string): void {
+    const status = tabId === 'all' ? null : tabId as QuoteStatus;
+    this.setFilter(status);
+  }
+
+  getStatusVariant(status: string): 'default' | 'primary' | 'success' | 'warning' | 'danger' {
+    switch (status) {
+      case 'pending': return 'warning';
+      case 'accepted': return 'success';
+      case 'rejected': return 'danger';
+      case 'expired': return 'default';
+      default: return 'primary';
+    }
   }
 
   getRepairerName(quote: Quote): string {

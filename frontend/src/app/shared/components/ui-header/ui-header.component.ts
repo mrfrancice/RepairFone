@@ -3,11 +3,12 @@ import { CommonModule, Location } from '@angular/common';
 import { Router, RouterLink } from '@angular/router';
 import { AuthStore } from '../../../core/stores/auth.store';
 import { NotificationBellComponent } from '../notification-bell/notification-bell.component';
+import { ThemeToggleComponent } from '../theme-toggle/theme-toggle.component';
 
 @Component({
   selector: 'ui-header',
   standalone: true,
-  imports: [CommonModule, RouterLink, NotificationBellComponent],
+  imports: [CommonModule, RouterLink, NotificationBellComponent, ThemeToggleComponent],
   template: `
     <header class="header">
       <div class="header-top">
@@ -41,6 +42,8 @@ import { NotificationBellComponent } from '../notification-bell/notification-bel
         </div>
         <div class="header-right">
           <ng-content select="[header-actions]"></ng-content>
+
+          <app-theme-toggle />
 
           @if (showProfile) {
             @if (authStore.isAuthenticated()) {

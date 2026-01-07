@@ -4,7 +4,7 @@ import { Router, RouterLink } from '@angular/router';
 import { AuthStore } from '../../../../core/stores/auth.store';
 import { RequestsService } from '../../../requests/services/requests.service';
 import { SettingsService } from '../../../../core/services/settings.service';
-import { HeaderSearchComponent } from '../../../../shared/components/header-search/header-search.component';
+import { UiSearchBarComponent } from '@app/shared';
 import { UiAvatarComponent } from '../../../../shared/components/ui-avatar/ui-avatar.component';
 import { BottomNavComponent } from '../../../../shared/components/bottom-nav/bottom-nav.component';
 import { NotificationBellComponent } from '../../../../shared/components/notification-bell/notification-bell.component';
@@ -37,7 +37,7 @@ interface QuickService {
   imports: [
     CommonModule,
     RouterLink,
-    HeaderSearchComponent,
+    UiSearchBarComponent,
     UiAvatarComponent,
     BottomNavComponent,
     NotificationBellComponent,
@@ -96,7 +96,7 @@ interface QuickService {
         </div>
 
         <!-- Search Bar -->
-        <app-header-search
+        <ui-search-bar
           placeholder="Rechercher un appareil, problème..."
           (search)="onSearch($event)"
         />

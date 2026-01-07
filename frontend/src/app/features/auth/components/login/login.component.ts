@@ -6,11 +6,12 @@ import { AuthService } from '../../services/auth.service';
 import { AuthStore } from '../../../../core/stores/auth.store';
 import { SecureStorageService, StorageKeys } from '../../../../core/services/secure-storage.service';
 import { CustomValidators, getErrorMessage } from '../../../../shared/validators/custom-validators';
+import { UiInputComponent } from '@app/shared';
 
 @Component({
   selector: 'app-login',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, RouterLink],
+  imports: [CommonModule, ReactiveFormsModule, RouterLink, UiInputComponent],
   template: `
     <div class="auth-container">
       <div class="auth-card">
@@ -38,49 +39,27 @@ import { CustomValidators, getErrorMessage } from '../../../../shared/validators
 
         <form [formGroup]="loginForm" (ngSubmit)="onSubmit()">
           <div class="form-group">
-            <label for="phone">Numéro de téléphone</label>
-            <div class="input-wrapper">
+            <div class="phone-input-wrapper">
               <span class="country-code">+225</span>
-              <input
+              <ui-input
                 type="tel"
-                id="phone"
                 formControlName="phone"
                 placeholder="07 XX XX XX XX"
-                class="form-input with-prefix"
-                [class.input-error]="isFieldInvalid('phone')"
-                (input)="formatPhoneInput($event)"
+                [error]="isFieldInvalid('phone') ? getFieldError('phone') : undefined"
+                (ngModelChange)="onPhoneChange($event)"
+                class="phone-input"
               />
             </div>
-            @if (isFieldInvalid('phone')) {
-              <span class="field-error">{{ getFieldError('phone') }}</span>
-            }
           </div>
 
-          <div class="form-group">
-            <label for="password">Mot de passe</label>
-            <div class="input-wrapper">
-              <span class="input-icon">P</span>
-              <input
-                [type]="showPassword() ? 'text' : 'password'"
-                id="password"
-                formControlName="password"
-                placeholder="Votre mot de passe"
-                class="form-input with-icon"
-                [class.input-error]="isFieldInvalid('password')"
-              />
-              <button
-                type="button"
-                class="toggle-password"
-                (click)="togglePassword()"
-                tabindex="-1"
-              >
-                {{ showPassword() ? 'Cacher' : 'Voir' }}
-              </button>
-            </div>
-            @if (isFieldInvalid('password')) {
-              <span class="field-error">{{ getFieldError('password') }}</span>
-            }
-          </div>
+          <ui-input
+            type="password"
+            label="Mot de passe"
+            formControlName="password"
+            placeholder="Votre mot de passe"
+            [error]="isFieldInvalid('password') ? getFieldError('password') : undefined"
+            [required]="true"
+          />
 
           <div class="form-options">
             <label class="checkbox-label">
@@ -169,77 +148,24 @@ import { CustomValidators, getErrorMessage } from '../../../../shared/validators
       margin-bottom: 1.25rem;
     }
 
-    .form-group label {
-      display: block;
-      font-weight: 500;
-      color: #374151;
-      margin-bottom: 0.5rem;
-    }
-
-    .input-wrapper {
+    .phone-input-wrapper {
       position: relative;
-      display: flex;
-      align-items: center;
     }
 
     .country-code {
       position: absolute;
       left: 1rem;
+      top: 50%;
+      transform: translateY(-50%);
       color: #6b7280;
       font-weight: 600;
       font-size: 0.9375rem;
+      z-index: 1;
+      pointer-events: none;
     }
 
-    .form-input {
-      width: 100%;
-      padding: 0.875rem 1rem;
-      border: 2px solid #e5e7eb;
-      border-radius: 12px;
-      font-size: 1rem;
-      transition: all 0.2s;
-      background: #f9fafb;
-    }
-
-    .form-input.with-prefix {
+    .phone-input-wrapper ::ng-deep .input-field {
       padding-left: 3.75rem;
-    }
-
-    .form-input:focus {
-      outline: none;
-      border-color: #FF6B35;
-      background: white;
-      box-shadow: 0 0 0 4px rgba(255, 107, 53, 0.1);
-    }
-
-    .form-input.input-error {
-      border-color: #dc2626;
-      background: #fef2f2;
-    }
-
-    .form-input.input-error:focus {
-      box-shadow: 0 0 0 4px rgba(220, 38, 38, 0.1);
-    }
-
-    .toggle-password {
-      position: absolute;
-      right: 1rem;
-      background: none;
-      border: none;
-      color: #6b7280;
-      cursor: pointer;
-      font-size: 0.875rem;
-      padding: 0;
-    }
-
-    .toggle-password:hover {
-      color: #2563eb;
-    }
-
-    .field-error {
-      display: block;
-      color: #dc2626;
-      font-size: 0.75rem;
-      margin-top: 0.375rem;
     }
 
     .form-options {
@@ -442,7 +368,6 @@ export class LoginComponent implements OnInit {
   readonly isLoading = this.authStore.isLoading;
   readonly error = signal<string | null>(null);
   readonly successMessage = signal<string | null>(null);
-  readonly showPassword = signal(false);
 
   loginForm: FormGroup = this.fb.group({
     phone: ['', [Validators.required, CustomValidators.phoneNumber()]],
@@ -451,13 +376,11 @@ export class LoginComponent implements OnInit {
   });
 
   async ngOnInit(): Promise<void> {
-    // Check for success message from registration
     const message = this.route.snapshot.queryParams['message'];
     if (message) {
       this.successMessage.set(message);
     }
 
-    // Load remembered phone number from secure storage
     await this.loadRememberedPhone();
   }
 
@@ -465,7 +388,6 @@ export class LoginComponent implements OnInit {
     try {
       const rememberedPhone = await this.secureStorage.get<string>(StorageKeys.REMEMBER_PHONE);
       if (rememberedPhone) {
-        // Format the phone number for display (XX XX XX XX XX)
         let formatted = rememberedPhone;
         if (formatted.length === 10) {
           formatted = formatted.replace(/(\d{2})(\d{2})(\d{2})(\d{2})(\d{2})/, '$1 $2 $3 $4 $5');
@@ -491,40 +413,33 @@ export class LoginComponent implements OnInit {
     return getErrorMessage(field) || '';
   }
 
-  togglePassword(): void {
-    this.showPassword.update(v => !v);
-  }
+  onPhoneChange(value: string): void {
+    let cleanValue = value.replace(/\D/g, '');
 
-  formatPhoneInput(event: Event): void {
-    const input = event.target as HTMLInputElement;
-    let value = input.value.replace(/\D/g, '');
-
-    // Remove country code if present
-    if (value.startsWith('225')) {
-      value = value.slice(3);
+    if (cleanValue.startsWith('225')) {
+      cleanValue = cleanValue.slice(3);
     }
 
-    // Format as XX XX XX XX XX
-    if (value.length > 2) {
-      value = value.slice(0, 2) + ' ' + value.slice(2);
+    let formatted = '';
+    if (cleanValue.length > 0) {
+      formatted = cleanValue.slice(0, 2);
     }
-    if (value.length > 5) {
-      value = value.slice(0, 5) + ' ' + value.slice(5);
+    if (cleanValue.length > 2) {
+      formatted += ' ' + cleanValue.slice(2, 4);
     }
-    if (value.length > 8) {
-      value = value.slice(0, 8) + ' ' + value.slice(8);
+    if (cleanValue.length > 4) {
+      formatted += ' ' + cleanValue.slice(4, 6);
     }
-    if (value.length > 11) {
-      value = value.slice(0, 11) + ' ' + value.slice(11);
+    if (cleanValue.length > 6) {
+      formatted += ' ' + cleanValue.slice(6, 8);
     }
-
-    // Limit to 14 chars (XX XX XX XX XX)
-    if (value.length > 14) {
-      value = value.slice(0, 14);
+    if (cleanValue.length > 8) {
+      formatted += ' ' + cleanValue.slice(8, 10);
     }
 
-    input.value = value;
-    this.loginForm.patchValue({ phone: value }, { emitEvent: false });
+    if (formatted !== value) {
+      this.loginForm.patchValue({ phone: formatted }, { emitEvent: false });
+    }
   }
 
   async onSubmit(): Promise<void> {
@@ -539,24 +454,20 @@ export class LoginComponent implements OnInit {
 
     try {
       const { phone, password, rememberMe } = this.loginForm.value;
-      // Clean phone number
       const cleanPhone = phone.replace(/\s/g, '');
 
       await this.authService.login(cleanPhone, password);
 
-      // Handle remember me with encrypted storage
       if (rememberMe) {
         await this.secureStorage.set(StorageKeys.REMEMBER_PHONE, cleanPhone);
       } else {
         this.secureStorage.remove(StorageKeys.REMEMBER_PHONE);
       }
 
-      // Navigate to return URL or default based on role
       const returnUrl = this.route.snapshot.queryParams['returnUrl'];
       if (returnUrl) {
         this.router.navigate([returnUrl]);
       } else {
-        // Redirect based on user role
         const defaultUrl = this.authStore.getDefaultRedirectUrl();
         this.router.navigate([defaultUrl]);
       }
