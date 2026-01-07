@@ -3,24 +3,21 @@ import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
 import { ConseilsService, Expert } from '../../services/conseils.service';
 import { ConseilsStore } from '../../stores/conseils.store';
+import { UiHeaderComponent } from '../../../../shared/components/ui-header/ui-header.component';
 
 @Component({
   selector: 'app-expert-list',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, UiHeaderComponent],
   template: `
     <div class="experts-container">
-      <header class="experts-header">
-        <button class="back-btn" (click)="goBack()">
-          <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
-            <path d="M15 18L9 12L15 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-          </svg>
-        </button>
-        <div class="header-content">
-          <h1>Nos experts</h1>
-          <p>{{ store.totalExperts() }} expert(s) disponible(s)</p>
-        </div>
-      </header>
+      <ui-header
+        title="Nos experts"
+        [subtitle]="store.totalExperts() + ' expert(s) disponible(s)'"
+        [showBack]="true"
+        [showProfile]="true"
+        (onBack)="goBack()"
+      />
 
       <!-- Filter chips -->
       @if (store.selectedType() || store.selectedFormat()) {
@@ -119,44 +116,11 @@ import { ConseilsStore } from '../../stores/conseils.store';
       background: #f9fafb;
     }
 
-    .experts-header {
-      background: linear-gradient(135deg, #7c3aed 0%, #5b21b6 100%);
-      color: white;
-      padding: 1rem;
-      padding-top: calc(1rem + env(safe-area-inset-top, 0));
-      display: flex;
-      align-items: flex-start;
-      gap: 1rem;
-    }
-
-    .back-btn {
-      background: rgba(255, 255, 255, 0.2);
-      border: none;
-      color: white;
-      width: 40px;
-      height: 40px;
-      border-radius: 10px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      cursor: pointer;
-    }
-
-    .header-content h1 {
-      font-size: 1.5rem;
-      font-weight: 700;
-      margin-bottom: 0.25rem;
-    }
-
-    .header-content p {
-      opacity: 0.9;
-      font-size: 0.875rem;
-    }
-
     .filters-bar {
       display: flex;
       gap: 0.5rem;
       padding: 0.75rem 1rem;
+      padding-top: calc(100px + 0.75rem);
       background: white;
       border-bottom: 1px solid #e5e7eb;
       overflow-x: auto;
@@ -167,18 +131,18 @@ import { ConseilsStore } from '../../stores/conseils.store';
       align-items: center;
       gap: 0.5rem;
       padding: 0.375rem 0.75rem;
-      background: #faf5ff;
-      border: 1px solid #7c3aed;
+      background: #FFF4E6;
+      border: 1px solid #FF6B35;
       border-radius: 20px;
       font-size: 0.875rem;
-      color: #7c3aed;
+      color: #FF6B35;
       white-space: nowrap;
     }
 
     .chip-remove {
       background: none;
       border: none;
-      color: #7c3aed;
+      color: #FF6B35;
       font-size: 1.125rem;
       cursor: pointer;
       padding: 0;
@@ -186,7 +150,14 @@ import { ConseilsStore } from '../../stores/conseils.store';
     }
 
     .experts-content {
-      padding: 1rem;
+      margin-top: 100px;
+      padding: 1.25rem;
+      background: white;
+      min-height: calc(100vh - 100px);
+    }
+
+    .experts-content.with-filters {
+      margin-top: 0;
     }
 
     .loading-state, .empty-state {
@@ -202,7 +173,7 @@ import { ConseilsStore } from '../../stores/conseils.store';
       width: 40px;
       height: 40px;
       border: 3px solid #e5e7eb;
-      border-top-color: #7c3aed;
+      border-top-color: #FF6B35;
       border-radius: 50%;
       animation: spin 1s linear infinite;
       margin-bottom: 1rem;
@@ -232,22 +203,23 @@ import { ConseilsStore } from '../../stores/conseils.store';
     .experts-list {
       display: flex;
       flex-direction: column;
-      gap: 1rem;
+      gap: 0.75rem;
     }
 
     .expert-card {
       display: flex;
       gap: 1rem;
-      background: white;
+      background: #f9fafb;
+      border: 1px solid #e5e7eb;
       border-radius: 16px;
       padding: 1rem;
-      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
       cursor: pointer;
       transition: all 0.2s;
     }
 
     .expert-card:hover {
-      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+      border-color: #FF6B35;
+      box-shadow: 0 4px 12px rgba(255, 107, 53, 0.15);
       transform: translateY(-2px);
     }
 
@@ -265,7 +237,7 @@ import { ConseilsStore } from '../../stores/conseils.store';
     }
 
     .avatar-placeholder {
-      background: linear-gradient(135deg, #7c3aed 0%, #5b21b6 100%);
+      background: linear-gradient(135deg, #FF6B35 0%, #FF9800 100%);
       color: white;
       display: flex;
       align-items: center;
@@ -294,7 +266,7 @@ import { ConseilsStore } from '../../stores/conseils.store';
     }
 
     .expert-name {
-      font-size: 1rem;
+      font-size: 0.9375rem;
       font-weight: 600;
       color: #1f2937;
       margin-bottom: 0.25rem;
@@ -330,11 +302,12 @@ import { ConseilsStore } from '../../stores/conseils.store';
     }
 
     .specialty-tag {
-      font-size: 0.75rem;
-      background: #f3f4f6;
-      color: #4b5563;
-      padding: 0.125rem 0.5rem;
-      border-radius: 4px;
+      font-size: 0.6875rem;
+      background: linear-gradient(135deg, #FFF4E6, #FFE5D9);
+      color: #E85A24;
+      padding: 0.25rem 0.5rem;
+      border-radius: 6px;
+      font-weight: 500;
     }
 
     .expert-meta {
@@ -361,7 +334,7 @@ import { ConseilsStore } from '../../stores/conseils.store';
     .price {
       font-size: 1rem;
       font-weight: 700;
-      color: #7c3aed;
+      color: #FF6B35;
     }
 
     .price-label {
@@ -371,16 +344,16 @@ import { ConseilsStore } from '../../stores/conseils.store';
 
     .unavailable-badge {
       margin-top: 0.5rem;
-      font-size: 0.75rem;
+      font-size: 0.6875rem;
       background: #fef2f2;
       color: #991b1b;
       padding: 0.25rem 0.5rem;
-      border-radius: 4px;
+      border-radius: 6px;
     }
 
     .btn {
       padding: 0.75rem 1.5rem;
-      border-radius: 8px;
+      border-radius: 12px;
       font-weight: 600;
       font-size: 1rem;
       cursor: pointer;
@@ -389,12 +362,18 @@ import { ConseilsStore } from '../../stores/conseils.store';
 
     .btn-outline {
       background: white;
-      border: 2px solid #7c3aed;
-      color: #7c3aed;
+      border: 2px solid #FF6B35;
+      color: #FF6B35;
     }
 
     .btn-outline:hover {
-      background: #faf5ff;
+      background: #FFF4E6;
+    }
+
+    @media (min-width: 640px) {
+      .experts-content {
+        padding: 1.5rem 2rem;
+      }
     }
   `],
 })

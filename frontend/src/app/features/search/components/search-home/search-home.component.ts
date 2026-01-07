@@ -315,14 +315,15 @@ interface Problem {
     }
 
     .search-card {
-      margin: 1rem;
-      margin-top: 110px;
+      margin: 0;
+      margin-top: 100px;
       background: white;
-      border-radius: 20px;
+      border-radius: 0;
       padding: 1.25rem;
-      box-shadow: 0 10px 40px rgba(0, 0, 0, 0.12);
+      box-shadow: none;
       position: relative;
       z-index: 1;
+      min-height: calc(100vh - 100px);
     }
 
     .alert {
@@ -635,6 +636,7 @@ interface Problem {
       cursor: pointer;
       transition: all 0.2s;
       font-size: 0.875rem;
+      color: #1f2937;
     }
 
     .brand-btn:hover {
@@ -916,9 +918,7 @@ interface Problem {
 
     @media (min-width: 640px) {
       .search-card {
-        max-width: 540px;
-        margin: 1rem auto;
-        margin-top: 110px;
+        padding: 1.5rem 2rem;
       }
     }
   `],
@@ -966,9 +966,16 @@ export class SearchHomeComponent implements OnInit {
   async loadCategories(): Promise<void> {
     try {
       const categories = await this.searchService.getDeviceCategories();
-      this.categories.set(categories);
+      // Use default categories if API returns empty
+      if (categories && categories.length > 0) {
+        this.categories.set(categories);
+      } else {
+        this.categories.set(['smartphone', 'computer']);
+      }
     } catch (err) {
       console.error('Error loading categories:', err);
+      // Fallback to default categories
+      this.categories.set(['smartphone', 'computer']);
     }
   }
 

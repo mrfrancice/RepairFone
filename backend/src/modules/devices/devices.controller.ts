@@ -37,8 +37,9 @@ export class DevicesController {
   @Get('brands')
   @Public()
   @ApiOperation({ summary: 'Liste toutes les marques' })
-  getBrands() {
-    return this.devicesService.getBrands();
+  @ApiQuery({ name: 'category', required: false })
+  getBrands(@Query('category') category?: string) {
+    return this.devicesService.getBrands(category);
   }
 
   @Get('categories')
@@ -88,6 +89,15 @@ export class DevicesController {
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Initialiser les appareils (admin)' })
   seed() {
-    return this.devicesService.seedDevices();
+    return this.devicesService.seedDevices(false);
+  }
+
+  @Post('reseed')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('admin')
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Réinitialiser tous les appareils (admin) - ATTENTION: supprime les données existantes' })
+  reseed() {
+    return this.devicesService.reseedDevices();
   }
 }

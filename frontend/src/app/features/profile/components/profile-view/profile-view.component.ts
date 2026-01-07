@@ -538,7 +538,7 @@ import { UiHeaderComponent } from '../../../../shared/components/ui-header/ui-he
     /* Content */
     .profile-content {
       padding: 1rem;
-      padding-top: 290px;
+      padding-top: 320px;
       position: relative;
       z-index: 1;
     }

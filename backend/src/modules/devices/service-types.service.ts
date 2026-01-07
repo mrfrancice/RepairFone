@@ -86,7 +86,7 @@ export class ServiceTypesService {
         { name: 'Réparation connecteur', description: 'Réparation du port de charge', basePrice: 18000, estimatedDuration: 45 },
         { name: 'Réinstallation système', description: 'Réinstallation du système d\'exploitation', basePrice: 15000, estimatedDuration: 60 },
       ];
-    } else if (category === 'laptop') {
+    } else if (category === 'computer') {
       services = [
         { name: 'Remplacement écran', description: 'Remplacement de l\'écran LCD', basePrice: 65000, estimatedDuration: 90 },
         { name: 'Remplacement clavier', description: 'Changement du clavier', basePrice: 35000, estimatedDuration: 60 },
@@ -94,6 +94,8 @@ export class ServiceTypesService {
         { name: 'Upgrade RAM', description: 'Ajout ou remplacement de mémoire RAM', basePrice: 25000, estimatedDuration: 30 },
         { name: 'Upgrade SSD', description: 'Remplacement du disque dur par SSD', basePrice: 35000, estimatedDuration: 45 },
         { name: 'Nettoyage ventilateur', description: 'Nettoyage du système de refroidissement', basePrice: 15000, estimatedDuration: 45 },
+        { name: 'Réparation charnière', description: 'Réparation ou remplacement des charnières', basePrice: 30000, estimatedDuration: 60 },
+        { name: 'Réparation carte mère', description: 'Diagnostic et réparation carte mère', basePrice: 50000, estimatedDuration: 180 },
         { name: 'Réinstallation Windows', description: 'Réinstallation du système Windows', basePrice: 20000, estimatedDuration: 90 },
         { name: 'Réinstallation macOS', description: 'Réinstallation du système macOS', basePrice: 20000, estimatedDuration: 90 },
         { name: 'Récupération de données', description: 'Récupération des données du disque', basePrice: 40000, estimatedDuration: 180 },

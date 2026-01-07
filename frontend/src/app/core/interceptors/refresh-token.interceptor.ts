@@ -107,7 +107,10 @@ function addTokenToRequest(req: HttpRequest<unknown>, token: string): HttpReques
 
 function handleRefreshError(authStore: AuthStore, router: Router) {
   isRefreshing = false;
-  authStore.logout();
-  router.navigate(['/auth/login']);
+  // Only redirect to login if user was previously authenticated
+  if (authStore.isAuthenticated()) {
+    authStore.logout();
+    router.navigate(['/auth/login']);
+  }
   return throwError(() => new Error('Session expirée. Veuillez vous reconnecter.'));
 }

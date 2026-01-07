@@ -1,4 +1,4 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import * as bcrypt from 'bcrypt';
@@ -9,7 +9,7 @@ import { ServiceType } from '../../modules/devices/entities/service-type.entity'
 import { Expert, ConseilType, ConseilFormat } from '../../modules/conseils/entities/expert.entity';
 
 @Injectable()
-export class SeederService {
+export class SeederService implements OnModuleInit {
   private readonly logger = new Logger(SeederService.name);
 
   constructor(
@@ -24,6 +24,14 @@ export class SeederService {
     @InjectRepository(Expert)
     private readonly expertRepository: Repository<Expert>,
   ) {}
+
+  /**
+   * Automatically seed database on application startup
+   */
+  async onModuleInit(): Promise<void> {
+    this.logger.log('🚀 Checking database seed status...');
+    await this.seed();
+  }
 
   async seed(): Promise<void> {
     this.logger.log('🌱 Starting database seeding...');

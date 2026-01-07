@@ -11,8 +11,12 @@ export const errorInterceptor: HttpInterceptorFn = (req, next) => {
   return next(req).pipe(
     catchError((error: HttpErrorResponse) => {
       if (error.status === 401) {
-        authStore.logout();
-        router.navigate(['/auth/login']);
+        // Only redirect to login if user was previously authenticated
+        // This prevents redirecting unauthenticated users on public pages
+        if (authStore.isAuthenticated()) {
+          authStore.logout();
+          router.navigate(['/auth/login']);
+        }
       }
 
       let errorMessage = 'Une erreur est survenue';

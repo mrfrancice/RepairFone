@@ -4,25 +4,22 @@ import { Router } from '@angular/router';
 import { ConseilsService } from '../../services/conseils.service';
 import { ConseilsStore } from '../../stores/conseils.store';
 import { ConseilType, ConseilFormat } from '../../../../shared/models';
+import { UiHeaderComponent } from '../../../../shared/components/ui-header/ui-header.component';
 
 @Component({
   selector: 'app-conseil-type',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, UiHeaderComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <div class="conseil-container">
-      <header class="conseil-header">
-        <button class="back-btn" (click)="goBack()">
-          <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
-            <path d="M15 18L9 12L15 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-          </svg>
-        </button>
-        <div class="header-content">
-          <h1>Conseils d'experts</h1>
-          <p>Obtenez l'aide d'un professionnel</p>
-        </div>
-      </header>
+      <ui-header
+        title="Conseils d'experts"
+        subtitle="Obtenez l'aide d'un professionnel"
+        [showBack]="true"
+        [showProfile]="true"
+        (onBack)="goBack()"
+      />
 
       <div class="conseil-content">
         <!-- Step 1: Type Selection -->
@@ -122,55 +119,22 @@ import { ConseilType, ConseilFormat } from '../../../../shared/models';
       background: #f9fafb;
     }
 
-    .conseil-header {
-      background: linear-gradient(135deg, #7c3aed 0%, #5b21b6 100%);
-      color: white;
-      padding: 1rem;
-      padding-top: calc(1rem + env(safe-area-inset-top, 0));
-      display: flex;
-      align-items: flex-start;
-      gap: 1rem;
-    }
-
-    .back-btn {
-      background: rgba(255, 255, 255, 0.2);
-      border: none;
-      color: white;
-      width: 40px;
-      height: 40px;
-      border-radius: 10px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      cursor: pointer;
-      transition: background 0.2s;
-    }
-
-    .back-btn:hover {
-      background: rgba(255, 255, 255, 0.3);
-    }
-
-    .header-content h1 {
-      font-size: 1.5rem;
-      font-weight: 700;
-      margin-bottom: 0.25rem;
-    }
-
-    .header-content p {
-      opacity: 0.9;
-      font-size: 0.875rem;
-    }
-
     .conseil-content {
-      padding: 1rem;
+      margin: 0;
+      margin-top: 100px;
+      background: white;
+      padding: 1.25rem;
+      min-height: calc(100vh - 100px);
     }
 
     .step-section {
-      background: white;
-      border-radius: 16px;
-      padding: 1.25rem;
-      margin-bottom: 1rem;
-      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+      margin-bottom: 1.5rem;
+      padding-bottom: 1.5rem;
+      border-bottom: 1px solid #f3f4f6;
+    }
+
+    .step-section:last-of-type {
+      border-bottom: none;
     }
 
     .step-header {
@@ -183,7 +147,7 @@ import { ConseilType, ConseilFormat } from '../../../../shared/models';
     .step-number {
       width: 28px;
       height: 28px;
-      background: #7c3aed;
+      background: #FF6B35;
       color: white;
       border-radius: 50%;
       display: flex;
@@ -199,7 +163,7 @@ import { ConseilType, ConseilFormat } from '../../../../shared/models';
     }
 
     .step-header h2 {
-      font-size: 1.125rem;
+      font-size: 1rem;
       font-weight: 600;
       color: #1f2937;
       margin: 0;
@@ -226,13 +190,24 @@ import { ConseilType, ConseilFormat } from '../../../../shared/models';
     }
 
     .type-card:hover {
-      border-color: #7c3aed;
-      background: #faf5ff;
+      border-color: #FF6B35;
+      background: #FFF4E6;
+      transform: translateY(-2px);
     }
 
     .type-card.selected {
-      border-color: #7c3aed;
-      background: #faf5ff;
+      background: linear-gradient(135deg, #FF6B35 0%, #FF9800 100%);
+      border-color: #FF6B35;
+      color: white;
+    }
+
+    .type-card.selected .type-label,
+    .type-card.selected .type-desc {
+      color: white;
+    }
+
+    .type-card.selected .type-desc {
+      opacity: 0.9;
     }
 
     .type-icon {
@@ -244,10 +219,11 @@ import { ConseilType, ConseilFormat } from '../../../../shared/models';
       font-weight: 600;
       color: #1f2937;
       margin-bottom: 0.25rem;
+      font-size: 0.875rem;
     }
 
     .type-desc {
-      font-size: 0.75rem;
+      font-size: 0.6875rem;
       color: #6b7280;
       line-height: 1.4;
     }
@@ -258,8 +234,8 @@ import { ConseilType, ConseilFormat } from '../../../../shared/models';
       right: 0.5rem;
       width: 20px;
       height: 20px;
-      background: #7c3aed;
-      color: white;
+      background: white;
+      color: #FF6B35;
       border-radius: 50%;
       display: flex;
       align-items: center;
@@ -269,41 +245,49 @@ import { ConseilType, ConseilFormat } from '../../../../shared/models';
     }
 
     .format-grid {
-      display: flex;
-      flex-direction: column;
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
       gap: 0.75rem;
     }
 
     .format-card {
       position: relative;
       display: flex;
+      flex-direction: column;
       align-items: center;
-      gap: 1rem;
-      padding: 1rem;
+      text-align: center;
+      gap: 0.5rem;
+      padding: 1.5rem 0.75rem;
+      min-height: 120px;
       background: #f9fafb;
       border: 2px solid #e5e7eb;
-      border-radius: 12px;
+      border-radius: 16px;
       cursor: pointer;
       transition: all 0.2s;
-      text-align: left;
     }
 
     .format-card:hover {
-      border-color: #7c3aed;
-      background: #faf5ff;
+      border-color: #FF6B35;
+      transform: translateY(-4px);
+      box-shadow: 0 4px 12px rgba(255, 107, 53, 0.15);
     }
 
     .format-card.selected {
-      border-color: #7c3aed;
-      background: #faf5ff;
+      background: linear-gradient(135deg, #FF6B35 0%, #FF9800 100%);
+      border-color: #FF6B35;
+      color: white;
+    }
+
+    .format-card.selected .format-label,
+    .format-card.selected .format-desc {
+      color: white;
     }
 
     .format-icon {
-      font-size: 1.75rem;
+      font-size: 2rem;
     }
 
     .format-info {
-      flex: 1;
       display: flex;
       flex-direction: column;
       gap: 0.125rem;
@@ -315,15 +299,12 @@ import { ConseilType, ConseilFormat } from '../../../../shared/models';
     }
 
     .format-desc {
-      font-size: 0.875rem;
+      font-size: 0.75rem;
       color: #6b7280;
     }
 
     .cta-section {
-      background: white;
-      border-radius: 16px;
-      padding: 1.25rem;
-      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+      margin-top: 1rem;
     }
 
     .summary {
@@ -331,7 +312,8 @@ import { ConseilType, ConseilFormat } from '../../../../shared/models';
       align-items: center;
       gap: 0.75rem;
       padding: 1rem;
-      background: #faf5ff;
+      background: linear-gradient(135deg, #FFF4E6 0%, #FFE8CC 100%);
+      border-left: 4px solid #FF6B35;
       border-radius: 12px;
       margin-bottom: 1rem;
     }
@@ -370,12 +352,17 @@ import { ConseilType, ConseilFormat } from '../../../../shared/models';
     }
 
     .btn-primary {
-      background: #7c3aed;
+      background: linear-gradient(135deg, #FF6B35 0%, #FF9800 100%);
       color: white;
+      box-shadow: 0 4px 12px rgba(255, 107, 53, 0.3);
+      min-height: 56px;
+      font-weight: 700;
     }
 
     .btn-primary:hover {
-      background: #6d28d9;
+      background: linear-gradient(135deg, #E85A24 0%, #F57C00 100%);
+      transform: translateY(-2px);
+      box-shadow: 0 6px 16px rgba(255, 107, 53, 0.4);
     }
 
     .btn-block {
@@ -383,16 +370,12 @@ import { ConseilType, ConseilFormat } from '../../../../shared/models';
     }
 
     @media (min-width: 640px) {
+      .conseil-content {
+        padding: 1.5rem 2rem;
+      }
+
       .type-grid {
         grid-template-columns: repeat(4, 1fr);
-      }
-
-      .format-grid {
-        flex-direction: row;
-      }
-
-      .format-card {
-        flex: 1;
       }
     }
   `],
