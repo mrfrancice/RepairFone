@@ -1,5 +1,5 @@
 import { NestFactory } from '@nestjs/core';
-import { ValidationPipe } from '@nestjs/common';
+import { ValidationPipe, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import helmet from 'helmet';
@@ -14,13 +14,17 @@ async function bootstrap() {
   app.use(urlencoded({ limit: '10mb', extended: true }));
   const configService = app.get(ConfigService);
 
-  // Security - Helmet with CSP configuration
+  // SEC-003: Security Headers - Helmet with CSP configuration
+  const isDev = configService.get<string>('nodeEnv') === 'development';
   app.use(
     helmet({
       contentSecurityPolicy: {
         directives: {
           defaultSrc: ["'self'"],
-          scriptSrc: ["'self'", "'unsafe-inline'", "'unsafe-eval'"],
+          // In production, remove unsafe-inline and unsafe-eval
+          scriptSrc: isDev
+            ? ["'self'", "'unsafe-inline'", "'unsafe-eval'"]
+            : ["'self'"],
           styleSrc: ["'self'", "'unsafe-inline'", 'https://fonts.googleapis.com'],
           fontSrc: ["'self'", 'https://fonts.gstatic.com'],
           imgSrc: ["'self'", 'data:', 'https:', 'blob:'],
@@ -29,15 +33,20 @@ async function bootstrap() {
           objectSrc: ["'none'"],
           baseUri: ["'self'"],
           formAction: ["'self'"],
-          upgradeInsecureRequests: [],
+          upgradeInsecureRequests: isDev ? [] : null, // Only in production
         },
       },
       crossOriginEmbedderPolicy: false, // Needed for external images
+      crossOriginOpenerPolicy: { policy: 'same-origin' },
+      crossOriginResourcePolicy: { policy: 'same-origin' },
       hsts: {
         maxAge: 31536000,
         includeSubDomains: true,
         preload: true,
       },
+      referrerPolicy: { policy: 'strict-origin-when-cross-origin' },
+      noSniff: true,
+      xssFilter: true,
     }),
   );
 
@@ -95,18 +104,17 @@ async function bootstrap() {
 
   // Start server
   const port = configService.get<number>('port') || 3000;
+  const logger = new Logger('Bootstrap');
   await app.listen(port);
 
-  console.log(`
-  ╔═══════════════════════════════════════════════════════════╗
-  ║                                                           ║
-  ║   🔧 FastRepair API Server                               ║
-  ║                                                           ║
-  ║   Server running on: http://localhost:${port}               ║
-  ║   API Docs: http://localhost:${port}/api/docs               ║
-  ║   Environment: ${configService.get('nodeEnv')}                          ║
-  ║                                                           ║
-  ╚═══════════════════════════════════════════════════════════╝
+  logger.log(`
+  ============================================================
+  FastRepair API Server
+  ------------------------------------------------------------
+  Server running on: http://localhost:${port}
+  API Docs: http://localhost:${port}/api/docs
+  Environment: ${configService.get('nodeEnv')}
+  ============================================================
   `);
 }
 

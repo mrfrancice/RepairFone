@@ -1,5 +1,6 @@
-import { IsOptional, IsString, IsNumber, IsUUID, IsEnum, IsArray, IsIn, IsNotEmpty } from 'class-validator';
+import { IsOptional, IsString, IsNumber, IsUUID, IsEnum, IsArray, IsIn, IsNotEmpty, MaxLength } from 'class-validator';
 import { DeliveryMode } from '../entities/repair-request.entity';
+import { IsSafeUrl } from '../../../common/validators';
 
 export class CreateRequestDto {
   @IsUUID()
@@ -16,6 +17,7 @@ export class CreateRequestDto {
 
   @IsString()
   @IsNotEmpty()
+  @MaxLength(2000, { message: 'La description ne peut pas depasser 2000 caracteres' })
   description: string;
 
   @IsOptional()
@@ -45,6 +47,7 @@ export class CreateRequestDto {
   @IsOptional()
   @IsArray()
   @IsString({ each: true })
+  @IsSafeUrl({ each: true, message: 'Les URLs d\'images doivent etre securisees (HTTPS ou base64)' })
   images?: string[];
 
   @IsOptional()

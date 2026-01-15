@@ -1,4 +1,4 @@
-import { Controller, Get, Query, HttpException, HttpStatus } from '@nestjs/common';
+import { Controller, Get, Query, HttpException, HttpStatus, Logger } from '@nestjs/common';
 import { Public } from '../../common/decorators/public.decorator';
 
 interface GeocodingResult {
@@ -14,6 +14,7 @@ interface GeocodingResult {
 
 @Controller('geocoding')
 export class GeocodingController {
+  private readonly logger = new Logger(GeocodingController.name);
   /**
    * Reverse geocode coordinates to address
    * GET /geocoding/reverse?lat=5.3289&lon=-4.0593
@@ -89,7 +90,7 @@ export class GeocodingController {
         formattedAddress,
       };
     } catch (error) {
-      console.error('Reverse geocoding error:', error);
+      this.logger.error('Reverse geocoding error', error instanceof Error ? error.stack : String(error));
       // Return fallback with coordinates
       return {
         address: 'Position détectée',

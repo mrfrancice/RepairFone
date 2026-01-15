@@ -1,8 +1,8 @@
-import { Component, inject, signal, computed, ViewChild, ElementRef, OnInit, DestroyRef } from '@angular/core';
+import { Component, inject, signal, computed, ViewChild, ElementRef, OnInit, DestroyRef, ChangeDetectionStrategy } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
-import { Router, RouterLink } from '@angular/router';
+import { Router, RouterLink, ActivatedRoute } from '@angular/router';
 import { AuthService } from '../../services/auth.service';
 import { CustomValidators, getErrorMessage } from '../../../../shared/validators/custom-validators';
 import { LocationService, City, Commune, Quarter } from '../../../../core/services/location.service';
@@ -11,6 +11,7 @@ import { SettingsService } from '../../../../core/services/settings.service';
 @Component({
   selector: 'app-register',
   standalone: true,
+  changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [CommonModule, ReactiveFormsModule, RouterLink],
   template: `
     <div class="auth-container">
@@ -2100,6 +2101,7 @@ import { SettingsService } from '../../../../core/services/settings.service';
 export class RegisterComponent implements OnInit {
   private readonly authService = inject(AuthService);
   private readonly router = inject(Router);
+  private readonly route = inject(ActivatedRoute);
   private readonly fb = inject(FormBuilder);
   private readonly locationService = inject(LocationService);
   private readonly settingsService = inject(SettingsService);
@@ -2266,6 +2268,16 @@ export class RegisterComponent implements OnInit {
   ngOnInit(): void {
     this.settingsService.loadAllSettings().catch(() => {});
     this.loadLocationData();
+
+    // Handle role query parameter (from "Devenez réparateur" CTA)
+    this.route.queryParams.pipe(
+      takeUntilDestroyed(this.destroyRef)
+    ).subscribe(params => {
+      if (params['role'] === 'repairer') {
+        this.registerForm.patchValue({ role: 'repairer' });
+        this.isRepairer.set(true);
+      }
+    });
   }
 
   private loadLocationData(): void {

@@ -1,4 +1,4 @@
-import { Component, inject, signal, computed, OnInit, OnDestroy } from '@angular/core';
+import { Component, inject, signal, computed, OnInit, OnDestroy, ChangeDetectionStrategy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { RequestsService, RepairRequest, RequestStatus } from '../../../requests/services/requests.service';
@@ -11,6 +11,7 @@ import { StepRatingComponent } from '../../../../shared/components/step-rating/s
 @Component({
   selector: 'app-tracking-view',
   standalone: true,
+  changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [CommonModule, RouterLink, UiMapComponent, UiTimelineComponent, UiButtonComponent, StepRatingComponent],
   template: `
     <div class="tracking-container">

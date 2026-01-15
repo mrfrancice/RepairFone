@@ -1,14 +1,14 @@
-import { Component, Input, Output, EventEmitter, inject, computed } from '@angular/core';
+import { Component, Input, Output, EventEmitter, inject, computed, ChangeDetectionStrategy } from '@angular/core';
 import { CommonModule, Location } from '@angular/common';
 import { Router, RouterLink } from '@angular/router';
 import { AuthStore } from '../../../core/stores/auth.store';
 import { NotificationBellComponent } from '../notification-bell/notification-bell.component';
-import { ThemeToggleComponent } from '../theme-toggle/theme-toggle.component';
 
 @Component({
   selector: 'ui-header',
   standalone: true,
-  imports: [CommonModule, RouterLink, NotificationBellComponent, ThemeToggleComponent],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  imports: [CommonModule, RouterLink, NotificationBellComponent],
   template: `
     <header class="header">
       <div class="header-top">
@@ -42,8 +42,6 @@ import { ThemeToggleComponent } from '../theme-toggle/theme-toggle.component';
         </div>
         <div class="header-right">
           <ng-content select="[header-actions]"></ng-content>
-
-          <app-theme-toggle />
 
           @if (showProfile) {
             @if (authStore.isAuthenticated()) {
@@ -106,8 +104,8 @@ import { ThemeToggleComponent } from '../theme-toggle/theme-toggle.component';
     }
 
     .back-btn {
-      width: 40px;
-      height: 40px;
+      min-width: 44px;
+      min-height: 44px;
       background: rgba(255, 255, 255, 0.15);
       border: none;
       color: white;
@@ -124,9 +122,14 @@ import { ThemeToggleComponent } from '../theme-toggle/theme-toggle.component';
       background: rgba(255, 255, 255, 0.25);
     }
 
+    .back-btn:focus-visible {
+      outline: 2px solid white;
+      outline-offset: 2px;
+    }
+
     .header-icon {
-      width: 40px;
-      height: 40px;
+      min-width: 44px;
+      min-height: 44px;
       background: rgba(255, 255, 255, 0.15);
       border-radius: 12px;
       display: flex;
@@ -156,8 +159,8 @@ import { ThemeToggleComponent } from '../theme-toggle/theme-toggle.component';
 
     /* Profile Button */
     .profile-btn {
-      width: 40px;
-      height: 40px;
+      min-width: 44px;
+      min-height: 44px;
       border-radius: 50%;
       border: 2px solid rgba(255, 255, 255, 0.3);
       background: rgba(255, 255, 255, 0.1);
@@ -170,6 +173,11 @@ import { ThemeToggleComponent } from '../theme-toggle/theme-toggle.component';
     .profile-btn:hover {
       border-color: rgba(255, 255, 255, 0.5);
       transform: scale(1.05);
+    }
+
+    .profile-btn:focus-visible {
+      outline: 2px solid white;
+      outline-offset: 2px;
     }
 
     .profile-btn img {
@@ -194,8 +202,10 @@ import { ThemeToggleComponent } from '../theme-toggle/theme-toggle.component';
     .login-btn {
       display: flex;
       align-items: center;
+      justify-content: center;
       gap: 0.375rem;
       padding: 0.5rem 0.875rem;
+      min-height: 44px;
       background: rgba(255, 255, 255, 0.15);
       border: none;
       border-radius: 20px;
@@ -208,6 +218,11 @@ import { ThemeToggleComponent } from '../theme-toggle/theme-toggle.component';
 
     .login-btn:hover {
       background: rgba(255, 255, 255, 0.25);
+    }
+
+    .login-btn:focus-visible {
+      outline: 2px solid white;
+      outline-offset: 2px;
     }
   `]
 })

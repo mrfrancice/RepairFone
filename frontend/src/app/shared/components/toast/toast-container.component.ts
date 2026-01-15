@@ -57,8 +57,8 @@ import { ToastService, Toast, ToastType } from '../../../core/services/toast.ser
       align-items: flex-start;
       gap: 0.75rem;
       padding: 1rem;
-      border-radius: 12px;
-      background: white;
+      border-radius: var(--border-radius-lg, 12px);
+      background: var(--color-surface, white);
       box-shadow: 0 10px 40px rgba(0, 0, 0, 0.15);
       animation: slideIn 0.3s ease-out;
       position: relative;
@@ -89,23 +89,23 @@ import { ToastService, Toast, ToastType } from '../../../core/services/toast.ser
     }
 
     .toast-success .toast-icon {
-      background: #dcfce7;
-      color: #16a34a;
+      background: var(--color-secondary-50, #E8F5E9);
+      color: var(--color-success, #4CAF50);
     }
 
     .toast-error .toast-icon {
-      background: #fee2e2;
-      color: #dc2626;
+      background: var(--color-primary-50, #FFF3E0);
+      color: var(--color-error, #F44336);
     }
 
     .toast-warning .toast-icon {
-      background: #fef3c7;
-      color: #d97706;
+      background: var(--color-gold-50, #FFFDE7);
+      color: var(--color-warning, #FFC107);
     }
 
     .toast-info .toast-icon {
-      background: #dbeafe;
-      color: #2563eb;
+      background: var(--color-ocean-50, #E3F2FD);
+      color: var(--color-info, #2196F3);
     }
 
     .toast-content {
@@ -116,20 +116,20 @@ import { ToastService, Toast, ToastType } from '../../../core/services/toast.ser
     .toast-title {
       font-weight: 600;
       font-size: 0.875rem;
-      color: #1f2937;
+      color: var(--color-text-primary, rgba(0, 0, 0, 0.87));
       margin-bottom: 0.25rem;
     }
 
     .toast-message {
       font-size: 0.875rem;
-      color: #4b5563;
+      color: var(--color-text-secondary, rgba(0, 0, 0, 0.60));
       line-height: 1.4;
     }
 
     .toast-close {
       background: none;
       border: none;
-      color: #9ca3af;
+      color: var(--color-neutral-400, #BDBDBD);
       cursor: pointer;
       padding: 0;
       font-size: 1.125rem;
@@ -138,7 +138,7 @@ import { ToastService, Toast, ToastType } from '../../../core/services/toast.ser
     }
 
     .toast-close:hover {
-      color: #4b5563;
+      color: var(--color-text-secondary, rgba(0, 0, 0, 0.60));
     }
 
     .toast-progress {
@@ -162,10 +162,10 @@ import { ToastService, Toast, ToastType } from '../../../core/services/toast.ser
       }
     }
 
-    .toast-success .toast-progress { color: #16a34a; }
-    .toast-error .toast-progress { color: #dc2626; }
-    .toast-warning .toast-progress { color: #d97706; }
-    .toast-info .toast-progress { color: #2563eb; }
+    .toast-success .toast-progress { color: var(--color-success, #4CAF50); }
+    .toast-error .toast-progress { color: var(--color-error, #F44336); }
+    .toast-warning .toast-progress { color: var(--color-warning, #FFC107); }
+    .toast-info .toast-progress { color: var(--color-info, #2196F3); }
 
     /* Mobile adjustments */
     @media (max-width: 480px) {

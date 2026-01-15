@@ -21,13 +21,13 @@ export class PaymentListener {
    * - Notify the repairer about the payment
    * - Could update financial statistics in the future
    */
-  @OnEvent(EventNames.PAYMENT_COMPLETED)
+  @OnEvent(EventNames.PAYMENT_COMPLETED, { async: true })
   async handlePaymentCompleted(event: PaymentCompletedEvent): Promise<void> {
     this.logger.log(event.toLogString());
 
     try {
       // Get repairer profile to find the user ID for notification
-      const repairerProfile = await this.repairersService.findById(event.repairerId);
+      const repairerProfile = await this.repairersService.findByIdOrNull(event.repairerId);
 
       if (repairerProfile) {
         // Send notification to repairer about payment received

@@ -310,7 +310,8 @@ export interface SelectGroup {
 
     .search-input {
       width: 100%;
-      padding: 0.5rem 2rem 0.5rem 0.75rem;
+      padding: 0.5rem 2.5rem 0.5rem 0.75rem;
+      min-height: 44px;
       border: 1px solid #d1d5db;
       border-radius: 6px;
       font-size: 0.875rem;
@@ -328,20 +329,31 @@ export interface SelectGroup {
 
     .clear-search {
       position: absolute;
-      right: 1rem;
+      right: 0.5rem;
       top: 50%;
       transform: translateY(-50%);
       background: none;
       border: none;
-      padding: 0.25rem;
+      padding: 0.5rem;
       cursor: pointer;
       color: #6b7280;
       display: flex;
       align-items: center;
+      justify-content: center;
+      min-width: 44px;
+      min-height: 44px;
+      border-radius: var(--border-radius-sm, 4px);
+      transition: background 0.15s ease;
     }
 
     .clear-search:hover {
       color: #374151;
+      background: var(--color-neutral-100, #f3f4f6);
+    }
+
+    .clear-search:focus-visible {
+      outline: 2px solid var(--color-primary, #FF9800);
+      outline-offset: 2px;
     }
 
     .options-container {
@@ -375,6 +387,7 @@ export interface SelectGroup {
       align-items: center;
       gap: 0.75rem;
       padding: 0.75rem 1rem;
+      min-height: 44px;
       cursor: pointer;
       transition: background-color 0.15s;
     }

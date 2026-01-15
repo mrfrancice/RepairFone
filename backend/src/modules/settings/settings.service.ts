@@ -220,7 +220,7 @@ export class SettingsService implements OnModuleInit {
 
   // App Configs
   async getAppConfigs(category?: string): Promise<AppConfig[]> {
-    const where: any = { isActive: true };
+    const where: { isActive: boolean; category?: string } = { isActive: true };
     if (category) where.category = category;
     return this.appConfigRepo.find({ where });
   }

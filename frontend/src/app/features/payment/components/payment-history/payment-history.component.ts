@@ -1,8 +1,9 @@
-import { Component, inject, OnInit, signal } from '@angular/core';
+import { Component, inject, OnInit, signal, ChangeDetectionStrategy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { PaymentService, Payment, PaymentStatus } from '../../services/payment.service';
 import { PaymentStore } from '../../stores/payment.store';
+import { AuthStore } from '../../../../core/stores/auth.store';
 import { UiCardComponent } from '../../../../shared/components/ui-card/ui-card.component';
 import { UiButtonComponent } from '../../../../shared/components/ui-button/ui-button.component';
 import { UiLoadingComponent } from '../../../../shared/components/ui-loading/ui-loading.component';
@@ -13,6 +14,7 @@ import { UiPriceDisplayComponent } from '../../../../shared/components/ui-price-
 @Component({
   selector: 'app-payment-history',
   standalone: true,
+  changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
     CommonModule,
     RouterLink,
@@ -27,8 +29,8 @@ import { UiPriceDisplayComponent } from '../../../../shared/components/ui-price-
     <div class="payment-history">
       <!-- Header -->
       <header class="header">
-        <h1>Mes paiements</h1>
-        <p class="subtitle">Historique de vos transactions</p>
+        <h1>{{ authStore.isRepairer() ? 'Paiements reçus' : 'Mes paiements' }}</h1>
+        <p class="subtitle">{{ authStore.isRepairer() ? 'Historique des paiements de vos clients' : 'Historique de vos transactions' }}</p>
       </header>
 
       <!-- Stats -->
@@ -36,8 +38,8 @@ import { UiPriceDisplayComponent } from '../../../../shared/components/ui-price-
         <div class="stats-grid">
           <ui-card class="stat-card">
             <div class="stat-content">
-              <span class="stat-label">Total dépensé</span>
-              <ui-price-display [amount]="store.totalSpent()" size="lg" />
+              <span class="stat-label">{{ authStore.isRepairer() ? 'Total reçu' : 'Total dépensé' }}</span>
+              <ui-price-display [amount]="authStore.isRepairer() ? store.totalReceived() : store.totalSpent()" size="lg" />
             </div>
           </ui-card>
           <ui-card class="stat-card">
@@ -133,7 +135,7 @@ import { UiPriceDisplayComponent } from '../../../../shared/components/ui-price-
 
               <div class="payment-body">
                 <div class="amount-row">
-                  <ui-price-display [amount]="payment.amount" size="lg" />
+                  <ui-price-display [amount]="authStore.isRepairer() ? payment.repairerAmount : payment.amount" size="lg" />
                   @if (payment.paymentMethod) {
                     <span class="method-badge" [style.background]="getMethodColor(payment.paymentMethod)">
                       {{ getMethodIcon(payment.paymentMethod) }}
@@ -141,7 +143,16 @@ import { UiPriceDisplayComponent } from '../../../../shared/components/ui-price-
                   }
                 </div>
 
-                @if (payment.repairer) {
+                @if (authStore.isRepairer() && payment.client) {
+                  <div class="repairer-info">
+                    <span class="label">Client:</span>
+                    <span class="value">
+                      {{ payment.client.firstName + ' ' + payment.client.lastName }}
+                    </span>
+                  </div>
+                }
+
+                @if (!authStore.isRepairer() && payment.repairer) {
                   <div class="repairer-info">
                     <span class="label">Réparateur:</span>
                     <span class="value">
@@ -395,6 +406,7 @@ import { UiPriceDisplayComponent } from '../../../../shared/components/ui-price-
 export class PaymentHistoryComponent implements OnInit {
   readonly paymentService = inject(PaymentService);
   readonly store = inject(PaymentStore);
+  readonly authStore = inject(AuthStore);
 
   readonly isLoading = signal(false);
   readonly isLoadingMore = signal(false);

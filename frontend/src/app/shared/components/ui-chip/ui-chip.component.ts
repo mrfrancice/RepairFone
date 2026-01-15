@@ -13,6 +13,7 @@ export type ChipSize = 'sm' | 'md' | 'lg';
 @Component({
   selector: 'ui-chip',
   standalone: true,
+  changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [CommonModule],
   template: `
     <span
@@ -66,7 +67,8 @@ export type ChipSize = 'sm' | 'md' | 'lg';
       display: inline-flex;
       align-items: center;
       gap: 0.375rem;
-      padding: 0.375rem 0.75rem;
+      padding: 0.625rem 0.875rem;
+      min-height: 44px;
       border-radius: 9999px;
       font-size: 0.8125rem;
       font-weight: 500;
@@ -76,11 +78,17 @@ export type ChipSize = 'sm' | 'md' | 'lg';
 
     .chip.clickable {
       cursor: pointer;
+      min-width: 44px;
     }
 
     .chip.clickable:focus {
       outline: none;
-      box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.2);
+    }
+
+    .chip.clickable:focus-visible {
+      outline: 2px solid var(--color-primary, #FF9800);
+      outline-offset: 2px;
+      box-shadow: 0 0 0 4px rgba(255, 152, 0, 0.2);
     }
 
     .chip.disabled {
@@ -88,102 +96,104 @@ export type ChipSize = 'sm' | 'md' | 'lg';
       cursor: not-allowed;
     }
 
-    /* Variants */
+    /* Variants - Using CSS custom properties */
     .chip-default {
-      background: #f3f4f6;
-      color: #374151;
+      background: var(--color-neutral-100, #f3f4f6);
+      color: var(--text-primary, #374151);
     }
 
     .chip-default.clickable:hover:not(.disabled) {
-      background: #e5e7eb;
+      background: var(--color-neutral-200, #e5e7eb);
     }
 
     .chip-default.selected {
-      background: #2563eb;
+      background: var(--color-primary, #FF9800);
       color: white;
     }
 
     .chip-primary {
-      background: #eff6ff;
-      color: #2563eb;
+      background: var(--color-primary-light, #FFF3E0);
+      color: var(--color-primary, #FF9800);
     }
 
     .chip-primary.clickable:hover:not(.disabled) {
-      background: #dbeafe;
+      background: var(--color-primary-100, #FFE0B2);
     }
 
     .chip-primary.selected {
-      background: #2563eb;
+      background: var(--color-primary, #FF9800);
       color: white;
     }
 
     .chip-success {
-      background: #f0fdf4;
-      color: #16a34a;
+      background: var(--color-success-light, #f0fdf4);
+      color: var(--color-success, #4CAF50);
     }
 
     .chip-success.clickable:hover:not(.disabled) {
-      background: #dcfce7;
+      background: var(--color-success-100, #dcfce7);
     }
 
     .chip-success.selected {
-      background: #16a34a;
+      background: var(--color-success, #4CAF50);
       color: white;
     }
 
     .chip-warning {
-      background: #fffbeb;
-      color: #d97706;
+      background: var(--color-warning-light, #fffbeb);
+      color: var(--color-warning, #F9A825);
     }
 
     .chip-warning.clickable:hover:not(.disabled) {
-      background: #fef3c7;
+      background: var(--color-warning-100, #fef3c7);
     }
 
     .chip-warning.selected {
-      background: #d97706;
+      background: var(--color-warning, #F9A825);
       color: white;
     }
 
     .chip-danger {
-      background: #fef2f2;
-      color: #dc2626;
+      background: var(--color-error-light, #fef2f2);
+      color: var(--color-error, #C62828);
     }
 
     .chip-danger.clickable:hover:not(.disabled) {
-      background: #fee2e2;
+      background: var(--color-error-100, #fee2e2);
     }
 
     .chip-danger.selected {
-      background: #dc2626;
+      background: var(--color-error, #C62828);
       color: white;
     }
 
     .chip-info {
-      background: #f0f9ff;
-      color: #0284c7;
+      background: var(--color-ocean-light, #f0f9ff);
+      color: var(--color-ocean, #1565C0);
     }
 
     .chip-info.clickable:hover:not(.disabled) {
-      background: #e0f2fe;
+      background: var(--color-ocean-100, #e0f2fe);
     }
 
     .chip-info.selected {
-      background: #0284c7;
+      background: var(--color-ocean, #1565C0);
       color: white;
     }
 
-    /* Sizes */
+    /* Sizes - All maintain 44px minimum touch target */
     .size-sm {
-      padding: 0.25rem 0.5rem;
+      padding: 0.5rem 0.625rem;
       font-size: 0.75rem;
       gap: 0.25rem;
+      min-height: 44px;
     }
 
     .size-lg {
-      padding: 0.5rem 1rem;
+      padding: 0.75rem 1.25rem;
       font-size: 0.875rem;
       gap: 0.5rem;
+      min-height: 48px;
     }
 
     /* Elements */
@@ -233,18 +243,26 @@ export type ChipSize = 'sm' | 'md' | 'lg';
       justify-content: center;
       background: none;
       border: none;
-      padding: 0.125rem;
-      margin: -0.125rem -0.25rem -0.125rem 0;
+      padding: 0.5rem;
+      margin: -0.25rem -0.25rem -0.25rem 0;
       cursor: pointer;
       color: currentColor;
       opacity: 0.6;
       border-radius: 50%;
       transition: all 0.2s;
+      min-width: 44px;
+      min-height: 44px;
     }
 
     .chip-remove:hover {
       opacity: 1;
       background: rgba(0, 0, 0, 0.1);
+    }
+
+    .chip-remove:focus-visible {
+      outline: 2px solid var(--color-primary, #FF9800);
+      outline-offset: 1px;
+      opacity: 1;
     }
 
     .chip.selected .chip-remove:hover {

@@ -21,13 +21,13 @@ export class ReviewListener {
    * - Notify the repairer about the new review
    * - Log for analytics purposes
    */
-  @OnEvent(EventNames.REVIEW_CREATED)
+  @OnEvent(EventNames.REVIEW_CREATED, { async: true })
   async handleReviewCreated(event: ReviewCreatedEvent): Promise<void> {
     this.logger.log(event.toLogString());
 
     try {
       // Get repairer profile to find the user ID for notification
-      const repairerProfile = await this.repairersService.findById(event.repairerId);
+      const repairerProfile = await this.repairersService.findByIdOrNull(event.repairerId);
 
       if (repairerProfile) {
         // Send notification to repairer about new review

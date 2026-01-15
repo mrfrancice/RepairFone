@@ -1,18 +1,27 @@
-import { Injectable, NotFoundException, BadRequestException, ForbiddenException } from '@nestjs/common';
+import { Injectable, NotFoundException, BadRequestException, ForbiddenException, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, In, DataSource } from 'typeorm';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { RepairRequest, RequestStatus, DeliveryMode } from './entities/repair-request.entity';
 import { RequestStatusHistory } from './entities/request-status-history.entity';
 import { RepairerProfile } from '../users/entities/repairer-profile.entity';
+import { Payment, PaymentStatus } from '../payments/entities/payment.entity';
 import { CreateRequestDto, UpdateRequestStatusDto, RequestFilters } from './dto';
 import { RequestStatusChangedEvent, EventNames } from '../../common/events';
+import {
+  RequestResponse,
+  ClientRequestResponse,
+  RepairerRequestResponse,
+  PaginatedRequestResponse,
+} from './interfaces/request-response.interface';
 
 // Re-export DTOs for backward compatibility
 export { CreateRequestDto, UpdateRequestStatusDto, RequestFilters } from './dto';
 
 @Injectable()
 export class RequestsService {
+  private readonly logger = new Logger(RequestsService.name);
+
   constructor(
     @InjectRepository(RepairRequest)
     private readonly requestRepository: Repository<RepairRequest>,
@@ -20,12 +29,16 @@ export class RequestsService {
     private readonly statusHistoryRepository: Repository<RequestStatusHistory>,
     @InjectRepository(RepairerProfile)
     private readonly repairerProfileRepository: Repository<RepairerProfile>,
+    @InjectRepository(Payment)
+    private readonly paymentRepository: Repository<Payment>,
     private readonly eventEmitter: EventEmitter2,
     private readonly dataSource: DataSource,
   ) {}
 
-  async createRequest(clientId: string, dto: CreateRequestDto): Promise<RepairRequest> {
-    // Générer un numéro de demande unique
+  async createRequest(clientId: string, dto: CreateRequestDto): Promise<RequestResponse> {
+    this.logger.log(`Creating repair request for client ${clientId} to repairer ${dto.repairerId}`);
+
+    // Generate unique request number
     const requestNumber = await this.generateRequestNumber();
 
     // Résoudre le repairerId (peut être l'ID du profil ou l'ID de l'utilisateur)
@@ -63,14 +76,15 @@ export class RequestsService {
     });
 
     const savedRequest = await this.requestRepository.save(request);
+    this.logger.log(`Request created: ${savedRequest.requestNumber} (${savedRequest.id})`);
 
     // Create initial status history
-    await this.addStatusHistory(savedRequest.id, RequestStatus.PENDING, 'Demande créée', clientId);
+    await this.addStatusHistory(savedRequest.id, RequestStatus.PENDING, 'Demande creee', clientId);
 
     return this.findOne(savedRequest.id);
   }
 
-  async findOne(id: string): Promise<any> {
+  async findOne(id: string): Promise<RequestResponse> {
     const request = await this.findOneEntity(id);
     // Transform to match frontend expected format
     return this.transformRequest(request);
@@ -96,7 +110,7 @@ export class RequestsService {
     return request;
   }
 
-  private transformRequest(request: RepairRequest): any {
+  private transformRequest(request: RepairRequest): RequestResponse {
     const repairerProfile = request.repairer;
     const repairerUser = repairerProfile?.user;
 
@@ -134,7 +148,7 @@ export class RequestsService {
     };
   }
 
-  async findByClient(clientId: string, filters: RequestFilters): Promise<{ data: any[]; total: number }> {
+  async findByClient(clientId: string, filters: RequestFilters): Promise<PaginatedRequestResponse<ClientRequestResponse>> {
     const { status, page = 1, limit = 20 } = filters;
     const skip = (page - 1) * limit;
 
@@ -168,7 +182,7 @@ export class RequestsService {
     return { data, total };
   }
 
-  private transformRequestForClient(request: RepairRequest): any {
+  private transformRequestForClient(request: RepairRequest): ClientRequestResponse {
     const repairerProfile = request.repairer;
     const repairerUser = repairerProfile?.user;
 
@@ -194,7 +208,7 @@ export class RequestsService {
     };
   }
 
-  async findByRepairer(userId: string, filters: RequestFilters): Promise<{ data: any[]; total: number }> {
+  async findByRepairer(userId: string, filters: RequestFilters): Promise<PaginatedRequestResponse<RepairerRequestResponse>> {
     const { status, page = 1, limit = 20 } = filters;
     const skip = (page - 1) * limit;
 
@@ -237,7 +251,7 @@ export class RequestsService {
     return { data, total };
   }
 
-  private transformRequestForRepairer(request: RepairRequest): any {
+  private transformRequestForRepairer(request: RepairRequest): RepairerRequestResponse {
     return {
       ...request,
       client: request.client
@@ -257,15 +271,29 @@ export class RequestsService {
     userId: string,
     userRole: string,
     dto: UpdateRequestStatusDto,
-  ): Promise<any> {
+  ): Promise<RequestResponse> {
+    this.logger.log(`Status update request: ${id} -> ${dto.status} by ${userRole} ${userId}`);
     const request = await this.findOneEntity(id);
 
     // Validate permission
     if (userRole === 'client' && request.clientId !== userId) {
       throw new ForbiddenException('Vous n\'avez pas accès à cette demande');
     }
-    if (userRole === 'repairer' && request.repairer?.userId !== userId) {
-      throw new ForbiddenException('Vous n\'avez pas accès à cette demande');
+
+    // BIZ-102: Vérification correcte que le réparateur est assigné à cette request
+    if (userRole === 'repairer') {
+      const repairerProfile = await this.repairerProfileRepository.findOne({
+        where: { userId },
+      });
+
+      if (!repairerProfile) {
+        throw new ForbiddenException('Profil réparateur non trouvé');
+      }
+
+      // Vérifier que ce réparateur est bien assigné à cette request
+      if (!request.repairerId || request.repairerId !== repairerProfile.id) {
+        throw new ForbiddenException('Vous n\'êtes pas assigné à cette demande');
+      }
     }
 
     // Validate status transition
@@ -274,6 +302,23 @@ export class RequestsService {
     // Vérifier que le motif de rejet est fourni si le statut est "rejected"
     if (dto.status === RequestStatus.REJECTED && !dto.rejectionReason) {
       throw new BadRequestException('Le motif de rejet est obligatoire');
+    }
+
+    // Vérifier qu'un paiement a été effectué avant de passer en IN_PROGRESS
+    if (dto.status === RequestStatus.IN_PROGRESS && request.status === RequestStatus.ACCEPTED) {
+      const payment = await this.paymentRepository.findOne({
+        where: {
+          requestId: id,
+          status: PaymentStatus.COMPLETED,
+        },
+      });
+
+      if (!payment) {
+        throw new BadRequestException(
+          'Un paiement doit etre effectue avant de demarrer la reparation'
+        );
+      }
+      this.logger.log(`Payment verified for request ${request.requestNumber}: ${payment.paymentNumber}`);
     }
 
     // Store previous status for event
@@ -293,6 +338,7 @@ export class RequestsService {
     }
 
     await this.requestRepository.save(request);
+    this.logger.log(`Request ${request.requestNumber} status updated: ${previousStatus} -> ${dto.status}`);
 
     // Add status history
     await this.addStatusHistory(id, dto.status, dto.comment, userId);
@@ -323,7 +369,7 @@ export class RequestsService {
       ],
       [RequestStatus.ACCEPTED]: [
         { status: RequestStatus.IN_PROGRESS, roles: ['repairer'] },
-        { status: RequestStatus.COMPLETED, roles: ['repairer'] },
+        // BIZ-111: Suppression transition directe ACCEPTED -> COMPLETED (doit passer par IN_PROGRESS)
         { status: RequestStatus.CANCELLED, roles: ['client', 'admin'] },
         { status: RequestStatus.DISPUTED, roles: ['client'] },
       ],
@@ -346,10 +392,9 @@ export class RequestsService {
         { status: RequestStatus.DISPUTED, roles: ['client'] },
       ],
       [RequestStatus.CANCELLED]: [],  // Statut final
-      [RequestStatus.DISPUTED]: [
-        { status: RequestStatus.COMPLETED, roles: ['admin'] },  // Admin can resolve dispute
-        { status: RequestStatus.CANCELLED, roles: ['admin'] },
-      ],
+      // BIZ-112: DISPUTED est un statut géré par disputes.service.ts
+      // Les transitions sont effectuées lors de la résolution du litige (BIZ-105)
+      [RequestStatus.DISPUTED]: [],
     };
 
     const allowedTransitions = validTransitions[currentStatus] || [];

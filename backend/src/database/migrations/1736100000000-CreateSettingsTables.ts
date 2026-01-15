@@ -4,14 +4,18 @@ export class CreateSettingsTables1736100000000 implements MigrationInterface {
   name = 'CreateSettingsTables1736100000000';
 
   public async up(queryRunner: QueryRunner): Promise<void> {
-    // Create specialty_category enum
+    // Create specialty_category enum if not exists
     await queryRunner.query(`
-      CREATE TYPE "specialty_category_enum" AS ENUM ('brand', 'device_type', 'repair_type')
+      DO $$ BEGIN
+        CREATE TYPE "specialty_category_enum" AS ENUM ('brand', 'device_type', 'repair_type');
+      EXCEPTION
+        WHEN duplicate_object THEN null;
+      END $$;
     `);
 
-    // Create specialties table
+    // Create specialties table if not exists
     await queryRunner.query(`
-      CREATE TABLE "specialties" (
+      CREATE TABLE IF NOT EXISTS "specialties" (
         "id" uuid NOT NULL DEFAULT uuid_generate_v4(),
         "created_at" TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now(),
         "updated_at" TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now(),
@@ -26,11 +30,11 @@ export class CreateSettingsTables1736100000000 implements MigrationInterface {
         CONSTRAINT "PK_specialties" PRIMARY KEY ("id")
       )
     `);
-    await queryRunner.query(`CREATE INDEX "IDX_specialties_code" ON "specialties" ("code")`);
+    await queryRunner.query(`CREATE INDEX IF NOT EXISTS "IDX_specialties_code" ON "specialties" ("code")`);
 
-    // Create problem_categories table
+    // Create problem_categories table if not exists
     await queryRunner.query(`
-      CREATE TABLE "problem_categories" (
+      CREATE TABLE IF NOT EXISTS "problem_categories" (
         "id" uuid NOT NULL DEFAULT uuid_generate_v4(),
         "created_at" TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now(),
         "updated_at" TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now(),
@@ -45,11 +49,11 @@ export class CreateSettingsTables1736100000000 implements MigrationInterface {
         CONSTRAINT "PK_problem_categories" PRIMARY KEY ("id")
       )
     `);
-    await queryRunner.query(`CREATE INDEX "IDX_problem_categories_code" ON "problem_categories" ("code")`);
+    await queryRunner.query(`CREATE INDEX IF NOT EXISTS "IDX_problem_categories_code" ON "problem_categories" ("code")`);
 
-    // Create business_types table
+    // Create business_types table if not exists
     await queryRunner.query(`
-      CREATE TABLE "business_types" (
+      CREATE TABLE IF NOT EXISTS "business_types" (
         "id" uuid NOT NULL DEFAULT uuid_generate_v4(),
         "created_at" TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now(),
         "updated_at" TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now(),
@@ -65,11 +69,11 @@ export class CreateSettingsTables1736100000000 implements MigrationInterface {
         CONSTRAINT "PK_business_types" PRIMARY KEY ("id")
       )
     `);
-    await queryRunner.query(`CREATE INDEX "IDX_business_types_code" ON "business_types" ("code")`);
+    await queryRunner.query(`CREATE INDEX IF NOT EXISTS "IDX_business_types_code" ON "business_types" ("code")`);
 
-    // Create experience_ranges table
+    // Create experience_ranges table if not exists
     await queryRunner.query(`
-      CREATE TABLE "experience_ranges" (
+      CREATE TABLE IF NOT EXISTS "experience_ranges" (
         "id" uuid NOT NULL DEFAULT uuid_generate_v4(),
         "created_at" TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now(),
         "updated_at" TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now(),
@@ -84,11 +88,11 @@ export class CreateSettingsTables1736100000000 implements MigrationInterface {
         CONSTRAINT "PK_experience_ranges" PRIMARY KEY ("id")
       )
     `);
-    await queryRunner.query(`CREATE INDEX "IDX_experience_ranges_code" ON "experience_ranges" ("code")`);
+    await queryRunner.query(`CREATE INDEX IF NOT EXISTS "IDX_experience_ranges_code" ON "experience_ranges" ("code")`);
 
-    // Create id_document_types table
+    // Create id_document_types table if not exists
     await queryRunner.query(`
-      CREATE TABLE "id_document_types" (
+      CREATE TABLE IF NOT EXISTS "id_document_types" (
         "id" uuid NOT NULL DEFAULT uuid_generate_v4(),
         "created_at" TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now(),
         "updated_at" TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now(),
@@ -102,11 +106,11 @@ export class CreateSettingsTables1736100000000 implements MigrationInterface {
         CONSTRAINT "PK_id_document_types" PRIMARY KEY ("id")
       )
     `);
-    await queryRunner.query(`CREATE INDEX "IDX_id_document_types_code" ON "id_document_types" ("code")`);
+    await queryRunner.query(`CREATE INDEX IF NOT EXISTS "IDX_id_document_types_code" ON "id_document_types" ("code")`);
 
-    // Create badge_types table
+    // Create badge_types table if not exists
     await queryRunner.query(`
-      CREATE TABLE "badge_types" (
+      CREATE TABLE IF NOT EXISTS "badge_types" (
         "id" uuid NOT NULL DEFAULT uuid_generate_v4(),
         "created_at" TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now(),
         "updated_at" TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now(),
@@ -122,11 +126,11 @@ export class CreateSettingsTables1736100000000 implements MigrationInterface {
         CONSTRAINT "PK_badge_types" PRIMARY KEY ("id")
       )
     `);
-    await queryRunner.query(`CREATE INDEX "IDX_badge_types_code" ON "badge_types" ("code")`);
+    await queryRunner.query(`CREATE INDEX IF NOT EXISTS "IDX_badge_types_code" ON "badge_types" ("code")`);
 
-    // Create app_configs table
+    // Create app_configs table if not exists
     await queryRunner.query(`
-      CREATE TABLE "app_configs" (
+      CREATE TABLE IF NOT EXISTS "app_configs" (
         "id" uuid NOT NULL DEFAULT uuid_generate_v4(),
         "created_at" TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now(),
         "updated_at" TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT now(),
@@ -141,31 +145,31 @@ export class CreateSettingsTables1736100000000 implements MigrationInterface {
         CONSTRAINT "PK_app_configs" PRIMARY KEY ("id")
       )
     `);
-    await queryRunner.query(`CREATE INDEX "IDX_app_configs_key" ON "app_configs" ("key")`);
+    await queryRunner.query(`CREATE INDEX IF NOT EXISTS "IDX_app_configs_key" ON "app_configs" ("key")`);
   }
 
   public async down(queryRunner: QueryRunner): Promise<void> {
-    await queryRunner.query(`DROP INDEX "IDX_app_configs_key"`);
-    await queryRunner.query(`DROP TABLE "app_configs"`);
+    await queryRunner.query(`DROP INDEX IF EXISTS "IDX_app_configs_key"`);
+    await queryRunner.query(`DROP TABLE IF EXISTS "app_configs"`);
 
-    await queryRunner.query(`DROP INDEX "IDX_badge_types_code"`);
-    await queryRunner.query(`DROP TABLE "badge_types"`);
+    await queryRunner.query(`DROP INDEX IF EXISTS "IDX_badge_types_code"`);
+    await queryRunner.query(`DROP TABLE IF EXISTS "badge_types"`);
 
-    await queryRunner.query(`DROP INDEX "IDX_id_document_types_code"`);
-    await queryRunner.query(`DROP TABLE "id_document_types"`);
+    await queryRunner.query(`DROP INDEX IF EXISTS "IDX_id_document_types_code"`);
+    await queryRunner.query(`DROP TABLE IF EXISTS "id_document_types"`);
 
-    await queryRunner.query(`DROP INDEX "IDX_experience_ranges_code"`);
-    await queryRunner.query(`DROP TABLE "experience_ranges"`);
+    await queryRunner.query(`DROP INDEX IF EXISTS "IDX_experience_ranges_code"`);
+    await queryRunner.query(`DROP TABLE IF EXISTS "experience_ranges"`);
 
-    await queryRunner.query(`DROP INDEX "IDX_business_types_code"`);
-    await queryRunner.query(`DROP TABLE "business_types"`);
+    await queryRunner.query(`DROP INDEX IF EXISTS "IDX_business_types_code"`);
+    await queryRunner.query(`DROP TABLE IF EXISTS "business_types"`);
 
-    await queryRunner.query(`DROP INDEX "IDX_problem_categories_code"`);
-    await queryRunner.query(`DROP TABLE "problem_categories"`);
+    await queryRunner.query(`DROP INDEX IF EXISTS "IDX_problem_categories_code"`);
+    await queryRunner.query(`DROP TABLE IF EXISTS "problem_categories"`);
 
-    await queryRunner.query(`DROP INDEX "IDX_specialties_code"`);
-    await queryRunner.query(`DROP TABLE "specialties"`);
+    await queryRunner.query(`DROP INDEX IF EXISTS "IDX_specialties_code"`);
+    await queryRunner.query(`DROP TABLE IF EXISTS "specialties"`);
 
-    await queryRunner.query(`DROP TYPE "specialty_category_enum"`);
+    await queryRunner.query(`DROP TYPE IF EXISTS "specialty_category_enum"`);
   }
 }

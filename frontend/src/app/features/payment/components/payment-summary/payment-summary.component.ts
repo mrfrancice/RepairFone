@@ -1,4 +1,4 @@
-import { Component, inject, signal, computed, OnInit } from '@angular/core';
+import { Component, inject, signal, computed, OnInit, ChangeDetectionStrategy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
@@ -7,44 +7,36 @@ import { PaymentStore } from '../../stores/payment.store';
 import { QuotesService } from '../../../quotes/services/quotes.service';
 import { UiButtonComponent } from '../../../../shared/components/ui-button/ui-button.component';
 import { UiLoadingComponent } from '../../../../shared/components/ui-loading/ui-loading.component';
+import { UiHeaderComponent } from '../../../../shared/components/ui-header/ui-header.component';
+import { UiStepperComponent } from '../../../../shared/components/ui-stepper/ui-stepper.component';
 
 @Component({
   selector: 'app-payment-summary',
   standalone: true,
-  imports: [CommonModule, FormsModule, UiButtonComponent, UiLoadingComponent],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  imports: [CommonModule, FormsModule, UiButtonComponent, UiLoadingComponent, UiHeaderComponent, UiStepperComponent],
   template: `
     <div class="payment-container">
-      <!-- Header -->
-      <header class="payment-header">
-        <button class="back-btn" (click)="goBack()">
-          <span>←</span>
-        </button>
-        <h1>Paiement</h1>
-      </header>
+      <!-- Header - Utilisation du composant partagé -->
+      <ui-header
+        title="💳 Paiement"
+        subtitle="Finalisez votre commande"
+        [showBack]="true"
+        (onBack)="goBack()"
+      />
 
-      <!-- Progress Steps -->
-      <div class="progress-bar">
-        <div class="progress-step" [class.active]="currentStep() >= 1" [class.completed]="currentStep() > 1">
-          <span class="step-number">1</span>
-          <span class="step-label">Récapitulatif</span>
-        </div>
-        <div class="progress-line" [class.active]="currentStep() > 1"></div>
-        <div class="progress-step" [class.active]="currentStep() >= 2" [class.completed]="currentStep() > 2">
-          <span class="step-number">2</span>
-          <span class="step-label">Moyen</span>
-        </div>
-        <div class="progress-line" [class.active]="currentStep() > 2"></div>
-        <div class="progress-step" [class.active]="currentStep() >= 3">
-          <span class="step-number">3</span>
-          <span class="step-label">Confirmation</span>
-        </div>
+      <!-- Progress Steps - Utilisation du composant partagé -->
+      <div class="stepper-wrapper">
+        <ui-stepper
+          [steps]="paymentSteps"
+          [currentStep]="currentStep() - 1"
+          [showNavigation]="false"
+          [linear]="true"
+        />
       </div>
 
       @if (isLoading()) {
-        <div class="loading-state">
-          <ui-loading size="lg" />
-          <p>Chargement...</p>
-        </div>
+        <ui-loading size="lg" text="Chargement..." [centered]="true" />
       } @else {
         <div class="payment-content">
           <!-- Step 1: Summary -->
@@ -1185,6 +1177,13 @@ export class PaymentSummaryComponent implements OnInit {
     const steps = ['summary', 'method', 'confirm', 'processing', 'result'];
     return steps.indexOf(step) + 1;
   });
+
+  // Configuration des étapes du stepper
+  readonly paymentSteps = [
+    { label: 'Récapitulatif', icon: '📋' },
+    { label: 'Moyen', icon: '💳' },
+    { label: 'Confirmation', icon: '✅' },
+  ];
 
   async ngOnInit(): Promise<void> {
     const requestId = this.route.snapshot.queryParamMap.get('requestId');

@@ -29,7 +29,6 @@ export type { SkeletonVariant } from './components/ui-skeleton/ui-skeleton.compo
 export { ToastContainerComponent } from './components/toast/toast-container.component';
 export { NotificationBellComponent } from './components/notification-bell/notification-bell.component';
 export { NetworkStatusComponent } from './components/network-status/network-status.component';
-export { ThemeToggleComponent } from './components/theme-toggle/theme-toggle.component';
 
 // Shared Pipes
 export { RelativeTimePipe } from './pipes/relative-time.pipe';

@@ -26,9 +26,9 @@ import { CommonModule } from '@angular/common';
   `,
   styles: [`
     .card {
-      background: white;
-      border-radius: 12px;
-      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+      background: var(--color-surface, white);
+      border-radius: var(--border-radius-lg, 12px);
+      box-shadow: var(--shadow-sm, 0 1px 3px rgba(0, 0, 0, 0.1));
       overflow: hidden;
     }
 
@@ -38,7 +38,7 @@ import { CommonModule } from '@angular/common';
     }
 
     .card.clickable:hover {
-      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+      box-shadow: var(--shadow-md, 0 4px 12px rgba(0, 0, 0, 0.15));
       transform: translateY(-2px);
     }
 
@@ -49,13 +49,13 @@ import { CommonModule } from '@angular/common';
     .card-title {
       font-size: 1.125rem;
       font-weight: 600;
-      color: #1f2937;
+      color: var(--color-text-primary, rgba(0, 0, 0, 0.87));
       margin: 0 0 0.25rem;
     }
 
     .card-subtitle {
       font-size: 0.875rem;
-      color: #6b7280;
+      color: var(--color-text-secondary, rgba(0, 0, 0, 0.60));
       margin: 0;
     }
 

@@ -30,7 +30,7 @@ export type AlertType = 'info' | 'success' | 'warning' | 'error';
       align-items: flex-start;
       gap: 0.75rem;
       padding: 1rem;
-      border-radius: 8px;
+      border-radius: var(--border-radius-md, 8px);
       border: 1px solid;
     }
 
@@ -61,7 +61,7 @@ export type AlertType = 'info' | 'success' | 'warning' | 'error';
       padding: 0.25rem;
       font-size: 1rem;
       opacity: 0.6;
-      transition: opacity 0.2s;
+      transition: opacity var(--transition-fast, 150ms);
     }
 
     .alert-close:hover {
@@ -69,27 +69,27 @@ export type AlertType = 'info' | 'success' | 'warning' | 'error';
     }
 
     .alert-info {
-      background: #eff6ff;
-      border-color: #bfdbfe;
-      color: #1e40af;
+      background: var(--color-ocean-50, #E3F2FD);
+      border-color: var(--color-info-light, #64B5F6);
+      color: var(--color-info-dark, #1565C0);
     }
 
     .alert-success {
-      background: #f0fdf4;
-      border-color: #bbf7d0;
-      color: #166534;
+      background: var(--color-secondary-50, #E8F5E9);
+      border-color: var(--color-success-light, #81C784);
+      color: var(--color-success-dark, #2E7D32);
     }
 
     .alert-warning {
-      background: #fffbeb;
-      border-color: #fed7aa;
-      color: #92400e;
+      background: var(--color-gold-50, #FFFDE7);
+      border-color: var(--color-warning-light, #FFD54F);
+      color: var(--color-warning-dark, #F57C00);
     }
 
     .alert-error {
-      background: #fef2f2;
-      border-color: #fecaca;
-      color: #991b1b;
+      background: var(--color-primary-50, #FFF3E0);
+      border-color: var(--color-error-light, #EF5350);
+      color: var(--color-error-dark, #C62828);
     }
   `]
 })

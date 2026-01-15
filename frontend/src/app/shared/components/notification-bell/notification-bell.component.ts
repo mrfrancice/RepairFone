@@ -6,6 +6,7 @@ import { NotificationService } from '../../../core/services/notification.service
 @Component({
   selector: 'app-notification-bell',
   standalone: true,
+  changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [CommonModule, RouterLink],
   template: `
     <a class="notification-bell" routerLink="/notifications">
@@ -23,9 +24,11 @@ import { NotificationService } from '../../../core/services/notification.service
       display: flex;
       align-items: center;
       justify-content: center;
-      width: 2.5rem;
-      height: 2.5rem;
+      min-width: 44px;
+      min-height: 44px;
       text-decoration: none;
+      border-radius: var(--border-radius-md, 8px);
+      transition: background 0.15s ease;
 
       .icon {
         font-size: 1.375rem;
@@ -33,12 +36,12 @@ import { NotificationService } from '../../../core/services/notification.service
 
       .badge {
         position: absolute;
-        top: 0;
-        right: 0;
+        top: 2px;
+        right: 2px;
         min-width: 1.125rem;
         height: 1.125rem;
         padding: 0 0.25rem;
-        background: #ef4444;
+        background: var(--color-error, #F44336);
         color: white;
         font-size: 0.625rem;
         font-weight: 700;
@@ -47,6 +50,15 @@ import { NotificationService } from '../../../core/services/notification.service
         align-items: center;
         justify-content: center;
       }
+    }
+
+    .notification-bell:hover {
+      background: rgba(255, 255, 255, 0.1);
+    }
+
+    .notification-bell:focus-visible {
+      outline: 2px solid var(--color-primary, #FF9800);
+      outline-offset: 2px;
     }
   `]
 })

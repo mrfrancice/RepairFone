@@ -1,0 +1,25 @@
+{
+  "name": "repairfone-ai-agents",
+  "version": "1.0.0",
+  "description": "AI Agent integration for RepairFone project",
+  "main": "agent-cli.js",
+  "scripts": {
+    "ai": "node agent-cli.js",
+    "ai:review": "node agent-cli.js --review",
+    "ai:angular": "node agent-cli.js --agent angular-expert",
+    "ai:nest": "node agent-cli.js --agent nestjs-expert",
+    "ai:test": "node agent-cli.js --agent test-strategist",
+    "ai:interactive": "node agent-cli.js --interactive"
+  },
+  "dependencies": {
+    "@anthropic-ai/sdk": "^0.30.0"
+  },
+  "devDependencies": {},
+  "keywords": [
+    "ai",
+    "claude",
+    "angular",
+    "nestjs",
+    "repairfone"
+  ]
+}

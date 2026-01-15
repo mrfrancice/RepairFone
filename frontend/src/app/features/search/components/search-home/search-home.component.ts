@@ -1,7 +1,7 @@
-import { Component, inject, signal, OnInit } from '@angular/core';
+import { Component, inject, signal, OnInit, ChangeDetectionStrategy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { Router } from '@angular/router';
+import { Router, ActivatedRoute } from '@angular/router';
 import { SearchService, Device, ServiceType, LocationDetails } from '../../services/search.service';
 import { SearchStore } from '../../stores/search.store';
 import { UiHeaderComponent } from '../../../../shared/components/ui-header/ui-header.component';
@@ -16,41 +16,25 @@ interface Problem {
 @Component({
   selector: 'app-search-home',
   standalone: true,
+  changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [CommonModule, FormsModule, UiHeaderComponent],
   template: `
     <div class="search-container">
       <!-- Header -->
       <ui-header
-        title="Choix du service"
-        subtitle="Trouvez un réparateur fiable"
+        title="Trouver un réparateur"
+        subtitle="En quelques étapes"
         [showBack]="true"
         [showProfile]="true"
         (onBack)="goHome()"
       />
 
       <div class="search-card">
-        @if (error()) {
-          <div class="alert alert-error">
-            <span class="alert-icon">⚠️</span>
-            <div class="alert-content">
-              <span>{{ error() }}</span>
-              <div class="alert-actions">
-                <button class="btn-retry" (click)="detectLocation()">
-                  🔄 Réessayer
-                </button>
-                <button class="btn-use-default" (click)="useDefaultLocation()">
-                  📍 Utiliser Abidjan
-                </button>
-              </div>
-            </div>
-          </div>
-        }
-
-        <!-- Step 1: Location -->
-        <div class="search-step" [class.completed]="store.hasLocation()">
+        <!-- Step 1: Device Type -->
+        <div class="search-step" [class.completed]="selectedCategory()">
           <div class="step-header">
-            <span class="step-indicator">
-              @if (store.hasLocation()) {
+            <span class="step-indicator" [class.active]="!selectedCategory()">
+              @if (selectedCategory()) {
                 <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
                   <path d="M13.3 4.3L6 11.6L2.7 8.3" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
                 </svg>
@@ -58,61 +42,7 @@ interface Problem {
                 1
               }
             </span>
-            <h3>Votre position</h3>
-          </div>
-
-          @if (store.hasLocation()) {
-            <div class="location-display">
-              <div class="location-info">
-                <span class="location-icon">📍</span>
-                <div class="location-details">
-                  @if (store.locationDetails()) {
-                    <span class="location-address">{{ store.locationDetails()!.address }}</span>
-                    <span class="location-city">{{ store.locationDetails()!.formattedAddress }}</span>
-                    <span class="location-coords">
-                      {{ store.locationDetails()!.latitude.toFixed(4) }}°N, {{ formatLongitude(store.locationDetails()!.longitude) }}
-                    </span>
-                  } @else if (locationName()) {
-                    <span class="location-address">{{ locationName() }}</span>
-                  } @else {
-                    <span class="location-address">Position détectée</span>
-                  }
-                </div>
-              </div>
-              <button class="btn-text" (click)="detectLocation()">Modifier</button>
-            </div>
-          } @else {
-            <button
-              class="btn btn-location btn-block"
-              (click)="detectLocation()"
-              [disabled]="isLoadingLocation()"
-            >
-              <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
-                <path d="M10 10.8333C11.3807 10.8333 12.5 9.71404 12.5 8.33333C12.5 6.95262 11.3807 5.83333 10 5.83333C8.61929 5.83333 7.5 6.95262 7.5 8.33333C7.5 9.71404 8.61929 10.8333 10 10.8333Z" stroke="currentColor" stroke-width="1.5"/>
-                <path d="M10 17.5C13.3333 14.1667 16.6667 11.0152 16.6667 8.33333C16.6667 4.65144 13.6819 1.66667 10 1.66667C6.31811 1.66667 3.33334 4.65144 3.33334 8.33333C3.33334 11.0152 6.66668 14.1667 10 17.5Z" stroke="currentColor" stroke-width="1.5"/>
-              </svg>
-              @if (isLoadingLocation()) {
-                Détection en cours...
-              } @else {
-                Détecter ma position
-              }
-            </button>
-          }
-        </div>
-
-        <!-- Step 2: Device Type -->
-        <div class="search-step" [class.disabled]="!store.hasLocation()">
-          <div class="step-header">
-            <span class="step-indicator" [class.active]="store.hasLocation() && !selectedCategory()">
-              @if (selectedCategory()) {
-                <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-                  <path d="M13.3 4.3L6 11.6L2.7 8.3" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                </svg>
-              } @else {
-                2
-              }
-            </span>
-            <h3>Type d'appareil</h3>
+            <h3>Quel appareil ?</h3>
           </div>
 
           <div class="category-grid">
@@ -120,7 +50,6 @@ interface Problem {
               <button
                 class="category-btn"
                 [class.active]="selectedCategory() === category"
-                [disabled]="!store.hasLocation()"
                 (click)="selectCategory(category)"
               >
                 <span class="category-icon">{{ getCategoryIcon(category) }}</span>
@@ -183,20 +112,20 @@ interface Problem {
           }
         </div>
 
-        <!-- Step 3: Problem -->
+        <!-- Step 2: Problem -->
         @if (selectedCategory()) {
-          <div class="search-step" [class.disabled]="!selectedCategory()">
+          <div class="search-step" [class.completed]="selectedProblem()">
             <div class="step-header">
-              <span class="step-indicator" [class.active]="selectedCategory() && !store.selectedServiceType()">
-                @if (store.selectedServiceType()) {
+              <span class="step-indicator" [class.active]="selectedCategory() && !selectedProblem()">
+                @if (selectedProblem()) {
                   <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
                     <path d="M13.3 4.3L6 11.6L2.7 8.3" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
                   </svg>
                 } @else {
-                  3
+                  2
                 }
               </span>
-              <h3>Problème rencontré</h3>
+              <h3>Quel problème ?</h3>
             </div>
 
             <div class="problems-list">
@@ -242,50 +171,89 @@ interface Problem {
                 ></textarea>
               </div>
             }
+
+            <!-- Price Suggestion -->
+            @if (selectedProblem() && selectedProblem()!.priceRange) {
+              <div class="price-suggestion">
+                <span class="suggestion-icon">💡</span>
+                <div class="suggestion-content">
+                  <span class="suggestion-label">Prix estimé</span>
+                  <span class="suggestion-price">
+                    {{ selectedProblem()!.priceRange!.min | number }} – {{ selectedProblem()!.priceRange!.max | number }} FCFA
+                  </span>
+                </div>
+              </div>
+            }
           </div>
         }
 
-        <!-- Step 4: Service Mode -->
+        <!-- Step 3: Location -->
         @if (selectedProblem()) {
-          <div class="search-step">
+          <div class="search-step" [class.completed]="store.hasLocation()">
             <div class="step-header">
-              <span class="step-indicator active">4</span>
-              <h3>Mode de service</h3>
-            </div>
-
-            <div class="service-mode-grid">
-              <button
-                class="service-mode-btn"
-                [class.active]="serviceMode() === 'shop'"
-                (click)="setServiceMode('shop')"
-              >
-                <span class="mode-icon">🏪</span>
-                <span class="mode-label">En boutique</span>
-                <span class="mode-desc">Je me déplace</span>
-              </button>
-              <button
-                class="service-mode-btn"
-                [class.active]="serviceMode() === 'home'"
-                (click)="setServiceMode('home')"
-              >
-                <span class="mode-icon">🏠</span>
-                <span class="mode-label">À domicile</span>
-                <span class="mode-desc">Le réparateur vient</span>
-              </button>
-            </div>
-          </div>
-        }
-
-        <!-- Price Suggestion -->
-        @if (selectedProblem() && selectedProblem()!.priceRange) {
-          <div class="price-suggestion">
-            <span class="suggestion-icon">💡</span>
-            <div class="suggestion-content">
-              <span class="suggestion-label">Prix estimé</span>
-              <span class="suggestion-price">
-                {{ selectedProblem()!.name }} : {{ selectedProblem()!.priceRange!.min | number }} – {{ selectedProblem()!.priceRange!.max | number }} FCFA
+              <span class="step-indicator" [class.active]="selectedProblem() && !store.hasLocation()">
+                @if (store.hasLocation()) {
+                  <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                    <path d="M13.3 4.3L6 11.6L2.7 8.3" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                  </svg>
+                } @else {
+                  3
+                }
               </span>
+              <h3>Où êtes-vous ?</h3>
             </div>
+
+            @if (error()) {
+              <div class="alert alert-error">
+                <span class="alert-icon">⚠️</span>
+                <div class="alert-content">
+                  <span>{{ error() }}</span>
+                  <div class="alert-actions">
+                    <button class="btn-retry" (click)="detectLocation()">
+                      🔄 Réessayer
+                    </button>
+                    <button class="btn-use-default" (click)="useDefaultLocation()">
+                      📍 Utiliser Abidjan
+                    </button>
+                  </div>
+                </div>
+              </div>
+            }
+
+            @if (store.hasLocation()) {
+              <div class="location-display">
+                <div class="location-info">
+                  <span class="location-icon">📍</span>
+                  <div class="location-details">
+                    @if (store.locationDetails()) {
+                      <span class="location-address">{{ store.locationDetails()!.address }}</span>
+                      <span class="location-city">{{ store.locationDetails()!.formattedAddress }}</span>
+                    } @else if (locationName()) {
+                      <span class="location-address">{{ locationName() }}</span>
+                    } @else {
+                      <span class="location-address">Position détectée</span>
+                    }
+                  </div>
+                </div>
+                <button class="btn-text" (click)="detectLocation()">Modifier</button>
+              </div>
+            } @else {
+              <button
+                class="btn btn-location btn-block"
+                (click)="detectLocation()"
+                [disabled]="isLoadingLocation()"
+              >
+                <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                  <path d="M10 10.8333C11.3807 10.8333 12.5 9.71404 12.5 8.33333C12.5 6.95262 11.3807 5.83333 10 5.83333C8.61929 5.83333 7.5 6.95262 7.5 8.33333C7.5 9.71404 8.61929 10.8333 10 10.8333Z" stroke="currentColor" stroke-width="1.5"/>
+                  <path d="M10 17.5C13.3333 14.1667 16.6667 11.0152 16.6667 8.33333C16.6667 4.65144 13.6819 1.66667 10 1.66667C6.31811 1.66667 3.33334 4.65144 3.33334 8.33333C3.33334 11.0152 6.66668 14.1667 10 17.5Z" stroke="currentColor" stroke-width="1.5"/>
+                </svg>
+                @if (isLoadingLocation()) {
+                  Détection en cours...
+                } @else {
+                  Détecter ma position
+                }
+              </button>
+            }
           </div>
         }
 
@@ -299,10 +267,10 @@ interface Problem {
             <span class="spinner-small"></span>
             Recherche en cours...
           } @else {
-            Continuer
             <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
-              <path d="M7.5 15L12.5 10L7.5 5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+              <path d="M17.5 17.5L13.875 13.875M15.833 9.167A6.667 6.667 0 112.5 9.167a6.667 6.667 0 0113.333 0z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
             </svg>
+            Voir les réparateurs
           }
         </button>
       </div>
@@ -800,59 +768,6 @@ interface Problem {
       box-shadow: 0 0 0 3px rgba(255, 107, 53, 0.1);
     }
 
-    .service-mode-grid {
-      display: grid;
-      grid-template-columns: repeat(2, 1fr);
-      gap: 0.75rem;
-    }
-
-    .service-mode-btn {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      text-align: center;
-      padding: 1.5rem 0.75rem;
-      min-height: 120px;
-      background: #f9fafb;
-      border: 2px solid #e5e7eb;
-      border-radius: 16px;
-      cursor: pointer;
-      transition: all 0.2s;
-    }
-
-    .service-mode-btn:hover {
-      border-color: #FF6B35;
-      transform: translateY(-4px);
-      box-shadow: 0 4px 12px rgba(255, 107, 53, 0.15);
-    }
-
-    .service-mode-btn.active {
-      background: linear-gradient(135deg, #FF6B35 0%, #FF9800 100%);
-      border-color: #FF6B35;
-      color: white;
-    }
-
-    .service-mode-btn.active .mode-label,
-    .service-mode-btn.active .mode-desc {
-      color: white;
-    }
-
-    .mode-icon {
-      font-size: 2rem;
-      margin-bottom: 0.5rem;
-    }
-
-    .mode-label {
-      font-weight: 600;
-      color: #1f2937;
-    }
-
-    .mode-desc {
-      font-size: 0.75rem;
-      color: #6b7280;
-      margin-top: 0.25rem;
-    }
-
     .btn {
       display: flex;
       align-items: center;
@@ -926,6 +841,7 @@ interface Problem {
 export class SearchHomeComponent implements OnInit {
   private readonly searchService = inject(SearchService);
   private readonly router = inject(Router);
+  private readonly route = inject(ActivatedRoute);
   readonly store = inject(SearchStore);
 
   readonly categories = signal<string[]>([]);
@@ -939,7 +855,6 @@ export class SearchHomeComponent implements OnInit {
   readonly locationName = signal<string | null>(null);
   readonly showAllDevices = signal(false);
   readonly selectedProblem = signal<Problem | null>(null);
-  readonly serviceMode = signal<'shop' | 'home'>('shop');
 
   selectedBrand = '';
   otherProblemDescription = '';
@@ -955,12 +870,71 @@ export class SearchHomeComponent implements OnInit {
 
   ngOnInit(): void {
     this.loadCategories();
-    if (!this.store.hasLocation()) {
-      this.detectLocation();
-    } else if (this.store.locationDetails()) {
-      // Restore location name from stored details
+    // Restore location name if already set
+    if (this.store.locationDetails()) {
       this.locationName.set(this.store.locationDetails()!.formattedAddress);
     }
+
+    // Handle query parameters from home page navigation
+    this.route.queryParams.subscribe(params => {
+      // Pre-select problem if passed from home page
+      if (params['problem']) {
+        const problemName = params['problem'].toLowerCase();
+        const matchingProblem = this.commonProblems().find(p =>
+          p.name.toLowerCase().includes(problemName) || p.id === problemName
+        );
+        if (matchingProblem) {
+          // Auto-select smartphone category (most common)
+          if (!this.selectedCategory()) {
+            this.selectCategory('smartphone');
+          }
+          this.selectedProblem.set(matchingProblem);
+          // Auto-detect location if not already set
+          if (!this.store.hasLocation()) {
+            this.detectLocation();
+          }
+        }
+      }
+
+      // Pre-select category/service if passed from home page
+      if (params['service']) {
+        const serviceId = params['service'].toLowerCase();
+        // Map service IDs to categories
+        const categoryMap: Record<string, string> = {
+          'screen': 'smartphone',
+          'battery': 'smartphone',
+          'charging': 'smartphone',
+          'ecran': 'smartphone',
+          'batterie': 'smartphone',
+        };
+        const category = categoryMap[serviceId] || 'smartphone';
+        if (!this.selectedCategory()) {
+          this.selectCategory(category);
+        }
+        // Also select the matching problem
+        const matchingProblem = this.commonProblems().find(p =>
+          p.id === serviceId || p.name.toLowerCase().includes(serviceId)
+        );
+        if (matchingProblem) {
+          this.selectedProblem.set(matchingProblem);
+        }
+      }
+
+      // Handle search query
+      if (params['q']) {
+        // Try to match query with a problem
+        const query = params['q'].toLowerCase();
+        const matchingProblem = this.commonProblems().find(p =>
+          p.name.toLowerCase().includes(query)
+        );
+        if (matchingProblem) {
+          if (!this.selectedCategory()) {
+            this.selectCategory('smartphone');
+          }
+          this.selectedProblem.set(matchingProblem);
+        }
+      }
+    });
   }
 
   async loadCategories(): Promise<void> {
@@ -1104,10 +1078,6 @@ export class SearchHomeComponent implements OnInit {
     this.selectedProblem.set({ id: 'other', name: 'Autre', icon: '❓' });
   }
 
-  setServiceMode(mode: 'shop' | 'home'): void {
-    this.serviceMode.set(mode);
-  }
-
   getCategoryIcon(category: string): string {
     const icons: Record<string, string> = {
       smartphone: '📱',
@@ -1143,7 +1113,7 @@ export class SearchHomeComponent implements OnInit {
   }
 
   canSearch(): boolean {
-    return this.store.hasLocation() && this.selectedCategory() !== null;
+    return this.selectedCategory() !== null && this.selectedProblem() !== null && this.store.hasLocation();
   }
 
   async search(): Promise<void> {
@@ -1151,9 +1121,6 @@ export class SearchHomeComponent implements OnInit {
 
     this.isSearching.set(true);
     try {
-      // Store additional search criteria
-      this.store.setServiceMode(this.serviceMode());
-
       this.router.navigate(['/search/results']);
     } finally {
       this.isSearching.set(false);

@@ -21,13 +21,14 @@ export class QuoteListener {
    * - Notify the repairer
    * - Update repairer statistics (accepted quotes count)
    */
-  @OnEvent(EventNames.QUOTE_ACCEPTED)
+  @OnEvent(EventNames.QUOTE_ACCEPTED, { async: true })
   async handleQuoteAccepted(event: QuoteAcceptedEvent): Promise<void> {
     this.logger.log(event.toLogString());
 
     try {
       // Get repairer profile to find the user ID for notification
-      const repairerProfile = await this.repairersService.findById(event.repairerId);
+      // Use findByIdOrNull to avoid throwing NotFoundException
+      const repairerProfile = await this.repairersService.findByIdOrNull(event.repairerId);
 
       if (repairerProfile) {
         // Send notification to repairer

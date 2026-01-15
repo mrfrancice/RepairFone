@@ -7,6 +7,7 @@ import { SettingsService } from '../../../../core/services/settings.service';
 import { SearchService } from '../../../search/services/search.service';
 import { UiSearchBarComponent } from '@app/shared';
 import { UiAvatarComponent } from '../../../../shared/components/ui-avatar/ui-avatar.component';
+import { UiSkeletonComponent } from '../../../../shared/components/ui-skeleton/ui-skeleton.component';
 import { BottomNavComponent } from '../../../../shared/components/bottom-nav/bottom-nav.component';
 import { NotificationBellComponent } from '../../../../shared/components/notification-bell/notification-bell.component';
 
@@ -41,6 +42,7 @@ interface QuickService {
     RouterLink,
     UiSearchBarComponent,
     UiAvatarComponent,
+    UiSkeletonComponent,
     BottomNavComponent,
     NotificationBellComponent,
   ],
@@ -84,22 +86,32 @@ interface QuickService {
               </span>
               <span class="role-badge">{{ getRoleLabel() }}</span>
               <app-notification-bell />
+              <button class="profile-btn" (click)="goToProfile()">
+                @if (authStore.user()?.avatarUrl) {
+                  <img [src]="authStore.user()?.avatarUrl" alt="Profil" />
+                } @else {
+                  <div class="profile-placeholder">
+                    {{ getInitials() }}
+                  </div>
+                }
+              </button>
+            } @else {
+              <button class="login-btn" (click)="goToProfile()">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/>
+                  <polyline points="10 17 15 12 10 7"/>
+                  <line x1="15" y1="12" x2="3" y2="12"/>
+                </svg>
+                Connexion
+              </button>
             }
-            <button class="profile-btn" (click)="goToProfile()">
-              @if (authStore.user()?.avatarUrl) {
-                <img [src]="authStore.user()?.avatarUrl" alt="Profil" />
-              } @else {
-                <div class="profile-placeholder">
-                  {{ getInitials() }}
-                </div>
-              }
-            </button>
           </div>
         </div>
 
         <!-- Search Bar -->
         <ui-search-bar
-          placeholder="Rechercher un appareil, problème..."
+          placeholder="Rechercher un service, un problème..."
+          variant="transparent"
           (search)="onSearch($event)"
         />
       </header>
@@ -109,93 +121,150 @@ interface QuickService {
         <!-- Main Action Cards -->
         <section class="action-section">
           <div class="action-cards">
-            <button class="action-card repair-card" (click)="goToRepair()">
-              <div class="action-icon-wrapper repair">
-                <svg width="32" height="32" viewBox="0 0 32 32" fill="none">
-                  <path d="M20 12l-4 4m0 0l-4-4m4 4v-8M12 22h8" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                  <circle cx="16" cy="16" r="10" stroke="currentColor" stroke-width="2"/>
-                </svg>
-              </div>
-              <div class="action-text">
-                <h3>Réparation</h3>
-                <p>Trouvez un réparateur près de vous</p>
-              </div>
-              <div class="action-arrow">
-                <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
-                  <path d="M7.5 15l5-5-5-5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                </svg>
-              </div>
-            </button>
+            @if (authStore.isRepairer()) {
+              <!-- Repairer-specific cards -->
+              <button class="action-card repair-card" (click)="goToRepairerDashboard()">
+                <div class="action-icon-wrapper repair">
+                  <svg width="32" height="32" viewBox="0 0 32 32" fill="none">
+                    <path d="M12 16h8M12 20h8M12 12h8M8 8h16v16H8V8z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                  </svg>
+                </div>
+                <div class="action-text">
+                  <div class="action-title-row">
+                    <h3>Mes demandes</h3>
+                    <span class="time-badge">Pro</span>
+                  </div>
+                  <p>Gérez vos demandes de réparation</p>
+                </div>
+                <div class="action-arrow">
+                  <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                    <path d="M7.5 15l5-5-5-5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                  </svg>
+                </div>
+              </button>
 
-            <button class="action-card advice-card" (click)="goToAdvice()">
-              <div class="action-icon-wrapper advice">
-                <svg width="32" height="32" viewBox="0 0 32 32" fill="none">
-                  <path d="M16 22v-2m0-8v4m0 6a10 10 0 110-20 10 10 0 010 20z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                </svg>
-              </div>
-              <div class="action-text">
-                <h3>Conseils</h3>
-                <p>Consultez un expert en ligne</p>
-              </div>
-              <div class="action-arrow">
-                <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
-                  <path d="M7.5 15l5-5-5-5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                </svg>
-              </div>
-            </button>
-          </div>
-        </section>
+              <button class="action-card advice-card" (click)="goToRepairerQuotes()">
+                <div class="action-icon-wrapper advice">
+                  <svg width="32" height="32" viewBox="0 0 32 32" fill="none">
+                    <path d="M10 14h12M10 18h8M8 8h16v16H8V8z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    <path d="M20 8V6a2 2 0 00-2-2h-4a2 2 0 00-2 2v2" stroke="currentColor" stroke-width="2"/>
+                  </svg>
+                </div>
+                <div class="action-text">
+                  <div class="action-title-row">
+                    <h3>Créer un devis</h3>
+                    <span class="time-badge advice">Nouveau</span>
+                  </div>
+                  <p>Répondez aux demandes de clients</p>
+                </div>
+                <div class="action-arrow">
+                  <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                    <path d="M7.5 15l5-5-5-5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                  </svg>
+                </div>
+              </button>
+            } @else {
+              <!-- Client/Visitor cards -->
+              <button class="action-card repair-card" (click)="goToRepair()">
+                <div class="action-icon-wrapper repair">
+                  <svg width="32" height="32" viewBox="0 0 32 32" fill="none">
+                    <path d="M20 12l-4 4m0 0l-4-4m4 4v-8M12 22h8" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    <circle cx="16" cy="16" r="10" stroke="currentColor" stroke-width="2"/>
+                  </svg>
+                </div>
+                <div class="action-text">
+                  <div class="action-title-row">
+                    <h3>Trouver un réparateur</h3>
+                    <span class="time-badge">~2 min</span>
+                  </div>
+                  <p>Décrivez votre panne et recevez des devis gratuits</p>
+                </div>
+                <div class="action-arrow">
+                  <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                    <path d="M7.5 15l5-5-5-5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                  </svg>
+                </div>
+              </button>
 
-        <!-- Quick Services -->
-        <section class="quick-services-section">
-          <div class="section-header">
-            <h2>Services rapides</h2>
-          </div>
-          <div class="services-scroll">
-            @for (service of quickServices(); track service.id) {
-              <button class="service-chip" (click)="selectService(service.id)">
-                <span class="service-icon" [style.background]="service.color">{{ service.icon }}</span>
-                <span class="service-label">{{ service.label }}</span>
+              <button class="action-card advice-card" (click)="goToAdvice()">
+                <div class="action-icon-wrapper advice">
+                  <svg width="32" height="32" viewBox="0 0 32 32" fill="none">
+                    <path d="M16 12v4m0 4h.01M8 8h16l-2 12H10L8 8zm0 0V6a2 2 0 012-2h12a2 2 0 012 2v2" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                  </svg>
+                </div>
+                <div class="action-text">
+                  <div class="action-title-row">
+                    <h3>Diagnostic en ligne</h3>
+                    <span class="time-badge advice">Gratuit</span>
+                  </div>
+                  <p>Obtenez un avis d'expert avant de réparer</p>
+                </div>
+                <div class="action-arrow">
+                  <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                    <path d="M7.5 15l5-5-5-5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                  </svg>
+                </div>
               </button>
             }
           </div>
         </section>
 
-        <!-- Nearby Repairers -->
-        <section class="repairers-section">
-          <div class="section-header">
-            <h2>Réparateurs proches</h2>
-            <a routerLink="/search" class="see-all-link">
-              Voir tout
-              <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-                <path d="M6 12l4-4-4-4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-              </svg>
-            </a>
-          </div>
-
-          @if (isLoadingRepairers()) {
-            <div class="repairers-loading">
-              @for (i of [1, 2, 3]; track i) {
-                <div class="repairer-skeleton">
-                  <div class="skeleton-avatar"></div>
-                  <div class="skeleton-content">
-                    <div class="skeleton-line w-70"></div>
-                    <div class="skeleton-line w-50"></div>
-                    <div class="skeleton-line w-40"></div>
-                  </div>
-                </div>
+        <!-- Quick Services - Shortcut chips (only for clients/visitors) -->
+        @if (!authStore.isRepairer()) {
+          <section class="quick-services-section">
+            <div class="section-header">
+              <h2>Réparations courantes</h2>
+              <span class="section-hint">Accès rapide</span>
+            </div>
+            <div class="services-scroll">
+              @for (service of quickServices(); track service.id) {
+                <button class="service-chip" (click)="selectService(service.id)">
+                  <span class="service-icon" [style.background]="service.color">{{ service.icon }}</span>
+                  <span class="service-label">{{ service.label }}</span>
+                </button>
               }
             </div>
+          </section>
+        }
+
+        <!-- Nearby Repairers (for clients/visitors) / Quick stats (for repairers) -->
+        @if (!authStore.isRepairer()) {
+          <section class="repairers-section">
+            <div class="section-header">
+              <h2>Réparateurs proches</h2>
+              <a routerLink="/search" class="see-all-link">
+                Voir tout
+                <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                  <path d="M6 12l4-4-4-4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+              </a>
+            </div>
+
+          @if (isLoadingRepairers()) {
+            <ui-skeleton
+              variant="repairer-card"
+              [count]="3"
+              animation="shimmer"
+              ariaLabel="Chargement des reparateurs"
+            />
           } @else if (nearbyRepairers().length === 0) {
             <div class="empty-repairers">
               <div class="empty-icon">
                 <svg width="48" height="48" viewBox="0 0 48 48" fill="none">
                   <circle cx="24" cy="24" r="20" stroke="#E5E7EB" stroke-width="2"/>
-                  <path d="M24 16v8m0 8h.01" stroke="#9CA3AF" stroke-width="2" stroke-linecap="round"/>
+                  <path d="M24 16v8m0 8h.01" stroke="#6B7280" stroke-width="2" stroke-linecap="round"/>
                 </svg>
               </div>
-              <p>Aucun réparateur trouvé</p>
-              <span>Activez la localisation pour voir les réparateurs proches</span>
+              @if (locationStatus() === 'error') {
+                <p>Localisation non disponible</p>
+                <span>Autorisez l'accès à votre position pour découvrir les réparateurs proches</span>
+              } @else {
+                <p>Aucun réparateur disponible</p>
+                <span>Il n'y a pas encore de réparateurs dans votre zone. Essayez d'élargir votre recherche.</span>
+              }
+              <button class="empty-action-btn" (click)="goToSearch()">
+                Rechercher un réparateur
+              </button>
             </div>
           } @else {
             <div class="repairers-list">
@@ -262,7 +331,8 @@ interface QuickService {
               }
             </div>
           }
-        </section>
+          </section>
+        }
 
         <!-- Recent Requests (if authenticated) -->
         @if (authStore.isAuthenticated() && activeRequests().length > 0) {
@@ -294,43 +364,62 @@ interface QuickService {
           </section>
         }
 
-        <!-- Problem Categories -->
-        <section class="categories-section">
-          <div class="section-header">
-            <h2>Problèmes fréquents</h2>
-          </div>
-          <div class="categories-grid">
-            @for (category of problemCategories(); track category.id) {
-              <button class="category-item" (click)="searchByProblem(category.name)">
-                <span class="category-icon">{{ category.icon }}</span>
-                <span class="category-name">{{ category.name }}</span>
-              </button>
-            }
-          </div>
-        </section>
+        <!-- Problem Categories (only for clients/visitors) -->
+        @if (!authStore.isRepairer()) {
+          <section class="categories-section">
+            <div class="section-header">
+              <h2>Problèmes fréquents</h2>
+            </div>
+            <div class="categories-grid">
+              @for (category of problemCategories(); track category.id) {
+                <button class="category-item" (click)="searchByProblem(category.name)">
+                  <span class="category-icon">{{ category.icon }}</span>
+                  <span class="category-name">{{ category.name }}</span>
+                </button>
+              }
+            </div>
+          </section>
+        }
 
-        <!-- Promo Banner -->
-        <section class="promo-section">
-          <div class="promo-banner">
-            <div class="promo-content">
-              <span class="promo-tag">NOUVEAU</span>
-              <h3>Devenez réparateur</h3>
-              <p>Rejoignez notre réseau et développez votre activité</p>
-              <button class="promo-btn" (click)="goToRepairerSignup()">
-                En savoir plus
-                <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-                  <path d="M6 12l4-4-4-4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+        <!-- Promo Banner - B2B CTA (only for non-repairers) -->
+        @if (!authStore.isRepairer()) {
+          <section class="promo-section">
+            <div class="promo-banner">
+              <div class="promo-content">
+                <span class="promo-tag">PROFESSIONNELS</span>
+                <h3>Rejoignez notre réseau</h3>
+                <p>Recevez des demandes de clients près de chez vous</p>
+                <div class="promo-benefits">
+                  <span class="benefit-item">
+                    <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
+                      <path d="M10 3L4.5 8.5L2 6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                    Inscription gratuite
+                  </span>
+                  <span class="benefit-item">
+                    <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
+                      <path d="M10 3L4.5 8.5L2 6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                    Paiement sécurisé
+                  </span>
+                </div>
+                <button class="promo-btn" (click)="goToRepairerSignup()">
+                  Commencer maintenant
+                  <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                    <path d="M6 12l4-4-4-4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                  </svg>
+                </button>
+              </div>
+              <div class="promo-illustration">
+                <svg width="80" height="80" viewBox="0 0 80 80" fill="none">
+                  <circle cx="40" cy="40" r="35" fill="rgba(255,255,255,0.1)"/>
+                  <path d="M32 40h16M40 32v16" stroke="white" stroke-width="3" stroke-linecap="round"/>
+                  <path d="M40 24a16 16 0 110 32 16 16 0 010-32z" stroke="white" stroke-width="2" stroke-opacity="0.5"/>
                 </svg>
-              </button>
+              </div>
             </div>
-            <div class="promo-illustration">
-              <svg width="80" height="80" viewBox="0 0 80 80" fill="none">
-                <circle cx="40" cy="40" r="35" fill="rgba(255,255,255,0.1)"/>
-                <path d="M50 30l-10 10m0 0L30 30m10 10v-15M35 50h10" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-              </svg>
-            </div>
-          </div>
-        </section>
+          </section>
+        }
       </main>
 
       <!-- Bottom spacing for nav -->
@@ -502,6 +591,37 @@ interface QuickService {
       font-size: 0.875rem;
     }
 
+    /* Login Button - Same style as ui-header */
+    .login-btn {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.375rem;
+      padding: 0.5rem 0.875rem;
+      min-height: 44px;
+      background: rgba(255, 255, 255, 0.15);
+      border: none;
+      border-radius: 20px;
+      color: white;
+      font-size: 0.8125rem;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .login-btn:hover {
+      background: rgba(255, 255, 255, 0.25);
+    }
+
+    .login-btn:focus-visible {
+      outline: 2px solid white;
+      outline-offset: 2px;
+    }
+
+    .login-btn svg {
+      flex-shrink: 0;
+    }
+
     /* Location Chip */
     .location-chip {
       display: flex;
@@ -568,6 +688,12 @@ interface QuickService {
       font-weight: 500;
     }
 
+    .section-hint {
+      font-size: 0.75rem;
+      color: #9CA3AF;
+      font-weight: 400;
+    }
+
     /* ============================================
        ACTION CARDS
     ============================================ */
@@ -624,11 +750,33 @@ interface QuickService {
       flex: 1;
     }
 
+    .action-title-row {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      margin-bottom: 0.25rem;
+    }
+
     .action-text h3 {
       font-size: 1rem;
       font-weight: 600;
       color: #1F2937;
-      margin: 0 0 0.25rem;
+      margin: 0;
+    }
+
+    .time-badge {
+      padding: 0.125rem 0.5rem;
+      background: #FEF3C7;
+      color: #92400E;
+      font-size: 0.625rem;
+      font-weight: 600;
+      border-radius: 10px;
+      white-space: nowrap;
+    }
+
+    .time-badge.advice {
+      background: #D1FAE5;
+      color: #065F46;
     }
 
     .action-text p {
@@ -638,7 +786,7 @@ interface QuickService {
     }
 
     .action-arrow {
-      color: #9CA3AF;
+      color: #6B7280;  /* WCAG AA compliant */
     }
 
     /* ============================================
@@ -799,7 +947,7 @@ interface QuickService {
     }
 
     .meta-item.rating .count {
-      color: #9CA3AF;
+      color: #6B7280;  /* WCAG AA compliant */
     }
 
     .meta-separator {
@@ -834,7 +982,7 @@ interface QuickService {
     }
 
     .repairer-action {
-      color: #9CA3AF;
+      color: #6B7280;  /* WCAG AA compliant */
       flex-shrink: 0;
     }
 
@@ -906,7 +1054,29 @@ interface QuickService {
 
     .empty-repairers span {
       font-size: 0.8125rem;
-      color: #9CA3AF;
+      color: #6B7280;  /* WCAG AA compliant */
+      display: block;
+      margin-bottom: 1rem;
+    }
+
+    .empty-action-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.375rem;
+      padding: 0.625rem 1.25rem;
+      background: #FF6B35;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      font-size: 0.875rem;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .empty-action-btn:hover {
+      background: #E85A24;
+      transform: translateY(-1px);
     }
 
     /* ============================================
@@ -967,7 +1137,7 @@ interface QuickService {
 
     .request-time {
       font-size: 0.6875rem;
-      color: #9CA3AF;
+      color: #6B7280;  /* WCAG AA compliant */
     }
 
     /* ============================================
@@ -1053,7 +1223,26 @@ interface QuickService {
     .promo-banner p {
       font-size: 0.75rem;
       color: rgba(255, 255, 255, 0.8);
-      margin: 0 0 0.75rem;
+      margin: 0 0 0.5rem;
+    }
+
+    .promo-benefits {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+      margin-bottom: 0.75rem;
+    }
+
+    .benefit-item {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.25rem;
+      font-size: 0.6875rem;
+      color: rgba(255, 255, 255, 0.9);
+    }
+
+    .benefit-item svg {
+      color: #86EFAC;
     }
 
     .promo-btn {
@@ -1266,6 +1455,14 @@ export class HomeComponent implements OnInit {
     this.router.navigate(['/conseils']);
   }
 
+  goToRepairerDashboard(): void {
+    this.router.navigate(['/repairer/requests']);
+  }
+
+  goToRepairerQuotes(): void {
+    this.router.navigate(['/repairer/dashboard']);
+  }
+
   goToProfile(): void {
     if (this.authStore.isAuthenticated()) {
       this.router.navigate(['/profile']);
@@ -1306,7 +1503,8 @@ export class HomeComponent implements OnInit {
   }
 
   goToRepairerSignup(): void {
-    this.router.navigate(['/repairer/register']);
+    // Navigate to registration page with repairer role pre-selected
+    this.router.navigate(['/auth/register'], { queryParams: { role: 'repairer' } });
   }
 
   formatDistance(km: number): string {

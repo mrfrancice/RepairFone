@@ -3,105 +3,47 @@ import {
   UnauthorizedException,
   BadRequestException,
   ConflictException,
+  Logger,
 } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, MoreThan } from 'typeorm';
 import * as bcrypt from 'bcrypt';
-import { IsString, IsNotEmpty, IsOptional, IsEnum } from 'class-validator';
-import { IsStrongPassword } from '../../common/validators/password.validator';
+import * as crypto from 'crypto';
 import { UsersService } from '../users/users.service';
 import { RepairersService } from '../users/repairers.service';
 import { User, UserRole } from '../users/entities/user.entity';
 import { OtpCode } from './entities/otp.entity';
 import { RefreshToken } from './entities/refresh-token.entity';
 import { SmsService } from '../../common/services/sms.service';
+import { FirebaseService } from '../../common/services/firebase.service';
+import { RegisterDto, LoginDto, RepairerProfileDto } from './dto';
+import { AUTH, BUSINESS, SUCCESS_MESSAGES, HTTP_MESSAGES } from '../../common/constants';
 
+// Re-export DTOs for backward compatibility
+export { RegisterDto, LoginDto, RepairerProfileDto } from './dto';
+
+/**
+ * Authentication tokens returned after successful login/registration
+ */
 export interface AuthTokens {
   accessToken: string;
   refreshToken: string;
   expiresIn: number;
 }
 
-export class RepairerProfileDto {
-  // Personal identification
-  dateOfBirth?: string;
-  nationalIdNumber?: string;
-  personalAddress?: string;
-
-  // Business information
-  businessName: string;
-  description?: string;
-  businessType?: string;
-  rccmNumber?: string;
-  taxId?: string;
-  businessPhone?: string;
-  businessEmail?: string;
-
-  // Shop location
-  address: string;
-  city?: string;
-  commune?: string;
-  quarter?: string;
-  landmark?: string;
-  latitude?: number;
-  longitude?: number;
-
-  // Shop details
-  specialties?: string[];
-  yearsOfExperience?: number;
-  acceptsHomeService?: boolean;
-  homeServiceRadiusKm?: number;
-}
-
-export class RegisterDto {
-  @IsString()
-  @IsNotEmpty()
-  phone: string;
-
-  @IsString()
-  @IsNotEmpty()
-  @IsStrongPassword({
-    message: 'Le mot de passe doit contenir au moins 8 caractères, une majuscule, une minuscule, un chiffre et un caractère spécial',
-  })
-  password: string;
-
-  @IsString()
-  @IsOptional()
-  firstName?: string;
-
-  @IsString()
-  @IsOptional()
-  lastName?: string;
-
-  @IsEnum(UserRole)
-  @IsOptional()
-  role?: UserRole;
-
-  // Repairer profile data (only for repairer role)
-  @IsOptional()
-  repairerProfile?: RepairerProfileDto;
-}
-
-export class LoginDto {
-  @IsString()
-  @IsNotEmpty()
-  phone: string;
-
-  @IsString()
-  @IsNotEmpty()
-  password: string;
-}
-
 @Injectable()
 export class AuthService {
+  private readonly logger = new Logger(AuthService.name);
+
   constructor(
     private readonly usersService: UsersService,
     private readonly repairersService: RepairersService,
     private readonly jwtService: JwtService,
     private readonly configService: ConfigService,
     private readonly smsService: SmsService,
+    private readonly firebaseService: FirebaseService,
     @InjectRepository(OtpCode)
     private readonly otpRepository: Repository<OtpCode>,
     @InjectRepository(RefreshToken)
@@ -109,14 +51,17 @@ export class AuthService {
   ) {}
 
   async register(dto: RegisterDto): Promise<{ user: User; message: string; devCode?: string }> {
+    this.logger.log(`Registration attempt for phone: ${dto.phone.slice(0, -4)}****`);
+
     // Check if phone already exists
     const existingUser = await this.usersService.findByPhone(dto.phone);
     if (existingUser) {
-      throw new ConflictException('Ce numéro de téléphone est déjà utilisé');
+      this.logger.warn(`Registration failed: phone already exists ${dto.phone.slice(0, -4)}****`);
+      throw new ConflictException('Ce numero de telephone est deja utilise');
     }
 
-    // Hash password
-    const passwordHash = await bcrypt.hash(dto.password, 12);
+    // Hash password using centralized constant
+    const passwordHash = await bcrypt.hash(dto.password, AUTH.PASSWORD_SALT_ROUNDS);
 
     // Create user
     const user = await this.usersService.create({
@@ -147,7 +92,7 @@ export class AuthService {
 
         // Shop location
         address: profileData.address,
-        city: profileData.city || 'Abidjan',
+        city: profileData.city || BUSINESS.DEFAULT_CITY,
         commune: profileData.commune,
         quarter: profileData.quarter,
         landmark: profileData.landmark,
@@ -158,7 +103,7 @@ export class AuthService {
         specialties: profileData.specialties || [],
         yearsOfExperience: profileData.yearsOfExperience,
         acceptsHomeService: profileData.acceptsHomeService || false,
-        homeServiceRadiusKm: profileData.homeServiceRadiusKm || 10,
+        homeServiceRadiusKm: profileData.homeServiceRadiusKm || BUSINESS.DEFAULT_HOME_SERVICE_RADIUS_KM,
       });
     }
 
@@ -167,18 +112,21 @@ export class AuthService {
 
     return {
       user,
-      message: 'Compte créé. Veuillez vérifier votre téléphone avec le code OTP envoyé.',
+      message: SUCCESS_MESSAGES.ACCOUNT_CREATED,
       ...(otpResult.devCode && { devCode: otpResult.devCode }),
     };
   }
 
   async login(dto: LoginDto): Promise<AuthTokens> {
-    const MAX_FAILED_ATTEMPTS = 5;
-    const LOCKOUT_DURATION_MINUTES = 30;
+    // Use centralized authentication constants
+    const { MAX_FAILED_ATTEMPTS, LOCKOUT_DURATION_MINUTES } = AUTH;
+
+    this.logger.log(`Login attempt for phone: ${dto.phone.slice(0, -4)}****`);
 
     const user = await this.usersService.findByPhone(dto.phone);
 
     if (!user) {
+      this.logger.warn(`Login failed: user not found ${dto.phone.slice(0, -4)}****`);
       throw new UnauthorizedException('Identifiants incorrects');
     }
 
@@ -187,8 +135,9 @@ export class AuthService {
       const remainingMinutes = Math.ceil(
         (new Date(user.lockedUntil).getTime() - Date.now()) / (1000 * 60)
       );
+      this.logger.warn(`Login blocked: account locked for user ${user.id}`);
       throw new UnauthorizedException(
-        `Compte temporairement verrouillé. Réessayez dans ${remainingMinutes} minute(s).`
+        `Compte temporairement verrouille. Reessayez dans ${remainingMinutes} minute(s).`
       );
     }
 
@@ -208,23 +157,27 @@ export class AuthService {
         // Lock the account
         const lockUntil = new Date(Date.now() + LOCKOUT_DURATION_MINUTES * 60 * 1000);
         await this.usersService.lockAccount(user.id, lockUntil, newAttempts);
+        this.logger.warn(`Account locked due to too many failed attempts: ${user.id}`);
         throw new UnauthorizedException(
-          `Trop de tentatives échouées. Compte verrouillé pour ${LOCKOUT_DURATION_MINUTES} minutes.`
+          `Trop de tentatives echouees. Compte verrouille pour ${LOCKOUT_DURATION_MINUTES} minutes.`
         );
       }
 
       await this.usersService.incrementFailedAttempts(user.id, newAttempts);
       const remainingAttempts = MAX_FAILED_ATTEMPTS - newAttempts;
+      this.logger.warn(`Login failed: invalid password for user ${user.id}, ${remainingAttempts} attempts remaining`);
       throw new UnauthorizedException(
         `Identifiants incorrects. ${remainingAttempts} tentative(s) restante(s).`
       );
     }
 
     if (!user.isPhoneVerified) {
-      throw new UnauthorizedException('Veuillez d\'abord vérifier votre numéro de téléphone');
+      this.logger.warn(`Login failed: phone not verified for user ${user.id}`);
+      throw new UnauthorizedException('Veuillez d\'abord verifier votre numero de telephone');
     }
 
     if (user.status === 'suspended') {
+      this.logger.warn(`Login failed: account suspended for user ${user.id}`);
       throw new UnauthorizedException('Votre compte est suspendu');
     }
 
@@ -235,19 +188,23 @@ export class AuthService {
 
     // Update last login
     await this.usersService.updateLastLogin(user.id);
+    this.logger.log(`Login successful for user ${user.id}`);
 
     return this.generateTokens(user);
   }
 
   async generateOtp(phone: string): Promise<{ message: string; devCode?: string }> {
-    // Generate 6-digit code
-    const code = Math.floor(100000 + Math.random() * 900000).toString();
+    // SEC-002: Use crypto.randomInt for cryptographically secure OTP generation
+    // Generate 6-digit code using secure random (100000 to 999999)
+    const min = Math.pow(10, 5); // 100000
+    const max = Math.pow(10, 6); // 1000000
+    const code = crypto.randomInt(min, max).toString();
 
     // Delete existing OTP for this phone
     await this.otpRepository.delete({ phone });
 
-    // Create new OTP
-    const expirationMinutes = this.configService.get<number>('otp.expirationMinutes') || 5;
+    // Create new OTP using centralized constant as fallback
+    const expirationMinutes = this.configService.get<number>('otp.expirationMinutes') || AUTH.OTP_EXPIRATION_MINUTES;
     const otp = this.otpRepository.create({
       phone,
       code,
@@ -260,12 +217,12 @@ export class AuthService {
     const smsResult = await this.smsService.sendOtp(phone, code);
 
     if (!smsResult.success && !isDev) {
-      throw new BadRequestException('Erreur lors de l\'envoi du SMS. Veuillez réessayer.');
+      throw new BadRequestException(HTTP_MESSAGES.BAD_REQUEST.INVALID_OTP);
     }
 
     // Return OTP in development mode only (for testing)
     return {
-      message: 'Code OTP envoyé',
+      message: SUCCESS_MESSAGES.OTP_SENT,
       ...(isDev && { devCode: code }),
     };
   }
@@ -294,8 +251,13 @@ export class AuthService {
       throw new BadRequestException('Nombre maximum de tentatives atteint');
     }
 
-    // Verify the code matches
-    if (otp.code !== code) {
+    // SEC-001: Use timing-safe comparison to prevent timing attacks
+    // crypto.timingSafeEqual requires buffers of equal length
+    const storedCodeBuffer = Buffer.from(otp.code.padEnd(6, '0'));
+    const providedCodeBuffer = Buffer.from(code.padEnd(6, '0'));
+    const isCodeValid = crypto.timingSafeEqual(storedCodeBuffer, providedCodeBuffer);
+
+    if (!isCodeValid) {
       throw new BadRequestException('Code OTP invalide');
     }
 
@@ -361,25 +323,101 @@ export class AuthService {
 
     const accessToken = this.jwtService.sign(payload);
 
-    // Generate refresh token (7 days in seconds)
+    // Generate refresh token using centralized constant
+    const refreshTokenExpirySeconds = AUTH.REFRESH_TOKEN_EXPIRY_DAYS * 24 * 60 * 60;
     const refreshToken = this.jwtService.sign(payload, {
       secret: this.configService.get<string>('jwt.refreshSecret'),
-      expiresIn: 604800, // 7 days in seconds
+      expiresIn: refreshTokenExpirySeconds,
     });
 
     // Store refresh token
-    const tokenHash = await bcrypt.hash(refreshToken, 10);
+    const tokenHash = await bcrypt.hash(refreshToken, AUTH.REFRESH_TOKEN_SALT_ROUNDS);
     const refreshTokenEntity = this.refreshTokenRepository.create({
       userId: user.id,
       tokenHash,
-      expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), // 7 days
+      expiresAt: new Date(Date.now() + refreshTokenExpirySeconds * 1000),
     });
     await this.refreshTokenRepository.save(refreshTokenEntity);
 
     return {
       accessToken,
       refreshToken,
-      expiresIn: 900, // 15 minutes in seconds
+      expiresIn: AUTH.ACCESS_TOKEN_EXPIRY,
     };
+  }
+
+  /**
+   * Authenticate using Firebase Phone Auth
+   * Creates user if doesn't exist, otherwise logs in
+   */
+  async authenticateWithFirebase(idToken: string, displayName?: string): Promise<AuthTokens> {
+    this.logger.log('Firebase authentication attempt');
+
+    // Verify Firebase ID token
+    const firebaseUser = await this.firebaseService.verifyIdToken(idToken);
+
+    if (!firebaseUser || !firebaseUser.phoneNumber) {
+      throw new UnauthorizedException('Token Firebase invalide ou numéro de téléphone manquant');
+    }
+
+    const phone = firebaseUser.phoneNumber;
+    this.logger.log(`Firebase auth for phone: ${phone.slice(0, -4)}****`);
+
+    // Check if user exists
+    let user = await this.usersService.findByPhone(phone);
+
+    if (!user) {
+      // Create new user
+      this.logger.log('Creating new user from Firebase auth');
+
+      // Parse name if provided
+      let firstName: string | undefined;
+      let lastName: string | undefined;
+      const nameToUse = displayName || firebaseUser.displayName;
+
+      if (nameToUse) {
+        const nameParts = nameToUse.trim().split(/\s+/);
+        firstName = nameParts[0];
+        lastName = nameParts.slice(1).join(' ') || undefined;
+      }
+
+      // Generate a random password hash (user won't need it with Firebase auth)
+      const randomPassword = crypto.randomBytes(32).toString('hex');
+      const passwordHash = await bcrypt.hash(randomPassword, 12);
+
+      user = await this.usersService.create({
+        phone,
+        passwordHash,
+        firstName,
+        lastName,
+        role: UserRole.CLIENT,
+        isPhoneVerified: true, // Phone is verified via Firebase
+        firebaseUid: firebaseUser.uid,
+      });
+
+      this.logger.log(`User created via Firebase: ${user.id}`);
+    } else {
+      // Update Firebase UID if not set
+      if (!user.firebaseUid) {
+        await this.usersService.update(user.id, { firebaseUid: firebaseUser.uid });
+      }
+
+      // Ensure phone is marked as verified
+      if (!user.isPhoneVerified) {
+        await this.usersService.verifyPhone(user.id);
+      }
+    }
+
+    // Reset failed login attempts
+    await this.usersService.resetLoginAttempts(user.id);
+
+    return this.generateTokens(user);
+  }
+
+  /**
+   * Check if Firebase is available for phone auth
+   */
+  isFirebaseEnabled(): boolean {
+    return this.firebaseService.isInitialized();
   }
 }

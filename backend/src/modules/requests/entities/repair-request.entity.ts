@@ -173,5 +173,5 @@ export class RepairRequest extends BaseEntity {
   urgencySupplement?: number;
 
   @OneToMany('RequestStatusHistory', 'request')
-  statusHistory: any[];
+  statusHistory: import('./request-status-history.entity').RequestStatusHistory[];
 }

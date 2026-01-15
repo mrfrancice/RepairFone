@@ -2,6 +2,7 @@ import { Injectable, inject } from '@angular/core';
 import { firstValueFrom } from 'rxjs';
 import { ApiService } from '../../../core/services/api.service';
 import { AuthStore, User } from '../../../core/stores/auth.store';
+import { FirebaseAuthService } from '../../../core/services/firebase-auth.service';
 
 interface LoginResponse {
   accessToken: string;
@@ -19,6 +20,39 @@ interface RegisterResponse {
 export class AuthService {
   private readonly api = inject(ApiService);
   private readonly authStore = inject(AuthStore);
+  private readonly firebaseAuth = inject(FirebaseAuthService);
+
+  private firebaseInitialized = false;
+  private useFirebase = false;
+
+  /**
+   * Initialize and check if Firebase is available
+   */
+  async initializeFirebase(): Promise<boolean> {
+    if (this.firebaseInitialized) {
+      return this.useFirebase;
+    }
+
+    this.useFirebase = await this.firebaseAuth.initialize();
+    this.firebaseInitialized = true;
+    return this.useFirebase;
+  }
+
+  /**
+   * Check if Firebase Phone Auth is being used
+   */
+  isUsingFirebase(): boolean {
+    return this.useFirebase && this.firebaseAuth.isAvailable();
+  }
+
+  /**
+   * Setup reCAPTCHA for Firebase (call before sendOtp when using Firebase)
+   */
+  setupRecaptcha(buttonId: string): void {
+    if (this.isUsingFirebase()) {
+      this.firebaseAuth.setupRecaptcha(buttonId);
+    }
+  }
 
   async login(phone: string, password: string): Promise<void> {
     const response = await firstValueFrom(
@@ -51,13 +85,42 @@ export class AuthService {
     );
   }
 
-  async sendOtp(phone: string): Promise<{ devCode?: string }> {
-    return firstValueFrom(
+  /**
+   * Send OTP - uses Firebase if available, otherwise falls back to backend SMS
+   */
+  async sendOtp(phone: string): Promise<{ devCode?: string; useFirebase?: boolean }> {
+    await this.initializeFirebase();
+
+    if (this.isUsingFirebase()) {
+      try {
+        await this.firebaseAuth.sendOtp(phone);
+        return { useFirebase: true };
+      } catch {
+        // Fall through to backend OTP
+      }
+    }
+
+    // Fallback to backend OTP
+    const response = await firstValueFrom(
       this.api.post<{ message: string; devCode?: string }>('/auth/send-otp', { phone })
     );
+    return { devCode: response.devCode, useFirebase: false };
   }
 
-  async verifyOtp(phone: string, code: string): Promise<void> {
+  /**
+   * Verify OTP - uses Firebase or backend based on how OTP was sent
+   */
+  async verifyOtp(phone: string, code: string, displayName?: string): Promise<void> {
+    if (this.isUsingFirebase() && this.firebaseAuth.isAvailable()) {
+      try {
+        await this.firebaseAuth.verifyOtp(code, displayName);
+        return;
+      } catch {
+        // Try backend verification as fallback
+      }
+    }
+
+    // Backend OTP verification
     const response = await firstValueFrom(
       this.api.post<LoginResponse>('/auth/verify-otp', { phone, code })
     );
@@ -78,6 +141,10 @@ export class AuthService {
 
   async logout(): Promise<void> {
     try {
+      // Sign out from Firebase if using it
+      if (this.isUsingFirebase()) {
+        await this.firebaseAuth.signOut();
+      }
       await firstValueFrom(this.api.post('/auth/logout', {}));
     } finally {
       this.authStore.logout();
@@ -118,5 +185,12 @@ export class AuthService {
     if (response.refreshToken) {
       await this.authStore.setRefreshToken(response.refreshToken);
     }
+  }
+
+  /**
+   * Cleanup Firebase resources
+   */
+  cleanup(): void {
+    this.firebaseAuth.cleanup();
   }
 }

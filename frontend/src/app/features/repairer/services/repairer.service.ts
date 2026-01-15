@@ -200,8 +200,14 @@ export class RepairerService {
     page?: number;
     limit?: number;
   }): Promise<{ data: RepairerRequest[]; total: number }> {
+    // Map 'new' to 'pending' for backend compatibility
+    const mappedParams = params ? {
+      ...params,
+      status: params.status === 'new' ? 'pending' : params.status
+    } : params;
+
     return firstValueFrom(
-      this.api.get<{ data: RepairerRequest[]; total: number }>('/requests/my', params)
+      this.api.get<{ data: RepairerRequest[]; total: number }>('/requests/my', mappedParams)
     );
   }
 

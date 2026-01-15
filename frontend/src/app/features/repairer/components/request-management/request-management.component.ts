@@ -1,4 +1,4 @@
-import { Component, inject, OnInit, signal, computed } from '@angular/core';
+import { Component, inject, OnInit, signal, computed, ChangeDetectionStrategy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, Router } from '@angular/router';
 import { RepairerService, RepairerRequest, RequestFilterStatus } from '../../services/repairer.service';
@@ -11,6 +11,7 @@ import { HeaderSearchComponent } from '../../../../shared/components/header-sear
 @Component({
   selector: 'app-request-management',
   standalone: true,
+  changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
     CommonModule,
     NotificationBellComponent,

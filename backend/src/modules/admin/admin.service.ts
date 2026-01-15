@@ -1,20 +1,24 @@
 import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository, In, Not } from 'typeorm';
+import { Repository } from 'typeorm';
 import { RepairerProfile, VerificationStatus } from '../users/entities/repairer-profile.entity';
 import { User, UserStatus, UserRole } from '../users/entities/user.entity';
+import {
+  AdminRepairerListItem,
+  AdminRepairerListResponse,
+  AdminRepairerDetailResponse,
+  AdminUserListItem,
+  AdminUserListResponse,
+  AdminUserDetailResponse,
+  RepairerListParams,
+  UserListParams,
+  VerificationDecisionDto,
+  VerificationStats,
+  RepairerUserInfo,
+} from './interfaces';
 
-export interface VerificationDecisionDto {
-  status: 'verified' | 'rejected';
-  notes?: string;
-}
-
-export interface RepairerListParams {
-  status?: VerificationStatus | 'all';
-  page?: number;
-  limit?: number;
-  search?: string;
-}
+// Re-export interfaces for backward compatibility
+export type { VerificationDecisionDto, RepairerListParams } from './interfaces';
 
 @Injectable()
 export class AdminService {
@@ -28,19 +32,7 @@ export class AdminService {
   /**
    * Get all repairers with filters (for admin dashboard)
    */
-  async getRepairers(params: RepairerListParams): Promise<{
-    data: any[];
-    total: number;
-    page: number;
-    limit: number;
-    stats: {
-      pending: number;
-      underReview: number;
-      verified: number;
-      rejected: number;
-      suspended: number;
-    };
-  }> {
+  async getRepairers(params: RepairerListParams): Promise<AdminRepairerListResponse> {
     const { status = 'all', page = 1, limit = 20, search } = params;
 
     const queryBuilder = this.repairerRepository
@@ -122,7 +114,7 @@ export class AdminService {
   /**
    * Get a single repairer profile with all details
    */
-  async getRepairerDetail(id: string): Promise<any> {
+  async getRepairerDetail(id: string): Promise<AdminRepairerDetailResponse> {
     const profile = await this.repairerRepository.findOne({
       where: { id },
       relations: ['user'],
@@ -296,13 +288,7 @@ export class AdminService {
   /**
    * Get verification statistics
    */
-  async getVerificationStats(): Promise<{
-    pending: number;
-    underReview: number;
-    verified: number;
-    rejected: number;
-    suspended: number;
-  }> {
+  async getVerificationStats(): Promise<VerificationStats> {
     const counts = await this.repairerRepository
       .createQueryBuilder('repairer')
       .select('repairer.verificationStatus', 'status')
@@ -412,18 +398,7 @@ export class AdminService {
   /**
    * Get all users with filters
    */
-  async getUsers(params: {
-    role?: UserRole | 'all';
-    status?: UserStatus | 'all';
-    page?: number;
-    limit?: number;
-    search?: string;
-  }): Promise<{
-    data: any[];
-    total: number;
-    page: number;
-    limit: number;
-  }> {
+  async getUsers(params: UserListParams): Promise<AdminUserListResponse> {
     const { role = 'all', status = 'all', page = 1, limit = 20, search } = params;
 
     const queryBuilder = this.userRepository
@@ -474,7 +449,7 @@ export class AdminService {
   /**
    * Get user detail
    */
-  async getUserDetail(id: string): Promise<any> {
+  async getUserDetail(id: string): Promise<AdminUserDetailResponse> {
     const user = await this.userRepository.findOne({ where: { id } });
 
     if (!user) {

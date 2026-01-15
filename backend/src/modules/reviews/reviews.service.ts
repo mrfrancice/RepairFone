@@ -33,9 +33,9 @@ export class ReviewsService {
       throw new ForbiddenException('Vous ne pouvez noter que vos propres demandes');
     }
 
-    // Only allow reviews on completed or delivered repairs
-    if (request.status !== RequestStatus.COMPLETED && request.status !== RequestStatus.DELIVERED) {
-      throw new BadRequestException('Vous ne pouvez noter que les demandes terminées ou livrées');
+    // BIZ-110: Reviews autorisées uniquement après livraison
+    if (request.status !== RequestStatus.DELIVERED) {
+      throw new BadRequestException('Vous ne pouvez noter que les réparations livrées');
     }
 
     // Check if already reviewed
@@ -210,6 +210,11 @@ export class ReviewsService {
 
     if (request.clientId !== clientId) {
       throw new ForbiddenException('Vous ne pouvez noter que vos propres demandes');
+    }
+
+    // Vérifier qu'un réparateur est assigné à la demande
+    if (!request.repairerId) {
+      throw new BadRequestException('Aucun réparateur n\'est assigné à cette demande');
     }
 
     // Vérifier que le statut permet cette étape de notation

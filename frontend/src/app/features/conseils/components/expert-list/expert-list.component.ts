@@ -1,4 +1,4 @@
-import { Component, inject, OnInit, signal } from '@angular/core';
+import { Component, inject, OnInit, signal, ChangeDetectionStrategy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
 import { ConseilsService, Expert } from '../../services/conseils.service';
@@ -8,6 +8,7 @@ import { UiHeaderComponent } from '../../../../shared/components/ui-header/ui-he
 @Component({
   selector: 'app-expert-list',
   standalone: true,
+  changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [CommonModule, UiHeaderComponent],
   template: `
     <div class="experts-container">

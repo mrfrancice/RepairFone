@@ -1,4 +1,4 @@
-import { Component, signal, inject, OnInit, OnDestroy } from '@angular/core';
+import { Component, signal, inject, OnInit, OnDestroy, ChangeDetectionStrategy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
 import { SecureStorageService } from '../../../../core/services/secure-storage.service';
@@ -15,6 +15,7 @@ interface OnboardingSlide {
 @Component({
   selector: 'app-onboarding-slides',
   standalone: true,
+  changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [CommonModule],
   animations: [
     trigger('fadeSlide', [
@@ -144,12 +145,26 @@ interface OnboardingSlide {
               </svg>
             </button>
           } @else {
-            <button class="nav-btn nav-btn-start" (click)="start()">
-              Commencer maintenant
-              <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
-                <path d="M7.5 15L12.5 10L7.5 5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-              </svg>
-            </button>
+            <!-- Final slide: Multiple options -->
+            <div class="final-actions">
+              <button class="nav-btn nav-btn-start" (click)="start()">
+                <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                  <path d="M17.5 17.5L13.875 13.875M15.833 9.167A6.667 6.667 0 112.5 9.167a6.667 6.667 0 0113.333 0z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+                Trouver un réparateur
+              </button>
+              <div class="auth-options">
+                <span class="auth-divider">ou</span>
+                <div class="auth-buttons">
+                  <button class="auth-btn auth-btn-login" (click)="goToLogin()">
+                    Se connecter
+                  </button>
+                  <button class="auth-btn auth-btn-register" (click)="goToRegister()">
+                    Créer un compte
+                  </button>
+                </div>
+              </div>
+            </div>
           }
         </div>
 
@@ -571,6 +586,66 @@ interface OnboardingSlide {
       box-shadow: 0 6px 16px rgba(255, 107, 53, 0.4);
     }
 
+    /* Final Actions */
+    .final-actions {
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+      width: 100%;
+    }
+
+    .auth-options {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0.75rem;
+    }
+
+    .auth-divider {
+      font-size: 0.875rem;
+      color: #9CA3AF;
+      font-weight: 500;
+    }
+
+    .auth-buttons {
+      display: flex;
+      gap: 0.75rem;
+      width: 100%;
+    }
+
+    .auth-btn {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 0.875rem 1rem;
+      border-radius: 12px;
+      font-size: 0.9375rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      border: none;
+    }
+
+    .auth-btn-login {
+      background: #F3F4F6;
+      color: #374151;
+    }
+
+    .auth-btn-login:hover {
+      background: #E5E7EB;
+    }
+
+    .auth-btn-register {
+      background: transparent;
+      color: #FF6B35;
+      border: 2px solid #FF6B35;
+    }
+
+    .auth-btn-register:hover {
+      background: rgba(255, 107, 53, 0.1);
+    }
+
     /* ============================================
        FEATURES BAR
     ============================================ */
@@ -601,7 +676,7 @@ interface OnboardingSlide {
 
     .feature-text {
       font-size: 0.6875rem;
-      color: #9CA3AF;
+      color: #6B7280;  /* WCAG AA compliant */
     }
 
     .feature-divider {
@@ -754,15 +829,22 @@ export class OnboardingSlidesComponent implements OnInit, OnDestroy {
     this.completeOnboarding();
   }
 
-  private async completeOnboarding(): Promise<void> {
+  goToLogin(): void {
+    this.completeOnboarding('/auth/login');
+  }
+
+  goToRegister(): void {
+    this.completeOnboarding('/auth/register');
+  }
+
+  private async completeOnboarding(redirectTo: string = '/home'): Promise<void> {
     this.stopAutoPlay();
     try {
       await this.storage.set('rf_onboarding_completed', true);
-      this.router.navigate(['/home']);
-    } catch (err) {
-      console.error('Failed to save onboarding state:', err);
+      this.router.navigate([redirectTo]);
+    } catch {
       // Navigate anyway as this is not critical
-      this.router.navigate(['/home']);
+      this.router.navigate([redirectTo]);
     }
   }
 

@@ -116,17 +116,28 @@ export type CheckboxSize = 'sm' | 'md' | 'lg';
       background: #eff6ff;
     }
 
-    /* Checkbox Wrapper */
+    /* Checkbox Wrapper - 44px minimum touch target */
     .checkbox-wrapper {
       position: relative;
       flex-shrink: 0;
+      min-width: 44px;
+      min-height: 44px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
     }
 
     .checkbox-input {
       position: absolute;
       opacity: 0;
-      width: 0;
-      height: 0;
+      width: 44px;
+      height: 44px;
+      cursor: pointer;
+      margin: 0;
+    }
+
+    .checkbox-input:disabled {
+      cursor: not-allowed;
     }
 
     /* Checkbox Box */
@@ -136,11 +147,12 @@ export type CheckboxSize = 'sm' | 'md' | 'lg';
       justify-content: center;
       width: 20px;
       height: 20px;
-      border: 2px solid #d1d5db;
+      border: 2px solid var(--color-neutral-300, #d1d5db);
       border-radius: 6px;
-      background: white;
+      background: var(--color-surface, white);
       transition: all 0.2s ease;
       color: white;
+      pointer-events: none;
     }
 
     .checkbox-container:hover:not(.disabled) .checkbox-box {

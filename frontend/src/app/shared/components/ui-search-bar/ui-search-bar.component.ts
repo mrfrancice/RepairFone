@@ -42,6 +42,7 @@ export interface SearchSuggestion {
       [class.disabled]="disabled"
       [class.size-sm]="size === 'sm'"
       [class.size-lg]="size === 'lg'"
+      [class.variant-transparent]="variant === 'transparent'"
     >
       <div class="search-input-wrapper">
         <!-- Search Icon -->
@@ -259,25 +260,41 @@ export interface SearchSuggestion {
       }
     }
 
-    /* Clear Button */
+    /* Clear Button - 44px touch target with smaller visible element */
     .clear-btn {
       display: flex;
       align-items: center;
       justify-content: center;
-      width: 24px;
-      height: 24px;
+      min-width: 44px;
+      min-height: 44px;
       border: none;
-      background: #f3f4f6;
-      border-radius: 50%;
+      background: transparent;
+      border-radius: var(--border-radius-md, 8px);
       color: #6b7280;
       cursor: pointer;
       transition: all 0.2s;
       flex-shrink: 0;
+      margin: -0.5rem 0;
+    }
+
+    .clear-btn svg {
+      padding: 4px;
+      background: #f3f4f6;
+      border-radius: 50%;
+      transition: background 0.2s;
+    }
+
+    .clear-btn:hover svg {
+      background: #e5e7eb;
     }
 
     .clear-btn:hover {
-      background: #e5e7eb;
       color: #374151;
+    }
+
+    .clear-btn:focus-visible {
+      outline: 2px solid var(--color-primary, #FF9800);
+      outline-offset: 2px;
     }
 
     /* Action Button */
@@ -285,8 +302,8 @@ export interface SearchSuggestion {
       display: flex;
       align-items: center;
       justify-content: center;
-      width: 36px;
-      height: 36px;
+      min-width: 44px;
+      min-height: 44px;
       border: none;
       background: #2563eb;
       border-radius: 8px;
@@ -304,6 +321,11 @@ export interface SearchSuggestion {
     .action-btn:disabled {
       opacity: 0.5;
       cursor: not-allowed;
+    }
+
+    .action-btn:focus-visible {
+      outline: 2px solid var(--color-primary, #FF9800);
+      outline-offset: 2px;
     }
 
     /* Dropdown */
@@ -350,10 +372,23 @@ export interface SearchSuggestion {
       background: none;
       border: none;
       cursor: pointer;
+      padding: 0.5rem;
+      margin: -0.5rem;
+      min-height: 44px;
+      display: flex;
+      align-items: center;
+      border-radius: var(--border-radius-sm, 4px);
+      transition: background 0.15s ease;
     }
 
     .clear-history:hover {
       text-decoration: underline;
+      background: var(--color-neutral-100, #f3f4f6);
+    }
+
+    .clear-history:focus-visible {
+      outline: 2px solid var(--color-primary, #FF9800);
+      outline-offset: 2px;
     }
 
     .suggestion-item {
@@ -361,11 +396,18 @@ export interface SearchSuggestion {
       align-items: center;
       gap: 0.75rem;
       padding: 0.75rem 1rem;
+      min-height: 44px;
       cursor: pointer;
       transition: background 0.15s;
     }
 
     .suggestion-item:hover {
+      background: #f3f4f6;
+    }
+
+    .suggestion-item:focus-visible {
+      outline: 2px solid var(--color-primary, #FF9800);
+      outline-offset: -2px;
       background: #f3f4f6;
     }
 
@@ -393,11 +435,52 @@ export interface SearchSuggestion {
       font-size: 0.75rem;
       margin-top: 0.125rem;
     }
+
+    /* Transparent variant for header */
+    .variant-transparent .search-input-wrapper {
+      background: rgba(255, 255, 255, 0.15);
+      border: none;
+    }
+
+    .variant-transparent .search-icon {
+      color: rgba(255, 255, 255, 0.7);
+    }
+
+    .variant-transparent .search-input {
+      color: white;
+    }
+
+    .variant-transparent .search-input::placeholder {
+      color: rgba(255, 255, 255, 0.7);
+    }
+
+    .variant-transparent.focused .search-input-wrapper {
+      background: rgba(255, 255, 255, 0.25);
+      box-shadow: none;
+    }
+
+    .variant-transparent.focused .search-icon,
+    .variant-transparent.has-value .search-icon {
+      color: white;
+    }
+
+    .variant-transparent .clear-btn {
+      color: rgba(255, 255, 255, 0.7);
+    }
+
+    .variant-transparent .clear-btn svg {
+      background: rgba(255, 255, 255, 0.2);
+    }
+
+    .variant-transparent .clear-btn:hover svg {
+      background: rgba(255, 255, 255, 0.3);
+    }
   `],
 })
 export class UiSearchBarComponent implements OnInit, ControlValueAccessor {
   @Input() placeholder = 'Rechercher...';
   @Input() size: 'sm' | 'md' | 'lg' = 'md';
+  @Input() variant: 'default' | 'transparent' = 'default';
   @Input() disabled = false;
   @Input() loading = false;
   @Input() clearable = true;

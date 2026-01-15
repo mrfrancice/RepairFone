@@ -37,3 +37,10 @@ documents_projet/
 null
 nul
 **/nul
+
+# Auto Claude data directory
+.auto-claude/
+
+# Claude Code temporary files
+tmpclaude-*
+**/tmpclaude-*

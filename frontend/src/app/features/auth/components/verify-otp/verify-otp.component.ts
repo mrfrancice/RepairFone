@@ -1,4 +1,4 @@
-import { Component, inject, signal, OnInit } from '@angular/core';
+import { Component, inject, signal, OnInit, ChangeDetectionStrategy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router, ActivatedRoute } from '@angular/router';
@@ -8,6 +8,7 @@ import { AuthStore } from '../../../../core/stores/auth.store';
 @Component({
   selector: 'app-verify-otp',
   standalone: true,
+  changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [CommonModule, FormsModule],
   template: `
     <div class="auth-container">
@@ -442,14 +443,20 @@ export class VerifyOtpComponent implements OnInit {
   readonly devCode = signal<string | null>(null);
   readonly resendCooldown = signal(0);
   readonly showNameInput = signal(false);
+  readonly usingFirebase = signal(false);
 
   private cooldownInterval?: ReturnType<typeof setInterval>;
 
   ngOnInit(): void {
     this.phone = this.route.snapshot.queryParams['phone'] || '';
     const devCodeParam = this.route.snapshot.queryParams['devCode'];
+    const useFirebaseParam = this.route.snapshot.queryParams['useFirebase'];
+
     if (devCodeParam) {
       this.devCode.set(devCodeParam);
+    }
+    if (useFirebaseParam === 'true') {
+      this.usingFirebase.set(true);
     }
     if (!this.phone) {
       this.router.navigate(['/auth/register']);
@@ -491,7 +498,9 @@ export class VerifyOtpComponent implements OnInit {
     this.isLoading.set(true);
 
     try {
-      await this.authService.verifyOtp(this.phone, code);
+      // Pass display name for Firebase auth if provided
+      const displayName = this.userName.trim() || undefined;
+      await this.authService.verifyOtp(this.phone, code, displayName);
       // Redirect based on user role
       const defaultUrl = this.authStore.getDefaultRedirectUrl();
       this.router.navigate([defaultUrl]);
@@ -512,6 +521,9 @@ export class VerifyOtpComponent implements OnInit {
       this.success.set('Nouveau code envoyé !');
       if (response.devCode) {
         this.devCode.set(response.devCode);
+      }
+      if (response.useFirebase) {
+        this.usingFirebase.set(true);
       }
       this.startCooldown();
     } catch (err: any) {

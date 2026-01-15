@@ -1,4 +1,4 @@
-import { Component, inject, signal, OnInit } from '@angular/core';
+import { Component, inject, signal, OnInit, ChangeDetectionStrategy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { QuotesService, Quote } from '../../services/quotes.service';
@@ -9,6 +9,7 @@ import { UiLoadingComponent } from '../../../../shared/components/ui-loading/ui-
 @Component({
   selector: 'app-quote-detail',
   standalone: true,
+  changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [CommonModule, RouterLink, UiButtonComponent, UiLoadingComponent],
   template: `
     <div class="quote-detail-container">
@@ -685,7 +686,7 @@ export class QuoteDetailComponent implements OnInit {
       pending: 'linear-gradient(135deg, #F9A825 0%, #FF9800 100%)',
       accepted: 'linear-gradient(135deg, #4CAF50 0%, #10B981 100%)',
       rejected: 'linear-gradient(135deg, #E53935 0%, #C62828 100%)',
-      expired: 'linear-gradient(135deg, #9E9E9E 0%, #757575 100%)',
+      expired: 'linear-gradient(135deg, #6B7280 0%, #4B5563 100%)',  /* WCAG AA compliant */
     };
     return colors[status || 'pending'] || colors['pending'];
   }
@@ -755,8 +756,10 @@ export class QuoteDetailComponent implements OnInit {
       this.quote.set({ ...q, status: 'accepted' });
       this.store.updateQuote(q.id, { status: 'accepted' });
 
-      // Navigate to tracking
-      this.router.navigate(['/tracking', q.requestId]);
+      // Navigate to payment page
+      this.router.navigate(['/payment/summary'], {
+        queryParams: { requestId: q.requestId, quoteId: q.id }
+      });
     } catch (err) {
       console.error('Error accepting quote:', err);
     }

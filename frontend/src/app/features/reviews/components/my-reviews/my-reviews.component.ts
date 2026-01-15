@@ -1,4 +1,4 @@
-import { Component, inject, signal, OnInit } from '@angular/core';
+import { Component, inject, signal, OnInit, ChangeDetectionStrategy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ReviewsService, Review, StepRating, StepRatingStats } from '../../services/reviews.service';
 import { AuthStore } from '../../../../core/stores/auth.store';
@@ -7,6 +7,7 @@ import { UiHeaderComponent } from '../../../../shared/components/ui-header/ui-he
 @Component({
   selector: 'app-my-reviews',
   standalone: true,
+  changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [CommonModule, UiHeaderComponent],
   template: `
     <div class="reviews-container">

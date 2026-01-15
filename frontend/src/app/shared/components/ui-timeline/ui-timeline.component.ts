@@ -1,6 +1,7 @@
 import {
   Component,
   Input,
+  ChangeDetectionStrategy,
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 
@@ -24,6 +25,7 @@ export type TimelinePosition = 'left' | 'right' | 'alternate';
 @Component({
   selector: 'ui-timeline',
   standalone: true,
+  changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [CommonModule],
   template: `
     <div
@@ -128,11 +130,11 @@ export type TimelinePosition = 'left' | 'right' | 'alternate';
       top: 32px;
       bottom: 0;
       width: 2px;
-      background: #e5e7eb;
+      background: var(--color-neutral-200, #EEEEEE);
     }
 
     .timeline.vertical .timeline-connector.completed {
-      background: #16a34a;
+      background: var(--color-success, #4CAF50);
     }
 
     /* Indicator */
@@ -140,7 +142,7 @@ export type TimelinePosition = 'left' | 'right' | 'alternate';
       width: 32px;
       height: 32px;
       border-radius: 50%;
-      background: #e5e7eb;
+      background: var(--color-neutral-200, #EEEEEE);
       display: flex;
       align-items: center;
       justify-content: center;
@@ -151,23 +153,23 @@ export type TimelinePosition = 'left' | 'right' | 'alternate';
     }
 
     .timeline-item.completed .timeline-indicator {
-      background: #16a34a;
+      background: var(--color-success, #4CAF50);
       color: white;
     }
 
     .timeline-item.current .timeline-indicator {
-      background: #2563eb;
+      background: var(--color-info, #2196F3);
       color: white;
-      box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.2);
+      box-shadow: 0 0 0 4px rgba(33, 150, 243, 0.2);
     }
 
     .timeline-item.pending .timeline-indicator {
-      background: #f3f4f6;
-      color: #9ca3af;
+      background: var(--color-neutral-100, #F5F5F5);
+      color: var(--color-neutral-400, #BDBDBD);
     }
 
     .timeline-item.error .timeline-indicator {
-      background: #dc2626;
+      background: var(--color-error, #F44336);
       color: white;
     }
 
@@ -226,24 +228,24 @@ export type TimelinePosition = 'left' | 'right' | 'alternate';
     .timeline-title {
       font-size: 0.9375rem;
       font-weight: 600;
-      color: #1f2937;
+      color: var(--color-text-primary, rgba(0, 0, 0, 0.87));
       margin: 0;
     }
 
     .timeline-item.pending .timeline-title {
-      color: #9ca3af;
+      color: var(--color-neutral-400, #BDBDBD);
     }
 
     .timeline-datetime {
       display: flex;
       gap: 0.5rem;
       font-size: 0.75rem;
-      color: #6b7280;
+      color: var(--color-text-secondary, rgba(0, 0, 0, 0.60));
     }
 
     .timeline-description {
       font-size: 0.8125rem;
-      color: #6b7280;
+      color: var(--color-text-secondary, rgba(0, 0, 0, 0.60));
       margin: 0.375rem 0 0;
       line-height: 1.5;
     }
@@ -252,7 +254,7 @@ export type TimelinePosition = 'left' | 'right' | 'alternate';
       margin: 0.5rem 0 0;
       padding-left: 1rem;
       font-size: 0.8125rem;
-      color: #6b7280;
+      color: var(--color-text-secondary, rgba(0, 0, 0, 0.60));
     }
 
     .timeline-details li {
@@ -302,11 +304,11 @@ export type TimelinePosition = 'left' | 'right' | 'alternate';
       left: calc(50% + 16px);
       right: calc(-50% + 16px);
       height: 2px;
-      background: #e5e7eb;
+      background: var(--color-neutral-200, #EEEEEE);
     }
 
     .timeline.horizontal .timeline-connector.completed {
-      background: #16a34a;
+      background: var(--color-success, #4CAF50);
     }
 
     .timeline.horizontal .timeline-content {

@@ -24,10 +24,17 @@ class MockSmsProvider implements SmsProvider {
   }
 }
 
+// Twilio client interface (minimal type for dynamic import)
+interface TwilioClient {
+  messages: {
+    create(options: { body: string; from: string; to: string }): Promise<{ sid: string }>;
+  };
+}
+
 // Twilio provider
 class TwilioSmsProvider implements SmsProvider {
   private readonly logger = new Logger('TwilioSmsProvider');
-  private client: any;
+  private client: TwilioClient | null = null;
   private fromNumber: string;
 
   constructor(
@@ -62,10 +69,11 @@ class TwilioSmsProvider implements SmsProvider {
         messageId: result.sid,
       };
     } catch (error) {
-      this.logger.error(`Twilio error: ${error.message}`);
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      this.logger.error(`Twilio error: ${errorMessage}`);
       return {
         success: false,
-        error: error.message,
+        error: errorMessage,
       };
     }
   }
@@ -116,10 +124,11 @@ class OrangeSmsProvider implements SmsProvider {
         messageId: data.outboundSMSMessageRequest?.resourceURL,
       };
     } catch (error) {
-      this.logger.error(`Orange SMS error: ${error.message}`);
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      this.logger.error(`Orange SMS error: ${errorMessage}`);
       return {
         success: false,
-        error: error.message,
+        error: errorMessage,
       };
     }
   }

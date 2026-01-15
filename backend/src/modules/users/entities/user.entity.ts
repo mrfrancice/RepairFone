@@ -76,8 +76,12 @@ export class User extends BaseEntity {
   @Column({ name: 'preferred_language', type: 'varchar', length: 5, default: 'fr' })
   preferredLanguage: string;
 
+  @Column({ name: 'firebase_uid', type: 'varchar', length: 128, nullable: true, unique: true })
+  @Index()
+  firebaseUid?: string;
+
   @OneToOne('RepairerProfile', 'user')
-  repairerProfile?: any;
+  repairerProfile?: import('./repairer-profile.entity').RepairerProfile;
 
   get fullName(): string {
     return [this.firstName, this.lastName].filter(Boolean).join(' ') || 'Utilisateur';

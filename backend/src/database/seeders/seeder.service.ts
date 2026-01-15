@@ -195,13 +195,13 @@ export class SeederService implements OnModuleInit {
         verificationStatus: VerificationStatus.VERIFIED,
         isAvailable: true,
         workingHours: {
-          monday: { open: '08:00', close: '18:00' },
-          tuesday: { open: '08:00', close: '18:00' },
-          wednesday: { open: '08:00', close: '18:00' },
-          thursday: { open: '08:00', close: '18:00' },
-          friday: { open: '08:00', close: '18:00' },
-          saturday: { open: '09:00', close: '15:00' },
-          sunday: null,
+          monday: { isOpen: true, openTime: '08:00', closeTime: '18:00' },
+          tuesday: { isOpen: true, openTime: '08:00', closeTime: '18:00' },
+          wednesday: { isOpen: true, openTime: '08:00', closeTime: '18:00' },
+          thursday: { isOpen: true, openTime: '08:00', closeTime: '18:00' },
+          friday: { isOpen: true, openTime: '08:00', closeTime: '18:00' },
+          saturday: { isOpen: true, openTime: '09:00', closeTime: '15:00' },
+          sunday: { isOpen: false },
         },
       });
       await this.repairerProfileRepository.save(profile);

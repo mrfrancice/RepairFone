@@ -1,8 +1,8 @@
 import { inject } from '@angular/core';
-import { Router, CanActivateFn } from '@angular/router';
+import { Router, CanActivateFn, ActivatedRouteSnapshot, RouterStateSnapshot } from '@angular/router';
 import { AuthStore } from '../stores/auth.store';
 
-export const authGuard: CanActivateFn = () => {
+export const authGuard: CanActivateFn = (route: ActivatedRouteSnapshot, state: RouterStateSnapshot) => {
   const authStore = inject(AuthStore);
   const router = inject(Router);
 
@@ -10,16 +10,21 @@ export const authGuard: CanActivateFn = () => {
     return true;
   }
 
-  router.navigate(['/auth/login']);
+  // Preserve the attempted URL for redirecting after login
+  router.navigate(['/auth/login'], {
+    queryParams: { returnUrl: state.url }
+  });
   return false;
 };
 
-export const adminGuard: CanActivateFn = () => {
+export const adminGuard: CanActivateFn = (route: ActivatedRouteSnapshot, state: RouterStateSnapshot) => {
   const authStore = inject(AuthStore);
   const router = inject(Router);
 
   if (!authStore.isAuthenticated()) {
-    router.navigate(['/auth/login']);
+    router.navigate(['/auth/login'], {
+      queryParams: { returnUrl: state.url }
+    });
     return false;
   }
 

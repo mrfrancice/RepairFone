@@ -1,9 +1,15 @@
-import { Component, inject, OnInit, signal, computed } from '@angular/core';
+import { Component, inject, OnInit, signal, computed, ChangeDetectionStrategy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { RepairerService, RepairerRequest, CreateQuoteDto, QuotePart } from '../../services/repairer.service';
 import { QuotesService, Quote } from '../../../quotes/services/quotes.service';
+import {
+  UiButtonComponent,
+  UiLoadingComponent,
+  UiModalComponent,
+} from '@app/shared';
+import { UiHeaderComponent } from '../../../../shared/components/ui-header/ui-header.component';
 
 // Liste prédéfinie des pièces détachées
 const AVAILABLE_PARTS: { name: string; defaultPrice: number; category: string }[] = [
@@ -46,35 +52,29 @@ interface SelectedPart {
 @Component({
   selector: 'app-quote-create',
   standalone: true,
+  changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
     CommonModule,
     FormsModule,
     RouterLink,
+    UiHeaderComponent,
+    UiButtonComponent,
+    UiLoadingComponent,
+    UiModalComponent,
   ],
   template: `
     <div class="quote-create">
-      <!-- Header -->
-      <header class="header">
-        <div class="header-bg"></div>
-        <div class="header-content">
-          <button class="back-btn" (click)="goBack()">
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-              <path d="M19 12H5M12 19l-7-7 7-7"/>
-            </svg>
-          </button>
-          <div class="header-text">
-            <h1>📝 Créer un devis</h1>
-            <p class="header-subtitle">Établissez votre proposition de réparation</p>
-          </div>
-        </div>
-      </header>
+      <!-- Header - Utilisation du composant partagé -->
+      <ui-header
+        title="📝 Créer un devis"
+        subtitle="Établissez votre proposition de réparation"
+        [showBack]="true"
+        (onBack)="goBack()"
+      />
 
-      <!-- Loading -->
+      <!-- Loading - Utilisation du composant partagé -->
       @if (isLoading()) {
-        <div class="loading-container">
-          <div class="loading-spinner"></div>
-          <p>Chargement de la demande...</p>
-        </div>
+        <ui-loading size="lg" text="Chargement de la demande..." [centered]="true" />
       }
 
       <!-- Error State -->
@@ -276,155 +276,85 @@ interface SelectedPart {
         @if (errorMessage()) {
           <div class="error-banner">⚠️ {{ errorMessage() }}</div>
         }
-        <button
-          class="submit-btn"
-          [disabled]="!canSubmit() || isSubmitting()"
-          (click)="submitQuote()"
+        <ui-button
+          variant="primary"
+          size="lg"
+          [block]="true"
+          [disabled]="!canSubmit()"
+          [loading]="isSubmitting()"
+          icon="📤"
+          (onClick)="submitQuote()"
         >
-          @if (isSubmitting()) {
-            ⏳ Envoi en cours...
-          } @else {
-            📤 Envoyer le devis
-          }
-        </button>
+          {{ isSubmitting() ? 'Envoi en cours...' : 'Envoyer le devis' }}
+        </ui-button>
       </div>
 
-      <!-- Success Modal -->
-      @if (showSuccess()) {
-        <div class="modal-overlay">
-          <div class="modal-content">
-            <div class="success-icon">✅</div>
-            <h3>Devis envoyé !</h3>
-            <p>Le client a été notifié.</p>
-            <a routerLink="/repairer/requests" class="modal-btn">
-              Retour aux demandes
-            </a>
-          </div>
+      <!-- Success Modal - Utilisation du composant partagé -->
+      <ui-modal
+        [isOpen]="showSuccess()"
+        title="Devis envoyé !"
+        size="sm"
+        [closable]="false"
+        [closeOnBackdrop]="false"
+      >
+        <div class="success-content">
+          <div class="success-icon">✅</div>
+          <p>Le client a été notifié.</p>
         </div>
-      }
+        <div modal-footer>
+          <ui-button variant="primary" [block]="true" routerLink="/repairer/requests">
+            Retour aux demandes
+          </ui-button>
+        </div>
+      </ui-modal>
     </div>
   `,
   styles: [`
     .quote-create {
       min-height: 100vh;
-      background: #f8fafc;
+      background: var(--color-neutral-50, #f8fafc);
       padding-bottom: 180px;
+      padding-top: 100px; /* Space for fixed header */
     }
 
-    /* ==================== HEADER ==================== */
-    .header {
-      position: relative;
-      margin-bottom: 1.5rem;
-    }
-
-    .header-bg {
-      position: absolute;
-      top: 0;
-      left: 0;
-      right: 0;
-      height: 140px;
-      background: linear-gradient(135deg, #FF6B35 0%, #FF8F5C 50%, #FFB088 100%);
-      border-radius: 0 0 2rem 2rem;
-      box-shadow: 0 4px 20px rgba(255, 107, 53, 0.3);
-    }
-
-    .header-content {
-      position: relative;
-      padding: 1.25rem 1rem;
-      display: flex;
-      align-items: center;
-      gap: 1rem;
-    }
-
-    .back-btn {
-      width: 44px;
-      height: 44px;
-      border-radius: 12px;
-      background: rgba(255,255,255,0.25);
-      backdrop-filter: blur(10px);
-      border: 1px solid rgba(255,255,255,0.3);
-      color: white;
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      transition: all 0.2s ease;
-    }
-
-    .back-btn:hover {
-      background: rgba(255,255,255,0.35);
-      transform: translateX(-2px);
-    }
-
-    .header-text {
-      flex: 1;
-    }
-
-    .header-text h1 {
-      color: white;
-      font-size: 1.5rem;
-      font-weight: 700;
-      margin: 0 0 0.25rem 0;
-      text-shadow: 0 2px 4px rgba(0,0,0,0.1);
-    }
-
-    .header-subtitle {
-      color: rgba(255,255,255,0.9);
-      font-size: 0.875rem;
-      margin: 0;
-      font-weight: 400;
-    }
-
-    /* ==================== LOADING & ERROR ==================== */
-    .loading-container, .error-container {
+    /* ==================== ERROR STATE ==================== */
+    .error-container {
       text-align: center;
       padding: 3rem 1rem;
-      color: #64748b;
-    }
-
-    .loading-spinner {
-      width: 48px;
-      height: 48px;
-      border: 4px solid #ffe4d6;
-      border-top-color: #FF6B35;
-      border-radius: 50%;
-      animation: spin 0.8s linear infinite;
-      margin: 0 auto 1rem;
-    }
-
-    @keyframes spin {
-      to { transform: rotate(360deg); }
+      color: var(--color-text-secondary, #64748b);
     }
 
     .btn-link {
-      color: #FF6B35;
+      color: var(--color-primary-500, #FF9800);
       text-decoration: none;
       font-weight: 500;
+    }
+
+    .btn-link:hover {
+      text-decoration: underline;
     }
 
     /* ==================== CONTENT ==================== */
     .content {
       padding: 0 1rem;
-      margin-top: -2rem;
       position: relative;
-      z-index: 10;
     }
 
     /* ==================== CARDS ==================== */
     .card {
-      background: white;
-      border-radius: 1.25rem;
+      background: var(--color-surface, white);
+      border-radius: var(--border-radius-xl, 1.25rem);
       padding: 1.25rem;
       margin-bottom: 1rem;
-      box-shadow: 0 4px 15px rgba(0,0,0,0.06);
-      border: 1px solid rgba(0,0,0,0.04);
+      box-shadow: var(--shadow-sm, 0 1px 3px rgba(0,0,0,0.1));
+      border: 1px solid var(--color-neutral-100, rgba(0,0,0,0.04));
     }
 
     /* ==================== REQUEST CARD ==================== */
     .request-card {
-      background: linear-gradient(135deg, #ffffff 0%, #fff9f7 100%);
+      background: linear-gradient(135deg, var(--color-surface, #ffffff) 0%, var(--color-primary-50, #FFF3E0) 100%);
       border: none;
-      box-shadow: 0 4px 20px rgba(255, 107, 53, 0.12);
+      box-shadow: var(--shadow-md, 0 4px 12px rgba(0, 0, 0, 0.1));
       position: relative;
       overflow: hidden;
     }
@@ -436,7 +366,7 @@ interface SelectedPart {
       top: 0;
       bottom: 0;
       width: 5px;
-      background: linear-gradient(180deg, #FF6B35, #FF8F5C);
+      background: linear-gradient(180deg, var(--color-primary-500, #FF9800), var(--color-primary-300, #FFB74D));
       border-radius: 5px 0 0 5px;
     }
 
@@ -854,90 +784,20 @@ interface SelectedPart {
       border: 1px solid rgba(220, 38, 38, 0.2);
     }
 
-    .submit-btn {
-      width: 100%;
-      padding: 1.125rem;
-      background: linear-gradient(135deg, #FF6B35 0%, #FF8F5C 100%);
-      color: white;
-      border: none;
-      border-radius: 1rem;
-      font-size: 1.0625rem;
-      font-weight: 700;
-      cursor: pointer;
-      box-shadow: 0 6px 20px rgba(255, 107, 53, 0.4);
-      transition: all 0.2s ease;
-    }
-
-    .submit-btn:hover:not(:disabled) {
-      transform: translateY(-2px);
-      box-shadow: 0 8px 25px rgba(255, 107, 53, 0.5);
-    }
-
-    .submit-btn:disabled {
-      background: linear-gradient(135deg, #94a3b8, #64748b);
-      box-shadow: none;
-      cursor: not-allowed;
-    }
-
-    /* ==================== MODAL ==================== */
-    .modal-overlay {
-      position: fixed;
-      top: 0;
-      left: 0;
-      right: 0;
-      bottom: 0;
-      background: rgba(15, 23, 42, 0.7);
-      backdrop-filter: blur(4px);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      z-index: 2000;
-      padding: 1rem;
-    }
-
-    .modal-content {
-      background: white;
-      border-radius: 1.5rem;
-      padding: 2.5rem 2rem;
+    /* ==================== SUCCESS MODAL CONTENT ==================== */
+    .success-content {
       text-align: center;
-      max-width: 340px;
-      width: 100%;
-      box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+      padding: 1rem 0;
     }
 
-    .success-icon {
+    .success-content .success-icon {
       font-size: 4rem;
-      margin-bottom: 1.25rem;
+      margin-bottom: 1rem;
     }
 
-    .modal-content h3 {
-      margin: 0 0 0.75rem;
-      color: #1e293b;
-      font-size: 1.375rem;
-      font-weight: 700;
-    }
-
-    .modal-content p {
-      color: #64748b;
-      margin: 0 0 1.75rem;
-      font-size: 1rem;
-    }
-
-    .modal-btn {
-      display: block;
-      padding: 1rem;
-      background: linear-gradient(135deg, #FF6B35, #FF8F5C);
-      color: white;
-      text-decoration: none;
-      border-radius: 0.75rem;
-      font-weight: 700;
-      box-shadow: 0 4px 15px rgba(255, 107, 53, 0.3);
-      transition: all 0.2s;
-    }
-
-    .modal-btn:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 6px 20px rgba(255, 107, 53, 0.4);
+    .success-content p {
+      color: var(--color-text-secondary, #64748b);
+      margin: 0;
     }
 
     /* ==================== RESPONSIVE ==================== */
@@ -949,10 +809,6 @@ interface SelectedPart {
       .selected-part-row {
         flex-direction: column;
         align-items: flex-start;
-      }
-
-      .header-text h1 {
-        font-size: 1.25rem;
       }
     }
   `]

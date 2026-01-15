@@ -1,8 +1,9 @@
-import { Component, inject, signal, computed, OnInit, OnDestroy, effect } from '@angular/core';
+import { Component, inject, signal, computed, OnInit, ChangeDetectionStrategy, DestroyRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router, ActivatedRoute } from '@angular/router';
-import { Subject, debounceTime, takeUntil } from 'rxjs';
+import { Subject, debounceTime } from 'rxjs';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { RequestsService, CreateRequestDto, UrgencyLevel } from '../../services/requests.service';
 import { SearchService, Device, ServiceType, Repairer } from '../../../search/services/search.service';
 import { SearchStore } from '../../../search/stores/search.store';
@@ -36,6 +37,7 @@ interface RequestStep {
 @Component({
   selector: 'app-new-request',
   standalone: true,
+  changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [CommonModule, FormsModule, UiImageUploadComponent, UiButtonComponent, UiStepperComponent, UiHeaderComponent],
   template: `
     <div class="new-request-container">
@@ -1122,17 +1124,17 @@ interface RequestStep {
     }
   `],
 })
-export class NewRequestComponent implements OnInit, OnDestroy {
+export class NewRequestComponent implements OnInit {
   private readonly requestsService = inject(RequestsService);
   private readonly searchService = inject(SearchService);
   readonly store = inject(SearchStore);
   private readonly router = inject(Router);
   private readonly route = inject(ActivatedRoute);
+  private readonly destroyRef = inject(DestroyRef);
 
   // Draft auto-save
   private readonly DRAFT_KEY = 'repair_request_draft';
   private readonly DRAFT_MAX_AGE_HOURS = 24;
-  private readonly destroy$ = new Subject<void>();
   private readonly saveSubject$ = new Subject<void>();
   readonly showDraftDialog = signal(false);
   readonly draftSavedAt = signal<string | null>(null);
@@ -1185,18 +1187,13 @@ export class NewRequestComponent implements OnInit, OnDestroy {
     this.saveSubject$
       .pipe(
         debounceTime(1000),
-        takeUntil(this.destroy$)
+        takeUntilDestroyed(this.destroyRef)
       )
       .subscribe(() => this.saveDraft());
 
     // Check for existing draft before loading data
     this.checkForDraft();
     this.loadData();
-  }
-
-  ngOnDestroy(): void {
-    this.destroy$.next();
-    this.destroy$.complete();
   }
 
   // ===== Draft Management Methods =====

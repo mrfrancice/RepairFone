@@ -171,10 +171,16 @@ export type RadioSize = 'sm' | 'md' | 'lg';
       cursor: pointer;
       transition: all 0.2s ease;
       user-select: none;
+      min-height: 44px;
     }
 
     .radio-option:focus {
       outline: none;
+    }
+
+    .radio-option:focus-visible {
+      outline: 2px solid var(--color-primary, #FF9800);
+      outline-offset: 2px;
     }
 
     .radio-option.disabled {
@@ -182,10 +188,12 @@ export type RadioSize = 'sm' | 'md' | 'lg';
       cursor: not-allowed;
     }
 
-    /* Standard Layout */
+    /* Standard Layout - 44px minimum touch target */
     .radio-options.vertical .radio-option,
     .radio-options.horizontal .radio-option {
-      padding: 0.5rem 0;
+      padding: 0.625rem 0.5rem;
+      min-height: 44px;
+      border-radius: var(--border-radius-sm, 4px);
     }
 
     .radio-options.vertical .radio-option:focus .radio-indicator,

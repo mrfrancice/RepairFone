@@ -10,6 +10,7 @@ import {
   AfterContentInit,
   TemplateRef,
   Directive,
+  ChangeDetectionStrategy,
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 
@@ -33,6 +34,7 @@ export class UiStepContentDirective {
 @Component({
   selector: 'ui-stepper',
   standalone: true,
+  changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [CommonModule],
   template: `
     <div class="stepper-container" [class.vertical]="orientation === 'vertical'">
@@ -165,13 +167,18 @@ export class UiStepContentDirective {
       transform: scale(1.05);
     }
 
-    /* Step Indicator */
+    .step-item.clickable:focus-visible .step-indicator {
+      outline: 2px solid var(--color-primary, #FF9800);
+      outline-offset: 2px;
+    }
+
+    /* Step Indicator - 44px minimum touch target */
     .step-indicator {
-      width: 36px;
-      height: 36px;
+      width: 44px;
+      height: 44px;
       border-radius: 50%;
-      background: #e5e7eb;
-      color: #6b7280;
+      background: var(--color-neutral-200, #EEEEEE);
+      color: var(--color-text-secondary, rgba(0, 0, 0, 0.60));
       display: flex;
       align-items: center;
       justify-content: center;
@@ -183,18 +190,18 @@ export class UiStepContentDirective {
     }
 
     .step-item.active .step-indicator {
-      background: #2563eb;
+      background: var(--color-info, #2196F3);
       color: white;
-      box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.2);
+      box-shadow: 0 0 0 4px rgba(33, 150, 243, 0.2);
     }
 
     .step-item.completed .step-indicator {
-      background: #16a34a;
+      background: var(--color-success, #4CAF50);
       color: white;
     }
 
     .step-item.error .step-indicator {
-      background: #dc2626;
+      background: var(--color-error, #F44336);
       color: white;
     }
 
@@ -222,60 +229,60 @@ export class UiStepContentDirective {
     .step-label {
       font-size: 0.875rem;
       font-weight: 600;
-      color: #374151;
+      color: var(--color-neutral-800, #424242);
       white-space: nowrap;
     }
 
     .step-item.active .step-label {
-      color: #2563eb;
+      color: var(--color-info, #2196F3);
     }
 
     .step-item.completed .step-label {
-      color: #16a34a;
+      color: var(--color-success, #4CAF50);
     }
 
     .step-item.error .step-label {
-      color: #dc2626;
+      color: var(--color-error, #F44336);
     }
 
     .step-optional {
       font-weight: 400;
-      color: #9ca3af;
+      color: var(--color-neutral-400, #BDBDBD);
       margin-left: 0.25rem;
     }
 
     .step-description {
       font-size: 0.75rem;
-      color: #6b7280;
+      color: var(--color-text-secondary, rgba(0, 0, 0, 0.60));
       margin-top: 0.125rem;
     }
 
     /* Horizontal Connector */
     .step-connector {
       position: absolute;
-      top: 18px;
-      left: calc(36px + 0.75rem);
+      top: 22px;
+      left: calc(44px + 0.75rem);
       right: 0;
       height: 2px;
-      background: #e5e7eb;
+      background: var(--color-neutral-200, #EEEEEE);
       transition: background 0.3s ease;
     }
 
     .step-connector.completed {
-      background: #16a34a;
+      background: var(--color-success, #4CAF50);
     }
 
     /* Vertical Connector */
     .step-connector-vertical {
       width: 2px;
       height: 24px;
-      background: #e5e7eb;
-      margin-left: 17px;
+      background: var(--color-neutral-200, #EEEEEE);
+      margin-left: 21px;
       transition: background 0.3s ease;
     }
 
     .step-connector-vertical.completed {
-      background: #16a34a;
+      background: var(--color-success, #4CAF50);
     }
 
     /* Stepper Content */
@@ -290,7 +297,7 @@ export class UiStepContentDirective {
       gap: 1rem;
       margin-top: 1.5rem;
       padding-top: 1rem;
-      border-top: 1px solid #e5e7eb;
+      border-top: 1px solid var(--color-neutral-200, #EEEEEE);
     }
 
     .nav-spacer {
@@ -299,6 +306,7 @@ export class UiStepContentDirective {
 
     .btn {
       padding: 0.75rem 1.5rem;
+      min-height: 44px;
       border-radius: 8px;
       font-weight: 600;
       font-size: 0.9375rem;
@@ -312,24 +320,29 @@ export class UiStepContentDirective {
       cursor: not-allowed;
     }
 
+    .btn:focus-visible {
+      outline: 2px solid var(--color-primary, #FF9800);
+      outline-offset: 2px;
+    }
+
     .btn-primary {
-      background: #2563eb;
+      background: var(--color-info, #2196F3);
       color: white;
     }
 
     .btn-primary:hover:not(:disabled) {
-      background: #1d4ed8;
+      background: var(--color-info-dark, #1565C0);
     }
 
     .btn-outline {
-      background: white;
-      color: #374151;
-      border: 1px solid #d1d5db;
+      background: var(--color-surface, white);
+      color: var(--color-neutral-800, #424242);
+      border: 1px solid var(--color-neutral-300, #E0E0E0);
     }
 
     .btn-outline:hover:not(:disabled) {
-      background: #f3f4f6;
-      border-color: #9ca3af;
+      background: var(--color-neutral-100, #F5F5F5);
+      border-color: var(--color-neutral-400, #BDBDBD);
     }
 
     /* Responsive */
@@ -358,7 +371,7 @@ export class UiStepContentDirective {
         left: 100%;
         width: 24px;
         height: 2px;
-        background: #e5e7eb;
+        background: var(--color-neutral-200, #EEEEEE);
         transform: translateY(-50%);
       }
 
@@ -367,7 +380,7 @@ export class UiStepContentDirective {
       }
 
       .step-item.completed::after {
-        background: #16a34a;
+        background: var(--color-success, #4CAF50);
       }
     }
   `],

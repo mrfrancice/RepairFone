@@ -234,11 +234,20 @@ export interface UploadedImage {
       color: #2563eb;
       font-size: 0.875rem;
       cursor: pointer;
-      padding: 0.25rem;
+      padding: 0.75rem 1rem;
+      min-height: 44px;
+      border-radius: var(--border-radius-md, 8px);
+      transition: background 0.15s ease;
     }
 
     .change-btn:hover {
       text-decoration: underline;
+      background: var(--color-neutral-100, #f3f4f6);
+    }
+
+    .change-btn:focus-visible {
+      outline: 2px solid var(--color-primary, #FF9800);
+      outline-offset: 2px;
     }
 
     /* Gallery Mode */
@@ -301,25 +310,44 @@ export interface UploadedImage {
 
     .remove-btn {
       position: absolute;
-      top: 4px;
-      right: 4px;
-      width: 24px;
-      height: 24px;
-      background: rgba(0, 0, 0, 0.6);
+      top: 0;
+      right: 0;
+      min-width: 44px;
+      min-height: 44px;
+      background: transparent;
       color: white;
       border: none;
-      border-radius: 50%;
+      border-radius: 0 8px 0 8px;
       cursor: pointer;
       display: flex;
       align-items: center;
       justify-content: center;
-      font-size: 1rem;
+      font-size: 1.25rem;
       opacity: 0;
-      transition: opacity 0.2s;
+      transition: opacity 0.2s, background 0.2s;
+    }
+
+    .remove-btn::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.6);
+      border-radius: inherit;
+      z-index: -1;
     }
 
     .image-item:hover .remove-btn {
       opacity: 1;
+    }
+
+    .remove-btn:hover::before {
+      background: rgba(220, 38, 38, 0.8);
+    }
+
+    .remove-btn:focus-visible {
+      opacity: 1;
+      outline: 2px solid var(--color-primary, #FF9800);
+      outline-offset: 2px;
     }
 
     .remove-btn:disabled {
@@ -328,6 +356,8 @@ export interface UploadedImage {
 
     .add-image-btn {
       aspect-ratio: 1;
+      min-width: 80px;
+      min-height: 80px;
       border: 2px dashed #d1d5db;
       border-radius: 8px;
       display: flex;
@@ -344,6 +374,11 @@ export interface UploadedImage {
     .add-image-btn.dragover {
       border-color: #2563eb;
       background: #eff6ff;
+    }
+
+    .add-image-btn:focus-visible {
+      outline: 2px solid var(--color-primary, #FF9800);
+      outline-offset: 2px;
     }
 
     .add-icon {
@@ -446,11 +481,24 @@ export interface UploadedImage {
       color: #6b7280;
       font-size: 1.25rem;
       cursor: pointer;
-      padding: 0.25rem;
+      padding: 0.5rem;
+      min-width: 44px;
+      min-height: 44px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: var(--border-radius-sm, 4px);
+      transition: color 0.15s, background 0.15s;
     }
 
     .file-remove:hover {
       color: #dc2626;
+      background: var(--color-error-light, #fef2f2);
+    }
+
+    .file-remove:focus-visible {
+      outline: 2px solid var(--color-primary, #FF9800);
+      outline-offset: 2px;
     }
 
     .add-more {

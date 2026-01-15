@@ -3,7 +3,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, FindOptionsWhere, DataSource } from 'typeorm';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { Payment, PaymentStatus, PaymentMethod, PaymentType } from './entities/payment.entity';
-import { Quote } from '../quotes/entities/quote.entity';
+import { Quote, QuoteStatus } from '../quotes/entities/quote.entity';
 import { RepairRequest } from '../requests/entities/repair-request.entity';
 import { RepairerProfile } from '../users/entities/repairer-profile.entity';
 import { UserRole } from '../users/entities/user.entity';
@@ -56,6 +56,13 @@ export class PaymentsService {
         throw new ForbiddenException('Vous ne pouvez pas payer ce devis');
       }
 
+      // BIZ-101: Vérifier que le devis est accepté avant d'autoriser le paiement
+      if (quote.status !== QuoteStatus.ACCEPTED) {
+        throw new BadRequestException(
+          'Le paiement ne peut être effectué que sur un devis accepté'
+        );
+      }
+
       // Calculate amounts
       const quoteAmount = Number(quote.totalAmount);
       const platformFee = Math.round(quoteAmount * (this.PLATFORM_FEE_PERCENT / 100));
@@ -76,7 +83,9 @@ export class PaymentsService {
         amount = quoteAmount + platformFee;
       }
 
-      const repairerAmount = quoteAmount - (dto.paymentType === PaymentType.FULL ? 0 : Math.round(platformFee * (dto.paymentType === PaymentType.DEPOSIT ? this.DEPOSIT_PERCENT / 100 : (100 - this.DEPOSIT_PERCENT) / 100)));
+      // BIZ-104: Calcul simplifié et correct du montant réparateur
+      // Le réparateur reçoit le montant du devis moins la commission plateforme
+      const repairerAmount = quoteAmount - platformFee;
 
       const payment = queryRunner.manager.create(Payment, {
         paymentNumber: this.generatePaymentNumber(),
@@ -87,7 +96,7 @@ export class PaymentsService {
         amount,
         platformFee,
         platformFeePercent: this.PLATFORM_FEE_PERCENT,
-        repairerAmount: dto.paymentType === PaymentType.FULL ? quoteAmount : repairerAmount,
+        repairerAmount,
         paymentType: dto.paymentType,
         paymentMethod: dto.paymentMethod,
         phoneNumber: dto.phoneNumber,
@@ -167,7 +176,7 @@ export class PaymentsService {
 
     const [data, total] = await this.paymentRepo.findAndCount({
       where,
-      relations: ['request', 'request.device', 'request.serviceType', 'repairer', 'repairer.user'],
+      relations: ['request', 'request.device', 'request.serviceType', 'client', 'repairer', 'repairer.user'],
       order: { createdAt: 'DESC' },
       skip,
       take: limit,

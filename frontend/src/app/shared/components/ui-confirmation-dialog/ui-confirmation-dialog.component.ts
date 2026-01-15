@@ -161,8 +161,8 @@ export class ConfirmationService {
     }
 
     .dialog-container {
-      background: white;
-      border-radius: 16px;
+      background: var(--color-surface, white);
+      border-radius: var(--border-radius-xl, 16px);
       max-width: 400px;
       width: 100%;
       padding: 1.5rem;
@@ -202,23 +202,23 @@ export class ConfirmationService {
     }
 
     .type-info .dialog-icon {
-      background: #eff6ff;
-      color: #2563eb;
+      background: var(--color-ocean-50, #E3F2FD);
+      color: var(--color-info, #2196F3);
     }
 
     .type-warning .dialog-icon {
-      background: #fffbeb;
-      color: #d97706;
+      background: var(--color-gold-50, #FFFDE7);
+      color: var(--color-warning, #FFC107);
     }
 
     .type-danger .dialog-icon {
-      background: #fef2f2;
-      color: #dc2626;
+      background: var(--color-primary-50, #FFF3E0);
+      color: var(--color-error, #F44336);
     }
 
     .type-success .dialog-icon {
-      background: #f0fdf4;
-      color: #16a34a;
+      background: var(--color-secondary-50, #E8F5E9);
+      color: var(--color-success, #4CAF50);
     }
 
     /* Content */
@@ -229,13 +229,13 @@ export class ConfirmationService {
     .dialog-title {
       font-size: 1.125rem;
       font-weight: 600;
-      color: #1f2937;
+      color: var(--color-text-primary, rgba(0, 0, 0, 0.87));
       margin: 0 0 0.5rem;
     }
 
     .dialog-message {
       font-size: 0.9375rem;
-      color: #6b7280;
+      color: var(--color-text-secondary, rgba(0, 0, 0, 0.60));
       margin: 0;
       line-height: 1.5;
     }
@@ -249,6 +249,7 @@ export class ConfirmationService {
     .btn {
       flex: 1;
       padding: 0.75rem 1rem;
+      min-height: 44px;
       border-radius: 8px;
       font-weight: 600;
       font-size: 0.9375rem;
@@ -257,40 +258,45 @@ export class ConfirmationService {
       border: none;
     }
 
+    .btn:focus-visible {
+      outline: 2px solid var(--color-primary, #FF9800);
+      outline-offset: 2px;
+    }
+
     .btn-cancel {
-      background: #f3f4f6;
-      color: #374151;
+      background: var(--color-neutral-100, #F5F5F5);
+      color: var(--color-neutral-800, #424242);
     }
 
     .btn-cancel:hover {
-      background: #e5e7eb;
+      background: var(--color-neutral-200, #EEEEEE);
     }
 
     .btn-primary {
-      background: #2563eb;
+      background: var(--color-info, #2196F3);
       color: white;
     }
 
     .btn-primary:hover {
-      background: #1d4ed8;
+      background: var(--color-info-dark, #1565C0);
     }
 
     .btn-danger {
-      background: #dc2626;
+      background: var(--color-error, #F44336);
       color: white;
     }
 
     .btn-danger:hover {
-      background: #b91c1c;
+      background: var(--color-error-dark, #C62828);
     }
 
     .btn-success {
-      background: #16a34a;
+      background: var(--color-success, #4CAF50);
       color: white;
     }
 
     .btn-success:hover {
-      background: #15803d;
+      background: var(--color-success-dark, #2E7D32);
     }
   `],
 })

@@ -1,4 +1,4 @@
-import { Component, inject, OnInit, signal } from '@angular/core';
+import { Component, inject, OnInit, signal, ChangeDetectionStrategy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { ChatService, Conversation } from '../../services/chat.service';
@@ -10,6 +10,7 @@ import { UiEmptyStateComponent } from '../../../../shared/components/ui-empty-st
 @Component({
   selector: 'app-chat-list',
   standalone: true,
+  changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
     CommonModule,
     RouterLink,

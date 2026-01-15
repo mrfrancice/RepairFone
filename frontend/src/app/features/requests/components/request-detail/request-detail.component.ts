@@ -1,4 +1,4 @@
-import { Component, inject, signal, OnInit, computed } from '@angular/core';
+import { Component, inject, signal, OnInit, computed, ChangeDetectionStrategy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
@@ -25,6 +25,7 @@ interface TimelineStep {
 @Component({
   selector: 'app-request-detail',
   standalone: true,
+  changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [CommonModule, FormsModule, RouterLink, UiHeaderComponent, StepRatingComponent],
   template: `
     <div class="detail-container">
@@ -289,6 +290,25 @@ interface TimelineStep {
                   </svg>
                   <span>Devis accepté - La réparation peut commencer</span>
                 </div>
+                @if (isClient()) {
+                  <div class="payment-info">
+                    <p class="payment-notice">
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="12" cy="12" r="10"/>
+                        <line x1="12" y1="16" x2="12" y2="12"/>
+                        <line x1="12" y1="8" x2="12.01" y2="8"/>
+                      </svg>
+                      Acompte de 30% requis pour démarrer la réparation. Le solde (70%) sera à régler à la livraison.
+                    </p>
+                    <button class="btn btn-primary btn-payment" (click)="goToPayment()">
+                      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <rect x="1" y="4" width="22" height="16" rx="2" ry="2"/>
+                        <line x1="1" y1="10" x2="23" y2="10"/>
+                      </svg>
+                      Verser l'acompte ({{ getDepositAmount() | number }} FCFA)
+                    </button>
+                  </div>
+                }
               }
 
               @if (quote()!.status === 'rejected') {
@@ -2391,6 +2411,63 @@ interface TimelineStep {
       color: #065f46;
     }
 
+    .payment-info {
+      margin-top: 1rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.75rem;
+    }
+
+    .payment-notice {
+      display: flex;
+      align-items: flex-start;
+      gap: 0.5rem;
+      margin: 0;
+      padding: 0.75rem;
+      background: #fef3c7;
+      border: 1px solid #f59e0b;
+      border-radius: 8px;
+      font-size: 0.875rem;
+      color: #92400e;
+    }
+
+    .payment-notice svg {
+      flex-shrink: 0;
+      margin-top: 2px;
+      color: #f59e0b;
+    }
+
+    .btn-payment {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+      width: 100%;
+      padding: 1rem 1.5rem;
+      background: linear-gradient(135deg, #FF6B35 0%, #FF9800 100%);
+      color: white;
+      border: none;
+      border-radius: 12px;
+      font-size: 1rem;
+      font-weight: 600;
+      cursor: pointer;
+      box-shadow: 0 4px 14px rgba(255, 107, 53, 0.4);
+      transition: all 0.2s ease;
+    }
+
+    .btn-payment:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(255, 107, 53, 0.5);
+    }
+
+    .btn-payment:active {
+      transform: translateY(0);
+    }
+
+    .btn-payment svg {
+      flex-shrink: 0;
+    }
+
     .quote-rejected-message {
       background: #fee2e2;
       color: #991b1b;
@@ -3190,7 +3267,8 @@ export class RequestDetailComponent implements OnInit {
 
   async acceptQuote(): Promise<void> {
     const quote = this.quote();
-    if (!quote) return;
+    const request = this.request();
+    if (!quote || !request) return;
 
     this.quoteError.set(null);
     this.isUpdating.set(true);
@@ -3198,17 +3276,27 @@ export class RequestDetailComponent implements OnInit {
     try {
       const updatedQuote = await this.quotesService.acceptQuote(quote.id);
       this.quote.set(updatedQuote);
-
-      // Reload request to get updated status
-      const request = this.request();
-      if (request) {
-        await this.loadRequest(request.id);
-      }
     } catch (err: any) {
       this.quoteError.set(err.message || 'Erreur lors de l\'acceptation du devis');
     } finally {
       this.isUpdating.set(false);
     }
+  }
+
+  getDepositAmount(): number {
+    const quote = this.quote();
+    if (!quote) return 0;
+    return Math.round(quote.totalAmount * 0.3);
+  }
+
+  goToPayment(): void {
+    const quote = this.quote();
+    const request = this.request();
+    if (!quote || !request) return;
+
+    this.router.navigate(['/payment/summary'], {
+      queryParams: { requestId: request.id, quoteId: quote.id }
+    });
   }
 
   openRejectQuoteModal(): void {

@@ -3,7 +3,9 @@ import {
   NestInterceptor,
   ExecutionContext,
   CallHandler,
+  Logger,
 } from '@nestjs/common';
+import { ModuleRef, ContextIdFactory } from '@nestjs/core';
 import { Observable } from 'rxjs';
 import { tap } from 'rxjs/operators';
 import { Request } from 'express';
@@ -20,7 +22,9 @@ interface AuthenticatedRequest extends Request {
 
 @Injectable()
 export class AuditInterceptor implements NestInterceptor {
-  constructor(private readonly auditService: AuditService) {}
+  private readonly logger = new Logger(AuditInterceptor.name);
+
+  constructor(private readonly moduleRef: ModuleRef) {}
 
   intercept(context: ExecutionContext, next: CallHandler): Observable<any> {
     const request = context.switchToHttp().getRequest<AuthenticatedRequest>();
@@ -44,39 +48,54 @@ export class AuditInterceptor implements NestInterceptor {
     const ipAddress = this.getIpAddress(request);
     const userAgent = request.headers['user-agent'];
 
+    // Resolve AuditService dynamically for request-scoped service
+    const contextId = ContextIdFactory.create();
+    this.moduleRef.registerRequestByContextId(request, contextId);
+
     return next.handle().pipe(
       tap({
-        next: (responseData) => {
-          // Log after successful response
-          const metadata: Record<string, any> = {
-            path: request.path,
-            method: request.method,
-          };
+        next: async (responseData) => {
+          try {
+            // Resolve the request-scoped AuditService
+            const auditService = await this.moduleRef.resolve(AuditService, contextId, { strict: false });
 
-          // Include request body (sanitize sensitive data)
-          if (request.body && Object.keys(request.body).length > 0) {
-            metadata.body = this.sanitizeBody(request.body);
-          }
+            if (!auditService) {
+              this.logger.warn('AuditService not available, skipping audit log');
+              return;
+            }
 
-          // Extract entity ID from response if it's a CREATE action
-          let finalEntityId = entityId;
-          if (action === AuditAction.CREATE && responseData?.id) {
-            finalEntityId = responseData.id;
-          }
+            // Log after successful response
+            const metadata: Record<string, any> = {
+              path: request.path,
+              method: request.method,
+            };
 
-          // Log the audit event asynchronously (don't block the response)
-          this.auditService.logWithContext({
-            action,
-            entityType,
-            entityId: finalEntityId,
-            userId: user.id,
-            ipAddress,
-            userAgent: Array.isArray(userAgent) ? userAgent[0] : userAgent,
-            metadata,
-          }).catch((error) => {
+            // Include request body (sanitize sensitive data)
+            if (request.body && Object.keys(request.body).length > 0) {
+              metadata.body = this.sanitizeBody(request.body);
+            }
+
+            // Extract entity ID from response if it's a CREATE action
+            let finalEntityId = entityId;
+            if (action === AuditAction.CREATE && responseData?.id) {
+              finalEntityId = responseData.id;
+            }
+
+            // Log the audit event asynchronously (don't block the response)
+            await auditService.logWithContext({
+              action,
+              entityType,
+              entityId: finalEntityId,
+              userId: user.id,
+              ipAddress,
+              userAgent: Array.isArray(userAgent) ? userAgent[0] : userAgent,
+              metadata,
+            });
+          } catch (error) {
             // Log error but don't fail the request
-            console.error('Failed to log audit event:', error);
-          });
+            const err = error as Error;
+            this.logger.error('Failed to log audit event', err.stack);
+          }
         },
         error: () => {
           // Optionally log failed requests

@@ -1,0 +1,135 @@
+name: AI Code Review
+
+on:
+  pull_request:
+    types: [opened, synchronize]
+    paths:
+      - 'frontend/src/**/*.ts'
+      - 'backend/src/**/*.ts'
+
+env:
+  NODE_VERSION: '20'
+
+jobs:
+  ai-review:
+    name: AI Code Review
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: write
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+      
+      - name: Install dependencies
+        working-directory: .ai-agents/tools
+        run: npm install
+      
+      - name: Get changed files
+        id: changed-files
+        run: |
+          FILES=$(git diff --name-only origin/${{ github.base_ref }}...HEAD | grep -E '\.(ts)$' | grep -v '\.spec\.ts$' | head -8)
+          echo "files<<EOF" >> $GITHUB_OUTPUT
+          echo "$FILES" >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
+          
+          SECURITY=$(git diff --name-only origin/${{ github.base_ref }}...HEAD | grep -iE '(auth|payment|stripe|guard|security)' | head -5)
+          echo "security<<EOF" >> $GITHUB_OUTPUT
+          echo "$SECURITY" >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
+      
+      - name: Run AI Code Review
+        if: steps.changed-files.outputs.files != ''
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+        run: |
+          mkdir -p review-results
+          echo "# 🤖 AI Code Review - RepairFone" > review-results/summary.md
+          echo "" >> review-results/summary.md
+          
+          while IFS= read -r file; do
+            if [ -n "$file" ] && [ -f "$file" ]; then
+              echo "Reviewing: $file"
+              echo "## 📄 \`$file\`" >> review-results/summary.md
+              
+              node << 'SCRIPT' >> review-results/summary.md
+              const Anthropic = require('@anthropic-ai/sdk').default;
+              const fs = require('fs');
+              async function review() {
+                const client = new Anthropic();
+                const code = fs.readFileSync(process.env.FILE, 'utf-8');
+                const response = await client.messages.create({
+                  model: 'claude-sonnet-4-20250514',
+                  max_tokens: 1500,
+                  system: 'Expert code reviewer Angular/NestJS. Format: ✅ Positif, ⚠️ À corriger, 💡 Suggestions. Max 300 mots.',
+                  messages: [{ role: 'user', content: 'Review:\n```typescript\n' + code + '\n```' }]
+                });
+                console.log(response.content[0].text);
+              }
+              review().catch(e => console.log('Erreur:', e.message));
+          SCRIPT
+              
+              echo -e "\n---\n" >> review-results/summary.md
+            fi
+          done <<< "${{ steps.changed-files.outputs.files }}"
+        env:
+          FILE: $file
+
+      - name: Run Security Audit
+        if: steps.changed-files.outputs.security != ''
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+        run: |
+          echo -e "\n# 🔒 Audit Sécurité\n" >> review-results/summary.md
+          
+          while IFS= read -r file; do
+            if [ -n "$file" ] && [ -f "$file" ]; then
+              echo "Security audit: $file"
+              echo "## 🔒 \`$file\`" >> review-results/summary.md
+              
+              FILE="$file" node << 'SCRIPT' >> review-results/summary.md
+              const Anthropic = require('@anthropic-ai/sdk').default;
+              const fs = require('fs');
+              async function audit() {
+                const client = new Anthropic();
+                const code = fs.readFileSync(process.env.FILE, 'utf-8');
+                const response = await client.messages.create({
+                  model: 'claude-sonnet-4-20250514',
+                  max_tokens: 1500,
+                  system: 'Expert sécurité OWASP. Cherche: injection, XSS, auth bypass, secrets. Format: 🔴 Critique, 🟠 Important, ✅ OK. Max 250 mots.',
+                  messages: [{ role: 'user', content: 'Audit:\n```typescript\n' + code + '\n```' }]
+                });
+                console.log(response.content[0].text);
+              }
+              audit().catch(e => console.log('Erreur:', e.message));
+          SCRIPT
+              
+              echo -e "\n---\n" >> review-results/summary.md
+            fi
+          done <<< "${{ steps.changed-files.outputs.security }}"
+      
+      - name: Post review comment
+        if: always() && steps.changed-files.outputs.files != ''
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            let review = '🤖 Aucun fichier à reviewer.';
+            try {
+              review = fs.readFileSync('review-results/summary.md', 'utf-8');
+            } catch (e) {}
+            
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.payload.pull_request.number,
+              body: review + '\n\n---\n*Review par RepairFone AI Agents v2.1*'
+            });

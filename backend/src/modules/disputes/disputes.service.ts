@@ -1,9 +1,11 @@
 import { Injectable, NotFoundException, ForbiddenException, BadRequestException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, FindOptionsWhere } from 'typeorm';
+import { EventEmitter2 } from '@nestjs/event-emitter';
 import { Dispute, DisputeReason, DisputeStatus, DisputeResolution } from './entities/dispute.entity';
+import { DisputeCreatedEvent, DisputeResolvedEvent, EventNames } from '../../common/events';
 import { DisputeMessage, DisputeMessageSenderType } from './entities/dispute-message.entity';
-import { RepairRequest } from '../requests/entities/repair-request.entity';
+import { RepairRequest, RequestStatus } from '../requests/entities/repair-request.entity';
 import { RepairerProfile } from '../users/entities/repairer-profile.entity';
 import { UserRole } from '../users/entities/user.entity';
 
@@ -42,6 +44,7 @@ export class DisputesService {
     private readonly requestRepo: Repository<RepairRequest>,
     @InjectRepository(RepairerProfile)
     private readonly repairerRepo: Repository<RepairerProfile>,
+    private readonly eventEmitter: EventEmitter2,
   ) {}
 
   async create(clientId: string, dto: CreateDisputeDto): Promise<Dispute> {
@@ -66,6 +69,13 @@ export class DisputesService {
       throw new BadRequestException('Un litige existe déjà pour cette demande');
     }
 
+    // BIZ-103: Vérifier qu'un réparateur est assigné avant de créer le litige
+    if (!request.repairerId) {
+      throw new BadRequestException(
+        'Impossible de créer un litige: aucun réparateur n\'est assigné à cette demande'
+      );
+    }
+
     const dispute = this.disputeRepo.create({
       requestId: dto.requestId,
       clientId,
@@ -77,6 +87,17 @@ export class DisputesService {
     });
 
     const savedDispute = await this.disputeRepo.save(dispute);
+
+    // BIZ-108: Émettre événement de création de litige
+    const disputeCreatedEvent = new DisputeCreatedEvent(
+      savedDispute.id,
+      dto.requestId,
+      clientId,
+      request.repairerId!,
+      dto.reason,
+      dto.description,
+    );
+    this.eventEmitter.emit(EventNames.DISPUTE_CREATED, disputeCreatedEvent);
 
     return this.findOne(savedDispute.id, clientId, UserRole.CLIENT);
   }
@@ -227,6 +248,36 @@ export class DisputesService {
     dispute.resolvedBy = adminId;
 
     await this.disputeRepo.save(dispute);
+
+    // BIZ-105: Mettre à jour le statut de la Request selon la résolution
+    let newRequestStatus: RequestStatus;
+    switch (dto.resolution) {
+      case DisputeResolution.REFUND_FULL:
+      case DisputeResolution.REFUND_PARTIAL:
+        newRequestStatus = RequestStatus.CANCELLED;
+        break;
+      case DisputeResolution.REDO_REPAIR:
+        newRequestStatus = RequestStatus.IN_PROGRESS;
+        break;
+      default:
+        newRequestStatus = RequestStatus.COMPLETED;
+    }
+
+    await this.requestRepo.update(dispute.requestId, {
+      status: newRequestStatus,
+    });
+
+    // BIZ-108: Émettre événement de résolution de litige
+    const disputeResolvedEvent = new DisputeResolvedEvent(
+      dispute.id,
+      dispute.requestId,
+      dispute.clientId,
+      dispute.repairerId,
+      dto.resolution,
+      dto.refundAmount,
+      dto.notes,
+    );
+    this.eventEmitter.emit(EventNames.DISPUTE_RESOLVED, disputeResolvedEvent);
 
     return this.findOne(disputeId, adminId, UserRole.ADMIN);
   }

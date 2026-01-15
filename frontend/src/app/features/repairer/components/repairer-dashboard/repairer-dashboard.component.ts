@@ -1,4 +1,4 @@
-import { Component, inject, OnInit, signal, computed } from '@angular/core';
+import { Component, inject, OnInit, signal, computed, ChangeDetectionStrategy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { RepairerService, RepairerStats, RepairerRequest } from '../../services/repairer.service';
@@ -10,6 +10,7 @@ import { UiHeaderComponent } from '../../../../shared/components/ui-header/ui-he
 @Component({
   selector: 'app-repairer-dashboard',
   standalone: true,
+  changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
     CommonModule,
     RouterLink,

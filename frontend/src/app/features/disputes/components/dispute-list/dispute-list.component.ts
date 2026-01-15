@@ -1,4 +1,4 @@
-import { Component, inject, OnInit, signal } from '@angular/core';
+import { Component, inject, OnInit, signal, ChangeDetectionStrategy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { DisputesService, Dispute, DisputeStatus } from '../../services/disputes.service';
@@ -12,6 +12,7 @@ import { UiChipComponent } from '../../../../shared/components/ui-chip/ui-chip.c
 @Component({
   selector: 'app-dispute-list',
   standalone: true,
+  changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
     CommonModule,
     RouterLink,

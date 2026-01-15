@@ -3,13 +3,14 @@ import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { RequestsService, RepairRequest, RequestStatus, RequestStats } from '../../services/requests.service';
 import { UiHeaderComponent } from '../../../../shared/components/ui-header/ui-header.component';
+import { UiSkeletonComponent } from '../../../../shared/components/ui-skeleton/ui-skeleton.component';
 import { AuthStore } from '../../../../core/stores/auth.store';
 
 @Component({
   selector: 'app-request-list',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [CommonModule, RouterLink, UiHeaderComponent],
+  imports: [CommonModule, RouterLink, UiHeaderComponent, UiSkeletonComponent],
   template: `
     <div class="requests-container">
       <!-- Header avec gradient orange -->
@@ -102,8 +103,12 @@ import { AuthStore } from '../../../../core/stores/auth.store';
       <div class="requests-content">
         @if (isLoading()) {
           <div class="loading-state">
-            <div class="spinner"></div>
-            <p>Chargement des demandes...</p>
+            <ui-skeleton
+              variant="request-card"
+              [count]="4"
+              animation="shimmer"
+              ariaLabel="Chargement des demandes"
+            />
           </div>
         } @else if (requests().length === 0) {
           <div class="empty-state">

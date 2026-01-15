@@ -7,6 +7,7 @@ import { ConseilsStore } from '../../stores/conseils.store';
 @Component({
   selector: 'app-conseil-sessions',
   standalone: true,
+  changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [CommonModule, RouterLink],
   template: `
     <div class="sessions-container">

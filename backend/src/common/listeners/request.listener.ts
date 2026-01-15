@@ -3,6 +3,7 @@ import { OnEvent } from '@nestjs/event-emitter';
 import { RequestStatusChangedEvent, EventNames } from '../events';
 import { NotificationsService } from '../../modules/notifications/notifications.service';
 import { RepairersService } from '../../modules/users/repairers.service';
+import { NotificationType } from '../../modules/notifications/entities/notification.entity';
 
 /**
  * Event listener for repair request-related events
@@ -21,7 +22,7 @@ export class RequestListener {
    * - Send appropriate notifications to client and/or repairer
    * - Update statistics based on status changes
    */
-  @OnEvent(EventNames.REQUEST_STATUS_CHANGED)
+  @OnEvent(EventNames.REQUEST_STATUS_CHANGED, { async: true })
   async handleRequestStatusChanged(event: RequestStatusChangedEvent): Promise<void> {
     this.logger.log(event.toLogString());
 
@@ -62,7 +63,7 @@ export class RequestListener {
     // Notify client that request was accepted
     await this.notificationsService.create({
       userId: event.clientId,
-      type: 'request_accepted' as any,
+      type: NotificationType.REQUEST_ACCEPTED,
       title: 'Demande acceptee',
       body: `Votre demande ${event.requestNumber} a ete acceptee par le reparateur`,
       referenceType: 'request',
@@ -75,7 +76,7 @@ export class RequestListener {
     // Notify client that request was rejected
     await this.notificationsService.create({
       userId: event.clientId,
-      type: 'request_rejected' as any,
+      type: NotificationType.REQUEST_REJECTED,
       title: 'Demande refusee',
       body: `Votre demande ${event.requestNumber} a ete refusee${event.comment ? `: ${event.comment}` : ''}`,
       referenceType: 'request',
@@ -92,11 +93,11 @@ export class RequestListener {
 
     if (event.changedBy === event.clientId && event.repairerId) {
       // Client cancelled - notify repairer
-      const repairerProfile = await this.repairersService.findById(event.repairerId);
+      const repairerProfile = await this.repairersService.findByIdOrNull(event.repairerId);
       if (repairerProfile) {
         await this.notificationsService.create({
           userId: repairerProfile.userId,
-          type: 'request_cancelled' as any,
+          type: NotificationType.REQUEST_CANCELLED,
           title: 'Demande annulee',
           body: `La demande ${event.requestNumber} a ete annulee par le client`,
           referenceType: 'request',
@@ -107,7 +108,7 @@ export class RequestListener {
       // Repairer cancelled - notify client
       await this.notificationsService.create({
         userId: event.clientId,
-        type: 'request_cancelled' as any,
+        type: NotificationType.REQUEST_CANCELLED,
         title: 'Demande annulee',
         body: `La demande ${event.requestNumber} a ete annulee`,
         referenceType: 'request',
@@ -121,7 +122,7 @@ export class RequestListener {
     // Notify client that repair has started
     await this.notificationsService.create({
       userId: event.clientId,
-      type: 'repair_started' as any,
+      type: NotificationType.REPAIR_STARTED,
       title: 'Reparation en cours',
       body: `La reparation de votre appareil (${event.requestNumber}) a commence`,
       referenceType: 'request',
@@ -134,7 +135,7 @@ export class RequestListener {
     // Notify client that the device has been delivered
     await this.notificationsService.create({
       userId: event.clientId,
-      type: 'request_delivered' as any,
+      type: NotificationType.REQUEST_DELIVERED,
       title: 'Appareil livre',
       body: `Votre appareil (${event.requestNumber}) a ete livre. N'oubliez pas de laisser un avis!`,
       referenceType: 'request',
@@ -146,7 +147,7 @@ export class RequestListener {
   private async handleRequestDisputed(event: RequestStatusChangedEvent): Promise<void> {
     // Notify repairer about the dispute
     if (event.repairerId) {
-      const repairerProfile = await this.repairersService.findById(event.repairerId);
+      const repairerProfile = await this.repairersService.findByIdOrNull(event.repairerId);
       if (repairerProfile) {
         await this.notificationsService.notifyDisputeOpened(
           repairerProfile.userId,
@@ -161,7 +162,7 @@ export class RequestListener {
     // Notify client that repair is waiting for parts
     await this.notificationsService.create({
       userId: event.clientId,
-      type: 'awaiting_parts' as any,
+      type: NotificationType.AWAITING_PARTS,
       title: 'En attente de pieces',
       body: `La reparation de votre appareil (${event.requestNumber}) est en attente de pieces`,
       referenceType: 'request',

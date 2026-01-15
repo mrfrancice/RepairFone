@@ -55,8 +55,8 @@ export type LoadingSize = 'sm' | 'md' | 'lg';
     }
 
     .spinner {
-      border: 3px solid #e5e7eb;
-      border-top-color: #2563eb;
+      border: 3px solid var(--color-neutral-200, #EEEEEE);
+      border-top-color: var(--color-primary-500, #FF9800);
       border-radius: 50%;
       animation: spin 0.75s linear infinite;
     }
@@ -83,7 +83,7 @@ export type LoadingSize = 'sm' | 'md' | 'lg';
     }
 
     .loading-text {
-      color: #6b7280;
+      color: var(--color-text-secondary, rgba(0, 0, 0, 0.60));
       font-size: 0.875rem;
       margin: 0;
     }

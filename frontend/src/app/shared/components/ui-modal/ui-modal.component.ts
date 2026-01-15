@@ -80,8 +80,8 @@ import { A11yModule, FocusTrap, FocusTrapFactory } from '@angular/cdk/a11y';
     }
 
     .modal {
-      background: white;
-      border-radius: 12px;
+      background: var(--color-surface, white);
+      border-radius: var(--border-radius-lg, 12px);
       width: 100%;
       max-height: 90vh;
       display: flex;
@@ -110,28 +110,41 @@ import { A11yModule, FocusTrap, FocusTrapFactory } from '@angular/cdk/a11y';
       align-items: center;
       justify-content: space-between;
       padding: 1rem 1.25rem;
-      border-bottom: 1px solid #e5e7eb;
+      border-bottom: 1px solid var(--color-neutral-200, #EEEEEE);
     }
 
     .modal-title {
       font-size: 1.125rem;
       font-weight: 600;
-      color: #1f2937;
+      color: var(--color-text-primary, rgba(0, 0, 0, 0.87));
       margin: 0;
     }
 
     .modal-close {
+      display: flex;
+      align-items: center;
+      justify-content: center;
       background: none;
       border: none;
       font-size: 1.25rem;
-      color: #6b7280;
+      color: var(--color-text-secondary, rgba(0, 0, 0, 0.60));
       cursor: pointer;
-      padding: 0.25rem;
-      transition: color 0.2s;
+      min-width: 44px;
+      min-height: 44px;
+      padding: 0.5rem;
+      margin: -0.5rem -0.5rem -0.5rem 0;
+      border-radius: var(--border-radius-md, 8px);
+      transition: color 0.2s, background 0.2s;
     }
 
     .modal-close:hover {
-      color: #1f2937;
+      color: var(--color-text-primary, rgba(0, 0, 0, 0.87));
+      background: var(--color-neutral-100, #f3f4f6);
+    }
+
+    .modal-close:focus-visible {
+      outline: 2px solid var(--color-primary, #FF9800);
+      outline-offset: 2px;
     }
 
     .modal-body {
@@ -142,7 +155,7 @@ import { A11yModule, FocusTrap, FocusTrapFactory } from '@angular/cdk/a11y';
 
     .modal-footer {
       padding: 1rem 1.25rem;
-      border-top: 1px solid #e5e7eb;
+      border-top: 1px solid var(--color-neutral-200, #EEEEEE);
       display: flex;
       justify-content: flex-end;
       gap: 0.75rem;

@@ -1,4 +1,4 @@
-import { Component, inject, signal, computed, OnInit } from '@angular/core';
+import { Component, inject, signal, computed, OnInit, ChangeDetectionStrategy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router, ActivatedRoute } from '@angular/router';
 import { SearchService, Repairer } from '../../services/search.service';
@@ -22,6 +22,7 @@ interface CompareRepairer extends Repairer {
 @Component({
   selector: 'app-compare-repairers',
   standalone: true,
+  changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [CommonModule, UiButtonComponent, UiLoadingComponent],
   template: `
     <div class="compare-container">

@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException, BadRequestException, ForbiddenException } from '@nestjs/common';
+import { Injectable, NotFoundException, BadRequestException, ForbiddenException, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, FindOptionsWhere, DataSource } from 'typeorm';
 import { EventEmitter2 } from '@nestjs/event-emitter';
@@ -6,13 +6,15 @@ import { Quote, QuoteStatus, QuotePart } from './entities/quote.entity';
 import { RepairRequest, RequestStatus } from '../requests/entities/repair-request.entity';
 import { RepairerProfile } from '../users/entities/repairer-profile.entity';
 import { CreateQuoteDto, UpdateQuoteDto, QuoteFilters } from './dto';
-import { QuoteAcceptedEvent, EventNames } from '../../common/events';
+import { QuoteAcceptedEvent, QuoteCreatedEvent, EventNames } from '../../common/events';
 
 // Re-export DTOs for backward compatibility
 export { CreateQuotePartDto, CreateQuoteDto, UpdateQuoteDto, QuoteFilters } from './dto';
 
 @Injectable()
 export class QuotesService {
+  private readonly logger = new Logger(QuotesService.name);
+
   constructor(
     @InjectRepository(Quote)
     private readonly quoteRepo: Repository<Quote>,
@@ -25,13 +27,16 @@ export class QuotesService {
   ) {}
 
   async createQuote(repairerId: string, dto: CreateQuoteDto): Promise<Quote> {
+    this.logger.log(`Creating quote for request ${dto.requestId} by repairer ${repairerId}`);
+
     const request = await this.requestRepo.findOne({
       where: { id: dto.requestId },
       relations: ['repairer'],
     });
 
     if (!request) {
-      throw new NotFoundException('Demande non trouvée');
+      this.logger.warn(`Quote creation failed: request ${dto.requestId} not found`);
+      throw new NotFoundException('Demande non trouvee');
     }
 
     // Check if repairer profile exists
@@ -41,6 +46,12 @@ export class QuotesService {
 
     if (!repairerProfile) {
       throw new ForbiddenException('Profil réparateur non trouvé');
+    }
+
+    // BIZ-109: Vérifier que le réparateur peut créer un devis sur cette request
+    // Il peut créer un devis si: pas de réparateur assigné OU c'est lui qui est assigné
+    if (request.repairerId && request.repairerId !== repairerProfile.id) {
+      throw new ForbiddenException('Un autre réparateur est déjà assigné à cette demande');
     }
 
     // Check if an active quote already exists (pending or accepted)
@@ -82,12 +93,26 @@ export class QuotesService {
     });
 
     const savedQuote = await this.quoteRepo.save(quote);
+    this.logger.log(`Quote created: ${savedQuote.id} for ${totalAmount} XOF`);
 
     // Update estimated price only - do NOT auto-accept the request
     // The request should be accepted separately via acceptQuote method
     await this.requestRepo.update(dto.requestId, {
       estimatedPrice: totalAmount,
     });
+
+    // BIZ-108: Émettre événement de création de devis
+    const quoteCreatedEvent = new QuoteCreatedEvent(
+      savedQuote.id,
+      dto.requestId,
+      request.clientId,
+      repairerProfile.id,
+      totalAmount,
+      dto.laborCost,
+      partsCost,
+      dto.estimatedDuration,
+    );
+    this.eventEmitter.emit(EventNames.QUOTE_CREATED, quoteCreatedEvent);
 
     return this.findOne(savedQuote.id);
   }
@@ -183,29 +208,45 @@ export class QuotesService {
    * This method uses pessimistic_write lock to ensure that only one user
    * can accept a quote at a time, preventing race conditions when multiple
    * users try to accept the same quote simultaneously.
+   *
+   * IMPORTANT: PostgreSQL does not allow FOR UPDATE on LEFT JOINs that may return NULL.
+   * Therefore, we use INNER JOIN for required relations and load optional relations separately.
    */
   async acceptQuote(id: string, clientId: string): Promise<Quote> {
+    this.logger.log(`Quote acceptance initiated: ${id} by client ${clientId}`);
+
     const queryRunner = this.dataSource.createQueryRunner();
     await queryRunner.connect();
     await queryRunner.startTransaction();
 
     try {
-      // BIZ-011: Use pessimistic lock to prevent race conditions
-      // This acquires a row-level exclusive lock on the quote
+      // BIZ-011: Use pessimistic lock with INNER JOINs only (required relations)
+      // PostgreSQL error: "FOR UPDATE cannot be applied to the nullable side of an outer join"
+      // Solution: Use innerJoinAndSelect for required relations only
       const quote = await queryRunner.manager
         .createQueryBuilder(Quote, 'quote')
         .setLock('pessimistic_write')
-        .leftJoinAndSelect('quote.request', 'request')
-        .leftJoinAndSelect('request.client', 'client')
-        .leftJoinAndSelect('request.device', 'device')
-        .leftJoinAndSelect('request.serviceType', 'serviceType')
-        .leftJoinAndSelect('quote.repairer', 'repairer')
-        .leftJoinAndSelect('repairer.user', 'repairerUser')
+        .innerJoinAndSelect('quote.request', 'request')
+        .innerJoinAndSelect('request.client', 'client')
+        .innerJoinAndSelect('quote.repairer', 'repairer')
+        .innerJoinAndSelect('repairer.user', 'repairerUser')
         .where('quote.id = :id', { id })
         .getOne();
 
       if (!quote) {
         throw new NotFoundException('Devis non trouve');
+      }
+
+      // Load optional relations separately (device and serviceType can be NULL)
+      if (quote.request) {
+        const requestWithOptional = await queryRunner.manager.findOne(RepairRequest, {
+          where: { id: quote.request.id },
+          relations: ['device', 'serviceType'],
+        });
+        if (requestWithOptional) {
+          quote.request.device = requestWithOptional.device;
+          quote.request.serviceType = requestWithOptional.serviceType;
+        }
       }
 
       if (quote.request.clientId !== clientId) {
@@ -235,20 +276,31 @@ export class QuotesService {
         throw new NotFoundException('Demande associee non trouvee');
       }
 
-      // Check if request already has an accepted quote
-      if (request.status === RequestStatus.ACCEPTED || request.status === RequestStatus.IN_PROGRESS) {
-        throw new BadRequestException('Cette demande a deja un devis accepte');
+      // BIZ-106: Protection contre double acceptation de quotes
+      // Si la request est déjà ACCEPTED avec un réparateur différent, refuser
+      if (request.status === RequestStatus.ACCEPTED &&
+          request.repairerId &&
+          request.repairerId !== quote.repairerId) {
+        throw new BadRequestException('Cette demande a déjà un réparateur assigné');
+      }
+
+      // Check if request already has an accepted quote (only block if already IN_PROGRESS or beyond)
+      if (request.status === RequestStatus.IN_PROGRESS ||
+          request.status === RequestStatus.COMPLETED ||
+          request.status === RequestStatus.DELIVERED) {
+        throw new BadRequestException('Cette demande a deja un devis accepte et est en cours de traitement');
       }
 
       quote.status = QuoteStatus.ACCEPTED;
       quote.acceptedAt = new Date();
       await queryRunner.manager.save(Quote, quote);
 
-      // Update request status to ACCEPTED and set final price
+      // Update request status to ACCEPTED, set final price and assign repairer
       await queryRunner.manager.update(RepairRequest, quote.requestId, {
         status: RequestStatus.ACCEPTED,
         acceptedAt: new Date(),
         finalPrice: quote.totalAmount,
+        repairerId: quote.repairerId,
       });
 
       // Reject any other pending quotes for this request
@@ -266,6 +318,7 @@ export class QuotesService {
         .execute();
 
       await queryRunner.commitTransaction();
+      this.logger.log(`Quote ${id} accepted successfully for ${quote.totalAmount} XOF`);
 
       // Emit quote accepted event
       const quoteAcceptedEvent = new QuoteAcceptedEvent(
@@ -282,8 +335,20 @@ export class QuotesService {
 
       return this.findOne(id);
     } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      const errorStack = error instanceof Error ? error.stack : undefined;
+      this.logger.error(`Quote acceptance failed for ${id}: ${errorMessage}`);
+      if (errorStack) {
+        this.logger.error(`Stack trace: ${errorStack}`);
+      }
       await queryRunner.rollbackTransaction();
-      throw error;
+      // Re-throw known exceptions, wrap unknown ones
+      if (error instanceof NotFoundException ||
+          error instanceof ForbiddenException ||
+          error instanceof BadRequestException) {
+        throw error;
+      }
+      throw new BadRequestException(`Erreur lors de l'acceptation du devis: ${errorMessage}`);
     } finally {
       await queryRunner.release();
     }
@@ -445,10 +510,19 @@ export class QuotesService {
     quote.rejectionReason = reason || 'Négociation annulée';
     await this.quoteRepo.save(quote);
 
-    // Reset request status to pending so it can be reassigned
-    await this.requestRepo.update(quote.requestId, {
-      status: RequestStatus.PENDING,
-    });
+    // BIZ-107: Reset complet de la request lors d'annulation de négociation
+    // Utiliser QueryBuilder pour pouvoir assigner NULL explicitement
+    await this.requestRepo
+      .createQueryBuilder()
+      .update(RepairRequest)
+      .set({
+        status: RequestStatus.PENDING,
+        repairerId: () => 'NULL',
+        acceptedAt: () => 'NULL',
+        finalPrice: () => 'NULL',
+      })
+      .where('id = :id', { id: quote.requestId })
+      .execute();
 
     return this.findOne(quoteId);
   }

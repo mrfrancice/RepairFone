@@ -1,5 +1,6 @@
 import { Routes } from '@angular/router';
 import { authGuard, adminGuard, noAdminGuard, clientOnlyGuard } from './core/guards/auth.guard';
+import { onboardingGuard } from './features/onboarding/guards/onboarding.guard';
 
 export const routes: Routes = [
   {
@@ -10,7 +11,7 @@ export const routes: Routes = [
   {
     path: 'onboarding',
     loadChildren: () => import('./features/onboarding/onboarding.routes').then((m) => m.ONBOARDING_ROUTES),
-    canActivate: [noAdminGuard],
+    canActivate: [noAdminGuard, onboardingGuard],
   },
   {
     path: 'home',

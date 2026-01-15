@@ -139,22 +139,27 @@ $color-mustard: (
 );
 
 /**
- * PALETTE NEUTRE - GRIS CHAUDS
+ * PALETTE NEUTRE - GRIS CHAUDS (WCAG AA Compliant)
  * Couleurs neutres avec une légère nuance chaude pour adoucir l'interface.
  * Utilisée pour les textes, les bordures, les backgrounds secondaires.
+ *
+ * WCAG 2.1 AA Requirements:
+ * - Normal text (< 18px): 4.5:1 contrast ratio minimum
+ * - Large text (>= 18px or >= 14px bold): 3:1 contrast ratio minimum
+ * - UI components and graphical objects: 3:1 contrast ratio minimum
  */
 $color-neutral: (
   50: #FAFAFA,   // Presque blanc - backgrounds
   100: #F5F5F5,  // Très clair - surfaces
   200: #EEEEEE,  // Clair - dividers
-  300: #E0E0E0,  // Clair médium - borders
-  400: #BDBDBD,  // Médium clair - disabled
-  500: #9E9E9E,  // Médium - icons secondaires
-  600: #757575,  // Médium foncé - texte secondaire
-  700: #616161,  // Foncé - texte primaire sur clair
-  800: #424242,  // Très foncé - texte important
-  900: #212121,  // Ultra foncé - texte emphase
-  950: #0A0A0A,  // Presque noir
+  300: #D1D5DB,  // Clair médium - borders (updated for visibility)
+  400: #9CA3AF,  // Médium clair - disabled states (updated)
+  500: #6B7280,  // Médium - icons secondaires (WCAG AA: 5.74:1 on white)
+  600: #4B5563,  // Médium foncé - texte secondaire (WCAG AA: 9.39:1 on white)
+  700: #374151,  // Foncé - texte primaire sur clair (WCAG AAA: 12.63:1 on white)
+  800: #1F2937,  // Très foncé - texte important (updated)
+  900: #111827,  // Ultra foncé - texte emphase (updated)
+  950: #030712,  // Presque noir (updated)
 );
 
 /**

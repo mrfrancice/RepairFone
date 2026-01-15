@@ -12,6 +12,7 @@ import { UiStepperComponent } from '../../../../shared/components/ui-stepper/ui-
 @Component({
   selector: 'app-new-review',
   standalone: true,
+  changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
     CommonModule,
     FormsModule,

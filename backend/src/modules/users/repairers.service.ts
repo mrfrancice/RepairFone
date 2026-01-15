@@ -5,6 +5,43 @@ import { IsOptional, IsNumber, IsString, IsBoolean } from 'class-validator';
 import { Type } from 'class-transformer';
 import { RepairerProfile, VerificationStatus } from './entities/repairer-profile.entity';
 
+/**
+ * CODE-010: Typed interface for repairer search results
+ */
+export interface RepairerSearchResultItem {
+  id: string;
+  firstName?: string;
+  lastName?: string;
+  phone: string;
+  avatarUrl?: string;
+  distance?: number;
+  repairerProfile: {
+    id: string;
+    businessName?: string;
+    description?: string;
+    address?: string;
+    latitude?: number;
+    longitude?: number;
+    rating: number;
+    reviewCount: number;
+    isAvailable: boolean;
+    specialties: string[];
+    isVerified: boolean;
+    responseTime: number;
+    completedRepairs: number;
+    yearsOfExperience: number;
+    acceptanceRate: number;
+    serviceRadius: number;
+  };
+}
+
+export interface RepairerSearchResponse {
+  data: RepairerSearchResultItem[];
+  total: number;
+  page: number;
+  limit: number;
+}
+
 export class SearchRepairersParams {
   @IsOptional()
   @Type(() => Number)
@@ -91,12 +128,7 @@ export class RepairersService {
     });
   }
 
-  async search(params: SearchRepairersParams): Promise<{
-    data: any[];
-    total: number;
-    page: number;
-    limit: number;
-  }> {
+  async search(params: SearchRepairersParams): Promise<RepairerSearchResponse> {
     const {
       latitude,
       longitude,

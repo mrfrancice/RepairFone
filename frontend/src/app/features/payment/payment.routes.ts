@@ -10,11 +10,16 @@ export const PAYMENT_ROUTES: Routes = [
     canActivate: [authGuard],
   },
   {
-    path: 'new',
+    path: 'summary',
     loadComponent: () =>
       import('./components/payment-summary/payment-summary.component').then((m) => m.PaymentSummaryComponent),
     title: 'Paiement - RepairFone',
     canActivate: [authGuard],
+  },
+  {
+    path: 'new',
+    redirectTo: 'summary',
+    pathMatch: 'full',
   },
   {
     path: ':id',

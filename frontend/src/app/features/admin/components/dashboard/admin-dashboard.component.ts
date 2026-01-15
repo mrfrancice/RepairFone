@@ -1,15 +1,17 @@
-import { Component, inject, signal, OnInit } from '@angular/core';
+import { Component, inject, signal, OnInit, ChangeDetectionStrategy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router, RouterLink } from '@angular/router';
 import { AdminService, DashboardSummary, VerificationStats } from '../../services/admin.service';
 import { AuthStore } from '../../../../core/stores/auth.store';
 import { NotificationBellComponent } from '../../../../shared/components/notification-bell/notification-bell.component';
 import { HeaderSearchComponent } from '../../../../shared/components/header-search/header-search.component';
+import { UiSkeletonComponent } from '../../../../shared/components/ui-skeleton/ui-skeleton.component';
 
 @Component({
   selector: 'app-admin-dashboard',
   standalone: true,
-  imports: [CommonModule, RouterLink, NotificationBellComponent, HeaderSearchComponent],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  imports: [CommonModule, RouterLink, NotificationBellComponent, HeaderSearchComponent, UiSkeletonComponent],
   template: `
     <div class="admin-page">
       <!-- Header like home -->
@@ -57,9 +59,62 @@ import { HeaderSearchComponent } from '../../../../shared/components/header-sear
 
       <div class="page-content">
         @if (isLoading()) {
-          <div class="loading-state">
-            <div class="spinner"></div>
-            <p>Chargement du tableau de bord...</p>
+          <!-- Skeleton Loading State -->
+          <div class="skeleton-dashboard">
+            <!-- Stats Grid Skeleton -->
+            <section class="stats-section">
+              <div class="section-title-skeleton">
+                <ui-skeleton variant="circle" width="20px" height="20px" animation="shimmer" />
+                <ui-skeleton variant="text" width="120px" height="16px" animation="shimmer" />
+              </div>
+              <ui-skeleton
+                variant="dashboard-card"
+                [count]="4"
+                animation="shimmer"
+                ariaLabel="Chargement des statistiques"
+              />
+            </section>
+
+            <!-- Actions Grid Skeleton -->
+            <section class="actions-section">
+              <div class="section-title-skeleton">
+                <ui-skeleton variant="circle" width="20px" height="20px" animation="shimmer" />
+                <ui-skeleton variant="text" width="100px" height="16px" animation="shimmer" />
+              </div>
+              <div class="actions-skeleton-grid">
+                <ui-skeleton variant="card" width="100%" height="180px" animation="shimmer" />
+                <ui-skeleton variant="card" width="100%" height="180px" animation="shimmer" />
+                <ui-skeleton variant="card" width="100%" height="180px" animation="shimmer" />
+              </div>
+            </section>
+
+            <!-- Details Grid Skeleton -->
+            <div class="details-grid">
+              <div class="detail-card">
+                <div class="detail-title-skeleton">
+                  <ui-skeleton variant="circle" width="18px" height="18px" animation="shimmer" />
+                  <ui-skeleton variant="text" width="140px" height="14px" animation="shimmer" />
+                </div>
+                <div class="stat-bars-skeleton">
+                  <ui-skeleton variant="rectangle" width="100%" height="40px" animation="shimmer" />
+                  <ui-skeleton variant="rectangle" width="100%" height="40px" animation="shimmer" />
+                  <ui-skeleton variant="rectangle" width="100%" height="40px" animation="shimmer" />
+                </div>
+              </div>
+              <div class="detail-card">
+                <div class="detail-title-skeleton">
+                  <ui-skeleton variant="circle" width="18px" height="18px" animation="shimmer" />
+                  <ui-skeleton variant="text" width="120px" height="14px" animation="shimmer" />
+                </div>
+                <div class="status-list-skeleton">
+                  <ui-skeleton variant="rectangle" width="100%" height="36px" animation="shimmer" />
+                  <ui-skeleton variant="rectangle" width="100%" height="36px" animation="shimmer" />
+                  <ui-skeleton variant="rectangle" width="100%" height="36px" animation="shimmer" />
+                  <ui-skeleton variant="rectangle" width="100%" height="36px" animation="shimmer" />
+                  <ui-skeleton variant="rectangle" width="100%" height="36px" animation="shimmer" />
+                </div>
+              </div>
+            </div>
           </div>
         } @else if (error()) {
           <div class="error-state">
@@ -907,6 +962,48 @@ import { HeaderSearchComponent } from '../../../../shared/components/header-sear
     .btn-primary:hover {
       transform: translateY(-2px);
       box-shadow: 0 6px 20px rgba(255, 107, 53, 0.4);
+    }
+
+    /* Skeleton Styles */
+    .skeleton-dashboard {
+      display: flex;
+      flex-direction: column;
+      gap: 2rem;
+    }
+
+    .section-title-skeleton {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      margin-bottom: 1rem;
+    }
+
+    .actions-skeleton-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 1rem;
+    }
+
+    @media (min-width: 768px) {
+      .actions-skeleton-grid {
+        grid-template-columns: repeat(3, 1fr);
+      }
+    }
+
+    .detail-title-skeleton {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      margin-bottom: 1.25rem;
+      padding-bottom: 0.75rem;
+      border-bottom: 1px solid #f3f4f6;
+    }
+
+    .stat-bars-skeleton,
+    .status-list-skeleton {
+      display: flex;
+      flex-direction: column;
+      gap: 0.75rem;
     }
   `],
 })

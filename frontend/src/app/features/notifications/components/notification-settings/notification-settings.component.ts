@@ -13,6 +13,7 @@ interface NotificationCategory {
 @Component({
   selector: 'app-notification-settings',
   standalone: true,
+  changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [CommonModule, RouterLink, UiLoadingComponent],
   template: `
     <div class="notification-settings">

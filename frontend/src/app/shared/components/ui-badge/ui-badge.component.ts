@@ -23,7 +23,7 @@ export type BadgeSize = 'sm' | 'md';
       align-items: center;
       gap: 0.375rem;
       font-weight: 500;
-      border-radius: 9999px;
+      border-radius: var(--border-radius-full, 9999px);
     }
 
     .badge-sm {
@@ -44,33 +44,33 @@ export type BadgeSize = 'sm' | 'md';
     }
 
     .badge-default {
-      background: #f3f4f6;
-      color: #4b5563;
+      background: var(--color-neutral-100, #F5F5F5);
+      color: var(--color-neutral-700, #616161);
     }
 
     .badge-primary {
-      background: #eff6ff;
-      color: #2563eb;
+      background: var(--color-primary-50, #FFF3E0);
+      color: var(--color-primary-700, #F57C00);
     }
 
     .badge-success {
-      background: #f0fdf4;
-      color: #16a34a;
+      background: var(--color-secondary-50, #E8F5E9);
+      color: var(--color-success-dark, #2E7D32);
     }
 
     .badge-warning {
-      background: #fffbeb;
-      color: #d97706;
+      background: var(--color-gold-50, #FFFDE7);
+      color: var(--color-warning-dark, #F57C00);
     }
 
     .badge-danger {
-      background: #fef2f2;
-      color: #dc2626;
+      background: var(--color-primary-50, #FFF3E0);
+      color: var(--color-error, #F44336);
     }
 
     .badge-info {
-      background: #f0f9ff;
-      color: #0284c7;
+      background: var(--color-ocean-50, #E3F2FD);
+      color: var(--color-info-dark, #1565C0);
     }
   `]
 })

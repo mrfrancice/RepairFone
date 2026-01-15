@@ -17,6 +17,41 @@ export enum VerificationStatus {
   SUSPENDED = 'suspended',
 }
 
+/**
+ * Certification record for a repairer
+ */
+export interface Certification {
+  name: string;
+  issuer?: string;
+  dateObtained?: string;
+  expiryDate?: string;
+  documentUrl?: string;
+}
+
+/**
+ * Working hours for a specific day
+ */
+export interface DayWorkingHours {
+  isOpen: boolean;
+  openTime?: string;  // Format: "HH:mm"
+  closeTime?: string; // Format: "HH:mm"
+  breakStart?: string;
+  breakEnd?: string;
+}
+
+/**
+ * Weekly working hours schedule
+ */
+export interface WorkingHoursSchedule {
+  monday?: DayWorkingHours;
+  tuesday?: DayWorkingHours;
+  wednesday?: DayWorkingHours;
+  thursday?: DayWorkingHours;
+  friday?: DayWorkingHours;
+  saturday?: DayWorkingHours;
+  sunday?: DayWorkingHours;
+}
+
 @Entity('repairer_profiles')
 export class RepairerProfile extends BaseEntity {
   @OneToOne(() => User, (user) => user.repairerProfile, { onDelete: 'CASCADE' })
@@ -125,11 +160,11 @@ export class RepairerProfile extends BaseEntity {
   businessVerified: boolean;
 
   @Column({ type: 'jsonb', default: [] })
-  certifications: any[];
+  certifications: Certification[];
 
   // ===== WORKING HOURS & AVAILABILITY =====
   @Column({ name: 'working_hours', type: 'jsonb', default: {} })
-  workingHours: Record<string, any>;
+  workingHours: WorkingHoursSchedule;
 
   @Column({ name: 'accepts_home_service', default: false })
   acceptsHomeService: boolean;

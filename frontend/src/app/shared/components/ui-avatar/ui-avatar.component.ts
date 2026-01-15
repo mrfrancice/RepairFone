@@ -27,7 +27,7 @@ export type AvatarSize = 'xs' | 'sm' | 'md' | 'lg' | 'xl';
       align-items: center;
       justify-content: center;
       border-radius: 50%;
-      background: linear-gradient(135deg, #2563eb 0%, #1e40af 100%);
+      background: linear-gradient(135deg, var(--color-primary-500, #FF9800) 0%, var(--color-primary-700, #F57C00) 100%);
       color: white;
       font-weight: 600;
       flex-shrink: 0;
@@ -79,12 +79,12 @@ export type AvatarSize = 'xs' | 'sm' | 'md' | 'lg' | 'xl';
       min-width: 8px;
       min-height: 8px;
       border-radius: 50%;
-      background: #dc2626;
-      border: 2px solid white;
+      background: var(--color-error, #F44336);
+      border: 2px solid var(--color-surface, white);
     }
 
     .online .status-dot {
-      background: #16a34a;
+      background: var(--color-success, #4CAF50);
     }
   `]
 })

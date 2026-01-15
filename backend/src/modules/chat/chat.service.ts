@@ -1,6 +1,6 @@
 import { Injectable, NotFoundException, ForbiddenException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository, FindOptionsWhere, LessThan } from 'typeorm';
+import { Repository, FindOptionsWhere, LessThan, IsNull } from 'typeorm';
 import { Conversation } from './entities/conversation.entity';
 import { Message, SenderType, MessageAttachment } from './entities/message.entity';
 import { RepairRequest } from '../requests/entities/repair-request.entity';
@@ -192,7 +192,7 @@ export class ChatService {
       {
         conversationId: conversation.id,
         senderType,
-        readAt: undefined as any,
+        readAt: IsNull(),
       },
       { readAt: new Date() },
     );

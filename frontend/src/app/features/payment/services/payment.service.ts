@@ -29,6 +29,12 @@ export interface Payment {
     device?: { brand: string; model: string };
     serviceType?: { name: string };
   };
+  client?: {
+    id: string;
+    firstName?: string;
+    lastName?: string;
+    phone?: string;
+  };
   repairer?: {
     id: string;
     firstName?: string;

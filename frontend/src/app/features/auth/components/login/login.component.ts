@@ -1,17 +1,19 @@
-import { Component, inject, signal, OnInit } from '@angular/core';
+import { Component, inject, signal, OnInit, OnDestroy, ChangeDetectionStrategy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { Router, RouterLink, ActivatedRoute } from '@angular/router';
+import { Subject, takeUntil } from 'rxjs';
 import { AuthService } from '../../services/auth.service';
 import { AuthStore } from '../../../../core/stores/auth.store';
 import { SecureStorageService, StorageKeys } from '../../../../core/services/secure-storage.service';
 import { CustomValidators, getErrorMessage } from '../../../../shared/validators/custom-validators';
-import { UiInputComponent } from '@app/shared';
+import { UiInputComponent, UiButtonComponent, UiAlertComponent, UiCheckboxComponent } from '@app/shared';
 
 @Component({
   selector: 'app-login',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, RouterLink, UiInputComponent],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  imports: [CommonModule, ReactiveFormsModule, RouterLink, UiInputComponent, UiButtonComponent, UiAlertComponent, UiCheckboxComponent],
   template: `
     <div class="auth-container">
       <div class="auth-card">
@@ -24,21 +26,20 @@ import { UiInputComponent } from '@app/shared';
         <p class="auth-subtitle">Accédez à votre espace</p>
 
         @if (error()) {
-          <div class="alert alert-error">
-            <span class="alert-icon">!</span>
+          <ui-alert type="error" [dismissible]="false">
             {{ error() }}
-          </div>
+          </ui-alert>
         }
 
         @if (successMessage()) {
-          <div class="alert alert-success">
-            <span class="alert-icon">OK</span>
+          <ui-alert type="success" [dismissible]="false">
             {{ successMessage() }}
-          </div>
+          </ui-alert>
         }
 
         <form [formGroup]="loginForm" (ngSubmit)="onSubmit()">
           <div class="form-group">
+            <label class="phone-label">Numéro de téléphone</label>
             <div class="phone-input-wrapper">
               <span class="country-code">+225</span>
               <ui-input
@@ -46,8 +47,8 @@ import { UiInputComponent } from '@app/shared';
                 formControlName="phone"
                 placeholder="07 XX XX XX XX"
                 [error]="isFieldInvalid('phone') ? getFieldError('phone') : undefined"
-                (ngModelChange)="onPhoneChange($event)"
                 class="phone-input"
+                aria-label="Numéro de téléphone"
               />
             </div>
           </div>
@@ -62,26 +63,24 @@ import { UiInputComponent } from '@app/shared';
           />
 
           <div class="form-options">
-            <label class="checkbox-label">
-              <input type="checkbox" formControlName="rememberMe" />
-              <span class="checkbox-custom"></span>
-              Se souvenir de moi
-            </label>
+            <ui-checkbox
+              formControlName="rememberMe"
+              label="Se souvenir de moi"
+              size="sm"
+            />
             <a routerLink="/auth/forgot-password" class="forgot-link">Mot de passe oublié ?</a>
           </div>
 
-          <button
+          <ui-button
             type="submit"
-            class="btn btn-primary btn-block"
-            [disabled]="isLoading() || loginForm.invalid"
+            variant="primary"
+            size="lg"
+            [block]="true"
+            [disabled]="loginForm.invalid"
+            [loading]="isLoading()"
           >
-            @if (isLoading()) {
-              <span class="spinner"></span>
-              Connexion...
-            } @else {
-              Continuer
-            }
-          </button>
+            {{ isLoading() ? 'Connexion...' : 'Continuer' }}
+          </ui-button>
         </form>
 
         <p class="auth-footer">
@@ -98,16 +97,16 @@ import { UiInputComponent } from '@app/shared';
       align-items: center;
       justify-content: center;
       padding: 1rem;
-      background: linear-gradient(135deg, #FF6B35 0%, #FF9800 100%);
+      background: linear-gradient(135deg, var(--color-primary-500, #FF9800) 0%, var(--color-primary-700, #F57C00) 100%);
     }
 
     .auth-card {
-      background: white;
-      border-radius: 20px;
+      background: var(--color-surface, white);
+      border-radius: var(--border-radius-xl, 20px);
       padding: 2.5rem 2rem;
       width: 100%;
       max-width: 420px;
-      box-shadow: 0 20px 60px rgba(255, 107, 53, 0.2);
+      box-shadow: var(--shadow-lg, 0 20px 60px rgba(0, 0, 0, 0.15));
     }
 
     .auth-logo {
@@ -118,9 +117,9 @@ import { UiInputComponent } from '@app/shared';
     .logo {
       display: inline-block;
       padding: 1rem 1.5rem;
-      background: linear-gradient(135deg, #FF6B35 0%, #FF9800 100%);
-      border-radius: 16px;
-      box-shadow: 0 8px 20px rgba(255, 107, 53, 0.3);
+      background: linear-gradient(135deg, var(--color-primary-500, #FF9800) 0%, var(--color-primary-700, #F57C00) 100%);
+      border-radius: var(--border-radius-lg, 16px);
+      box-shadow: var(--shadow-md, 0 8px 20px rgba(0, 0, 0, 0.15));
     }
 
     .logo-text {
@@ -133,13 +132,13 @@ import { UiInputComponent } from '@app/shared';
     .auth-title {
       font-size: 1.75rem;
       font-weight: 700;
-      color: #1f2937;
+      color: var(--color-text-primary, #1f2937);
       margin-bottom: 0.5rem;
       text-align: center;
     }
 
     .auth-subtitle {
-      color: #6b7280;
+      color: var(--color-text-secondary, #6b7280);
       text-align: center;
       margin-bottom: 2rem;
     }
@@ -157,11 +156,19 @@ import { UiInputComponent } from '@app/shared';
       left: 1rem;
       top: 50%;
       transform: translateY(-50%);
-      color: #6b7280;
+      color: var(--color-text-secondary, #6b7280);
       font-weight: 600;
       font-size: 0.9375rem;
       z-index: 1;
       pointer-events: none;
+    }
+
+    .phone-label {
+      display: block;
+      font-size: 0.875rem;
+      font-weight: 500;
+      color: var(--color-text-primary, #1f2937);
+      margin-bottom: 0.5rem;
     }
 
     .phone-input-wrapper ::ng-deep .input-field {
@@ -175,57 +182,18 @@ import { UiInputComponent } from '@app/shared';
       margin-bottom: 1.5rem;
     }
 
-    .checkbox-label {
-      display: flex;
-      align-items: center;
-      gap: 0.5rem;
-      cursor: pointer;
-      font-size: 0.875rem;
-      color: #4b5563;
-      position: relative;
-      padding-left: 1.75rem;
+    .form-options ::ng-deep ui-checkbox {
+      flex-shrink: 0;
     }
 
-    .checkbox-label input {
-      position: absolute;
-      opacity: 0;
-    }
-
-    .checkbox-custom {
-      position: absolute;
-      left: 0;
-      width: 18px;
-      height: 18px;
-      border: 2px solid #d1d5db;
-      border-radius: 4px;
-      transition: all 0.2s;
-    }
-
-    .checkbox-label input:checked ~ .checkbox-custom {
-      background: #4CAF50;
-      border-color: #4CAF50;
-    }
-
-    .checkbox-custom:after {
-      content: '';
-      position: absolute;
-      display: none;
-      left: 5px;
-      top: 1px;
-      width: 5px;
-      height: 10px;
-      border: solid white;
-      border-width: 0 2px 2px 0;
-      transform: rotate(45deg);
-    }
-
-    .checkbox-label input:checked ~ .checkbox-custom:after {
-      display: block;
+    .form-options ::ng-deep .checkbox-wrapper {
+      min-width: 32px;
+      min-height: 32px;
     }
 
     .forgot-link {
       font-size: 0.875rem;
-      color: #FF6B35;
+      color: var(--color-primary-500, #FF9800);
       text-decoration: none;
       font-weight: 500;
     }
@@ -234,116 +202,28 @@ import { UiInputComponent } from '@app/shared';
       text-decoration: underline;
     }
 
-    .btn {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 0.5rem;
-      padding: 0.875rem 1.5rem;
-      border-radius: 10px;
-      font-weight: 600;
-      font-size: 1rem;
-      border: none;
-      cursor: pointer;
-      transition: all 0.2s;
-    }
-
-    .btn-primary {
-      background: linear-gradient(135deg, #FF6B35 0%, #FF9800 100%);
-      color: white;
-      box-shadow: 0 4px 14px rgba(255, 107, 53, 0.4);
-    }
-
-    .btn-primary:hover:not(:disabled) {
-      transform: translateY(-2px);
-      box-shadow: 0 6px 20px rgba(255, 107, 53, 0.5);
-    }
-
-    .btn-primary:disabled {
-      opacity: 0.6;
-      cursor: not-allowed;
-      transform: none;
-    }
-
-    .btn-block {
-      width: 100%;
-    }
-
-    .spinner {
-      width: 18px;
-      height: 18px;
-      border: 2px solid rgba(255, 255, 255, 0.3);
-      border-top-color: white;
-      border-radius: 50%;
-      animation: spin 0.8s linear infinite;
-    }
-
-    @keyframes spin {
-      to { transform: rotate(360deg); }
-    }
-
-    .alert {
-      display: flex;
-      align-items: center;
-      gap: 0.75rem;
-      padding: 0.875rem 1rem;
-      border-radius: 10px;
-      margin-bottom: 1.25rem;
-    }
-
-    .alert-icon {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      width: 24px;
-      height: 24px;
-      border-radius: 50%;
-      font-size: 0.75rem;
-      flex-shrink: 0;
-    }
-
-    .alert-error {
-      background: #fef2f2;
-      color: #991b1b;
-      border: 1px solid #fecaca;
-    }
-
-    .alert-error .alert-icon {
-      background: #dc2626;
-      color: white;
-    }
-
-    .alert-success {
-      background: #f0fdf4;
-      color: #166534;
-      border: 2px solid #4CAF50;
-    }
-
-    .alert-success .alert-icon {
-      background: #4CAF50;
-      color: white;
-    }
+    /* Les styles de boutons et alertes sont gérés par les composants partagés */
 
     .auth-footer {
       text-align: center;
       margin-top: 1.5rem;
-      color: #6b7280;
+      color: var(--color-text-secondary, #6b7280);
       font-size: 0.9375rem;
     }
 
     .create-account-link {
       display: inline-block;
       margin-top: 0.5rem;
-      color: #FF6B35;
+      color: var(--color-primary-500, #FF9800);
       font-weight: 600;
       text-decoration: none;
       padding: 0.5rem 1rem;
-      border-radius: 8px;
+      border-radius: var(--border-radius-md, 8px);
       transition: all 0.2s;
     }
 
     .create-account-link:hover {
-      background: #fff5f0;
+      background: var(--color-primary-50, #FFF3E0);
     }
 
     @media (max-width: 480px) {
@@ -357,13 +237,14 @@ import { UiInputComponent } from '@app/shared';
     }
   `],
 })
-export class LoginComponent implements OnInit {
+export class LoginComponent implements OnInit, OnDestroy {
   private readonly authService = inject(AuthService);
   private readonly authStore = inject(AuthStore);
   private readonly router = inject(Router);
   private readonly route = inject(ActivatedRoute);
   private readonly fb = inject(FormBuilder);
   private readonly secureStorage = inject(SecureStorageService);
+  private readonly destroy$ = new Subject<void>();
 
   readonly isLoading = this.authStore.isLoading;
   readonly error = signal<string | null>(null);
@@ -382,6 +263,51 @@ export class LoginComponent implements OnInit {
     }
 
     await this.loadRememberedPhone();
+    this.setupPhoneFormatting();
+  }
+
+  ngOnDestroy(): void {
+    this.destroy$.next();
+    this.destroy$.complete();
+  }
+
+  private setupPhoneFormatting(): void {
+    this.loginForm.get('phone')?.valueChanges
+      .pipe(takeUntil(this.destroy$))
+      .subscribe(value => {
+        if (!value) return;
+        const formatted = this.formatPhoneNumber(value);
+        if (formatted !== value) {
+          this.loginForm.patchValue({ phone: formatted }, { emitEvent: false });
+        }
+      });
+  }
+
+  private formatPhoneNumber(value: string): string {
+    let cleanValue = value.replace(/\D/g, '');
+
+    if (cleanValue.startsWith('225')) {
+      cleanValue = cleanValue.slice(3);
+    }
+
+    let formatted = '';
+    if (cleanValue.length > 0) {
+      formatted = cleanValue.slice(0, 2);
+    }
+    if (cleanValue.length > 2) {
+      formatted += ' ' + cleanValue.slice(2, 4);
+    }
+    if (cleanValue.length > 4) {
+      formatted += ' ' + cleanValue.slice(4, 6);
+    }
+    if (cleanValue.length > 6) {
+      formatted += ' ' + cleanValue.slice(6, 8);
+    }
+    if (cleanValue.length > 8) {
+      formatted += ' ' + cleanValue.slice(8, 10);
+    }
+
+    return formatted;
   }
 
   private async loadRememberedPhone(): Promise<void> {
@@ -413,35 +339,6 @@ export class LoginComponent implements OnInit {
     return getErrorMessage(field) || '';
   }
 
-  onPhoneChange(value: string): void {
-    let cleanValue = value.replace(/\D/g, '');
-
-    if (cleanValue.startsWith('225')) {
-      cleanValue = cleanValue.slice(3);
-    }
-
-    let formatted = '';
-    if (cleanValue.length > 0) {
-      formatted = cleanValue.slice(0, 2);
-    }
-    if (cleanValue.length > 2) {
-      formatted += ' ' + cleanValue.slice(2, 4);
-    }
-    if (cleanValue.length > 4) {
-      formatted += ' ' + cleanValue.slice(4, 6);
-    }
-    if (cleanValue.length > 6) {
-      formatted += ' ' + cleanValue.slice(6, 8);
-    }
-    if (cleanValue.length > 8) {
-      formatted += ' ' + cleanValue.slice(8, 10);
-    }
-
-    if (formatted !== value) {
-      this.loginForm.patchValue({ phone: formatted }, { emitEvent: false });
-    }
-  }
-
   async onSubmit(): Promise<void> {
     if (this.loginForm.invalid) {
       this.loginForm.markAllAsTouched();
@@ -466,7 +363,8 @@ export class LoginComponent implements OnInit {
 
       const returnUrl = this.route.snapshot.queryParams['returnUrl'];
       if (returnUrl) {
-        this.router.navigate([returnUrl]);
+        // Use navigateByUrl to handle URLs with query params correctly
+        this.router.navigateByUrl(returnUrl);
       } else {
         const defaultUrl = this.authStore.getDefaultRedirectUrl();
         this.router.navigate([defaultUrl]);

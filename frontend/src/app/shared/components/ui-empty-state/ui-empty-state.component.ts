@@ -42,13 +42,13 @@ import { UiButtonComponent } from '../ui-button/ui-button.component';
     .empty-title {
       font-size: 1.25rem;
       font-weight: 600;
-      color: #1f2937;
+      color: var(--color-text-primary, rgba(0, 0, 0, 0.87));
       margin: 0 0 0.5rem;
     }
 
     .empty-description {
       font-size: 0.875rem;
-      color: #6b7280;
+      color: var(--color-text-secondary, rgba(0, 0, 0, 0.60));
       margin: 0 0 1.5rem;
       max-width: 280px;
     }

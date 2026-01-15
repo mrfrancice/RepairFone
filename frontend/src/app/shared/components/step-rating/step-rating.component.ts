@@ -1,4 +1,4 @@
-import { Component, Input, Output, EventEmitter, inject, signal, computed } from '@angular/core';
+import { Component, Input, Output, EventEmitter, inject, signal, computed, ChangeDetectionStrategy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import {
@@ -12,6 +12,7 @@ import {
 @Component({
   selector: 'app-step-rating',
   standalone: true,
+  changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [CommonModule, FormsModule],
   template: `
     <div class="step-rating-container">
@@ -108,7 +109,7 @@ import {
   `,
   styles: [`
     .step-rating-container {
-      background: white;
+      background: var(--color-surface, white);
       border-radius: 16px;
       padding: 1.5rem;
       max-width: 500px;
@@ -121,13 +122,13 @@ import {
       gap: 1rem;
       margin-bottom: 1.5rem;
       padding-bottom: 1rem;
-      border-bottom: 1px solid #e5e7eb;
+      border-bottom: 1px solid var(--color-neutral-200, #EEEEEE);
     }
 
     .rating-icon {
       width: 48px;
       height: 48px;
-      background: linear-gradient(135deg, #f97316, #ea580c);
+      background: linear-gradient(135deg, var(--color-primary-600, #FB8C00), var(--color-primary-800, #EF6C00));
       border-radius: 12px;
       display: flex;
       align-items: center;
@@ -142,33 +143,38 @@ import {
     .rating-info h3 {
       font-size: 1.125rem;
       font-weight: 600;
-      color: #1e293b;
+      color: var(--color-text-primary, rgba(0, 0, 0, 0.87));
       margin: 0;
     }
 
     .rating-info p {
       font-size: 0.875rem;
-      color: #64748b;
+      color: var(--color-text-secondary, rgba(0, 0, 0, 0.60));
       margin: 0.25rem 0 0;
     }
 
     .close-btn {
-      width: 36px;
-      height: 36px;
+      min-width: 44px;
+      min-height: 44px;
       border-radius: 50%;
       border: none;
-      background: #f1f5f9;
+      background: var(--color-neutral-100, #F5F5F5);
       cursor: pointer;
       display: flex;
       align-items: center;
       justify-content: center;
-      color: #64748b;
+      color: var(--color-text-secondary, rgba(0, 0, 0, 0.60));
       transition: all 0.2s;
     }
 
     .close-btn:hover {
-      background: #e2e8f0;
-      color: #1e293b;
+      background: var(--color-neutral-200, #EEEEEE);
+      color: var(--color-text-primary, rgba(0, 0, 0, 0.87));
+    }
+
+    .close-btn:focus-visible {
+      outline: 2px solid var(--color-primary, #FF9800);
+      outline-offset: 2px;
     }
 
     .rating-categories {
@@ -179,7 +185,7 @@ import {
     }
 
     .rating-category {
-      background: #f8fafc;
+      background: var(--color-neutral-50, #FAFAFA);
       border-radius: 12px;
       padding: 1rem;
     }
@@ -198,7 +204,7 @@ import {
     .category-label {
       flex: 1;
       font-weight: 500;
-      color: #1e293b;
+      color: var(--color-text-primary, rgba(0, 0, 0, 0.87));
     }
 
     .category-value {
@@ -222,11 +228,11 @@ import {
     }
 
     .slider-label.negative {
-      color: #ef4444;
+      color: var(--color-error, #F44336);
     }
 
     .slider-label.positive {
-      color: #10b981;
+      color: var(--color-success, #4CAF50);
     }
 
     .rating-slider {
@@ -235,7 +241,7 @@ import {
       appearance: none;
       height: 8px;
       border-radius: 4px;
-      background: linear-gradient(to right, #ef4444, #f59e0b 50%, #10b981);
+      background: linear-gradient(to right, var(--color-error, #F44336), var(--color-warning, #FFC107) 50%, var(--color-success, #4CAF50));
       outline: none;
       cursor: pointer;
     }
@@ -243,14 +249,16 @@ import {
     .rating-slider::-webkit-slider-thumb {
       -webkit-appearance: none;
       appearance: none;
-      width: 24px;
-      height: 24px;
+      width: 28px;
+      height: 28px;
       border-radius: 50%;
-      background: white;
-      border: 3px solid var(--slider-color, #f59e0b);
+      background: var(--color-surface, white);
+      border: 3px solid var(--slider-color, var(--color-warning, #FFC107));
       cursor: pointer;
       box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
       transition: transform 0.2s;
+      /* Touch target is larger than visual thumb */
+      box-sizing: content-box;
     }
 
     .rating-slider::-webkit-slider-thumb:hover {
@@ -258,13 +266,19 @@ import {
     }
 
     .rating-slider::-moz-range-thumb {
-      width: 24px;
-      height: 24px;
+      width: 28px;
+      height: 28px;
       border-radius: 50%;
-      background: white;
-      border: 3px solid var(--slider-color, #f59e0b);
+      background: var(--color-surface, white);
+      border: 3px solid var(--slider-color, var(--color-warning, #FFC107));
       cursor: pointer;
       box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+    }
+
+    /* Increase touch area for slider track */
+    .rating-slider {
+      padding: 8px 0;
+      margin: -8px 0;
     }
 
     .rating-labels {
@@ -274,7 +288,7 @@ import {
 
     .rating-label-text {
       font-size: 0.75rem;
-      color: #64748b;
+      color: var(--color-text-secondary, rgba(0, 0, 0, 0.60));
       font-weight: 500;
     }
 
@@ -286,14 +300,14 @@ import {
       display: block;
       font-size: 0.875rem;
       font-weight: 500;
-      color: #374151;
+      color: var(--color-neutral-800, #424242);
       margin-bottom: 0.5rem;
     }
 
     .comment-section textarea {
       width: 100%;
       padding: 0.75rem;
-      border: 1px solid #e5e7eb;
+      border: 1px solid var(--color-neutral-200, #EEEEEE);
       border-radius: 8px;
       font-size: 0.875rem;
       resize: vertical;
@@ -302,8 +316,8 @@ import {
 
     .comment-section textarea:focus {
       outline: none;
-      border-color: #f97316;
-      box-shadow: 0 0 0 3px rgba(249, 115, 22, 0.1);
+      border-color: var(--color-primary-600, #FB8C00);
+      box-shadow: 0 0 0 3px rgba(255, 152, 0, 0.1);
     }
 
     .rating-actions {
@@ -314,6 +328,7 @@ import {
     .btn {
       flex: 1;
       padding: 0.875rem 1.5rem;
+      min-height: 44px;
       border-radius: 10px;
       font-size: 0.9375rem;
       font-weight: 600;
@@ -330,25 +345,30 @@ import {
       cursor: not-allowed;
     }
 
+    .btn:focus-visible {
+      outline: 2px solid var(--color-primary, #FF9800);
+      outline-offset: 2px;
+    }
+
     .btn-secondary {
-      background: #f1f5f9;
+      background: var(--color-neutral-100, #F5F5F5);
       border: none;
-      color: #475569;
+      color: var(--color-neutral-600, #757575);
     }
 
     .btn-secondary:hover:not(:disabled) {
-      background: #e2e8f0;
+      background: var(--color-neutral-200, #EEEEEE);
     }
 
     .btn-primary {
-      background: linear-gradient(135deg, #f97316, #ea580c);
+      background: linear-gradient(135deg, var(--color-primary-600, #FB8C00), var(--color-primary-800, #EF6C00));
       border: none;
       color: white;
     }
 
     .btn-primary:hover:not(:disabled) {
       transform: translateY(-1px);
-      box-shadow: 0 4px 12px rgba(249, 115, 22, 0.3);
+      box-shadow: 0 4px 12px rgba(255, 152, 0, 0.3);
     }
 
     .spinner {
@@ -367,10 +387,10 @@ import {
     .error-message {
       margin-top: 1rem;
       padding: 0.75rem;
-      background: #fef2f2;
-      border: 1px solid #fee2e2;
+      background: var(--color-primary-50, #FFF3E0);
+      border: 1px solid var(--color-error-light, #EF5350);
       border-radius: 8px;
-      color: #dc2626;
+      color: var(--color-error, #F44336);
       font-size: 0.875rem;
       text-align: center;
     }

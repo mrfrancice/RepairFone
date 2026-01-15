@@ -1,4 +1,4 @@
-import { Component, inject, signal, OnInit } from '@angular/core';
+import { Component, inject, signal, OnInit, ChangeDetectionStrategy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router, RouterLink } from '@angular/router';
 import { QuotesService, Quote, QuoteStatus } from '../../services/quotes.service';
@@ -12,6 +12,7 @@ import { TabItem } from '../../../../shared/models';
 @Component({
   selector: 'app-quote-list',
   standalone: true,
+  changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [CommonModule, RouterLink, UiButtonComponent, UiTabsComponent, UiBadgeComponent, UiSkeletonComponent],
   template: `
     <div class="quotes-container">
@@ -528,6 +529,11 @@ export class QuoteListComponent implements OnInit {
     try {
       await this.quotesService.acceptQuote(quote.id);
       this.store.updateQuote(quote.id, { status: 'accepted' });
+
+      // Redirect to payment page after successful acceptance
+      this.router.navigate(['/payment/summary'], {
+        queryParams: { requestId: quote.requestId, quoteId: quote.id }
+      });
     } catch (err) {
       console.error('Error accepting quote:', err);
     }

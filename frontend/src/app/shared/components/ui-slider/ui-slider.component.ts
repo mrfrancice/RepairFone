@@ -16,6 +16,7 @@ import { ControlValueAccessor, NG_VALUE_ACCESSOR } from '@angular/forms';
 @Component({
   selector: 'ui-slider',
   standalone: true,
+  changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [CommonModule],
   providers: [
     {
@@ -159,25 +160,41 @@ import { ControlValueAccessor, NG_VALUE_ACCESSOR } from '@angular/forms';
     .slider-thumb {
       position: absolute;
       top: 50%;
+      width: 44px;
+      height: 44px;
+      background: transparent;
+      border: none;
+      border-radius: 50%;
+      transform: translate(-50%, -50%);
+      cursor: grab;
+      transition: box-shadow 0.2s ease;
+      z-index: 2;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .slider-thumb::before {
+      content: '';
       width: 20px;
       height: 20px;
       background: white;
       border: 2px solid #2563eb;
       border-radius: 50%;
-      transform: translate(-50%, -50%);
-      cursor: grab;
       transition: box-shadow 0.2s ease, transform 0.1s ease;
-      z-index: 2;
     }
 
-    .slider-thumb:hover {
+    .slider-thumb:hover::before {
       box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.2);
     }
 
     .slider-thumb.dragging {
       cursor: grabbing;
+    }
+
+    .slider-thumb.dragging::before {
       box-shadow: 0 0 0 6px rgba(37, 99, 235, 0.2);
-      transform: translate(-50%, -50%) scale(1.1);
+      transform: scale(1.1);
     }
 
     .slider-tooltip {

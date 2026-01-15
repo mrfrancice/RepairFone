@@ -19,6 +19,7 @@ export class PaymentStore {
   private readonly _payments = signal<Payment[]>([]);
   private readonly _totalPayments = signal(0);
   private readonly _filterStatus = signal<PaymentStatus | null>(null);
+  private readonly _userRole = signal<'client' | 'repairer' | 'admin'>('client');
 
   // Payment flow state
   private readonly _flowState = signal<PaymentFlowState>({
@@ -38,6 +39,8 @@ export class PaymentStore {
   readonly totalPayments = this._totalPayments.asReadonly();
   readonly filterStatus = this._filterStatus.asReadonly();
   readonly flowState = this._flowState.asReadonly();
+  readonly userRole = this._userRole.asReadonly();
+  readonly isRepairer = computed(() => this._userRole() === 'repairer');
 
   // Computed
   readonly hasPayments = computed(() => this._payments().length > 0);
@@ -60,6 +63,12 @@ export class PaymentStore {
     this._payments()
       .filter(p => p.status === 'completed')
       .reduce((sum, p) => sum + p.amount, 0)
+  );
+
+  readonly totalReceived = computed(() =>
+    this._payments()
+      .filter(p => p.status === 'completed')
+      .reduce((sum, p) => sum + (p.repairerAmount || 0), 0)
   );
 
   readonly canProceed = computed(() => {
@@ -94,6 +103,10 @@ export class PaymentStore {
 
   setFilterStatus(status: PaymentStatus | null): void {
     this._filterStatus.set(status);
+  }
+
+  setUserRole(role: 'client' | 'repairer' | 'admin'): void {
+    this._userRole.set(role);
   }
 
   // Actions for payment flow

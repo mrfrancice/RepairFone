@@ -1,4 +1,4 @@
-import { Component, inject } from '@angular/core';
+import { Component, inject, ChangeDetectionStrategy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink, RouterLinkActive } from '@angular/router';
 import { AuthStore } from '../../../core/stores/auth.store';
@@ -6,6 +6,7 @@ import { AuthStore } from '../../../core/stores/auth.store';
 @Component({
   selector: 'app-bottom-nav',
   standalone: true,
+  changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [CommonModule, RouterLink, RouterLinkActive],
   template: `
     <nav class="bottom-nav" role="navigation" aria-label="Navigation principale">

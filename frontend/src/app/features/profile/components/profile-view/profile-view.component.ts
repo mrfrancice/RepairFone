@@ -1,4 +1,4 @@
-import { Component, inject, signal, OnInit } from '@angular/core';
+import { Component, inject, signal, OnInit, ChangeDetectionStrategy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router, RouterLink } from '@angular/router';
 import { AuthStore, User } from '../../../../core/stores/auth.store';
@@ -8,11 +8,13 @@ import { RequestsService, RequestStats } from '../../../requests/services/reques
 import { ReviewsService, Review, SubRatings, StepRatingStats, StepRating } from '../../../reviews/services/reviews.service';
 import { SecureStorageService } from '../../../../core/services/secure-storage.service';
 import { UiHeaderComponent } from '../../../../shared/components/ui-header/ui-header.component';
+import { UiSkeletonComponent } from '../../../../shared/components/ui-skeleton/ui-skeleton.component';
 
 @Component({
   selector: 'app-profile-view',
   standalone: true,
-  imports: [CommonModule, RouterLink, UiHeaderComponent],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  imports: [CommonModule, RouterLink, UiHeaderComponent, UiSkeletonComponent],
   template: `
     <div class="profile-page">
       <!-- Header Banner -->
@@ -78,8 +80,19 @@ import { UiHeaderComponent } from '../../../../shared/components/ui-header/ui-he
       </ui-header>
 
       <div class="profile-content">
+        <!-- Stats Skeleton (while loading) -->
+        @if (isLoadingStats() && !isAdmin()) {
+          <section class="stats-section">
+            <ui-skeleton
+              variant="stats-grid"
+              animation="shimmer"
+              ariaLabel="Chargement des statistiques"
+            />
+          </section>
+        }
+
         <!-- Stats (hidden for admin) -->
-        @if (stats() && !isAdmin()) {
+        @if (!isLoadingStats() && stats() && !isAdmin()) {
           <section class="stats-section">
             <div class="stats-grid">
               <div class="stat-card">
@@ -122,6 +135,26 @@ import { UiHeaderComponent } from '../../../../shared/components/ui-header/ui-he
 
         <!-- Repairer Rating Section -->
         @if (isRepairer()) {
+          <!-- Rating Section Skeleton -->
+          @if (isLoadingReviews()) {
+            <section class="section rating-section">
+              <div class="section-header">
+                <ui-skeleton variant="circle" width="36px" height="36px" animation="shimmer" />
+                <ui-skeleton variant="text" width="140px" height="20px" animation="shimmer" />
+              </div>
+              <div class="rating-skeleton-content">
+                <ui-skeleton variant="rectangle" width="100%" height="140px" animation="shimmer" />
+                <div class="sub-ratings-skeleton">
+                  <ui-skeleton variant="rectangle" width="100%" height="40px" animation="shimmer" />
+                  <ui-skeleton variant="rectangle" width="100%" height="40px" animation="shimmer" />
+                  <ui-skeleton variant="rectangle" width="100%" height="40px" animation="shimmer" />
+                  <ui-skeleton variant="rectangle" width="100%" height="40px" animation="shimmer" />
+                </div>
+              </div>
+            </section>
+          }
+
+          @if (!isLoadingReviews()) {
           <section class="section rating-section">
             <div class="section-header">
               <div class="section-icon rating-icon">
@@ -247,6 +280,7 @@ import { UiHeaderComponent } from '../../../../shared/components/ui-header/ui-he
               </svg>
             </a>
           </section>
+          }
         }
 
         <!-- Repairer Profile -->
@@ -1218,6 +1252,22 @@ import { UiHeaderComponent } from '../../../../shared/components/ui-header/ui-he
       transform: translateY(-2px);
       box-shadow: 0 6px 16px rgba(255, 107, 53, 0.4);
     }
+
+    /* Skeleton Styles */
+    .rating-skeleton-content {
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+    }
+
+    .sub-ratings-skeleton {
+      display: flex;
+      flex-direction: column;
+      gap: 0.75rem;
+      padding: 1rem;
+      background: #f9fafb;
+      border-radius: 12px;
+    }
   `],
 })
 export class ProfileViewComponent implements OnInit {
@@ -1233,6 +1283,9 @@ export class ProfileViewComponent implements OnInit {
   readonly stats = signal<RequestStats | null>(null);
   readonly recentReviews = signal<StepRating[]>([]);
   readonly stepRatingStats = signal<StepRatingStats | null>(null);
+  readonly isLoading = signal(true);
+  readonly isLoadingStats = signal(true);
+  readonly isLoadingReviews = signal(true);
 
   ngOnInit(): void {
     this.loadData();
@@ -1240,9 +1293,15 @@ export class ProfileViewComponent implements OnInit {
 
   async loadData(): Promise<void> {
     try {
+      this.isLoading.set(true);
+      this.isLoadingStats.set(true);
+
       await this.profileService.getProfile();
+      this.isLoading.set(false);
+
       const stats = await this.requestsService.getStats();
       this.stats.set(stats);
+      this.isLoadingStats.set(false);
 
       // Load reviews for repairer
       if (this.isRepairer() && this.user()?.id) {
@@ -1250,19 +1309,27 @@ export class ProfileViewComponent implements OnInit {
       }
     } catch (err) {
       console.error('Error loading profile:', err);
+      this.isLoading.set(false);
+      this.isLoadingStats.set(false);
     }
   }
 
   async loadReviews(): Promise<void> {
     try {
+      this.isLoadingReviews.set(true);
       const repairerProfileId = this.user()?.repairerProfile?.id;
-      if (!repairerProfileId) return;
+      if (!repairerProfileId) {
+        this.isLoadingReviews.set(false);
+        return;
+      }
 
       const stats = await this.reviewsService.getRepairerStepRatingStats(repairerProfileId);
       this.stepRatingStats.set(stats);
       this.recentReviews.set(stats.recentRatings || []);
+      this.isLoadingReviews.set(false);
     } catch (err) {
       console.error('Error loading reviews:', err);
+      this.isLoadingReviews.set(false);
     }
   }
 

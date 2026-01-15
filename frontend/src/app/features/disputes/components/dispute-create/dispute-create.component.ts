@@ -1,4 +1,4 @@
-import { Component, inject, OnInit, signal } from '@angular/core';
+import { Component, inject, OnInit, signal, ChangeDetectionStrategy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
@@ -10,6 +10,7 @@ import { UiStepperComponent } from '../../../../shared/components/ui-stepper/ui-
 @Component({
   selector: 'app-dispute-create',
   standalone: true,
+  changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
     CommonModule,
     FormsModule,
@@ -565,7 +566,7 @@ import { UiStepperComponent } from '../../../../shared/components/ui-stepper/ui-
 
     .photo-hint {
       font-size: 0.75rem;
-      color: #9E9E9E;
+      color: #6B7280;  /* WCAG AA compliant */
       margin: 0 0 1.5rem 0;
     }
 
