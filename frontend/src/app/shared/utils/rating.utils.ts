@@ -67,12 +67,12 @@ export function getRatingLabel(rating: number): string {
  * @returns CSS color string
  */
 export function getRatingColor(rating: number): string {
-  if (rating >= 4.5) return '#10b981'; // Green
-  if (rating >= 4) return '#22c55e';   // Light green
+  if (rating >= 4.5) return '#4CAF50'; // Green
+  if (rating >= 4) return '#4CAF50';   // Light green
   if (rating >= 3.5) return '#84cc16'; // Lime
   if (rating >= 3) return '#eab308';   // Yellow
   if (rating >= 2) return '#f97316';   // Orange
-  if (rating >= 1) return '#ef4444';   // Red
+  if (rating >= 1) return '#F44336';   // Red
   return '#9ca3af'; // Gray for unrated
 }
 

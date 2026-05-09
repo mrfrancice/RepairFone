@@ -16,6 +16,7 @@ export { UiCheckboxComponent } from './components/ui-checkbox/ui-checkbox.compon
 export { UiRatingComponent } from './components/ui-rating/ui-rating.component';
 export { UiChipComponent } from './components/ui-chip/ui-chip.component';
 export { UiEmptyStateComponent } from './components/ui-empty-state/ui-empty-state.component';
+export { UiErrorStateComponent, type ErrorSeverity } from './components/ui-error-state/ui-error-state.component';
 export { UiSearchBarComponent } from './components/ui-search-bar/ui-search-bar.component';
 export { UiBottomSheetComponent } from './components/ui-bottom-sheet/ui-bottom-sheet.component';
 export { UiConfirmationDialogComponent } from './components/ui-confirmation-dialog/ui-confirmation-dialog.component';
@@ -29,12 +30,38 @@ export type { SkeletonVariant } from './components/ui-skeleton/ui-skeleton.compo
 export { ToastContainerComponent } from './components/toast/toast-container.component';
 export { NotificationBellComponent } from './components/notification-bell/notification-bell.component';
 export { NetworkStatusComponent } from './components/network-status/network-status.component';
+export { UiListContainerComponent } from './components/ui-list-container/ui-list-container.component';
 
 // Shared Pipes
 export { RelativeTimePipe } from './pipes/relative-time.pipe';
+export { FormatDatePipe } from './pipes/format-date.pipe';
+export { TruncatePipe } from './pipes/truncate.pipe';
+export { InitialsPipe } from './pipes/initials.pipe';
+export { CurrencyXofPipe } from './pipes/currency-xof.pipe';
+export { PhoneFormatPipe } from './pipes/phone-format.pipe';
+
+// Shared Utils
+export * from './utils/date.utils';
+export * from './utils/format.utils';
+export * from './utils/rating.utils';
+
+// Shared Services
+export { StatusLabelsService } from './services/status-labels.service';
+export type {
+  RequestStatus,
+  QuoteStatus,
+  DisputeStatus,
+  PaymentStatus,
+  PaymentType,
+  UrgencyLevel,
+  ChipVariant,
+} from './services/status-labels.service';
 
 // Shared Directives
 export { PullToRefreshDirective } from './directives/pull-to-refresh.directive';
 export { SwipeDirective } from './directives/swipe.directive';
+export { DebounceDirective, DebounceClickDirective } from './directives/debounce.directive';
+export { InfiniteScrollDirective } from './directives/infinite-scroll.directive';
+export { ClickOutsideDirective } from './directives/click-outside.directive';
 export type { PullToRefreshConfig } from './directives/pull-to-refresh.directive';
 export type { SwipeDirection, SwipeEvent } from './directives/swipe.directive';

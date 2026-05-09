@@ -1,0 +1,178 @@
+// =============================================================================
+// Status Badges Mixins
+// Reusable mixins for status badges across the application
+// =============================================================================
+
+// Base Badge
+// Usage: @include status-badge;
+@mixin status-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.375rem 0.75rem;
+  border-radius: 8px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  white-space: nowrap;
+}
+
+// Vertical Badge (for list cards)
+// Usage: @include status-badge-vertical;
+@mixin status-badge-vertical {
+  writing-mode: vertical-rl;
+  text-orientation: mixed;
+  transform: rotate(180deg);
+  padding: 0.75rem 0.5rem;
+  border-radius: 8px;
+  font-size: 0.6875rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-right: 1rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+// Status Colors - Request
+@mixin status-pending {
+  background: linear-gradient(135deg, #FFF8E1, #FFE082);
+  color: #92400e;
+}
+
+@mixin status-accepted {
+  background: linear-gradient(135deg, #E8F5E9, #C8E6C9);
+  color: #065f46;
+}
+
+@mixin status-rejected {
+  background: linear-gradient(135deg, #FFEBEE, #FFCDD2);
+  color: #991b1b;
+}
+
+@mixin status-in-progress {
+  background: linear-gradient(135deg, #E3F2FD, #BBDEFB);
+  color: #1e40af;
+}
+
+@mixin status-completed {
+  background: linear-gradient(135deg, #ede9fe, #ddd6fe);
+  color: #5b21b6;
+}
+
+@mixin status-delivered {
+  background: linear-gradient(135deg, #cffafe, #a5f3fc);
+  color: #0e7490;
+}
+
+@mixin status-cancelled {
+  background: linear-gradient(135deg, #f1f5f9, #e2e8f0);
+  color: #4B5563;
+}
+
+@mixin status-expired {
+  background: linear-gradient(135deg, #f1f5f9, #e2e8f0);
+  color: #4B5563;
+}
+
+// Status Colors - Dispute
+@mixin status-open {
+  @include status-pending;
+}
+
+@mixin status-in-review {
+  @include status-in-progress;
+}
+
+@mixin status-resolved {
+  @include status-accepted;
+}
+
+@mixin status-closed {
+  @include status-cancelled;
+}
+
+// Status Colors - Payment
+@mixin status-processing {
+  @include status-in-progress;
+}
+
+@mixin status-paid {
+  @include status-accepted;
+}
+
+@mixin status-failed {
+  @include status-rejected;
+}
+
+@mixin status-refunded {
+  @include status-completed;
+}
+
+@mixin status-blocked {
+  @include status-rejected;
+}
+
+// Urgency Badges
+@mixin urgency-normal {
+  background: linear-gradient(135deg, #E8F5E9, #C8E6C9);
+  color: #065f46;
+}
+
+@mixin urgency-express {
+  background: linear-gradient(135deg, #FFEBEE, #FFCDD2);
+  color: #991b1b;
+}
+
+// Dot Indicator
+// Usage: @include status-dot($color);
+@mixin status-dot($color: #4CAF50) {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background-color: $color;
+  display: inline-block;
+  margin-right: 0.5rem;
+}
+
+// Animated Dot (pulsing)
+// Usage: @include status-dot-animated($color);
+@mixin status-dot-animated($color: #4CAF50) {
+  @include status-dot($color);
+  animation: pulse-dot 2s ease-in-out infinite;
+}
+
+@keyframes pulse-dot {
+  0%, 100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  50% {
+    transform: scale(1.2);
+    opacity: 0.7;
+  }
+}
+
+// Generate all status classes
+// Usage: @include generate-status-classes;
+@mixin generate-status-classes {
+  .status-pending { @include status-pending; }
+  .status-accepted { @include status-accepted; }
+  .status-rejected { @include status-rejected; }
+  .status-in_progress { @include status-in-progress; }
+  .status-completed { @include status-completed; }
+  .status-delivered { @include status-delivered; }
+  .status-cancelled { @include status-cancelled; }
+  .status-expired { @include status-expired; }
+  .status-open { @include status-open; }
+  .status-in_review { @include status-in-review; }
+  .status-resolved { @include status-resolved; }
+  .status-closed { @include status-closed; }
+  .status-processing { @include status-processing; }
+  .status-paid { @include status-paid; }
+  .status-failed { @include status-failed; }
+  .status-refunded { @include status-refunded; }
+  .status-blocked { @include status-blocked; }
+}

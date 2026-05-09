@@ -63,7 +63,7 @@ export class PullToRefreshDirective implements OnInit, OnDestroy {
   /**
    * Color of the refresh indicator
    */
-  @Input() indicatorColor = '#3b82f6';
+  @Input() indicatorColor = '#1565C0';
 
   /**
    * Size of the refresh indicator in pixels

@@ -44,3 +44,10 @@ nul
 # Claude Code temporary files
 tmpclaude-*
 **/tmpclaude-*
+
+# Local agent / tooling artifacts
+.serena/
+.claude-design-extract/
+.charte-test/
+frontend/.audit/
+frontend/test-screenshots/
