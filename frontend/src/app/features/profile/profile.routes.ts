@@ -7,13 +7,13 @@ export const PROFILE_ROUTES: Routes = [
     loadComponent: () =>
       import('./components/profile-view/profile-view.component').then((m) => m.ProfileViewComponent),
     canActivate: [authGuard],
-    title: 'Mon profil - FastRepair',
+    title: 'Mon profil - RepairFone',
   },
   {
     path: 'edit',
     loadComponent: () =>
       import('./components/profile-edit/profile-edit.component').then((m) => m.ProfileEditComponent),
     canActivate: [authGuard],
-    title: 'Modifier mon profil - FastRepair',
+    title: 'Modifier mon profil - RepairFone',
   },
 ];

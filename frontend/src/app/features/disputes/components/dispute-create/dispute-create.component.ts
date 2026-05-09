@@ -6,6 +6,8 @@ import { DisputesService, DisputeReason, CreateDisputeDto } from '../../services
 import { DisputesStore } from '../../stores/disputes.store';
 import { UiButtonComponent } from '../../../../shared/components/ui-button/ui-button.component';
 import { UiStepperComponent } from '../../../../shared/components/ui-stepper/ui-stepper.component';
+import { UiHeaderComponent } from '../../../../shared/components/ui-header/ui-header.component';
+import { LoggerService } from '../../../../core/services/logger.service';
 
 @Component({
   selector: 'app-dispute-create',
@@ -16,19 +18,16 @@ import { UiStepperComponent } from '../../../../shared/components/ui-stepper/ui-
     FormsModule,
     UiButtonComponent,
     UiStepperComponent,
+    UiHeaderComponent,
   ],
   template: `
     <div class="dispute-create">
-      <!-- Header -->
-      <header class="header">
-        <button class="back-btn" (click)="goBack()">
-          ←
-        </button>
-        <div class="header-text">
-          <h1>Signaler un problème</h1>
-          <p class="subtitle">Nous allons vous aider à résoudre ce litige</p>
-        </div>
-      </header>
+      <ui-header
+        title="Signaler un problème"
+        subtitle="Nous allons vous aider à résoudre ce litige"
+        [showBack]="true"
+        (onBack)="goBack()"
+      />
 
       <!-- Stepper -->
       <div class="stepper-wrapper">
@@ -281,52 +280,8 @@ import { UiStepperComponent } from '../../../../shared/components/ui-stepper/ui-
     .dispute-create {
       min-height: 100vh;
       background: var(--color-background, #FAFAFA);
+      padding-top: var(--header-height, 100px);
       padding-bottom: 6rem;
-    }
-
-    .header {
-      display: flex;
-      align-items: center;
-      gap: 1rem;
-      padding: 1rem;
-      background: white;
-      border-bottom: 1px solid #EEEEEE;
-    }
-
-    .back-btn {
-      width: 40px;
-      height: 40px;
-      border-radius: 50%;
-      border: none;
-      background: #F5F5F5;
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 1.25rem;
-      transition: all 150ms cubic-bezier(0.4, 0, 0.2, 1);
-      flex-shrink: 0;
-    }
-
-    .back-btn:hover {
-      background: #EEEEEE;
-    }
-
-    .header-text {
-      flex: 1;
-    }
-
-    .header h1 {
-      font-size: 1.25rem;
-      font-weight: 700;
-      color: #212121;
-      margin: 0;
-    }
-
-    .subtitle {
-      color: #757575;
-      font-size: 0.875rem;
-      margin: 0;
     }
 
     .stepper-wrapper {
@@ -781,6 +736,7 @@ export class DisputeCreateComponent implements OnInit {
   private readonly router = inject(Router);
   readonly disputesService = inject(DisputesService);
   readonly store = inject(DisputesStore);
+  private readonly logger = inject(LoggerService);
 
   readonly isSubmitting = signal(false);
   readonly showSuccess = signal(false);
@@ -886,7 +842,7 @@ export class DisputeCreateComponent implements OnInit {
       this.createdDisputeId.set(dispute.id);
       this.showSuccess.set(true);
     } catch (err: any) {
-      console.error('Failed to create dispute:', err);
+      this.logger.error('DisputeCreateComponent', 'Failed to create dispute', err);
     } finally {
       this.isSubmitting.set(false);
     }

@@ -5,11 +5,14 @@ import { PaymentService, Payment, PaymentStatus } from '../../services/payment.s
 import { PaymentStore } from '../../stores/payment.store';
 import { AuthStore } from '../../../../core/stores/auth.store';
 import { UiCardComponent } from '../../../../shared/components/ui-card/ui-card.component';
-import { UiButtonComponent } from '../../../../shared/components/ui-button/ui-button.component';
 import { UiLoadingComponent } from '../../../../shared/components/ui-loading/ui-loading.component';
 import { UiEmptyStateComponent } from '../../../../shared/components/ui-empty-state/ui-empty-state.component';
+import { UiErrorStateComponent } from '../../../../shared/components/ui-error-state/ui-error-state.component';
 import { UiChipComponent } from '../../../../shared/components/ui-chip/ui-chip.component';
 import { UiPriceDisplayComponent } from '../../../../shared/components/ui-price-display/ui-price-display.component';
+import { FormatDatePipe } from '../../../../shared/pipes/format-date.pipe';
+import { InfiniteScrollDirective } from '../../../../shared/directives/infinite-scroll.directive';
+import { UiHeaderComponent } from '../../../../shared/components/ui-header/ui-header.component';
 
 @Component({
   selector: 'app-payment-history',
@@ -19,19 +22,21 @@ import { UiPriceDisplayComponent } from '../../../../shared/components/ui-price-
     CommonModule,
     RouterLink,
     UiCardComponent,
-    UiButtonComponent,
     UiLoadingComponent,
     UiEmptyStateComponent,
+    UiErrorStateComponent,
     UiChipComponent,
     UiPriceDisplayComponent,
+    FormatDatePipe,
+    InfiniteScrollDirective,
+    UiHeaderComponent,
   ],
   template: `
     <div class="payment-history">
-      <!-- Header -->
-      <header class="header">
-        <h1>{{ authStore.isRepairer() ? 'Paiements reçus' : 'Mes paiements' }}</h1>
-        <p class="subtitle">{{ authStore.isRepairer() ? 'Historique des paiements de vos clients' : 'Historique de vos transactions' }}</p>
-      </header>
+      <ui-header
+        [title]="authStore.isRepairer() ? 'Paiements reçus' : 'Mes paiements'"
+        [subtitle]="authStore.isRepairer() ? 'Historique des paiements de vos clients' : 'Historique de vos transactions'"
+      />
 
       <!-- Stats -->
       @if (store.hasPayments()) {
@@ -92,13 +97,13 @@ import { UiPriceDisplayComponent } from '../../../../shared/components/ui-price-
       }
 
       <!-- Error -->
-      @if (error()) {
-        <ui-card class="error-card">
-          <p>{{ error() }}</p>
-          <ui-button variant="outline" size="sm" (onClick)="loadPayments()">
-            Réessayer
-          </ui-button>
-        </ui-card>
+      @if (!isLoading() && error()) {
+        <ui-error-state
+          [message]="error()!"
+          severity="error"
+          [showRetry]="true"
+          (onRetry)="loadPayments()"
+        />
       }
 
       <!-- Empty state -->
@@ -112,7 +117,12 @@ import { UiPriceDisplayComponent } from '../../../../shared/components/ui-price-
 
       <!-- Payment list -->
       @if (!isLoading() && store.filteredPayments().length > 0) {
-        <div class="payment-list">
+        <div class="payment-list"
+             appInfiniteScroll
+             [useWindow]="true"
+             [threshold]="200"
+             [disabled]="isLoadingMore() || !hasMore()"
+             (scrolled)="loadMore()">
           @for (payment of store.filteredPayments(); track payment.id) {
             <ui-card class="payment-card" [routerLink]="['/payment', payment.id]">
               <div class="payment-header">
@@ -172,7 +182,7 @@ import { UiPriceDisplayComponent } from '../../../../shared/components/ui-price-
 
               <div class="payment-footer">
                 <span class="date">
-                  {{ formatDate(payment.paidAt || payment.createdAt) }}
+                  {{ (payment.paidAt || payment.createdAt) | formatDate }}
                 </span>
                 <span class="arrow">→</span>
               </div>
@@ -180,16 +190,11 @@ import { UiPriceDisplayComponent } from '../../../../shared/components/ui-price-
           }
         </div>
 
-        <!-- Load more -->
-        @if (hasMore()) {
-          <div class="load-more">
-            <ui-button
-              variant="outline"
-              [loading]="isLoadingMore()"
-              (onClick)="loadMore()"
-            >
-              Charger plus
-            </ui-button>
+        <!-- Loading indicator for infinite scroll -->
+        @if (isLoadingMore()) {
+          <div class="loading-more">
+            <ui-loading size="sm" />
+            <span>Chargement...</span>
           </div>
         }
       }
@@ -198,24 +203,8 @@ import { UiPriceDisplayComponent } from '../../../../shared/components/ui-price-
   styles: [`
     .payment-history {
       padding: 1rem;
+      padding-top: calc(var(--header-height, 100px) + 1rem);
       padding-bottom: 5rem;
-    }
-
-    .header {
-      margin-bottom: 1.5rem;
-
-      h1 {
-        font-size: 1.5rem;
-        font-weight: 700;
-        color: #1e293b;
-        margin: 0 0 0.25rem 0;
-      }
-
-      .subtitle {
-        color: #64748b;
-        font-size: 0.875rem;
-        margin: 0;
-      }
     }
 
     .stats-grid {
@@ -236,7 +225,7 @@ import { UiPriceDisplayComponent } from '../../../../shared/components/ui-price-
 
       .stat-label {
         font-size: 0.75rem;
-        color: #64748b;
+        color: #6B7280;
         text-transform: uppercase;
         letter-spacing: 0.05em;
       }
@@ -244,7 +233,7 @@ import { UiPriceDisplayComponent } from '../../../../shared/components/ui-price-
       .stat-value {
         font-size: 1.5rem;
         font-weight: 700;
-        color: #1e293b;
+        color: #1F2937;
       }
     }
 
@@ -261,23 +250,25 @@ import { UiPriceDisplayComponent } from '../../../../shared/components/ui-price-
 
       .filter-btn {
         padding: 0.5rem 1rem;
-        border: 1px solid #e2e8f0;
-        background: white;
+        border: 1px solid var(--color-neutral-200, #EEEEEE);
+        background: var(--color-neutral-100, #F5F5F5);
         border-radius: 9999px;
         font-size: 0.875rem;
-        color: #64748b;
+        color: var(--color-neutral-700, #374151);
         white-space: nowrap;
         cursor: pointer;
         transition: all 0.2s;
 
         &:hover {
-          border-color: #cbd5e1;
+          border-color: var(--color-primary-500, #FF9800);
+          color: var(--color-primary-500, #FF9800);
         }
 
         &.active {
-          background: #3b82f6;
-          border-color: #3b82f6;
+          background: linear-gradient(135deg, var(--color-primary-500, #FF9800), var(--color-gold-800, #F9A825));
+          border-color: var(--color-primary-500, #FF9800);
           color: white;
+          box-shadow: var(--shadow-warm, 0 8px 24px rgba(255, 152, 0, 0.20));
         }
       }
     }
@@ -288,16 +279,16 @@ import { UiPriceDisplayComponent } from '../../../../shared/components/ui-price-
       align-items: center;
       gap: 1rem;
       padding: 3rem;
-      color: #64748b;
+      color: #6B7280;
     }
 
     .error-card {
       padding: 1.5rem;
       text-align: center;
-      background: #fef2f2;
+      background: #FFEBEE;
 
       p {
-        color: #dc2626;
+        color: var(--color-terracotta, #C62828);
         margin: 0 0 1rem 0;
       }
     }
@@ -333,13 +324,13 @@ import { UiPriceDisplayComponent } from '../../../../shared/components/ui-price-
 
       .payment-type {
         font-weight: 600;
-        color: #1e293b;
+        color: #1F2937;
         font-size: 0.9375rem;
       }
 
       .device-info {
         font-size: 0.75rem;
-        color: #64748b;
+        color: #6B7280;
       }
     }
 
@@ -369,11 +360,11 @@ import { UiPriceDisplayComponent } from '../../../../shared/components/ui-price-
         margin-bottom: 0.25rem;
 
         .label {
-          color: #64748b;
+          color: #6B7280;
         }
 
         .value {
-          color: #1e293b;
+          color: #1F2937;
         }
       }
     }
@@ -388,18 +379,22 @@ import { UiPriceDisplayComponent } from '../../../../shared/components/ui-price-
 
       .date {
         font-size: 0.75rem;
-        color: #94a3b8;
+        color: #9CA3AF;
       }
 
       .arrow {
-        color: #94a3b8;
+        color: #9CA3AF;
       }
     }
 
-    .load-more {
+    .loading-more {
       display: flex;
+      align-items: center;
       justify-content: center;
-      margin-top: 1.5rem;
+      gap: 0.5rem;
+      padding: 1.5rem;
+      color: #6B7280;
+      font-size: 0.875rem;
     }
   `]
 })
@@ -489,14 +484,4 @@ export class PaymentHistoryComponent implements OnInit {
     return colors[method] || '#F5F5F5';
   }
 
-  formatDate(dateStr: string): string {
-    const date = new Date(dateStr);
-    return date.toLocaleDateString('fr-FR', {
-      day: 'numeric',
-      month: 'short',
-      year: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit',
-    });
-  }
 }

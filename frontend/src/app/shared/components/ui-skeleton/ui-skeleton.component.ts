@@ -337,7 +337,7 @@ export type SkeletonAnimation = 'pulse' | 'shimmer' | 'none';
     }
 
     .skeleton {
-      background-color: var(--color-neutral-200, #e5e7eb);
+      background-color: var(--color-neutral-200, #EEEEEE);
       position: relative;
       overflow: hidden;
     }
@@ -466,7 +466,7 @@ export type SkeletonAnimation = 'pulse' | 'shimmer' | 'none';
     }
 
     .skeleton-list-item:not(:last-child) {
-      border-bottom: 1px solid var(--border-color-light, #f3f4f6);
+      border-bottom: 1px solid var(--border-color-light, #F5F5F5);
     }
 
     .skeleton-list-item .skeleton-avatar {
@@ -532,7 +532,7 @@ export type SkeletonAnimation = 'pulse' | 'shimmer' | 'none';
     .skeleton-repairer-card {
       padding: 1rem;
       background: var(--bg-surface, white);
-      border: 1px solid var(--border-color, #e5e7eb);
+      border: 1px solid var(--border-color, #EEEEEE);
       display: flex;
       flex-direction: column;
       gap: 1rem;

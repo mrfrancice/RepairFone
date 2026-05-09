@@ -4,6 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { Router, ActivatedRoute } from '@angular/router';
 import { AuthService } from '../../services/auth.service';
 import { AuthStore } from '../../../../core/stores/auth.store';
+import { ToastService } from '../../../../core/services/toast.service';
 
 @Component({
   selector: 'app-verify-otp',
@@ -122,7 +123,8 @@ import { AuthStore } from '../../../../core/stores/auth.store';
       align-items: center;
       justify-content: center;
       padding: 1rem;
-      background: linear-gradient(135deg, #FF6B35 0%, #FF9800 100%);
+      padding-bottom: calc(1rem + var(--bottom-nav-height, 80px) + var(--safe-area-bottom, 0px));
+      background: linear-gradient(135deg, var(--color-primary-500, #FF9800) 0%, var(--color-gold-800, #F9A825) 100%);
     }
 
     .auth-card {
@@ -131,7 +133,7 @@ import { AuthStore } from '../../../../core/stores/auth.store';
       padding: 2rem 1.5rem;
       width: 100%;
       max-width: 420px;
-      box-shadow: 0 20px 60px rgba(255, 107, 53, 0.2);
+      box-shadow: 0 20px 60px rgba(255, 152, 0, 0.2);
     }
 
     .logo-section {
@@ -145,13 +147,13 @@ import { AuthStore } from '../../../../core/stores/auth.store';
       justify-content: center;
       width: 70px;
       height: 70px;
-      background: linear-gradient(135deg, #FF6B35 0%, #FF9800 100%);
+      background: linear-gradient(135deg, var(--color-primary-500, #FF9800) 0%, var(--color-gold-800, #F9A825) 100%);
       border-radius: 20px;
       font-size: 1.75rem;
       font-weight: 900;
       color: white;
       margin-bottom: 1rem;
-      box-shadow: 0 8px 20px rgba(255, 107, 53, 0.3);
+      box-shadow: 0 8px 20px rgba(255, 152, 0, 0.3);
     }
 
     .auth-title {
@@ -170,7 +172,7 @@ import { AuthStore } from '../../../../core/stores/auth.store';
     }
 
     .phone-display {
-      color: #FF6B35;
+      color: var(--color-primary-500, #FF9800);
       font-weight: 600;
     }
 
@@ -187,18 +189,18 @@ import { AuthStore } from '../../../../core/stores/auth.store';
       text-align: center;
       font-size: 1.5rem;
       font-weight: 700;
-      border: 2px solid #e5e7eb;
+      border: 2px solid #EEEEEE;
       border-radius: 12px;
       transition: all 0.2s;
-      background: #f9fafb;
+      background: #FAFAFA;
       color: #1f2937;
     }
 
     .otp-input:focus {
       outline: none;
-      border-color: #FF6B35;
+      border-color: var(--color-primary-500, #FF9800);
       background: white;
-      box-shadow: 0 0 0 4px rgba(255, 107, 53, 0.1);
+      box-shadow: 0 0 0 4px rgba(255, 152, 0, 0.1);
       transform: scale(1.05);
     }
 
@@ -207,7 +209,7 @@ import { AuthStore } from '../../../../core/stores/auth.store';
       padding: 1rem;
       background: #f8fafc;
       border-radius: 12px;
-      border: 2px dashed #e5e7eb;
+      border: 2px dashed #EEEEEE;
     }
 
     .optional-label {
@@ -232,8 +234,8 @@ import { AuthStore } from '../../../../core/stores/auth.store';
     .form-input {
       width: 100%;
       padding: 0.75rem 1rem;
-      border: 2px solid #e5e7eb;
-      border-radius: 10px;
+      border: 2px solid #EEEEEE;
+      border-radius: 12px;
       font-size: 1rem;
       transition: all 0.2s;
       background: white;
@@ -241,8 +243,8 @@ import { AuthStore } from '../../../../core/stores/auth.store';
 
     .form-input:focus {
       outline: none;
-      border-color: #FF6B35;
-      box-shadow: 0 0 0 4px rgba(255, 107, 53, 0.1);
+      border-color: var(--color-primary-500, #FF9800);
+      box-shadow: 0 0 0 4px rgba(255, 152, 0, 0.1);
     }
 
     .hint {
@@ -267,14 +269,14 @@ import { AuthStore } from '../../../../core/stores/auth.store';
     }
 
     .btn-primary {
-      background: linear-gradient(135deg, #FF6B35 0%, #FF9800 100%);
+      background: linear-gradient(135deg, var(--color-primary-500, #FF9800) 0%, var(--color-gold-800, #F9A825) 100%);
       color: white;
-      box-shadow: 0 4px 14px rgba(255, 107, 53, 0.4);
+      box-shadow: 0 4px 14px rgba(255, 152, 0, 0.4);
     }
 
     .btn-primary:hover:not(:disabled) {
       transform: translateY(-2px);
-      box-shadow: 0 6px 20px rgba(255, 107, 53, 0.5);
+      box-shadow: 0 6px 20px rgba(255, 152, 0, 0.5);
     }
 
     .btn-primary:active:not(:disabled) {
@@ -307,7 +309,7 @@ import { AuthStore } from '../../../../core/stores/auth.store';
     .btn-link {
       background: none;
       border: none;
-      color: #FF6B35;
+      color: var(--color-primary-500, #FF9800);
       font-weight: 600;
       cursor: pointer;
       padding: 0.5rem 1rem;
@@ -315,12 +317,12 @@ import { AuthStore } from '../../../../core/stores/auth.store';
       align-items: center;
       gap: 0.5rem;
       font-size: 0.9375rem;
-      border-radius: 8px;
+      border-radius: 12px;
       transition: all 0.2s;
     }
 
     .btn-link:hover {
-      background: #fff5f0;
+      background: #FFF3E0;
     }
 
     .btn-link .icon {
@@ -342,13 +344,13 @@ import { AuthStore } from '../../../../core/stores/auth.store';
     }
 
     .alert-error {
-      background: #fef2f2;
+      background: #FFEBEE;
       color: #991b1b;
-      border: 2px solid #fecaca;
+      border: 2px solid #FFCDD2;
     }
 
     .alert-success {
-      background: #f0fdf4;
+      background: #E8F5E9;
       color: #166534;
       border: 2px solid #4CAF50;
     }
@@ -358,13 +360,13 @@ import { AuthStore } from '../../../../core/stores/auth.store';
     }
 
     .alert-dev {
-      background: #fef3c7;
+      background: #FFF8E1;
       color: #92400e;
       border: 2px solid #fcd34d;
     }
 
     .alert-dev code {
-      background: #fbbf24;
+      background: var(--color-mustard, #FFC107);
       padding: 0.25rem 0.5rem;
       border-radius: 6px;
       font-size: 1.25rem;
@@ -384,7 +386,7 @@ import { AuthStore } from '../../../../core/stores/auth.store';
     }
 
     .cooldown-text strong {
-      color: #FF6B35;
+      color: var(--color-primary-500, #FF9800);
     }
 
     .info-box {
@@ -392,22 +394,22 @@ import { AuthStore } from '../../../../core/stores/auth.store';
       align-items: flex-start;
       gap: 0.75rem;
       padding: 1rem;
-      background: #eff6ff;
+      background: #E3F2FD;
       border-radius: 12px;
       margin-top: 1.5rem;
-      border: 1px solid #dbeafe;
+      border: 1px solid #E3F2FD;
     }
 
     .info-box .icon {
       font-size: 1.25rem;
-      color: #3b82f6;
+      color: var(--color-ocean, #1565C0);
       flex-shrink: 0;
     }
 
     .info-box p {
       margin: 0;
       font-size: 0.8125rem;
-      color: #1e40af;
+      color: var(--color-ocean, #1565C0);
       line-height: 1.5;
     }
 
@@ -433,6 +435,7 @@ export class VerifyOtpComponent implements OnInit {
   private readonly authStore = inject(AuthStore);
   private readonly router = inject(Router);
   private readonly route = inject(ActivatedRoute);
+  private readonly toast = inject(ToastService);
 
   phone = '';
   userName = '';
@@ -444,13 +447,16 @@ export class VerifyOtpComponent implements OnInit {
   readonly resendCooldown = signal(0);
   readonly showNameInput = signal(false);
   readonly usingFirebase = signal(false);
+  private returnUrl: string | null = null;
+  private isRepairerRegistration = false;
 
   private cooldownInterval?: ReturnType<typeof setInterval>;
 
   ngOnInit(): void {
-    this.phone = this.route.snapshot.queryParams['phone'] || '';
-    const devCodeParam = this.route.snapshot.queryParams['devCode'];
-    const useFirebaseParam = this.route.snapshot.queryParams['useFirebase'];
+    const params = this.route.snapshot.queryParams;
+    this.phone = params['phone'] || '';
+    const devCodeParam = params['devCode'];
+    const useFirebaseParam = params['useFirebase'];
 
     if (devCodeParam) {
       this.devCode.set(devCodeParam);
@@ -458,7 +464,14 @@ export class VerifyOtpComponent implements OnInit {
     if (useFirebaseParam === 'true') {
       this.usingFirebase.set(true);
     }
+    if (params['returnUrl']) {
+      this.returnUrl = params['returnUrl'];
+    }
+    if (params['role'] === 'repairer') {
+      this.isRepairerRegistration = true;
+    }
     if (!this.phone) {
+      this.toast.info("Veuillez d'abord saisir vos informations d'inscription.");
       this.router.navigate(['/auth/register']);
     }
   }
@@ -501,9 +514,19 @@ export class VerifyOtpComponent implements OnInit {
       // Pass display name for Firebase auth if provided
       const displayName = this.userName.trim() || undefined;
       await this.authService.verifyOtp(this.phone, code, displayName);
-      // Redirect based on user role
-      const defaultUrl = this.authStore.getDefaultRedirectUrl();
-      this.router.navigate([defaultUrl]);
+
+      // Determine redirect URL
+      if (this.isRepairerRegistration && this.authStore.isRepairer()) {
+        // New repairer - redirect to profile setup
+        this.router.navigate(['/repairer/profile/setup']);
+      } else if (this.returnUrl) {
+        // Return to original page
+        this.router.navigateByUrl(this.returnUrl);
+      } else {
+        // Default redirect based on role
+        const defaultUrl = this.authStore.getDefaultRedirectUrl();
+        this.router.navigate([defaultUrl]);
+      }
     } catch (err: any) {
       this.error.set(err.message || 'Code invalide');
     } finally {

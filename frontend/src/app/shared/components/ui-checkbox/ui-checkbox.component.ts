@@ -101,27 +101,28 @@ export type CheckboxSize = 'sm' | 'md' | 'lg';
     /* Card Style */
     .checkbox-container.card-style {
       padding: 1rem;
-      border: 2px solid #e5e7eb;
-      border-radius: 12px;
+      border: 2px solid var(--color-neutral-200, #EEEEEE);
+      border-radius: 0.75rem;
       background: white;
+      transition: all 150ms ease;
     }
 
     .checkbox-container.card-style:hover:not(.disabled) {
-      border-color: #2563eb;
-      background: #f8fafc;
+      border-color: var(--color-primary-500, #FF9800);
+      background: var(--color-primary-50, #FFF3E0);
     }
 
     .checkbox-container.card-style.checked {
-      border-color: #2563eb;
-      background: #eff6ff;
+      border-color: var(--color-primary-500, #FF9800);
+      background: var(--color-primary-50, #FFF3E0);
     }
 
     /* Checkbox Wrapper - 44px minimum touch target */
     .checkbox-wrapper {
       position: relative;
       flex-shrink: 0;
-      min-width: 44px;
-      min-height: 44px;
+      min-width: 48px;
+      min-height: 48px;
       display: flex;
       align-items: center;
       justify-content: center;
@@ -156,21 +157,21 @@ export type CheckboxSize = 'sm' | 'md' | 'lg';
     }
 
     .checkbox-container:hover:not(.disabled) .checkbox-box {
-      border-color: #2563eb;
+      border-color: var(--color-primary-500, #FF9800);
     }
 
     .checkbox-input:focus + .checkbox-box {
-      box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.2);
+      box-shadow: 0 0 0 4px rgba(255, 152, 0, 0.20);
     }
 
     .checkbox-box.checked {
-      background: #2563eb;
-      border-color: #2563eb;
+      background: var(--color-primary-500, #FF9800);
+      border-color: var(--color-primary-500, #FF9800);
     }
 
     .checkbox-box.indeterminate {
-      background: #2563eb;
-      border-color: #2563eb;
+      background: var(--color-primary-500, #FF9800);
+      border-color: var(--color-primary-500, #FF9800);
     }
 
     .check-icon,
@@ -228,7 +229,7 @@ export type CheckboxSize = 'sm' | 'md' | 'lg';
     }
 
     .required {
-      color: #dc2626;
+      color: var(--color-terracotta, #C62828);
       margin-left: 0.25rem;
     }
 
@@ -245,11 +246,11 @@ export type CheckboxSize = 'sm' | 'md' | 'lg';
 
     /* Error State */
     .checkbox-container.error .checkbox-box {
-      border-color: #dc2626;
+      border-color: var(--color-terracotta, #C62828);
     }
 
     .checkbox-container.error.card-style {
-      border-color: #fecaca;
+      border-color: #FFCDD2;
     }
 
     /* Messages */
@@ -257,7 +258,7 @@ export type CheckboxSize = 'sm' | 'md' | 'lg';
       display: block;
       margin-top: 0.5rem;
       font-size: 0.75rem;
-      color: #dc2626;
+      color: var(--color-terracotta, #C62828);
     }
 
     .hint-message {

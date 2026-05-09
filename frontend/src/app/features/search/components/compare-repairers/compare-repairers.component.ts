@@ -5,6 +5,8 @@ import { SearchService, Repairer } from '../../services/search.service';
 import { SearchStore } from '../../stores/search.store';
 import { UiButtonComponent } from '../../../../shared/components/ui-button/ui-button.component';
 import { UiLoadingComponent } from '../../../../shared/components/ui-loading/ui-loading.component';
+import { InitialsPipe } from '../../../../shared/pipes/initials.pipe';
+import { UiHeaderComponent } from '../../../../shared/components/ui-header/ui-header.component';
 
 interface CompareRepairer extends Repairer {
   qualityScores: {
@@ -23,17 +25,15 @@ interface CompareRepairer extends Repairer {
   selector: 'app-compare-repairers',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [CommonModule, UiButtonComponent, UiLoadingComponent],
+  imports: [CommonModule, UiButtonComponent, UiLoadingComponent, InitialsPipe, UiHeaderComponent],
   template: `
     <div class="compare-container">
-      <!-- Header -->
-      <header class="compare-header">
-        <button class="back-btn" (click)="goBack()">
-          <span class="back-icon">←</span>
-        </button>
-        <h1>Comparer les réparateurs</h1>
-        <span class="compare-count">{{ repairers().length }} sélectionnés</span>
-      </header>
+      <ui-header
+        title="Comparer les réparateurs"
+        [subtitle]="repairers().length + ' sélectionnés'"
+        [showBack]="true"
+        (onBack)="goBack()"
+      />
 
       @if (isLoading()) {
         <div class="loading-state">
@@ -63,7 +63,7 @@ interface CompareRepairer extends Repairer {
                   @if (repairer.avatarUrl) {
                     <img [src]="repairer.avatarUrl" [alt]="getRepairerName(repairer)" />
                   } @else {
-                    <span class="avatar-placeholder">{{ getInitials(repairer) }}</span>
+                    <span class="avatar-placeholder">{{ repairer.firstName | initials : repairer.lastName }}</span>
                   }
                 </div>
                 <h3>{{ getRepairerName(repairer) }}</h3>
@@ -253,47 +253,8 @@ interface CompareRepairer extends Repairer {
     .compare-container {
       min-height: 100vh;
       background: #f5f5f5;
+      padding-top: var(--header-height, 100px);
       padding-bottom: 2rem;
-    }
-
-    .compare-header {
-      display: flex;
-      align-items: center;
-      gap: 1rem;
-      padding: 1rem;
-      background: white;
-      border-bottom: 1px solid #eee;
-      position: sticky;
-      top: 0;
-      z-index: 10;
-    }
-
-    .back-btn {
-      width: 40px;
-      height: 40px;
-      border-radius: 50%;
-      border: none;
-      background: #f5f5f5;
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 1.25rem;
-    }
-
-    .compare-header h1 {
-      flex: 1;
-      margin: 0;
-      font-size: 1.25rem;
-      font-weight: 600;
-    }
-
-    .compare-count {
-      font-size: 0.875rem;
-      color: #666;
-      background: #f0f0f0;
-      padding: 0.25rem 0.75rem;
-      border-radius: 20px;
     }
 
     .loading-state,
@@ -734,11 +695,6 @@ export class CompareRepairersComponent implements OnInit {
       return `${repairer.firstName || ''} ${repairer.lastName || ''}`.trim();
     }
     return repairer.repairerProfile?.businessName || 'Réparateur';
-  }
-
-  getInitials(repairer: Repairer): string {
-    const name = this.getRepairerName(repairer);
-    return name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
   }
 
   getStars(rating: number): string {

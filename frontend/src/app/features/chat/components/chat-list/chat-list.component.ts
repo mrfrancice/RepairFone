@@ -6,6 +6,10 @@ import { ChatStore } from '../../stores/chat.store';
 import { AuthStore } from '../../../../core/stores/auth.store';
 import { UiLoadingComponent } from '../../../../shared/components/ui-loading/ui-loading.component';
 import { UiEmptyStateComponent } from '../../../../shared/components/ui-empty-state/ui-empty-state.component';
+import { UiErrorStateComponent } from '../../../../shared/components/ui-error-state/ui-error-state.component';
+import { InitialsPipe } from '../../../../shared/pipes/initials.pipe';
+import { LoggerService } from '../../../../core/services/logger.service';
+import { UiHeaderComponent } from '../../../../shared/components/ui-header/ui-header.component';
 
 @Component({
   selector: 'app-chat-list',
@@ -16,16 +20,17 @@ import { UiEmptyStateComponent } from '../../../../shared/components/ui-empty-st
     RouterLink,
     UiLoadingComponent,
     UiEmptyStateComponent,
+    UiErrorStateComponent,
+    InitialsPipe,
+    UiHeaderComponent,
   ],
   template: `
     <div class="chat-list">
-      <!-- Header -->
-      <header class="header">
-        <h1>Messages</h1>
+      <ui-header title="Messages">
         @if (store.totalUnreadCount() > 0) {
-          <span class="unread-badge">{{ store.totalUnreadCount() }}</span>
+          <span header-actions class="unread-badge">{{ store.totalUnreadCount() }}</span>
         }
-      </header>
+      </ui-header>
 
       <!-- Loading -->
       @if (store.isLoadingConversations()) {
@@ -34,8 +39,18 @@ import { UiEmptyStateComponent } from '../../../../shared/components/ui-empty-st
         </div>
       }
 
+      <!-- Error state -->
+      @if (!store.isLoadingConversations() && error()) {
+        <ui-error-state
+          [message]="error()!"
+          severity="error"
+          [showRetry]="true"
+          (onRetry)="loadConversations()"
+        />
+      }
+
       <!-- Empty state -->
-      @if (!store.isLoadingConversations() && !store.hasConversations()) {
+      @if (!store.isLoadingConversations() && !error() && !store.hasConversations()) {
         <ui-empty-state
           icon="💬"
           title="Aucune conversation"
@@ -53,7 +68,11 @@ import { UiEmptyStateComponent } from '../../../../shared/components/ui-empty-st
               [routerLink]="['/chat', conversation.id]"
             >
               <div class="avatar">
-                {{ getInitials(conversation) }}
+                @if (conversation.clientId === authStore.user()?.id) {
+                  {{ conversation.repairer?.firstName | initials : conversation.repairer?.lastName }}
+                } @else {
+                  {{ conversation.client?.firstName | initials : conversation.client?.lastName }}
+                }
               </div>
 
               <div class="conversation-content">
@@ -104,33 +123,18 @@ import { UiEmptyStateComponent } from '../../../../shared/components/ui-empty-st
   styles: [`
     .chat-list {
       min-height: 100vh;
-      background: #f9fafb;
+      background: #FAFAFA;
+      padding-top: var(--header-height, 100px);
     }
 
-    .header {
-      display: flex;
-      align-items: center;
-      gap: 0.75rem;
-      padding: 1.5rem 1rem 1rem;
-      background: white;
-      border-bottom: 1px solid #e5e7eb;
-
-      h1 {
-        font-size: 1.5rem;
-        font-weight: 700;
-        color: #1e293b;
-        margin: 0;
-      }
-
-      .unread-badge {
-        background: #FF6B35;
-        color: white;
-        font-size: 0.75rem;
-        font-weight: 600;
-        padding: 0.125rem 0.5rem;
-        border-radius: 9999px;
-        box-shadow: 0 2px 4px rgba(255, 107, 53, 0.3);
-      }
+    .unread-badge {
+      background: linear-gradient(135deg, var(--color-primary-500, #FF9800), var(--color-gold-800, #F9A825));
+      color: white;
+      font-size: 0.75rem;
+      font-weight: 600;
+      padding: 0.125rem 0.5rem;
+      border-radius: 9999px;
+      box-shadow: 0 2px 8px rgba(255, 152, 0, 0.35);
     }
 
     .loading-container {
@@ -139,7 +143,7 @@ import { UiEmptyStateComponent } from '../../../../shared/components/ui-empty-st
       align-items: center;
       gap: 1rem;
       padding: 3rem;
-      color: #64748b;
+      color: #6B7280;
     }
 
     .conversations {
@@ -160,17 +164,17 @@ import { UiEmptyStateComponent } from '../../../../shared/components/ui-empty-st
       }
 
       &.unread {
-        background: #fff5f0;
-        border-left: 3px solid #FF6B35;
+        background: #FFF3E0;
+        border-left: 3px solid var(--color-primary-500, #FF9800);
 
         .name {
           font-weight: 700;
-          color: #1e293b;
+          color: #1F2937;
         }
 
         .last-message {
           font-weight: 500;
-          color: #1e293b;
+          color: #1F2937;
         }
       }
     }
@@ -179,7 +183,7 @@ import { UiEmptyStateComponent } from '../../../../shared/components/ui-empty-st
       width: 3rem;
       height: 3rem;
       border-radius: 50%;
-      background: linear-gradient(135deg, #FF6B35, #FF9800);
+      background: linear-gradient(135deg, var(--color-primary-500, #FF9800), #FF9800);
       color: white;
       display: flex;
       align-items: center;
@@ -187,7 +191,7 @@ import { UiEmptyStateComponent } from '../../../../shared/components/ui-empty-st
       font-weight: 600;
       font-size: 1rem;
       flex-shrink: 0;
-      box-shadow: 0 2px 8px rgba(255, 107, 53, 0.3);
+      box-shadow: 0 2px 8px rgba(255, 152, 0, 0.3);
     }
 
     .conversation-content {
@@ -203,13 +207,13 @@ import { UiEmptyStateComponent } from '../../../../shared/components/ui-empty-st
 
       .name {
         font-weight: 600;
-        color: #1e293b;
+        color: #1F2937;
         font-size: 0.9375rem;
       }
 
       .time {
         font-size: 0.75rem;
-        color: #94a3b8;
+        color: #9CA3AF;
       }
     }
 
@@ -217,7 +221,7 @@ import { UiEmptyStateComponent } from '../../../../shared/components/ui-empty-st
       .device-tag {
         display: inline-block;
         font-size: 0.6875rem;
-        color: #64748b;
+        color: #6B7280;
         background: #f1f5f9;
         padding: 0.125rem 0.375rem;
         border-radius: 0.25rem;
@@ -226,25 +230,25 @@ import { UiEmptyStateComponent } from '../../../../shared/components/ui-empty-st
 
       .last-message {
         font-size: 0.8125rem;
-        color: #64748b;
+        color: #6B7280;
         margin: 0;
         overflow: hidden;
         text-overflow: ellipsis;
         white-space: nowrap;
 
         .you {
-          color: #94a3b8;
+          color: #9CA3AF;
         }
 
         &.empty {
           font-style: italic;
-          color: #94a3b8;
+          color: #9CA3AF;
         }
       }
     }
 
     .unread-count {
-      background: linear-gradient(135deg, #FF6B35, #FF9800);
+      background: linear-gradient(135deg, var(--color-primary-500, #FF9800), #FF9800);
       color: white;
       font-size: 0.6875rem;
       font-weight: 700;
@@ -255,7 +259,7 @@ import { UiEmptyStateComponent } from '../../../../shared/components/ui-empty-st
       align-items: center;
       justify-content: center;
       padding: 0 0.25rem;
-      box-shadow: 0 2px 6px rgba(255, 107, 53, 0.4);
+      box-shadow: 0 2px 6px rgba(255, 152, 0, 0.4);
     }
 
     .connection-error {
@@ -263,9 +267,9 @@ import { UiEmptyStateComponent } from '../../../../shared/components/ui-empty-st
       bottom: 5rem;
       left: 1rem;
       right: 1rem;
-      background: #fef2f2;
-      border: 1px solid #fecaca;
-      color: #dc2626;
+      background: #FFEBEE;
+      border: 1px solid #FFCDD2;
+      color: var(--color-terracotta, #C62828);
       padding: 0.75rem 1rem;
       border-radius: 0.5rem;
       display: flex;
@@ -282,7 +286,9 @@ import { UiEmptyStateComponent } from '../../../../shared/components/ui-empty-st
 export class ChatListComponent implements OnInit {
   readonly chatService = inject(ChatService);
   readonly store = inject(ChatStore);
-  private readonly authStore = inject(AuthStore);
+  readonly authStore = inject(AuthStore);
+  private readonly logger = inject(LoggerService);
+  readonly error = signal<string | null>(null);
 
   ngOnInit(): void {
     this.loadConversations();
@@ -290,12 +296,14 @@ export class ChatListComponent implements OnInit {
 
   async loadConversations(): Promise<void> {
     this.store.setLoadingConversations(true);
+    this.error.set(null);
 
     try {
       const conversations = await this.chatService.getConversations();
       this.store.setConversations(conversations);
     } catch (err) {
-      console.error('Error loading conversations:', err);
+      this.logger.error('ChatListComponent', 'Error loading conversations', err);
+      this.error.set('Impossible de charger les conversations');
     } finally {
       this.store.setLoadingConversations(false);
     }
@@ -304,30 +312,6 @@ export class ChatListComponent implements OnInit {
   getConversationName(conversation: Conversation): string {
     const currentUserId = this.authStore.user()?.id || '';
     return this.chatService.getConversationName(conversation, currentUserId);
-  }
-
-  getInitials(conversation: Conversation): string {
-    const currentUserId = this.authStore.user()?.id || '';
-
-    if (conversation.clientId === currentUserId) {
-      // Show repairer initials
-      const name = conversation.repairer?.repairerProfile?.businessName ||
-        `${conversation.repairer?.firstName || ''} ${conversation.repairer?.lastName || ''}`;
-      return this.extractInitials(name);
-    } else {
-      // Show client initials
-      const firstName = conversation.client?.firstName || '';
-      const lastName = conversation.client?.lastName || '';
-      return (firstName.charAt(0) + lastName.charAt(0)).toUpperCase() || '?';
-    }
-  }
-
-  private extractInitials(name: string): string {
-    const parts = name.trim().split(' ');
-    if (parts.length >= 2) {
-      return (parts[0].charAt(0) + parts[1].charAt(0)).toUpperCase();
-    }
-    return name.charAt(0).toUpperCase() || '?';
   }
 
   isOwnMessage(message: any): boolean {

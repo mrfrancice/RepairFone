@@ -37,8 +37,8 @@ import { TabItem } from '../../models';
     .tabs {
       display: flex;
       position: relative;
-      background: var(--color-neutral-100, #f3f4f6);
-      border-radius: 8px;
+      background: var(--color-neutral-100, #F5F5F5);
+      border-radius: 0.75rem;
       padding: 4px;
       gap: 4px;
     }
@@ -49,33 +49,34 @@ import { TabItem } from '../../models';
       align-items: center;
       justify-content: center;
       gap: 0.375rem;
-      padding: 0.75rem 1rem;
-      min-height: 44px;
+      padding: 0.5rem 1.125rem;
+      min-height: 48px;
       background: none;
       border: none;
-      border-radius: 6px;
-      font-size: 0.875rem;
-      font-weight: 500;
-      color: var(--text-secondary, #6b7280);
+      border-radius: 0.5rem;
+      font-family: 'Inter', sans-serif;
+      font-size: 0.8125rem;
+      font-weight: 600;
+      color: var(--color-neutral-600, #4B5563);
       cursor: pointer;
-      transition: all 0.2s;
+      transition: all 150ms ease;
       position: relative;
       z-index: 1;
     }
 
     .tab:focus-visible {
-      outline: 2px solid var(--color-primary, #FF9800);
+      outline: 2px solid var(--color-primary-500, #FF9800);
       outline-offset: -2px;
     }
 
     .tab:hover:not(.active) {
-      color: var(--text-primary, #374151);
+      color: var(--color-neutral-800, #1F2937);
     }
 
     .tab.active {
-      color: var(--text-primary, #1f2937);
-      background: var(--bg-surface, white);
-      box-shadow: var(--shadow-sm, 0 1px 3px rgba(0, 0, 0, 0.1));
+      color: var(--color-primary-500, #FF9800);
+      background: white;
+      box-shadow: var(--shadow-sm, 0 1px 2px rgba(0, 0, 0, 0.05));
     }
 
     .tab-icon {

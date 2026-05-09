@@ -8,19 +8,19 @@ import { AuthStore } from '../../../../core/stores/auth.store';
 import { SecureStorageService, StorageKeys } from '../../../../core/services/secure-storage.service';
 import { CustomValidators, getErrorMessage } from '../../../../shared/validators/custom-validators';
 import { UiInputComponent, UiButtonComponent, UiAlertComponent, UiCheckboxComponent } from '@app/shared';
+import { AppLogoComponent } from '../../../../shared/components/app-logo/app-logo.component';
+import { LoggerService } from '../../../../core/services/logger.service';
 
 @Component({
   selector: 'app-login',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [CommonModule, ReactiveFormsModule, RouterLink, UiInputComponent, UiButtonComponent, UiAlertComponent, UiCheckboxComponent],
+  imports: [CommonModule, ReactiveFormsModule, RouterLink, UiInputComponent, UiButtonComponent, UiAlertComponent, UiCheckboxComponent, AppLogoComponent],
   template: `
     <div class="auth-container">
       <div class="auth-card">
         <div class="auth-logo">
-          <div class="logo">
-            <span class="logo-text">RepairFone</span>
-          </div>
+          <app-logo size="md" variant="gradient" />
         </div>
         <h1 class="auth-title">Connexion</h1>
         <p class="auth-subtitle">Accédez à votre espace</p>
@@ -97,7 +97,8 @@ import { UiInputComponent, UiButtonComponent, UiAlertComponent, UiCheckboxCompon
       align-items: center;
       justify-content: center;
       padding: 1rem;
-      background: linear-gradient(135deg, var(--color-primary-500, #FF9800) 0%, var(--color-primary-700, #F57C00) 100%);
+      padding-bottom: calc(1rem + var(--bottom-nav-height, 80px) + var(--safe-area-bottom, 0px));
+      background: linear-gradient(135deg, var(--color-primary-500, #FF9800) 0%, var(--color-gold-800, #F9A825) 100%);
     }
 
     .auth-card {
@@ -244,6 +245,7 @@ export class LoginComponent implements OnInit, OnDestroy {
   private readonly route = inject(ActivatedRoute);
   private readonly fb = inject(FormBuilder);
   private readonly secureStorage = inject(SecureStorageService);
+  private readonly logger = inject(LoggerService);
   private readonly destroy$ = new Subject<void>();
 
   readonly isLoading = this.authStore.isLoading;
@@ -324,7 +326,7 @@ export class LoginComponent implements OnInit, OnDestroy {
         });
       }
     } catch (error) {
-      console.error('Failed to load remembered phone:', error);
+      this.logger.error('LoginComponent', 'Failed to load remembered phone', error);
     }
   }
 

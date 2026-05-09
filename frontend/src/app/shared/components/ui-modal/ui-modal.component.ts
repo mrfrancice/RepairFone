@@ -80,8 +80,9 @@ import { A11yModule, FocusTrap, FocusTrapFactory } from '@angular/cdk/a11y';
     }
 
     .modal {
-      background: var(--color-surface, white);
-      border-radius: var(--border-radius-lg, 12px);
+      background: var(--color-surface, #FFFFFF);
+      border-radius: 1.25rem;
+      box-shadow: var(--shadow-lg, 0 8px 24px rgba(0, 0, 0, 0.12));
       width: 100%;
       max-height: 90vh;
       display: flex;
@@ -114,9 +115,11 @@ import { A11yModule, FocusTrap, FocusTrapFactory } from '@angular/cdk/a11y';
     }
 
     .modal-title {
-      font-size: 1.125rem;
+      font-family: 'Poppins', 'Inter', sans-serif;
+      font-size: 1.25rem;
       font-weight: 600;
-      color: var(--color-text-primary, rgba(0, 0, 0, 0.87));
+      letter-spacing: -0.01em;
+      color: var(--color-neutral-900, #111827);
       margin: 0;
     }
 
@@ -129,8 +132,8 @@ import { A11yModule, FocusTrap, FocusTrapFactory } from '@angular/cdk/a11y';
       font-size: 1.25rem;
       color: var(--color-text-secondary, rgba(0, 0, 0, 0.60));
       cursor: pointer;
-      min-width: 44px;
-      min-height: 44px;
+      min-width: 48px;
+      min-height: 48px;
       padding: 0.5rem;
       margin: -0.5rem -0.5rem -0.5rem 0;
       border-radius: var(--border-radius-md, 8px);
@@ -139,7 +142,7 @@ import { A11yModule, FocusTrap, FocusTrapFactory } from '@angular/cdk/a11y';
 
     .modal-close:hover {
       color: var(--color-text-primary, rgba(0, 0, 0, 0.87));
-      background: var(--color-neutral-100, #f3f4f6);
+      background: var(--color-neutral-100, #F5F5F5);
     }
 
     .modal-close:focus-visible {

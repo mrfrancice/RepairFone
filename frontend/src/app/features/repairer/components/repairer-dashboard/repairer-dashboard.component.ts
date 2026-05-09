@@ -4,8 +4,11 @@ import { RouterLink } from '@angular/router';
 import { RepairerService, RepairerStats, RepairerRequest } from '../../services/repairer.service';
 import { RepairerStore } from '../../stores/repairer.store';
 import { AuthStore } from '../../../../core/stores/auth.store';
+import { LoggerService } from '../../../../core/services/logger.service';
 import { UiLoadingComponent } from '../../../../shared/components/ui-loading/ui-loading.component';
 import { UiHeaderComponent } from '../../../../shared/components/ui-header/ui-header.component';
+import { UiErrorStateComponent } from '../../../../shared/components/ui-error-state/ui-error-state.component';
+import { InitialsPipe } from '../../../../shared/pipes/initials.pipe';
 
 @Component({
   selector: 'app-repairer-dashboard',
@@ -16,6 +19,8 @@ import { UiHeaderComponent } from '../../../../shared/components/ui-header/ui-he
     RouterLink,
     UiLoadingComponent,
     UiHeaderComponent,
+    UiErrorStateComponent,
+    InitialsPipe,
   ],
   template: `
     <div class="dashboard">
@@ -47,7 +52,17 @@ import { UiHeaderComponent } from '../../../../shared/components/ui-header/ui-he
           </div>
         }
 
-        @if (!isLoading()) {
+        <!-- Error -->
+        @if (!isLoading() && error()) {
+          <ui-error-state
+            [message]="error()!"
+            severity="error"
+            [showRetry]="true"
+            (onRetry)="loadDashboardData()"
+          />
+        }
+
+        @if (!isLoading() && !error()) {
           <!-- Profile Summary Card -->
           <section class="profile-summary">
             <div class="profile-card">
@@ -57,7 +72,7 @@ import { UiHeaderComponent } from '../../../../shared/components/ui-header/ui-he
                     <img [src]="authStore.user()?.avatarUrl" alt="Photo" />
                   } @else {
                     <span class="avatar-placeholder">
-                      {{ getInitials() }}
+                      {{ authStore.user()?.firstName | initials : authStore.user()?.lastName }}
                     </span>
                   }
                   <span class="verification-badge" [class.verified]="store.isVerified()">
@@ -331,7 +346,7 @@ import { UiHeaderComponent } from '../../../../shared/components/ui-header/ui-he
 
     .dashboard-content {
       padding: 1rem;
-      padding-top: 100px;
+      padding-top: var(--header-height, 100px);
       padding-bottom: 100px;
       max-width: 800px;
       margin: 0 auto;
@@ -362,11 +377,11 @@ import { UiHeaderComponent } from '../../../../shared/components/ui-header/ui-he
         width: 8px;
         height: 8px;
         border-radius: 50%;
-        background: #ef4444;
+        background: var(--color-error, #F44336);
       }
 
       &.available .status-dot {
-        background: #10b981;
+        background: var(--color-secondary, #4CAF50);
       }
 
       &:hover {
@@ -380,7 +395,7 @@ import { UiHeaderComponent } from '../../../../shared/components/ui-header/ui-he
       align-items: center;
       gap: 1rem;
       padding: 3rem;
-      color: #64748b;
+      color: #6B7280;
     }
 
     /* Profile Summary */
@@ -420,7 +435,7 @@ import { UiHeaderComponent } from '../../../../shared/components/ui-header/ui-he
         width: 100%;
         height: 100%;
         border-radius: 50%;
-        background: linear-gradient(135deg, #FF6B35, #E85A24);
+        background: linear-gradient(135deg, var(--color-primary-500, #FF9800), var(--color-primary-900, #E65100));
         color: white;
         display: flex;
         align-items: center;
@@ -436,7 +451,7 @@ import { UiHeaderComponent } from '../../../../shared/components/ui-header/ui-he
         width: 22px;
         height: 22px;
         border-radius: 50%;
-        background: #f59e0b;
+        background: var(--color-mustard, #FFC107);
         color: white;
         font-size: 0.75rem;
         display: flex;
@@ -445,7 +460,7 @@ import { UiHeaderComponent } from '../../../../shared/components/ui-header/ui-he
         border: 2px solid white;
 
         &.verified {
-          background: #10b981;
+          background: var(--color-secondary, #4CAF50);
         }
       }
     }
@@ -454,7 +469,7 @@ import { UiHeaderComponent } from '../../../../shared/components/ui-header/ui-he
       .business-name {
         font-size: 1.125rem;
         font-weight: 600;
-        color: #1e293b;
+        color: #1F2937;
         margin: 0 0 0.25rem 0;
       }
 
@@ -463,7 +478,7 @@ import { UiHeaderComponent } from '../../../../shared/components/ui-header/ui-he
         flex-direction: column;
         gap: 0.125rem;
         font-size: 0.75rem;
-        color: #64748b;
+        color: #6B7280;
 
         .location {
           display: flex;
@@ -471,7 +486,7 @@ import { UiHeaderComponent } from '../../../../shared/components/ui-header/ui-he
           gap: 0.25rem;
 
           svg {
-            color: #FF6B35;
+            color: var(--color-primary-500, #FF9800);
           }
         }
       }
@@ -484,7 +499,7 @@ import { UiHeaderComponent } from '../../../../shared/components/ui-header/ui-he
         .rating-value {
           font-size: 1.5rem;
           font-weight: 700;
-          color: #f59e0b;
+          color: var(--color-mustard, #FFC107);
         }
 
         .rating-stars {
@@ -498,14 +513,14 @@ import { UiHeaderComponent } from '../../../../shared/components/ui-header/ui-he
             color: #e2e8f0;
 
             &.filled {
-              color: #fbbf24;
+              color: var(--color-mustard, #FFC107);
             }
           }
         }
 
         .rating-count {
           font-size: 0.625rem;
-          color: #94a3b8;
+          color: #9CA3AF;
         }
       }
     }
@@ -516,13 +531,13 @@ import { UiHeaderComponent } from '../../../../shared/components/ui-header/ui-he
       gap: 0.75rem;
       margin-top: 0.75rem;
       padding: 0.75rem 1rem;
-      background: #fef3c7;
+      background: #FFF8E1;
       border-radius: 12px;
-      border-left: 4px solid #f59e0b;
+      border-left: 4px solid var(--color-mustard, #FFC107);
 
       &.pending {
-        background: #dbeafe;
-        border-left-color: #3b82f6;
+        background: #E3F2FD;
+        border-left-color: var(--color-ocean, #1565C0);
       }
 
       .banner-icon {
@@ -532,15 +547,15 @@ import { UiHeaderComponent } from '../../../../shared/components/ui-header/ui-he
       .banner-text {
         flex: 1;
         font-size: 0.875rem;
-        color: #1e293b;
+        color: #1F2937;
       }
 
       .banner-btn {
         padding: 0.375rem 0.875rem;
-        background: #FF6B35;
+        background: var(--color-primary-500, #FF9800);
         color: white;
         border: none;
-        border-radius: 8px;
+        border-radius: 12px;
         font-size: 0.75rem;
         font-weight: 600;
         cursor: pointer;
@@ -576,7 +591,7 @@ import { UiHeaderComponent } from '../../../../shared/components/ui-header/ui-he
       }
 
       &.highlight {
-        border: 2px solid #FF6B35;
+        border: 2px solid var(--color-primary-500, #FF9800);
       }
     }
 
@@ -589,22 +604,22 @@ import { UiHeaderComponent } from '../../../../shared/components/ui-header/ui-he
       justify-content: center;
 
       &.orange {
-        background: linear-gradient(135deg, #FF6B35, #E85A24);
+        background: linear-gradient(135deg, var(--color-primary-500, #FF9800), var(--color-primary-900, #E65100));
         color: white;
       }
 
       &.blue {
-        background: linear-gradient(135deg, #3b82f6, #2563eb);
+        background: linear-gradient(135deg, var(--color-ocean, #1565C0), var(--color-primary-500, #FF9800));
         color: white;
       }
 
       &.green {
-        background: linear-gradient(135deg, #10b981, #059669);
+        background: linear-gradient(135deg, var(--color-secondary, #4CAF50), var(--color-success-dark, #2E7D32));
         color: white;
       }
 
       &.gold {
-        background: linear-gradient(135deg, #f59e0b, #d97706);
+        background: linear-gradient(135deg, var(--color-mustard, #FFC107), var(--color-primary-700, #F57C00));
         color: white;
       }
     }
@@ -617,7 +632,7 @@ import { UiHeaderComponent } from '../../../../shared/components/ui-header/ui-he
       .stat-value {
         font-size: 1.5rem;
         font-weight: 700;
-        color: #1e293b;
+        color: #1F2937;
 
         &.revenue-value {
           font-size: 1.125rem;
@@ -626,7 +641,7 @@ import { UiHeaderComponent } from '../../../../shared/components/ui-header/ui-he
 
       .stat-label {
         font-size: 0.75rem;
-        color: #64748b;
+        color: #6B7280;
       }
     }
 
@@ -635,7 +650,7 @@ import { UiHeaderComponent } from '../../../../shared/components/ui-header/ui-he
       top: 0.75rem;
       right: 0.75rem;
       padding: 0.25rem 0.5rem;
-      background: #FF6B35;
+      background: var(--color-primary-500, #FF9800);
       color: white;
       font-size: 0.625rem;
       font-weight: 600;
@@ -670,7 +685,7 @@ import { UiHeaderComponent } from '../../../../shared/components/ui-header/ui-he
       h3 {
         font-size: 1rem;
         font-weight: 600;
-        color: #1e293b;
+        color: #1F2937;
         margin: 0;
       }
 
@@ -684,7 +699,7 @@ import { UiHeaderComponent } from '../../../../shared/components/ui-header/ui-he
 
       .view-all {
         font-size: 0.8125rem;
-        color: #FF6B35;
+        color: var(--color-primary-500, #FF9800);
         text-decoration: none;
         font-weight: 500;
       }
@@ -713,7 +728,7 @@ import { UiHeaderComponent } from '../../../../shared/components/ui-header/ui-he
 
       .card-title {
         font-size: 0.75rem;
-        color: #64748b;
+        color: #6B7280;
         margin-top: 0.5rem;
       }
     }
@@ -754,13 +769,13 @@ import { UiHeaderComponent } from '../../../../shared/components/ui-header/ui-he
         .score-number {
           font-size: 1.5rem;
           font-weight: 700;
-          color: #1e293b;
+          color: #1F2937;
           display: block;
         }
 
         .score-label {
           font-size: 0.625rem;
-          color: #94a3b8;
+          color: #9CA3AF;
         }
       }
     }
@@ -768,12 +783,12 @@ import { UiHeaderComponent } from '../../../../shared/components/ui-header/ui-he
     .perf-value {
       font-size: 1.25rem;
       font-weight: 700;
-      color: #1e293b;
+      color: #1F2937;
     }
 
     .perf-label {
       font-size: 0.6875rem;
-      color: #64748b;
+      color: #6B7280;
       margin-bottom: 0.5rem;
     }
 
@@ -785,23 +800,23 @@ import { UiHeaderComponent } from '../../../../shared/components/ui-header/ui-he
 
       .perf-bar-fill {
         height: 100%;
-        background: #FF6B35;
+        background: var(--color-primary-500, #FF9800);
         border-radius: 2px;
         transition: width 0.5s ease;
 
         &.green {
-          background: #10b981;
+          background: var(--color-secondary, #4CAF50);
         }
       }
     }
 
     .perf-indicator {
       font-size: 0.625rem;
-      color: #f59e0b;
+      color: var(--color-mustard, #FFC107);
       margin-top: 0.25rem;
 
       &.good {
-        color: #10b981;
+        color: var(--color-secondary, #4CAF50);
       }
     }
 
@@ -812,7 +827,7 @@ import { UiHeaderComponent } from '../../../../shared/components/ui-header/ui-he
       h3 {
         font-size: 1rem;
         font-weight: 600;
-        color: #1e293b;
+        color: #1F2937;
         margin: 0;
       }
     }
@@ -832,13 +847,13 @@ import { UiHeaderComponent } from '../../../../shared/components/ui-header/ui-he
       .empty-title {
         font-size: 1rem;
         font-weight: 600;
-        color: #1e293b;
+        color: #1F2937;
         margin: 0 0 0.25rem 0;
       }
 
       .empty-subtitle {
         font-size: 0.8125rem;
-        color: #94a3b8;
+        color: #9CA3AF;
         margin: 0;
       }
     }
@@ -882,12 +897,12 @@ import { UiHeaderComponent } from '../../../../shared/components/ui-header/ui-he
         .device-name {
           font-size: 0.9375rem;
           font-weight: 600;
-          color: #1e293b;
+          color: #1F2937;
         }
 
         .service-type {
           font-size: 0.75rem;
-          color: #64748b;
+          color: #6B7280;
         }
       }
     }
@@ -899,8 +914,8 @@ import { UiHeaderComponent } from '../../../../shared/components/ui-header/ui-he
       gap: 0.25rem;
 
       .urgency-badge {
-        background: #fef3c7;
-        color: #d97706;
+        background: #FFF8E1;
+        color: var(--color-primary-700, #F57C00);
         padding: 0.125rem 0.5rem;
         border-radius: 4px;
         font-size: 0.625rem;
@@ -909,12 +924,12 @@ import { UiHeaderComponent } from '../../../../shared/components/ui-header/ui-he
 
       .distance {
         font-size: 0.75rem;
-        color: #64748b;
+        color: #6B7280;
       }
 
       .time-ago {
         font-size: 0.6875rem;
-        color: #94a3b8;
+        color: #9CA3AF;
       }
     }
 
@@ -925,7 +940,7 @@ import { UiHeaderComponent } from '../../../../shared/components/ui-header/ui-he
       h3 {
         font-size: 1rem;
         font-weight: 600;
-        color: #1e293b;
+        color: #1F2937;
         margin: 0 0 0.75rem 0;
       }
     }
@@ -957,21 +972,21 @@ import { UiHeaderComponent } from '../../../../shared/components/ui-header/ui-he
       .action-icon {
         width: 40px;
         height: 40px;
-        border-radius: 10px;
+        border-radius: 12px;
         display: flex;
         align-items: center;
         justify-content: center;
         font-size: 1.25rem;
 
-        &.orange { background: #fff7ed; }
-        &.blue { background: #eff6ff; }
-        &.green { background: #f0fdf4; }
+        &.orange { background: #FFF3E0; }
+        &.blue { background: #E3F2FD; }
+        &.green { background: #E8F5E9; }
         &.purple { background: #faf5ff; }
       }
 
       span {
         font-size: 0.6875rem;
-        color: #64748b;
+        color: #6B7280;
         font-weight: 500;
       }
     }
@@ -981,7 +996,7 @@ import { UiHeaderComponent } from '../../../../shared/components/ui-header/ui-he
       h3 {
         font-size: 1rem;
         font-weight: 600;
-        color: #1e293b;
+        color: #1F2937;
         margin: 0 0 0.75rem 0;
       }
     }
@@ -998,7 +1013,7 @@ import { UiHeaderComponent } from '../../../../shared/components/ui-header/ui-he
       padding: 0.375rem 0.75rem;
       border-radius: 20px;
       font-size: 0.75rem;
-      color: #475569;
+      color: #4B5563;
     }
   `]
 })
@@ -1006,9 +1021,11 @@ export class RepairerDashboardComponent implements OnInit {
   readonly repairerService = inject(RepairerService);
   readonly store = inject(RepairerStore);
   readonly authStore = inject(AuthStore);
+  private readonly logger = inject(LoggerService);
   readonly Math = Math;
 
   readonly isLoading = signal(false);
+  readonly error = signal<string | null>(null);
 
   readonly todayDate = new Date().toLocaleDateString('fr-FR', {
     weekday: 'long',
@@ -1031,14 +1048,6 @@ export class RepairerDashboardComponent implements OnInit {
       || 'Réparateur';
 
     return `${greeting}, ${name}`;
-  }
-
-  getInitials(): string {
-    const user = this.authStore.user();
-    if (!user) return 'R';
-    const first = user.firstName?.[0] || '';
-    const last = user.lastName?.[0] || '';
-    return (first + last).toUpperCase() || 'R';
   }
 
   getMemberSince(): string {
@@ -1065,6 +1074,7 @@ export class RepairerDashboardComponent implements OnInit {
 
   async loadDashboardData(): Promise<void> {
     this.isLoading.set(true);
+    this.error.set(null);
 
     try {
       const [profile, stats, requests] = await Promise.all([
@@ -1076,8 +1086,9 @@ export class RepairerDashboardComponent implements OnInit {
       this.store.setProfile(profile);
       this.store.setStats(stats);
       this.store.setRequests(requests.data, requests.total);
-    } catch (err) {
-      console.error('Error loading dashboard:', err);
+    } catch (err: any) {
+      this.logger.error('RepairerDashboardComponent', 'Error loading dashboard', err);
+      this.error.set(err.message || 'Impossible de charger le tableau de bord');
     } finally {
       this.isLoading.set(false);
     }
@@ -1112,7 +1123,7 @@ export class RepairerDashboardComponent implements OnInit {
         isAvailable: newAvailability,
       });
     } catch (err) {
-      console.error('Error toggling availability:', err);
+      this.logger.error('RepairerDashboardComponent', 'Error toggling availability', err);
     }
   }
 }

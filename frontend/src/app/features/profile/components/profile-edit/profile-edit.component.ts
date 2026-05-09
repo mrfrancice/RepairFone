@@ -7,13 +7,14 @@ import { ProfileService, UpdateProfileDto, UpdateRepairerProfileDto } from '../.
 import { LocationService, City, Commune, Quarter } from '../../../../core/services/location.service';
 import { SettingsService } from '../../../../core/services/settings.service';
 import { UiHeaderComponent } from '../../../../shared/components/ui-header/ui-header.component';
+import { FormatDatePipe } from '../../../../shared/pipes/format-date.pipe';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 
 @Component({
   selector: 'app-profile-edit',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [CommonModule, FormsModule, ReactiveFormsModule, UiHeaderComponent],
+  imports: [CommonModule, FormsModule, ReactiveFormsModule, UiHeaderComponent, FormatDatePipe],
   template: `
     <div class="edit-container">
       <!-- Header avec gradient orange -->
@@ -185,7 +186,7 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
                 <div class="form-group">
                   <label>Date de naissance</label>
                   <div class="readonly-field">
-                    {{ formatDate(user()?.repairerProfile?.dateOfBirth) || 'Non renseignée' }}
+                    {{ (user()?.repairerProfile?.dateOfBirth | formatDate:'long') || 'Non renseignée' }}
                   </div>
                 </div>
 
@@ -617,13 +618,13 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
   styles: [`
     .edit-container {
       min-height: 100vh;
-      background: #f8fafc;
-      padding-bottom: 2rem;
+      background: var(--color-neutral-50, #FAFAFA);
+      padding-bottom: calc(2rem + var(--bottom-nav-height, 80px) + var(--safe-area-bottom, 0px));
     }
 
     .edit-content {
       padding: 1rem;
-      padding-top: 100px;
+      padding-top: var(--header-height, 100px);
       max-width: 800px;
       margin: 0 auto;
     }
@@ -652,22 +653,22 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
     .alert-error {
       background: white;
       color: #991b1b;
-      border-left: 4px solid #dc2626;
+      border-left: 4px solid var(--color-terracotta, #C62828);
     }
 
     .alert-error .alert-icon {
-      background: linear-gradient(135deg, #dc2626, #ef4444);
+      background: linear-gradient(135deg, var(--color-terracotta, #C62828), var(--color-error, #F44336));
       color: white;
     }
 
     .alert-success {
       background: white;
       color: #166534;
-      border-left: 4px solid #16a34a;
+      border-left: 4px solid var(--color-success-dark, #2E7D32);
     }
 
     .alert-success .alert-icon {
-      background: linear-gradient(135deg, #16a34a, #22c55e);
+      background: linear-gradient(135deg, var(--color-success-dark, #2E7D32), var(--color-secondary, #4CAF50));
       color: white;
     }
 
@@ -695,8 +696,8 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
     .section-icon-wrapper {
       width: 36px;
       height: 36px;
-      border-radius: 10px;
-      background: linear-gradient(135deg, #FF6B35 0%, #FF9800 100%);
+      border-radius: 12px;
+      background: linear-gradient(135deg, var(--color-primary-500, #FF9800) 0%, #FF9800 100%);
       display: flex;
       align-items: center;
       justify-content: center;
@@ -705,43 +706,43 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
     }
 
     .section-icon-wrapper.icon-blue {
-      background: linear-gradient(135deg, #3b82f6 0%, #60a5fa 100%);
+      background: linear-gradient(135deg, var(--color-ocean, #1565C0) 0%, #2196F3 100%);
     }
 
     .section-icon-wrapper.icon-green {
-      background: linear-gradient(135deg, #10b981 0%, #34d399 100%);
+      background: linear-gradient(135deg, var(--color-secondary, #4CAF50) 0%, #81C784 100%);
     }
 
     .section-icon-wrapper.icon-amber {
-      background: linear-gradient(135deg, #f59e0b 0%, #fbbf24 100%);
+      background: linear-gradient(135deg, var(--color-mustard, #FFC107) 0%, var(--color-mustard, #FFC107) 100%);
     }
 
     .section-icon-wrapper.icon-red {
-      background: linear-gradient(135deg, #ef4444 0%, #f87171 100%);
+      background: linear-gradient(135deg, var(--color-error, #F44336) 0%, #EF5350 100%);
     }
 
     .section-icon-wrapper.icon-purple {
-      background: linear-gradient(135deg, #8b5cf6 0%, #a78bfa 100%);
+      background: linear-gradient(135deg, #FF9800 0%, #F9A825 100%);
     }
 
     .section-icon-wrapper.icon-teal {
-      background: linear-gradient(135deg, #14b8a6 0%, #2dd4bf 100%);
+      background: linear-gradient(135deg, #4CAF50 0%, #81C784 100%);
     }
 
     .section-notice {
       display: flex;
       align-items: center;
       gap: 0.5rem;
-      background: linear-gradient(135deg, #fef3c7, #fde68a);
+      background: linear-gradient(135deg, #FFF8E1, #FFE082);
       color: #92400e;
       padding: 0.75rem 1rem;
-      border-radius: 10px;
+      border-radius: 12px;
       font-size: 0.875rem;
       margin-bottom: 1rem;
     }
 
     .section-hint {
-      color: #64748b;
+      color: #6B7280;
       font-size: 0.875rem;
       margin: -0.5rem 0 1rem 0;
     }
@@ -780,7 +781,7 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
       width: 100%;
       padding: 0.75rem 1rem;
       border: 2px solid #e2e8f0;
-      border-radius: 10px;
+      border-radius: 12px;
       font-size: 1rem;
       transition: all 0.2s;
       background: white;
@@ -788,8 +789,8 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 
     .form-input:focus {
       outline: none;
-      border-color: #FF6B35;
-      box-shadow: 0 0 0 3px rgba(255, 107, 53, 0.15);
+      border-color: var(--color-primary-500, #FF9800);
+      box-shadow: 0 0 0 3px rgba(255, 152, 0, 0.15);
     }
 
     .form-textarea {
@@ -798,24 +799,24 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
     }
 
     .input-error {
-      border-color: #dc2626 !important;
+      border-color: var(--color-terracotta, #C62828) !important;
     }
 
     .field-error {
       display: block;
-      color: #dc2626;
+      color: var(--color-terracotta, #C62828);
       font-size: 0.75rem;
       margin-top: 0.25rem;
     }
 
     .required {
-      color: #dc2626;
+      color: var(--color-terracotta, #C62828);
     }
 
     .char-count {
       display: block;
       text-align: right;
-      color: #64748b;
+      color: #6B7280;
       font-size: 0.75rem;
       margin-top: 0.25rem;
     }
@@ -826,16 +827,16 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
       gap: 0.75rem;
       padding: 0.75rem 1rem;
       background: #f1f5f9;
-      border-radius: 10px;
-      color: #475569;
+      border-radius: 12px;
+      color: #4B5563;
       font-size: 0.9375rem;
     }
 
     .readonly-icon {
       width: 32px;
       height: 32px;
-      border-radius: 8px;
-      background: linear-gradient(135deg, #FF6B35, #FF9800);
+      border-radius: 12px;
+      background: linear-gradient(135deg, var(--color-primary-500, #FF9800), #FF9800);
       display: flex;
       align-items: center;
       justify-content: center;
@@ -845,7 +846,7 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
     .readonly-badge {
       margin-left: auto;
       background: #e2e8f0;
-      color: #64748b;
+      color: #6B7280;
       padding: 0.25rem 0.75rem;
       border-radius: 20px;
       font-size: 0.75rem;
@@ -869,8 +870,8 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
       cursor: pointer;
       border: 4px solid transparent;
       background: linear-gradient(white, white) padding-box,
-                  linear-gradient(135deg, #FF6B35, #FF9800) border-box;
-      box-shadow: 0 4px 12px rgba(255, 107, 53, 0.3);
+                  linear-gradient(135deg, var(--color-primary-500, #FF9800), #FF9800) border-box;
+      box-shadow: 0 4px 12px rgba(255, 152, 0, 0.3);
     }
 
     .avatar-preview img {
@@ -882,7 +883,7 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
     .avatar-placeholder {
       width: 100%;
       height: 100%;
-      background: linear-gradient(135deg, #FF6B35 0%, #FF9800 100%);
+      background: linear-gradient(135deg, var(--color-primary-500, #FF9800) 0%, #FF9800 100%);
       display: flex;
       align-items: center;
       justify-content: center;
@@ -908,7 +909,7 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
     }
 
     .upload-hint {
-      color: #64748b;
+      color: #6B7280;
       font-size: 0.875rem;
     }
 
@@ -935,8 +936,8 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 
     .location-box.has-location {
       border-style: solid;
-      border-color: #10b981;
-      background: linear-gradient(135deg, #ecfdf5, #d1fae5);
+      border-color: var(--color-secondary, #4CAF50);
+      background: linear-gradient(135deg, #E8F5E9, #E8F5E9);
     }
 
     .location-info {
@@ -950,8 +951,8 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
     .location-icon-wrapper {
       width: 40px;
       height: 40px;
-      border-radius: 10px;
-      background: linear-gradient(135deg, #10b981, #34d399);
+      border-radius: 12px;
+      background: linear-gradient(135deg, var(--color-secondary, #4CAF50), #81C784);
       display: flex;
       align-items: center;
       justify-content: center;
@@ -971,19 +972,19 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
       align-items: center;
       gap: 0.5rem;
       padding: 0.875rem 1.5rem;
-      background: linear-gradient(135deg, #FF6B35 0%, #FF9800 100%);
+      background: linear-gradient(135deg, var(--color-primary-500, #FF9800) 0%, #FF9800 100%);
       color: white;
       border: none;
-      border-radius: 10px;
+      border-radius: 12px;
       font-weight: 600;
       cursor: pointer;
       transition: all 0.2s;
-      box-shadow: 0 4px 12px rgba(255, 107, 53, 0.3);
+      box-shadow: 0 4px 12px rgba(255, 152, 0, 0.3);
     }
 
     .btn-location:hover:not(:disabled) {
       transform: translateY(-2px);
-      box-shadow: 0 6px 16px rgba(255, 107, 53, 0.4);
+      box-shadow: 0 6px 16px rgba(255, 152, 0, 0.4);
     }
 
     .btn-location:disabled {
@@ -994,7 +995,7 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
     .btn-text {
       background: none;
       border: none;
-      color: #FF6B35;
+      color: var(--color-primary-500, #FF9800);
       font-weight: 600;
       cursor: pointer;
       padding: 0.25rem 0.5rem;
@@ -1023,7 +1024,7 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
       align-items: center;
       justify-content: center;
       gap: 0.5rem;
-      color: #94a3b8;
+      color: #9CA3AF;
       cursor: pointer;
       border: 2px dashed #e2e8f0;
       border-radius: 12px;
@@ -1031,9 +1032,9 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
     }
 
     .shop-photo-placeholder:hover {
-      border-color: #FF6B35;
-      color: #FF6B35;
-      background: #fff7ed;
+      border-color: var(--color-primary-500, #FF9800);
+      color: var(--color-primary-500, #FF9800);
+      background: #FFF3E0;
     }
 
     .shop-photo-placeholder span {
@@ -1065,7 +1066,7 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
     }
 
     .shop-photo-remove-btn:hover {
-      background: #dc2626;
+      background: var(--color-terracotta, #C62828);
     }
 
     .shop-photo-label {
@@ -1095,19 +1096,19 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
       border: 2px solid #e2e8f0;
       border-radius: 25px;
       background: white;
-      color: #475569;
+      color: #4B5563;
       font-size: 0.875rem;
       cursor: pointer;
       transition: all 0.2s;
     }
 
     .specialty-chip:hover {
-      border-color: #FF6B35;
-      color: #FF6B35;
+      border-color: var(--color-primary-500, #FF9800);
+      color: var(--color-primary-500, #FF9800);
     }
 
     .specialty-chip.selected {
-      background: linear-gradient(135deg, #FF6B35 0%, #FF9800 100%);
+      background: linear-gradient(135deg, var(--color-primary-500, #FF9800) 0%, #FF9800 100%);
       border-color: transparent;
       color: white;
     }
@@ -1117,7 +1118,7 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
       align-items: center;
       gap: 0.5rem;
       margin-top: 0.75rem;
-      color: #FF6B35;
+      color: var(--color-primary-500, #FF9800);
       font-size: 0.875rem;
       font-weight: 500;
     }
@@ -1142,7 +1143,7 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
     }
 
     .toggle-text small {
-      color: #64748b;
+      color: #6B7280;
       font-size: 0.8125rem;
     }
 
@@ -1157,7 +1158,7 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
     }
 
     .toggle-switch.active {
-      background: linear-gradient(135deg, #10b981, #34d399);
+      background: linear-gradient(135deg, var(--color-secondary, #4CAF50), #81C784);
     }
 
     .toggle-slider {
@@ -1183,7 +1184,7 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
       gap: 1rem;
       padding: 0.5rem;
       background: #f8fafc;
-      border-radius: 10px;
+      border-radius: 12px;
     }
 
     .range-input {
@@ -1199,20 +1200,20 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
       -webkit-appearance: none;
       width: 22px;
       height: 22px;
-      background: linear-gradient(135deg, #FF6B35, #FF9800);
+      background: linear-gradient(135deg, var(--color-primary-500, #FF9800), #FF9800);
       border-radius: 50%;
       cursor: pointer;
-      box-shadow: 0 2px 8px rgba(255, 107, 53, 0.4);
+      box-shadow: 0 2px 8px rgba(255, 152, 0, 0.4);
     }
 
     .radius-value {
       min-width: 55px;
       text-align: center;
       font-weight: 700;
-      color: #FF6B35;
+      color: var(--color-primary-500, #FF9800);
       background: white;
       padding: 0.375rem 0.75rem;
-      border-radius: 8px;
+      border-radius: 12px;
       font-size: 0.875rem;
     }
 
@@ -1236,14 +1237,14 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
     }
 
     .btn-primary {
-      background: linear-gradient(135deg, #FF6B35 0%, #E85A24 50%, #FF9800 100%);
+      background: linear-gradient(135deg, var(--color-primary-500, #FF9800) 0%, var(--color-primary-900, #E65100) 50%, #FF9800 100%);
       color: white;
-      box-shadow: 0 4px 15px rgba(255, 107, 53, 0.4);
+      box-shadow: 0 4px 15px rgba(255, 152, 0, 0.4);
     }
 
     .btn-primary:hover:not(:disabled) {
       transform: translateY(-2px);
-      box-shadow: 0 6px 20px rgba(255, 107, 53, 0.5);
+      box-shadow: 0 6px 20px rgba(255, 152, 0, 0.5);
     }
 
     .btn-primary:disabled {
@@ -1482,12 +1483,6 @@ export class ProfileEditComponent implements OnInit {
       return `${user.firstName[0]}${user.lastName[0]}`.toUpperCase();
     }
     return '?';
-  }
-
-  formatDate(dateStr: string | undefined): string {
-    if (!dateStr) return '';
-    const date = new Date(dateStr);
-    return date.toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' });
   }
 
   getIdDocumentTypeLabel(type: string | undefined): string {

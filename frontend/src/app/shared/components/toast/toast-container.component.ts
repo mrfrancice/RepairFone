@@ -41,11 +41,11 @@ import { ToastService, Toast, ToastType } from '../../../core/services/toast.ser
   styles: [`
     .toast-container {
       position: fixed;
-      top: 1rem;
+      bottom: calc(var(--bottom-nav-height, 80px) + var(--safe-area-bottom, 0px) + 1rem);
       right: 1rem;
       z-index: 9999;
       display: flex;
-      flex-direction: column;
+      flex-direction: column-reverse;
       gap: 0.75rem;
       max-width: 380px;
       width: calc(100vw - 2rem);
@@ -56,10 +56,10 @@ import { ToastService, Toast, ToastType } from '../../../core/services/toast.ser
       display: flex;
       align-items: flex-start;
       gap: 0.75rem;
-      padding: 1rem;
-      border-radius: var(--border-radius-lg, 12px);
-      background: var(--color-surface, white);
-      box-shadow: 0 10px 40px rgba(0, 0, 0, 0.15);
+      padding: 1rem 1.25rem;
+      border-radius: 1rem;
+      background: var(--color-surface, #FFFFFF);
+      box-shadow: var(--shadow-lg, 0 8px 24px rgba(0, 0, 0, 0.12));
       animation: slideIn 0.3s ease-out;
       position: relative;
       overflow: hidden;
@@ -94,7 +94,7 @@ import { ToastService, Toast, ToastType } from '../../../core/services/toast.ser
     }
 
     .toast-error .toast-icon {
-      background: var(--color-primary-50, #FFF3E0);
+      background: var(--color-error-light, #FFEBEE);
       color: var(--color-error, #F44336);
     }
 
@@ -114,9 +114,11 @@ import { ToastService, Toast, ToastType } from '../../../core/services/toast.ser
     }
 
     .toast-title {
+      font-family: 'Poppins', 'Inter', sans-serif;
       font-weight: 600;
       font-size: 0.875rem;
-      color: var(--color-text-primary, rgba(0, 0, 0, 0.87));
+      letter-spacing: -0.005em;
+      color: var(--color-neutral-900, #111827);
       margin-bottom: 0.25rem;
     }
 
@@ -170,8 +172,7 @@ import { ToastService, Toast, ToastType } from '../../../core/services/toast.ser
     /* Mobile adjustments */
     @media (max-width: 480px) {
       .toast-container {
-        top: auto;
-        bottom: 1rem;
+        bottom: calc(var(--bottom-nav-height, 80px) + var(--safe-area-bottom, 0px) + 1rem);
         left: 1rem;
         right: 1rem;
         width: auto;

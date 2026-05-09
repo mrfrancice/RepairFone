@@ -104,23 +104,23 @@ export type PriceVariant = 'default' | 'primary' | 'success' | 'danger' | 'muted
 
     /* Variants */
     .variant-default {
-      color: #1f2937;
+      color: var(--color-neutral-900, #111827);
     }
 
     .variant-primary {
-      color: #2563eb;
+      color: var(--color-primary-500, #FF9800);
     }
 
     .variant-success {
-      color: #16a34a;
+      color: var(--color-success-dark, #2E7D32);
     }
 
     .variant-danger {
-      color: #dc2626;
+      color: var(--color-terracotta, #C62828);
     }
 
     .variant-muted {
-      color: #6b7280;
+      color: var(--color-neutral-500, #6B7280);
     }
 
     /* Elements */
@@ -166,7 +166,7 @@ export type PriceVariant = 'default' | 'primary' | 'success' | 'danger' | 'muted
     }
 
     .discount-badge {
-      background: #dc2626;
+      background: var(--color-terracotta, #C62828);
       color: white;
       font-size: 0.6875rem;
       font-weight: 600;

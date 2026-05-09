@@ -40,9 +40,11 @@ import { UiButtonComponent } from '../ui-button/ui-button.component';
     }
 
     .empty-title {
+      font-family: 'Poppins', 'Inter', sans-serif;
       font-size: 1.25rem;
       font-weight: 600;
-      color: var(--color-text-primary, rgba(0, 0, 0, 0.87));
+      letter-spacing: -0.01em;
+      color: var(--color-neutral-900, #111827);
       margin: 0 0 0.5rem;
     }
 

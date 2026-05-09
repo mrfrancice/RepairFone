@@ -116,12 +116,12 @@ import { UiHeaderComponent } from '../../../../shared/components/ui-header/ui-he
   styles: [`
     .conseil-container {
       min-height: 100vh;
-      background: #f9fafb;
+      background: #FAFAFA;
     }
 
     .conseil-content {
       margin: 0;
-      margin-top: 100px;
+      margin-top: var(--header-height, 100px);
       background: white;
       padding: 1.25rem;
       min-height: calc(100vh - 100px);
@@ -130,7 +130,7 @@ import { UiHeaderComponent } from '../../../../shared/components/ui-header/ui-he
     .step-section {
       margin-bottom: 1.5rem;
       padding-bottom: 1.5rem;
-      border-bottom: 1px solid #f3f4f6;
+      border-bottom: 1px solid #F5F5F5;
     }
 
     .step-section:last-of-type {
@@ -147,7 +147,7 @@ import { UiHeaderComponent } from '../../../../shared/components/ui-header/ui-he
     .step-number {
       width: 28px;
       height: 28px;
-      background: #FF6B35;
+      background: var(--color-primary-500, #FF9800);
       color: white;
       border-radius: 50%;
       display: flex;
@@ -159,7 +159,7 @@ import { UiHeaderComponent } from '../../../../shared/components/ui-header/ui-he
     }
 
     .step-number.completed {
-      background: #10b981;
+      background: var(--color-secondary, #4CAF50);
     }
 
     .step-header h2 {
@@ -182,22 +182,22 @@ import { UiHeaderComponent } from '../../../../shared/components/ui-header/ui-he
       align-items: center;
       text-align: center;
       padding: 1.25rem 0.75rem;
-      background: #f9fafb;
-      border: 2px solid #e5e7eb;
+      background: #FAFAFA;
+      border: 2px solid #EEEEEE;
       border-radius: 12px;
       cursor: pointer;
       transition: all 0.2s;
     }
 
     .type-card:hover {
-      border-color: #FF6B35;
-      background: #FFF4E6;
+      border-color: var(--color-primary-500, #FF9800);
+      background: #FFF3E0;
       transform: translateY(-2px);
     }
 
     .type-card.selected {
-      background: linear-gradient(135deg, #FF6B35 0%, #FF9800 100%);
-      border-color: #FF6B35;
+      background: linear-gradient(135deg, var(--color-primary-500, #FF9800) 0%, #FF9800 100%);
+      border-color: var(--color-primary-500, #FF9800);
       color: white;
     }
 
@@ -235,7 +235,7 @@ import { UiHeaderComponent } from '../../../../shared/components/ui-header/ui-he
       width: 20px;
       height: 20px;
       background: white;
-      color: #FF6B35;
+      color: var(--color-primary-500, #FF9800);
       border-radius: 50%;
       display: flex;
       align-items: center;
@@ -259,22 +259,22 @@ import { UiHeaderComponent } from '../../../../shared/components/ui-header/ui-he
       gap: 0.5rem;
       padding: 1.5rem 0.75rem;
       min-height: 120px;
-      background: #f9fafb;
-      border: 2px solid #e5e7eb;
+      background: #FAFAFA;
+      border: 2px solid #EEEEEE;
       border-radius: 16px;
       cursor: pointer;
       transition: all 0.2s;
     }
 
     .format-card:hover {
-      border-color: #FF6B35;
+      border-color: var(--color-primary-500, #FF9800);
       transform: translateY(-4px);
-      box-shadow: 0 4px 12px rgba(255, 107, 53, 0.15);
+      box-shadow: 0 4px 12px rgba(255, 152, 0, 0.15);
     }
 
     .format-card.selected {
-      background: linear-gradient(135deg, #FF6B35 0%, #FF9800 100%);
-      border-color: #FF6B35;
+      background: linear-gradient(135deg, var(--color-primary-500, #FF9800) 0%, #FF9800 100%);
+      border-color: var(--color-primary-500, #FF9800);
       color: white;
     }
 
@@ -312,8 +312,8 @@ import { UiHeaderComponent } from '../../../../shared/components/ui-header/ui-he
       align-items: center;
       gap: 0.75rem;
       padding: 1rem;
-      background: linear-gradient(135deg, #FFF4E6 0%, #FFE8CC 100%);
-      border-left: 4px solid #FF6B35;
+      background: linear-gradient(135deg, #FFF3E0 0%, #FFE8CC 100%);
+      border-left: 4px solid var(--color-primary-500, #FF9800);
       border-radius: 12px;
       margin-bottom: 1rem;
     }
@@ -352,17 +352,17 @@ import { UiHeaderComponent } from '../../../../shared/components/ui-header/ui-he
     }
 
     .btn-primary {
-      background: linear-gradient(135deg, #FF6B35 0%, #FF9800 100%);
+      background: linear-gradient(135deg, var(--color-primary-500, #FF9800) 0%, #FF9800 100%);
       color: white;
-      box-shadow: 0 4px 12px rgba(255, 107, 53, 0.3);
+      box-shadow: 0 4px 12px rgba(255, 152, 0, 0.3);
       min-height: 56px;
       font-weight: 700;
     }
 
     .btn-primary:hover {
-      background: linear-gradient(135deg, #E85A24 0%, #F57C00 100%);
+      background: linear-gradient(135deg, var(--color-primary-900, #E65100) 0%, #F57C00 100%);
       transform: translateY(-2px);
-      box-shadow: 0 6px 16px rgba(255, 107, 53, 0.4);
+      box-shadow: 0 6px 16px rgba(255, 152, 0, 0.4);
     }
 
     .btn-block {

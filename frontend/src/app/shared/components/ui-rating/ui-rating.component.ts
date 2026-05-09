@@ -53,14 +53,14 @@ import { CommonModule } from '@angular/common';
 
     .rating-sm .star {
       font-size: 1.25rem;
-      min-width: 44px;
-      min-height: 44px;
+      min-width: 48px;
+      min-height: 48px;
     }
 
     .rating-md .star {
       font-size: 1.5rem;
-      min-width: 44px;
-      min-height: 44px;
+      min-width: 48px;
+      min-height: 48px;
     }
 
     .rating-lg .star {
@@ -92,8 +92,8 @@ import { CommonModule } from '@angular/common';
       color: var(--color-neutral-400, #BDBDBD);
       transition: color 0.15s, transform 0.15s;
       border-radius: var(--border-radius-sm, 4px);
-      min-width: 44px;
-      min-height: 44px;
+      min-width: 48px;
+      min-height: 48px;
     }
 
     .star.interactive {

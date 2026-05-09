@@ -9,12 +9,14 @@ import { UiButtonComponent } from '../../../../shared/components/ui-button/ui-bu
 import { UiLoadingComponent } from '../../../../shared/components/ui-loading/ui-loading.component';
 import { UiHeaderComponent } from '../../../../shared/components/ui-header/ui-header.component';
 import { UiStepperComponent } from '../../../../shared/components/ui-stepper/ui-stepper.component';
+import { FormatDatePipe } from '../../../../shared/pipes/format-date.pipe';
+import { LoggerService } from '../../../../core/services/logger.service';
 
 @Component({
   selector: 'app-payment-summary',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [CommonModule, FormsModule, UiButtonComponent, UiLoadingComponent, UiHeaderComponent, UiStepperComponent],
+  imports: [CommonModule, FormsModule, UiButtonComponent, UiLoadingComponent, UiHeaderComponent, UiStepperComponent, FormatDatePipe],
   template: `
     <div class="payment-container">
       <!-- Header - Utilisation du composant partagé -->
@@ -333,7 +335,7 @@ import { UiStepperComponent } from '../../../../shared/components/ui-stepper/ui-
                     </div>
                     <div class="result-row">
                       <span>Date</span>
-                      <span>{{ formatDate(store.flowState().currentPayment?.paidAt) }}</span>
+                      <span>{{ store.flowState().currentPayment?.paidAt | formatDate }}</span>
                     </div>
                   </div>
 
@@ -408,41 +410,8 @@ import { UiStepperComponent } from '../../../../shared/components/ui-stepper/ui-
     .payment-container {
       min-height: 100vh;
       background: var(--color-background, #FAFAFA);
+      padding-top: var(--header-height, 100px);
       padding-bottom: 2rem;
-    }
-
-    .payment-header {
-      display: flex;
-      align-items: center;
-      gap: 1rem;
-      padding: 1rem;
-      background: white;
-      border-bottom: 1px solid #EEEEEE;
-    }
-
-    .back-btn {
-      width: 40px;
-      height: 40px;
-      border-radius: 50%;
-      border: none;
-      background: #F5F5F5;
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 1.25rem;
-      transition: all 150ms cubic-bezier(0.4, 0, 0.2, 1);
-    }
-
-    .back-btn:hover {
-      background: #EEEEEE;
-    }
-
-    .payment-header h1 {
-      margin: 0;
-      font-size: 1.25rem;
-      font-weight: 600;
-      color: #212121;
     }
 
     /* Progress Bar */
@@ -1144,10 +1113,6 @@ import { UiStepperComponent } from '../../../../shared/components/ui-stepper/ui-
     }
 
     @media (max-width: 640px) {
-      .payment-header h1 {
-        font-size: 1.125rem;
-      }
-
       .step-content {
         padding: 1rem;
       }
@@ -1164,6 +1129,7 @@ export class PaymentSummaryComponent implements OnInit {
   private readonly quotesService = inject(QuotesService);
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
+  private readonly logger = inject(LoggerService);
 
   readonly isLoading = signal(true);
   readonly isProcessing = signal(false);
@@ -1201,7 +1167,7 @@ export class PaymentSummaryComponent implements OnInit {
       const summary = this.paymentService.calculateSummary(quote.totalAmount);
       this.store.initFlow(requestId, quoteId, quote.totalAmount, summary);
     } catch (err) {
-      console.error('Error loading quote:', err);
+      this.logger.error('PaymentSummaryComponent', 'Error loading quote', err);
       this.router.navigate(['/requests']);
     } finally {
       this.isLoading.set(false);
@@ -1342,11 +1308,6 @@ export class PaymentSummaryComponent implements OnInit {
   retryPayment(): void {
     this.paymentError.set(null);
     this.store.setStep('confirm');
-  }
-
-  formatDate(dateStr?: string): string {
-    if (!dateStr) return new Date().toLocaleString('fr-FR');
-    return new Date(dateStr).toLocaleString('fr-FR');
   }
 
   goToPayments(): void {

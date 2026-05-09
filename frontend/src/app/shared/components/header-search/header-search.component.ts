@@ -54,23 +54,23 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
       display: flex;
       align-items: center;
       gap: 0.75rem;
-      background: rgba(255, 255, 255, 0.15);
-      backdrop-filter: blur(10px);
-      border: 1px solid rgba(255, 255, 255, 0.2);
+      background: var(--color-neutral-100, #F5F5F5);
+      border: 1.5px solid var(--color-neutral-200, #EEEEEE);
       border-radius: 12px;
-      padding: 0.75rem 1rem;
+      padding: 0.625rem 1rem;
       margin-top: 1rem;
-      transition: all 0.2s;
+      transition: all 150ms ease;
     }
 
     .search-input-wrapper.focused,
     .search-input-wrapper:focus-within {
-      background: rgba(255, 255, 255, 0.25);
-      border-color: rgba(255, 255, 255, 0.4);
+      background: white;
+      border-color: var(--color-primary-500, #FF9800);
+      box-shadow: 0 0 0 4px rgba(255, 152, 0, 0.12);
     }
 
     .search-input-wrapper svg {
-      color: rgba(255, 255, 255, 0.8);
+      color: var(--color-neutral-500, #6B7280);
       flex-shrink: 0;
     }
 
@@ -79,13 +79,14 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
       border: none;
       outline: none;
       background: transparent;
+      font-family: 'Inter', sans-serif;
       font-size: 0.9375rem;
-      color: white;
+      color: var(--color-neutral-900, #111827);
       min-width: 0;
     }
 
     .search-input-wrapper input::placeholder {
-      color: rgba(255, 255, 255, 0.7);
+      color: var(--color-neutral-500, #6B7280);
     }
 
     .clear-search {
@@ -93,18 +94,18 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
       height: 24px;
       border-radius: 6px;
       border: none;
-      background: rgba(255, 255, 255, 0.2);
-      color: white;
+      background: var(--color-neutral-200, #EEEEEE);
+      color: var(--color-neutral-700, #374151);
       cursor: pointer;
       display: flex;
       align-items: center;
       justify-content: center;
-      transition: all 0.2s;
+      transition: all 150ms ease;
       flex-shrink: 0;
     }
 
     .clear-search:hover {
-      background: rgba(255, 255, 255, 0.3);
+      background: var(--color-neutral-300, #D1D5DB);
     }
   `],
 })

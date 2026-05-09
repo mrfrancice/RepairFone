@@ -1,6 +1,8 @@
-import { Component, inject, ChangeDetectionStrategy } from '@angular/core';
+import { Component, inject, ChangeDetectionStrategy, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { RouterLink, RouterLinkActive } from '@angular/router';
+import { Router, RouterLink, RouterLinkActive, NavigationEnd } from '@angular/router';
+import { toSignal } from '@angular/core/rxjs-interop';
+import { filter, map, startWith } from 'rxjs';
 import { AuthStore } from '../../../core/stores/auth.store';
 
 @Component({
@@ -9,13 +11,14 @@ import { AuthStore } from '../../../core/stores/auth.store';
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [CommonModule, RouterLink, RouterLinkActive],
   template: `
+    @if (!hideNav()) {
     <nav class="bottom-nav" role="navigation" aria-label="Navigation principale">
       @if (!authStore.isAdmin() && !authStore.isRepairer()) {
         <a routerLink="/search"
            routerLinkActive="active"
            #searchLink="routerLinkActive"
            class="nav-item nav-cta"
-           aria-label="Rechercher des reparateurs"
+           aria-label="Rechercher des réparateurs"
            [attr.aria-current]="searchLink.isActive ? 'page' : null">
           <span class="nav-icon-wrapper cta-search" aria-hidden="true">
             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -27,13 +30,34 @@ import { AuthStore } from '../../../core/stores/auth.store';
         </a>
       }
 
-      @if (!authStore.isAdmin()) {
+      @if (!authStore.isAdmin() && !authStore.isRepairer() && authStore.isAuthenticated()) {
+        <!-- Client connecté : Mes demandes envoyées -->
         <a routerLink="/requests"
            routerLinkActive="active"
            #requestsLink="routerLinkActive"
            class="nav-item nav-cta"
-           aria-label="Mes demandes de reparation"
+           aria-label="Mes demandes de réparation"
            [attr.aria-current]="requestsLink.isActive ? 'page' : null">
+          <span class="nav-icon-wrapper cta-demande" aria-hidden="true">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+              <polyline points="14 2 14 8 20 8"/>
+              <line x1="12" y1="18" x2="12" y2="12"/>
+              <line x1="9" y1="15" x2="15" y2="15"/>
+            </svg>
+          </span>
+          <span class="nav-label">Demandes</span>
+        </a>
+      }
+
+      @if (authStore.isRepairer()) {
+        <!-- Repairer: Demandes reçues des clients -->
+        <a routerLink="/repairer/requests"
+           routerLinkActive="active"
+           #repairerRequestsLink="routerLinkActive"
+           class="nav-item nav-cta"
+           aria-label="Demandes reçues"
+           [attr.aria-current]="repairerRequestsLink.isActive ? 'page' : null">
           <span class="nav-icon-wrapper cta-demande" aria-hidden="true">
             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
               <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
@@ -78,6 +102,7 @@ import { AuthStore } from '../../../core/stores/auth.store';
         </a>
       }
     </nav>
+    }
   `,
   styles: [`
     .bottom-nav {
@@ -87,7 +112,7 @@ import { AuthStore } from '../../../core/stores/auth.store';
       right: 0;
       height: 72px;
       background: white;
-      border-top: 1px solid #e5e7eb;
+      border-top: 1px solid var(--color-neutral-200, #EEEEEE);
       display: flex;
       justify-content: space-around;
       align-items: center;
@@ -102,7 +127,7 @@ import { AuthStore } from '../../../core/stores/auth.store';
       align-items: center;
       gap: 0.35rem;
       text-decoration: none;
-      color: #9ca3af;
+      color: var(--color-neutral-500, #6B7280);
       font-size: 0.7rem;
       padding: 0.5rem 1rem;
       transition: all 0.3s ease;
@@ -113,7 +138,7 @@ import { AuthStore } from '../../../core/stores/auth.store';
     }
 
     .nav-item.active {
-      color: #FF6B35;
+      color: var(--color-primary-500, #FF9800);
     }
 
     .nav-icon-wrapper {
@@ -126,40 +151,40 @@ import { AuthStore } from '../../../core/stores/auth.store';
       transition: all 0.3s ease;
     }
 
-    /* CTA Buttons - Recherche & Demandes */
+    /* CTA Buttons - Recherche & Demandes (charte: gradient Coucher africain) */
     .nav-cta .nav-icon-wrapper {
-      background: linear-gradient(135deg, #FF6B35 0%, #E85A24 100%);
+      background: linear-gradient(135deg, var(--color-primary-500, #FF9800) 0%, var(--color-gold-800, #F9A825) 100%);
       color: white;
-      box-shadow: 0 3px 12px rgba(255, 107, 53, 0.4);
+      box-shadow: var(--shadow-warm, 0 8px 24px rgba(255, 152, 0, 0.20));
     }
 
     .nav-cta:hover .nav-icon-wrapper {
-      background: linear-gradient(135deg, #10B981 0%, #059669 100%);
+      background: linear-gradient(135deg, var(--color-secondary, #4CAF50) 0%, var(--color-secondary-dark, #2E7D32) 100%);
       color: white;
-      box-shadow: 0 4px 16px rgba(16, 185, 129, 0.45);
+      box-shadow: var(--shadow-success, 0 8px 24px rgba(76, 175, 80, 0.20));
       transform: scale(1.08);
     }
 
     .nav-cta.active .nav-icon-wrapper {
-      background: linear-gradient(135deg, #FF6B35 0%, #E85A24 100%);
+      background: linear-gradient(135deg, var(--color-primary-500, #FF9800) 0%, var(--color-gold-800, #F9A825) 100%);
       color: white;
-      box-shadow: 0 4px 16px rgba(255, 107, 53, 0.5);
+      box-shadow: 0 4px 16px rgba(255, 152, 0, 0.5);
     }
 
     .nav-cta .nav-label {
-      color: #FF6B35;
+      color: var(--color-primary-500, #FF9800);
       font-weight: 600;
     }
 
     .nav-cta:hover .nav-label {
-      color: #10B981;
+      color: var(--color-secondary-dark, #2E7D32);
     }
 
     .nav-cta.active .nav-label {
-      color: #E85A24;
+      color: var(--color-primary-900, #E65100);
     }
 
-    /* Pulse animation for CTA */
+    /* Pulse animation for CTA (charte) */
     .cta-search,
     .cta-demande {
       animation: pulse-cta 2.5s ease-in-out infinite;
@@ -171,10 +196,10 @@ import { AuthStore } from '../../../core/stores/auth.store';
 
     @keyframes pulse-cta {
       0%, 100% {
-        box-shadow: 0 3px 12px rgba(255, 107, 53, 0.4);
+        box-shadow: 0 3px 12px rgba(255, 152, 0, 0.4);
       }
       50% {
-        box-shadow: 0 3px 20px rgba(255, 107, 53, 0.6);
+        box-shadow: 0 3px 20px rgba(255, 152, 0, 0.6);
       }
     }
 
@@ -185,25 +210,26 @@ import { AuthStore } from '../../../core/stores/auth.store';
 
     /* Regular nav item (Connexion/Profil) */
     .nav-item:not(.nav-cta) .nav-icon-wrapper {
-      background: #f3f4f6;
-      color: #6b7280;
+      background: var(--color-neutral-100, #F5F5F5);
+      color: var(--color-neutral-600, #4B5563);
     }
 
     .nav-item:not(.nav-cta):hover .nav-icon-wrapper {
-      background: #e5e7eb;
-      color: #374151;
+      background: var(--color-neutral-200, #EEEEEE);
+      color: var(--color-neutral-700, #374151);
     }
 
     .nav-item:not(.nav-cta).active .nav-icon-wrapper {
-      background: #dbeafe;
-      color: #2563eb;
+      background: var(--color-ocean-50, #E3F2FD);
+      color: var(--color-ocean, #1565C0);
     }
 
     .nav-item:not(.nav-cta).active .nav-label {
-      color: #2563eb;
+      color: var(--color-ocean, #1565C0);
     }
 
     .nav-label {
+      font-family: 'Inter', sans-serif;
       font-weight: 500;
       letter-spacing: 0.01em;
     }
@@ -211,4 +237,19 @@ import { AuthStore } from '../../../core/stores/auth.store';
 })
 export class BottomNavComponent {
   readonly authStore = inject(AuthStore);
+  private readonly router = inject(Router);
+
+  private readonly currentUrl = toSignal(
+    this.router.events.pipe(
+      filter((e): e is NavigationEnd => e instanceof NavigationEnd),
+      map((e) => e.urlAfterRedirects),
+      startWith(this.router.url)
+    ),
+    { initialValue: this.router.url }
+  );
+
+  readonly hideNav = computed(() => {
+    const url = this.currentUrl();
+    return url.startsWith('/auth') || url.startsWith('/onboarding');
+  });
 }

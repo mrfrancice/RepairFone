@@ -3,22 +3,20 @@ import { CommonModule } from '@angular/common';
 import { Router, RouterLink } from '@angular/router';
 import { ConseilsService, ConseilSession } from '../../services/conseils.service';
 import { ConseilsStore } from '../../stores/conseils.store';
+import { UiErrorStateComponent } from '../../../../shared/components/ui-error-state/ui-error-state.component';
+import { FormatDatePipe } from '../../../../shared/pipes/format-date.pipe';
+import { StatusLabelsService, SessionStatus } from '../../../../shared/services/status-labels.service';
+import { LoggerService } from '../../../../core/services/logger.service';
+import { UiHeaderComponent } from '../../../../shared/components/ui-header/ui-header.component';
 
 @Component({
   selector: 'app-conseil-sessions',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [CommonModule, RouterLink],
+  imports: [CommonModule, RouterLink, UiErrorStateComponent, FormatDatePipe, UiHeaderComponent],
   template: `
     <div class="sessions-container">
-      <header class="sessions-header">
-        <button class="back-btn" (click)="goBack()">
-          <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
-            <path d="M15 18L9 12L15 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-          </svg>
-        </button>
-        <h1>Mes sessions</h1>
-      </header>
+      <ui-header title="Mes sessions" [showBack]="true" (onBack)="goBack()" />
 
       <!-- Tabs -->
       <div class="tabs-bar">
@@ -44,6 +42,13 @@ import { ConseilsStore } from '../../stores/conseils.store';
             <div class="spinner"></div>
             <p>Chargement...</p>
           </div>
+        } @else if (error()) {
+          <ui-error-state
+            [message]="error()!"
+            severity="error"
+            [showRetry]="true"
+            (onRetry)="loadSessions()"
+          />
         } @else if (filteredSessions().length === 0) {
           <div class="empty-state">
             <span class="empty-icon">💬</span>
@@ -78,7 +83,7 @@ import { ConseilsStore } from '../../stores/conseils.store';
                     <span class="expert-name">
                       {{ session.expert?.firstName }} {{ session.expert?.lastName }}
                     </span>
-                    <span class="session-date">{{ formatDate(session.createdAt) }}</span>
+                    <span class="session-date">{{ session.createdAt | formatDate }}</span>
                   </div>
 
                   <div class="session-type">
@@ -93,7 +98,7 @@ import { ConseilsStore } from '../../stores/conseils.store';
 
                   <div class="session-footer">
                     <span class="status-badge" [class]="session.status">
-                      {{ getStatusLabel(session.status) }}
+                      {{ statusLabels.getSessionStatusLabel($any(session.status)) }}
                     </span>
                     <span class="session-price">{{ session.price | number }} FCFA</span>
                   </div>
@@ -112,46 +117,14 @@ import { ConseilsStore } from '../../stores/conseils.store';
   styles: [`
     .sessions-container {
       min-height: 100vh;
-      background: #f9fafb;
-    }
-
-    .sessions-header {
-      display: flex;
-      align-items: center;
-      gap: 1rem;
-      padding: 1rem;
-      padding-top: calc(1rem + env(safe-area-inset-top, 0));
-      background: white;
-      border-bottom: 1px solid #e5e7eb;
-    }
-
-    .back-btn {
-      background: none;
-      border: none;
-      color: #374151;
-      width: 40px;
-      height: 40px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      cursor: pointer;
-      border-radius: 8px;
-    }
-
-    .back-btn:hover {
-      background: #f3f4f6;
-    }
-
-    .sessions-header h1 {
-      font-size: 1.25rem;
-      font-weight: 600;
-      color: #1f2937;
+      background: #FAFAFA;
+      padding-top: var(--header-height, 100px);
     }
 
     .tabs-bar {
       display: flex;
       background: white;
-      border-bottom: 1px solid #e5e7eb;
+      border-bottom: 1px solid #EEEEEE;
     }
 
     .tab {
@@ -168,8 +141,8 @@ import { ConseilsStore } from '../../stores/conseils.store';
     }
 
     .tab.active {
-      color: #7c3aed;
-      border-bottom-color: #7c3aed;
+      color: var(--color-primary-500, #FF9800);
+      border-bottom-color: var(--color-primary-500, #FF9800);
     }
 
     .sessions-content {
@@ -188,8 +161,8 @@ import { ConseilsStore } from '../../stores/conseils.store';
     .spinner {
       width: 40px;
       height: 40px;
-      border: 3px solid #e5e7eb;
-      border-top-color: #7c3aed;
+      border: 3px solid #EEEEEE;
+      border-top-color: var(--color-primary-500, #FF9800);
       border-radius: 50%;
       animation: spin 1s linear infinite;
       margin-bottom: 1rem;
@@ -247,7 +220,7 @@ import { ConseilsStore } from '../../stores/conseils.store';
     }
 
     .avatar-placeholder {
-      background: linear-gradient(135deg, #7c3aed 0%, #5b21b6 100%);
+      background: linear-gradient(135deg, var(--color-primary-500, #FF9800) 0%, var(--color-gold-800, #F9A825) 100%);
       color: white;
       display: flex;
       align-items: center;
@@ -291,7 +264,7 @@ import { ConseilsStore } from '../../stores/conseils.store';
     }
 
     .format-badge {
-      background: #f3f4f6;
+      background: #F5F5F5;
       padding: 0.125rem 0.5rem;
       border-radius: 4px;
       font-size: 0.75rem;
@@ -321,29 +294,29 @@ import { ConseilsStore } from '../../stores/conseils.store';
     }
 
     .status-badge.pending {
-      background: #fef3c7;
+      background: #FFF8E1;
       color: #92400e;
     }
 
     .status-badge.accepted,
     .status-badge.in_progress {
-      background: #dbeafe;
-      color: #1e40af;
+      background: #E3F2FD;
+      color: var(--color-ocean, #1565C0);
     }
 
     .status-badge.completed {
-      background: #d1fae5;
+      background: #E8F5E9;
       color: #065f46;
     }
 
     .status-badge.cancelled {
-      background: #fee2e2;
+      background: #FFEBEE;
       color: #991b1b;
     }
 
     .session-price {
       font-weight: 600;
-      color: #7c3aed;
+      color: var(--color-primary-500, #FF9800);
     }
 
     .chevron {
@@ -354,7 +327,7 @@ import { ConseilsStore } from '../../stores/conseils.store';
 
     .btn {
       padding: 0.75rem 1.5rem;
-      border-radius: 8px;
+      border-radius: 12px;
       font-weight: 600;
       font-size: 1rem;
       border: none;
@@ -363,7 +336,7 @@ import { ConseilsStore } from '../../stores/conseils.store';
     }
 
     .btn-primary {
-      background: #7c3aed;
+      background: var(--color-primary-500, #FF9800);
       color: white;
     }
 
@@ -376,8 +349,11 @@ export class ConseilSessionsComponent implements OnInit {
   private readonly router = inject(Router);
   private readonly conseilsService = inject(ConseilsService);
   readonly store = inject(ConseilsStore);
+  readonly statusLabels = inject(StatusLabelsService);
+  private readonly logger = inject(LoggerService);
 
   readonly activeTab = signal<'active' | 'completed'>('active');
+  readonly error = signal<string | null>(null);
 
   ngOnInit(): void {
     this.loadSessions();
@@ -385,11 +361,13 @@ export class ConseilSessionsComponent implements OnInit {
 
   async loadSessions(): Promise<void> {
     this.store.setIsLoadingSessions(true);
+    this.error.set(null);
     try {
       const result = await this.conseilsService.getMySessions();
       this.store.setSessions(result.data, result.total);
-    } catch (err) {
-      console.error('Error loading sessions:', err);
+    } catch (err: any) {
+      this.logger.error('ConseilSessionsComponent', 'Error loading sessions', err);
+      this.error.set(err.message || 'Impossible de charger les sessions');
     } finally {
       this.store.setIsLoadingSessions(false);
     }
@@ -449,33 +427,6 @@ export class ConseilSessionsComponent implements OnInit {
       call: 'Appel',
     };
     return labels[format] || format;
-  }
-
-  getStatusLabel(status: string): string {
-    const labels: Record<string, string> = {
-      pending: 'En attente',
-      accepted: 'Acceptée',
-      in_progress: 'En cours',
-      completed: 'Terminée',
-      cancelled: 'Annulée',
-    };
-    return labels[status] || status;
-  }
-
-  formatDate(dateStr: string): string {
-    const date = new Date(dateStr);
-    const now = new Date();
-    const diff = now.getTime() - date.getTime();
-    const days = Math.floor(diff / (1000 * 60 * 60 * 24));
-
-    if (days === 0) {
-      return date.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
-    } else if (days === 1) {
-      return 'Hier';
-    } else if (days < 7) {
-      return date.toLocaleDateString('fr-FR', { weekday: 'short' });
-    }
-    return date.toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' });
   }
 
   goBack(): void {

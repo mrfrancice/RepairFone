@@ -15,14 +15,14 @@ import { NotificationBellComponent } from '../notification-bell/notification-bel
         <div class="header-left">
           @if (showBack) {
             @if (backRoute) {
-              <a [routerLink]="backRoute" class="back-btn">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+              <a [routerLink]="backRoute" class="back-btn" aria-label="Retour">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true">
                   <path d="M15 18L9 12L15 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
                 </svg>
               </a>
             } @else {
-              <button class="back-btn" (click)="goBack()">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+              <button class="back-btn" (click)="goBack()" aria-label="Retour">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true">
                   <path d="M15 18L9 12L15 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
                 </svg>
               </button>
@@ -46,11 +46,11 @@ import { NotificationBellComponent } from '../notification-bell/notification-bel
           @if (showProfile) {
             @if (authStore.isAuthenticated()) {
               <app-notification-bell />
-              <button class="profile-btn" (click)="goToProfile()">
+              <button class="profile-btn" (click)="goToProfile()" aria-label="Accéder à mon profil">
                 @if (authStore.user()?.avatarUrl) {
-                  <img [src]="authStore.user()?.avatarUrl" alt="Profil" />
+                  <img [src]="authStore.user()?.avatarUrl" alt="" />
                 } @else {
-                  <div class="profile-placeholder">
+                  <div class="profile-placeholder" aria-hidden="true">
                     {{ userInitials() }}
                   </div>
                 }
@@ -72,17 +72,22 @@ import { NotificationBellComponent } from '../notification-bell/notification-bel
     </header>
   `,
   styles: [`
+    /* Header sombre charte "fond premium" : noir profond + lueur orange + border orange */
     .header {
       position: fixed;
       top: 0;
       left: 0;
       right: 0;
       z-index: 100;
-      background: linear-gradient(135deg, #FF6B35 0%, #E85A24 100%);
-      padding: 1.25rem 1.25rem 1.75rem;
-      padding-top: calc(1.25rem + env(safe-area-inset-top, 0));
-      border-radius: 0 0 24px 24px;
-      box-shadow: 0 4px 20px rgba(255, 107, 53, 0.3);
+      background:
+        radial-gradient(ellipse at 92% 50%, rgba(255, 152, 0, 0.22) 0%, transparent 55%),
+        linear-gradient(135deg, #1A1A1A 0%, #0F0F0F 100%);
+      padding: 1rem 1.25rem;
+      padding-top: calc(1rem + env(safe-area-inset-top, 0));
+      border-bottom: 2px solid var(--color-primary-500, #FF9800);
+      border-bottom-left-radius: 30px;
+      border-bottom-right-radius: 30px;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.35);
     }
 
     .header-top {
@@ -100,42 +105,45 @@ import { NotificationBellComponent } from '../notification-bell/notification-bel
     .header-right {
       display: flex;
       align-items: center;
-      gap: 0.75rem;
+      gap: 0.5rem;
     }
 
     .back-btn {
       min-width: 44px;
       min-height: 44px;
-      background: rgba(255, 255, 255, 0.15);
-      border: none;
+      background: rgba(255, 255, 255, 0.08);
+      border: 1px solid rgba(255, 255, 255, 0.1);
       color: white;
       border-radius: 12px;
       display: flex;
       align-items: center;
       justify-content: center;
       cursor: pointer;
-      transition: all 0.2s;
+      transition: all 150ms ease;
       text-decoration: none;
     }
 
     .back-btn:hover {
-      background: rgba(255, 255, 255, 0.25);
+      background: rgba(255, 152, 0, 0.18);
+      border-color: var(--color-primary-500, #FF9800);
+      color: var(--color-primary-500, #FF9800);
     }
 
     .back-btn:focus-visible {
-      outline: 2px solid white;
+      outline: 2px solid var(--color-primary-500, #FF9800);
       outline-offset: 2px;
     }
 
     .header-icon {
       min-width: 44px;
       min-height: 44px;
-      background: rgba(255, 255, 255, 0.15);
+      background: linear-gradient(135deg, var(--color-primary-500, #FF9800), var(--color-gold-800, #F9A825));
       border-radius: 12px;
       display: flex;
       align-items: center;
       justify-content: center;
       color: white;
+      box-shadow: 0 4px 12px rgba(255, 152, 0, 0.35);
     }
 
     .header-titles {
@@ -144,8 +152,10 @@ import { NotificationBellComponent } from '../notification-bell/notification-bel
     }
 
     .app-title {
+      font-family: 'Poppins', 'Inter', sans-serif;
       font-size: 1.125rem;
       font-weight: 700;
+      letter-spacing: -0.01em;
       color: white;
       margin: 0;
       line-height: 1.2;
@@ -153,7 +163,7 @@ import { NotificationBellComponent } from '../notification-bell/notification-bel
 
     .welcome-msg {
       font-size: 0.75rem;
-      color: rgba(255, 255, 255, 0.9);
+      color: rgba(255, 255, 255, 0.65);
       margin: 0;
     }
 
@@ -162,21 +172,22 @@ import { NotificationBellComponent } from '../notification-bell/notification-bel
       min-width: 44px;
       min-height: 44px;
       border-radius: 50%;
-      border: 2px solid rgba(255, 255, 255, 0.3);
-      background: rgba(255, 255, 255, 0.1);
+      border: 2px solid var(--color-primary-500, #FF9800);
+      background: rgba(255, 255, 255, 0.08);
       overflow: hidden;
       cursor: pointer;
       padding: 0;
-      transition: all 0.2s;
+      transition: all 150ms ease;
     }
 
     .profile-btn:hover {
-      border-color: rgba(255, 255, 255, 0.5);
+      border-color: var(--color-gold-800, #F9A825);
       transform: scale(1.05);
+      box-shadow: 0 0 0 4px rgba(255, 152, 0, 0.18);
     }
 
     .profile-btn:focus-visible {
-      outline: 2px solid white;
+      outline: 2px solid var(--color-primary-500, #FF9800);
       outline-offset: 2px;
     }
 
@@ -195,7 +206,7 @@ import { NotificationBellComponent } from '../notification-bell/notification-bel
       color: white;
       font-weight: 600;
       font-size: 0.875rem;
-      background: rgba(255, 255, 255, 0.15);
+      background: linear-gradient(135deg, var(--color-primary-500, #FF9800), var(--color-gold-800, #F9A825));
     }
 
     /* Login Button */
@@ -204,24 +215,27 @@ import { NotificationBellComponent } from '../notification-bell/notification-bel
       align-items: center;
       justify-content: center;
       gap: 0.375rem;
-      padding: 0.5rem 0.875rem;
+      padding: 0 0.875rem;
       min-height: 44px;
-      background: rgba(255, 255, 255, 0.15);
+      background: linear-gradient(135deg, var(--color-primary-500, #FF9800), var(--color-gold-800, #F9A825));
       border: none;
-      border-radius: 20px;
+      border-radius: 12px;
       color: white;
+      font-family: 'Inter', sans-serif;
       font-size: 0.8125rem;
-      font-weight: 500;
+      font-weight: 600;
       cursor: pointer;
-      transition: all 0.2s;
+      transition: all 150ms ease;
+      box-shadow: 0 4px 12px rgba(255, 152, 0, 0.35);
     }
 
     .login-btn:hover {
-      background: rgba(255, 255, 255, 0.25);
+      transform: translateY(-1px);
+      box-shadow: 0 6px 16px rgba(255, 152, 0, 0.45);
     }
 
     .login-btn:focus-visible {
-      outline: 2px solid white;
+      outline: 2px solid var(--color-primary-500, #FF9800);
       outline-offset: 2px;
     }
   `]

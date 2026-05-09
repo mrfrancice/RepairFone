@@ -5,24 +5,23 @@ import { QuotesService, Quote } from '../../services/quotes.service';
 import { QuotesStore } from '../../stores/quotes.store';
 import { UiButtonComponent } from '../../../../shared/components/ui-button/ui-button.component';
 import { UiLoadingComponent } from '../../../../shared/components/ui-loading/ui-loading.component';
+import { FormatDatePipe } from '../../../../shared/pipes/format-date.pipe';
+import { LoggerService } from '../../../../core/services/logger.service';
+import { UiHeaderComponent } from '../../../../shared/components/ui-header/ui-header.component';
 
 @Component({
   selector: 'app-quote-detail',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [CommonModule, RouterLink, UiButtonComponent, UiLoadingComponent],
+  imports: [CommonModule, RouterLink, UiButtonComponent, UiLoadingComponent, FormatDatePipe, UiHeaderComponent],
   template: `
     <div class="quote-detail-container">
-      <!-- Header -->
-      <header class="detail-header">
-        <button class="back-btn" (click)="goBack()">
-          <span>←</span>
-        </button>
-        <h1>Détail du devis</h1>
-        @if (quote()) {
-          <span class="quote-id">#{{ quote()?.id?.slice(0, 8)?.toUpperCase() }}</span>
-        }
-      </header>
+      <ui-header
+        title="Détail du devis"
+        [subtitle]="quote() ? '#' + (quote()?.id?.slice(0, 8)?.toUpperCase() || '') : ''"
+        [showBack]="true"
+        (onBack)="goBack()"
+      />
 
       @if (isLoading()) {
         <div class="loading-state">
@@ -177,7 +176,7 @@ import { UiLoadingComponent } from '../../../../shared/components/ui-loading/ui-
               <div class="validity-text">
                 <span class="validity-label">Validité du devis</span>
                 <span class="validity-date">
-                  Jusqu'au {{ formatDate(quote()?.validUntil) }}
+                  Jusqu'au {{ quote()?.validUntil | formatDate:'long' }}
                 </span>
               </div>
             </div>
@@ -220,52 +219,24 @@ import { UiLoadingComponent } from '../../../../shared/components/ui-loading/ui-
   styles: [`
     .quote-detail-container {
       min-height: 100vh;
-      background: #FFF5F0;
+      background: #FFF3E0;
+      padding-top: var(--header-height, 100px);
       padding-bottom: 2rem;
     }
 
-    .detail-header {
-      display: flex;
-      align-items: center;
-      gap: 1rem;
-      padding: 1rem;
-      background: linear-gradient(135deg, #FF6B35 0%, #FF9800 100%);
-      color: white;
-      box-shadow: 0 2px 12px rgba(255, 107, 53, 0.3);
-    }
-
-    .back-btn {
-      width: 44px;
-      height: 44px;
-      border-radius: 50%;
-      border: none;
-      background: rgba(255, 255, 255, 0.2);
-      color: white;
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 1.5rem;
-      transition: all 0.2s;
-      min-width: 44px;
-    }
-
-    .back-btn:hover {
-      background: rgba(255, 255, 255, 0.3);
-      transform: scale(1.05);
-    }
-
     .detail-header h1 {
+      font-family: 'Poppins', 'Inter', sans-serif;
       flex: 1;
       margin: 0;
-      font-size: 1.25rem;
-      font-weight: 600;
+      font-size: 1.125rem;
+      font-weight: 700;
+      letter-spacing: -0.01em;
       color: white;
     }
 
     .quote-id {
       font-size: 0.75rem;
-      color: rgba(255, 255, 255, 0.9);
+      color: rgba(255, 255, 255, 0.65);
       font-family: monospace;
     }
 
@@ -353,10 +324,10 @@ import { UiLoadingComponent } from '../../../../shared/components/ui-loading/ui-
 
     /* Amount Section */
     .amount-section {
-      background: linear-gradient(135deg, #FF6B35 0%, #FF9800 100%);
+      background: linear-gradient(135deg, var(--color-primary-500, #FF9800) 0%, #FF9800 100%);
       color: white;
       text-align: center;
-      box-shadow: 0 4px 16px rgba(255, 107, 53, 0.3);
+      box-shadow: 0 4px 16px rgba(255, 152, 0, 0.3);
     }
 
     .total-display {
@@ -392,19 +363,19 @@ import { UiLoadingComponent } from '../../../../shared/components/ui-loading/ui-
     }
 
     .price-row.subtotal {
-      border-top: 1px dashed #e5e7eb;
+      border-top: 1px dashed #EEEEEE;
       margin-top: 0.5rem;
       padding-top: 0.75rem;
       color: #6b7280;
     }
 
     .price-row.supplement {
-      color: #FF6B35;
+      color: var(--color-primary-500, #FF9800);
       font-weight: 600;
     }
 
     .parts-section {
-      background: linear-gradient(135deg, #FFF5F0 0%, #FFFFFF 100%);
+      background: linear-gradient(135deg, #FFF3E0 0%, #FFFFFF 100%);
       border-radius: 12px;
       padding: 1rem;
       margin: 0.75rem 0;
@@ -423,7 +394,7 @@ import { UiLoadingComponent } from '../../../../shared/components/ui-loading/ui-
       justify-content: space-between;
       align-items: flex-start;
       padding: 0.5rem 0;
-      border-bottom: 1px solid #e5e7eb;
+      border-bottom: 1px solid #EEEEEE;
     }
 
     .part-row:last-child {
@@ -465,7 +436,7 @@ import { UiLoadingComponent } from '../../../../shared/components/ui-loading/ui-
     }
 
     .price-total span:last-child {
-      color: #FF6B35;
+      color: var(--color-primary-500, #FF9800);
       font-size: 1.5rem;
     }
 
@@ -493,7 +464,7 @@ import { UiLoadingComponent } from '../../../../shared/components/ui-loading/ui-
     }
 
     .detail-value.express {
-      color: #FF6B35;
+      color: var(--color-primary-500, #FF9800);
       font-weight: 600;
     }
 
@@ -516,7 +487,7 @@ import { UiLoadingComponent } from '../../../../shared/components/ui-loading/ui-
       font-size: 0.875rem;
       color: #4b5563;
       line-height: 1.6;
-      background: linear-gradient(135deg, #FFF5F0 0%, #FFFFFF 100%);
+      background: linear-gradient(135deg, #FFF3E0 0%, #FFFFFF 100%);
       padding: 1rem;
       border-radius: 12px;
       border: 1px solid #FFE5D9;
@@ -534,7 +505,7 @@ import { UiLoadingComponent } from '../../../../shared/components/ui-loading/ui-
       height: 56px;
       border-radius: 50%;
       overflow: hidden;
-      background: #e5e7eb;
+      background: #EEEEEE;
     }
 
     .repairer-avatar img {
@@ -549,7 +520,7 @@ import { UiLoadingComponent } from '../../../../shared/components/ui-loading/ui-
       display: flex;
       align-items: center;
       justify-content: center;
-      background: linear-gradient(135deg, #FF6B35 0%, #FF9800 100%);
+      background: linear-gradient(135deg, var(--color-primary-500, #FF9800) 0%, #FF9800 100%);
       color: white;
       font-weight: 700;
       font-size: 1.25rem;
@@ -575,7 +546,7 @@ import { UiLoadingComponent } from '../../../../shared/components/ui-loading/ui-
 
     .view-profile-btn {
       font-size: 0.875rem;
-      color: #FF6B35;
+      color: var(--color-primary-500, #FF9800);
       text-decoration: none;
       font-weight: 600;
       transition: all 0.2s;
@@ -588,7 +559,7 @@ import { UiLoadingComponent } from '../../../../shared/components/ui-loading/ui-
 
     /* Validity Section */
     .validity-section {
-      background: linear-gradient(135deg, #FFF4E6 0%, #FFE5D9 100%);
+      background: linear-gradient(135deg, #FFF3E0 0%, #FFE5D9 100%);
       border: 2px solid #F9A825;
     }
 
@@ -656,6 +627,7 @@ export class QuoteDetailComponent implements OnInit {
   readonly store = inject(QuotesStore);
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
+  private readonly logger = inject(LoggerService);
 
   readonly quote = signal<Quote | null>(null);
   readonly isLoading = signal(true);
@@ -674,7 +646,7 @@ export class QuoteDetailComponent implements OnInit {
       this.quote.set(quote);
       this.store.setSelectedQuote(quote);
     } catch (err) {
-      console.error('Error loading quote:', err);
+      this.logger.error('QuoteDetailComponent', 'Error loading quote', err);
     } finally {
       this.isLoading.set(false);
     }
@@ -684,7 +656,7 @@ export class QuoteDetailComponent implements OnInit {
     const status = this.quote()?.status;
     const colors: Record<string, string> = {
       pending: 'linear-gradient(135deg, #F9A825 0%, #FF9800 100%)',
-      accepted: 'linear-gradient(135deg, #4CAF50 0%, #10B981 100%)',
+      accepted: 'linear-gradient(135deg, #4CAF50 0%, var(--color-secondary, #4CAF50) 100%)',
       rejected: 'linear-gradient(135deg, #E53935 0%, #C62828 100%)',
       expired: 'linear-gradient(135deg, #6B7280 0%, #4B5563 100%)',  /* WCAG AA compliant */
     };
@@ -729,15 +701,6 @@ export class QuoteDetailComponent implements OnInit {
     return name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
   }
 
-  formatDate(dateStr?: string): string {
-    if (!dateStr) return '';
-    return new Date(dateStr).toLocaleDateString('fr-FR', {
-      day: 'numeric',
-      month: 'long',
-      year: 'numeric'
-    });
-  }
-
   getExpiryText(): string {
     const q = this.quote();
     if (!q) return '';
@@ -761,7 +724,7 @@ export class QuoteDetailComponent implements OnInit {
         queryParams: { requestId: q.requestId, quoteId: q.id }
       });
     } catch (err) {
-      console.error('Error accepting quote:', err);
+      this.logger.error('QuoteDetailComponent', 'Error accepting quote', err);
     }
   }
 
@@ -776,7 +739,7 @@ export class QuoteDetailComponent implements OnInit {
       this.quote.set({ ...q, status: 'rejected' });
       this.store.updateQuote(q.id, { status: 'rejected' });
     } catch (err) {
-      console.error('Error rejecting quote:', err);
+      this.logger.error('QuoteDetailComponent', 'Error rejecting quote', err);
     }
   }
 

@@ -1,6 +1,8 @@
 import { Injectable, inject, signal } from '@angular/core';
 import { firstValueFrom } from 'rxjs';
 import { ApiService } from './api.service';
+import { LoggerService } from './logger.service';
+import { AuthStore } from '../stores/auth.store';
 
 export type SpecialtyCategory = 'brand' | 'device_type' | 'repair_type';
 
@@ -88,6 +90,8 @@ export interface AllSettings {
 @Injectable({ providedIn: 'root' })
 export class SettingsService {
   private readonly api = inject(ApiService);
+  private readonly logger = inject(LoggerService);
+  private readonly authStore = inject(AuthStore);
 
   // Cached settings
   private readonly _specialties = signal<Specialty[]>([]);
@@ -118,6 +122,14 @@ export class SettingsService {
 
     this._isLoading.set(true);
 
+    // Endpoint /settings protégé par JWT : pour un visiteur, on évite l'appel
+    // et on charge directement le jeu de données statique de secours.
+    if (!this.authStore.isAuthenticated()) {
+      this.loadFallbackData();
+      this._isLoading.set(false);
+      return this.getCurrentSettings();
+    }
+
     try {
       const settings = await firstValueFrom(
         this.api.get<AllSettings>('/settings')
@@ -134,10 +146,9 @@ export class SettingsService {
 
       return settings;
     } catch (error) {
-      console.error('Failed to load settings:', error);
-      // Use fallback data if API fails
+      this.logger.warn('SettingsService', 'Falling back to static settings', error);
       this.loadFallbackData();
-      throw error;
+      return this.getCurrentSettings();
     } finally {
       this._isLoading.set(false);
     }
@@ -211,10 +222,10 @@ export class SettingsService {
     ]);
 
     this._badgeTypes.set([
-      { id: '1', code: 'verified', label: 'Vérifié', icon: '✓', color: '#10b981', description: null, sortOrder: 1, isActive: true },
-      { id: '2', code: 'fast_response', label: 'Réponse rapide', icon: '⚡', color: '#f59e0b', description: null, sortOrder: 2, isActive: true },
+      { id: '1', code: 'verified', label: 'Vérifié', icon: '✓', color: '#4CAF50', description: null, sortOrder: 1, isActive: true },
+      { id: '2', code: 'fast_response', label: 'Réponse rapide', icon: '⚡', color: '#FFC107', description: null, sortOrder: 2, isActive: true },
       { id: '3', code: 'top_rated', label: 'Top noté', icon: '⭐', color: '#eab308', description: null, sortOrder: 3, isActive: true },
-      { id: '4', code: 'expert', label: 'Expert', icon: '🏆', color: '#8b5cf6', description: null, sortOrder: 4, isActive: true },
+      { id: '4', code: 'expert', label: 'Expert', icon: '🏆', color: '#FF9800', description: null, sortOrder: 4, isActive: true },
     ]);
 
     this._isLoaded.set(true);

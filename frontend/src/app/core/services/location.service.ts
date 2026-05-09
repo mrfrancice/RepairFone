@@ -1,5 +1,6 @@
 import { Injectable, inject, signal, computed } from '@angular/core';
 import { ApiService } from './api.service';
+import { LoggerService } from './logger.service';
 import { Observable, tap, map, of, catchError } from 'rxjs';
 
 export interface Quarter {
@@ -28,6 +29,7 @@ export interface LocationHierarchy {
 @Injectable({ providedIn: 'root' })
 export class LocationService {
   private readonly api = inject(ApiService);
+  private readonly logger = inject(LoggerService);
 
   // Cache for location data
   private readonly _locationData = signal<LocationHierarchy | null>(null);
@@ -64,7 +66,7 @@ export class LocationService {
       catchError((err) => {
         this._error.set('Erreur lors du chargement des localisations');
         this._loading.set(false);
-        console.error('Error loading locations:', err);
+        this.logger.error('LocationService', 'Error loading locations', err);
         // Return empty data structure on error
         return of({ cities: [] });
       })

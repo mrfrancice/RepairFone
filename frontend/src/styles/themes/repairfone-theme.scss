@@ -230,12 +230,13 @@ $repairfone-light-theme: mat.define-theme((
   --color-info-light: #64B5F6;
   --color-info-dark: #1565C0;
 
-  // Ombres
+  // Ombres (alignées charte officielle)
   --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
-  --shadow-md: 0 4px 12px 0 rgba(0, 0, 0, 0.1);
+  --shadow-md: 0 4px 12px 0 rgba(0, 0, 0, 0.10);
   --shadow-lg: 0 8px 24px 0 rgba(0, 0, 0, 0.12);
   --shadow-xl: 0 12px 32px 0 rgba(0, 0, 0, 0.15);
-  --shadow-warm: 0 4px 16px 0 rgba(255, 152, 0, 0.15);
+  --shadow-warm: 0 8px 24px 0 rgba(255, 152, 0, 0.20);
+  --shadow-success: 0 8px 24px 0 rgba(76, 175, 80, 0.20);
 
   // Bordures
   --border-radius-sm: 0.25rem;
@@ -257,6 +258,27 @@ $repairfone-light-theme: mat.define-theme((
   --transition-fast: 150ms cubic-bezier(0.4, 0, 0.2, 1);
   --transition-base: 200ms cubic-bezier(0.4, 0, 0.2, 1);
   --transition-slow: 300ms cubic-bezier(0.4, 0, 0.2, 1);
+
+  // ============================================================================
+  // LAYOUT VARIABLES
+  // ============================================================================
+
+  // Header heights
+  --header-height: 100px;
+  --header-height-with-subtitle: 120px;
+
+  // Navigation
+  --bottom-nav-height: 80px;
+
+  // Safe areas (iOS notch, Android gesture bar)
+  --safe-area-top: env(safe-area-inset-top, 0px);
+  --safe-area-bottom: env(safe-area-inset-bottom, 0px);
+  --safe-area-left: env(safe-area-inset-left, 0px);
+  --safe-area-right: env(safe-area-inset-right, 0px);
+
+  // Content spacing (combines header + safe area)
+  --content-top-offset: calc(var(--header-height) + var(--safe-area-top));
+  --content-bottom-offset: calc(var(--bottom-nav-height) + var(--safe-area-bottom));
 }
 
 // ============================================================================
@@ -268,7 +290,7 @@ $repairfone-light-theme: mat.define-theme((
 .mat-mdc-raised-button,
 .mat-mdc-outlined-button {
   border-radius: var(--border-radius-lg) !important;
-  min-height: 44px; // Touch-friendly
+  min-height: 48px; // Touch-friendly
   font-weight: 500;
   letter-spacing: 0.02em;
 }

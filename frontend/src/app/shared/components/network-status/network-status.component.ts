@@ -69,12 +69,12 @@ import { CommonModule, isPlatformBrowser } from '@angular/common';
     }
 
     .network-banner.offline {
-      background: linear-gradient(135deg, #ef4444 0%, #f97316 100%);
+      background: linear-gradient(135deg, var(--color-terracotta, #C62828) 0%, var(--color-error, #F44336) 100%);
       color: white;
     }
 
     .network-banner.online {
-      background: linear-gradient(135deg, #22c55e 0%, #10b981 100%);
+      background: linear-gradient(135deg, var(--color-secondary, #4CAF50) 0%, var(--color-secondary-dark, #2E7D32) 100%);
       color: white;
       animation: slideDown 0.3s ease-out, fadeOut 0.3s ease-in 2.7s forwards;
     }

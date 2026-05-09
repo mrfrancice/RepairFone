@@ -6,6 +6,9 @@ import { ChatService, ChatMessage, Conversation } from '../../services/chat.serv
 import { ChatStore } from '../../stores/chat.store';
 import { AuthStore } from '../../../../core/stores/auth.store';
 import { UiLoadingComponent } from '../../../../shared/components/ui-loading/ui-loading.component';
+import { FormatDatePipe } from '../../../../shared/pipes/format-date.pipe';
+import { InitialsPipe } from '../../../../shared/pipes/initials.pipe';
+import { LoggerService } from '../../../../core/services/logger.service';
 
 @Component({
   selector: 'app-chat-room',
@@ -16,6 +19,8 @@ import { UiLoadingComponent } from '../../../../shared/components/ui-loading/ui-
     FormsModule,
     RouterLink,
     UiLoadingComponent,
+    FormatDatePipe,
+    InitialsPipe,
   ],
   template: `
     <div class="chat-room">
@@ -28,7 +33,11 @@ import { UiLoadingComponent } from '../../../../shared/components/ui-loading/ui-
         @if (store.currentConversation()) {
           <div class="conversation-info">
             <div class="avatar">
-              {{ getInitials() }}
+              @if (store.currentConversation()?.clientId === authStore.user()?.id) {
+                {{ store.currentConversation()?.repairer?.firstName | initials : store.currentConversation()?.repairer?.lastName }}
+              } @else {
+                {{ store.currentConversation()?.client?.firstName | initials : store.currentConversation()?.client?.lastName }}
+              }
             </div>
             <div class="info">
               <span class="name">{{ getConversationName() }}</span>
@@ -75,7 +84,7 @@ import { UiLoadingComponent } from '../../../../shared/components/ui-loading/ui-
           @for (message of store.messages(); track message.id; let i = $index) {
             @if (shouldShowDate(message, i)) {
               <div class="date-separator">
-                <span>{{ formatDate(message.createdAt) }}</span>
+                <span>{{ message.createdAt | formatDate:'relative' }}</span>
               </div>
             }
 
@@ -208,7 +217,7 @@ import { UiLoadingComponent } from '../../../../shared/components/ui-loading/ui-
       display: flex;
       flex-direction: column;
       height: 100vh;
-      background: #f9fafb;
+      background: #FAFAFA;
     }
 
     .header {
@@ -216,17 +225,23 @@ import { UiLoadingComponent } from '../../../../shared/components/ui-loading/ui-
       align-items: center;
       gap: 0.75rem;
       padding: 0.75rem 1rem;
-      background: white;
-      border-bottom: 1px solid #e5e7eb;
+      background:
+        radial-gradient(ellipse at 92% 50%, rgba(255, 152, 0, 0.22) 0%, transparent 55%),
+        linear-gradient(135deg, #1A1A1A 0%, #0F0F0F 100%);
+      border-bottom-left-radius: 30px;
+      border-bottom-right-radius: 30px;
+      border-bottom: 2px solid var(--color-primary-500, #FF9800);
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.35);
       min-height: 3.5rem;
 
       .back-btn {
-        background: none;
-        border: none;
+        background: rgba(255, 255, 255, 0.08);
+        border: 1px solid rgba(255, 255, 255, 0.1);
         font-size: 1.25rem;
-        color: #64748b;
+        color: white;
         cursor: pointer;
-        padding: 0.25rem;
+        padding: 0.25rem 0.5rem;
+        border-radius: 8px;
       }
 
       .conversation-info {
@@ -239,7 +254,7 @@ import { UiLoadingComponent } from '../../../../shared/components/ui-loading/ui-
           width: 2.5rem;
           height: 2.5rem;
           border-radius: 50%;
-          background: linear-gradient(135deg, #FF6B35, #FF9800);
+          background: linear-gradient(135deg, var(--color-primary-500, #FF9800), var(--color-gold-800, #F9A825));
           color: white;
           display: flex;
           align-items: center;
@@ -247,7 +262,7 @@ import { UiLoadingComponent } from '../../../../shared/components/ui-loading/ui-
           font-weight: 600;
           font-size: 0.875rem;
           flex-shrink: 0;
-          box-shadow: 0 2px 8px rgba(255, 107, 53, 0.3);
+          box-shadow: 0 2px 8px rgba(255, 152, 0, 0.35);
         }
 
         .info {
@@ -256,18 +271,18 @@ import { UiLoadingComponent } from '../../../../shared/components/ui-loading/ui-
 
           .name {
             font-weight: 600;
-            color: #1e293b;
+            color: white;
             font-size: 0.9375rem;
           }
 
           .device {
             font-size: 0.75rem;
-            color: #64748b;
+            color: rgba(255, 255, 255, 0.65);
           }
 
           .typing {
             font-size: 0.75rem;
-            color: #FF6B35;
+            color: var(--color-primary-500, #FF9800);
             font-style: italic;
           }
         }
@@ -275,11 +290,13 @@ import { UiLoadingComponent } from '../../../../shared/components/ui-loading/ui-
 
       .header-actions {
         .action-btn {
-          background: none;
-          border: none;
+          background: rgba(255, 255, 255, 0.08);
+          border: 1px solid rgba(255, 255, 255, 0.1);
+          color: white;
           font-size: 1.25rem;
           cursor: pointer;
           padding: 0.5rem;
+          border-radius: 8px;
         }
       }
     }
@@ -301,9 +318,9 @@ import { UiLoadingComponent } from '../../../../shared/components/ui-loading/ui-
       width: 100%;
       padding: 0.75rem;
       background: white;
-      border: 2px solid #e5e7eb;
+      border: 2px solid #EEEEEE;
       border-radius: 0.75rem;
-      color: #FF6B35;
+      color: var(--color-primary-500, #FF9800);
       font-size: 0.875rem;
       font-weight: 500;
       cursor: pointer;
@@ -311,8 +328,8 @@ import { UiLoadingComponent } from '../../../../shared/components/ui-loading/ui-
       transition: all 0.2s;
 
       &:hover {
-        background: #fff5f0;
-        border-color: #FF6B35;
+        background: #FFF3E0;
+        border-color: var(--color-primary-500, #FF9800);
       }
     }
 
@@ -329,8 +346,8 @@ import { UiLoadingComponent } from '../../../../shared/components/ui-loading/ui-
       margin: 1rem 0;
 
       span {
-        background: #e5e7eb;
-        color: #64748b;
+        background: #EEEEEE;
+        color: #6B7280;
         font-size: 0.75rem;
         padding: 0.25rem 0.75rem;
         border-radius: 1rem;
@@ -345,10 +362,10 @@ import { UiLoadingComponent } from '../../../../shared/components/ui-loading/ui-
         align-self: flex-end;
 
         .message-bubble {
-          background: linear-gradient(135deg, #FF6B35, #FF9800);
+          background: linear-gradient(135deg, var(--color-primary-500, #FF9800), var(--color-gold-800, #F9A825));
           color: white;
           border-bottom-right-radius: 0.25rem;
-          box-shadow: 0 2px 8px rgba(255, 107, 53, 0.2);
+          box-shadow: 0 2px 8px rgba(255, 152, 0, 0.2);
 
           .message-meta {
             color: rgba(255, 255, 255, 0.8);
@@ -365,12 +382,12 @@ import { UiLoadingComponent } from '../../../../shared/components/ui-loading/ui-
 
         .message-bubble {
           background: white;
-          color: #1e293b;
+          color: #1F2937;
           border-bottom-left-radius: 0.25rem;
           box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
 
           .message-meta {
-            color: #94a3b8;
+            color: #9CA3AF;
           }
         }
       }
@@ -450,7 +467,7 @@ import { UiLoadingComponent } from '../../../../shared/components/ui-loading/ui-
         span {
           width: 0.5rem;
           height: 0.5rem;
-          background: #94a3b8;
+          background: #9CA3AF;
           border-radius: 50%;
           animation: typing 1.4s infinite ease-in-out;
 
@@ -468,7 +485,7 @@ import { UiLoadingComponent } from '../../../../shared/components/ui-loading/ui-
 
     .input-container {
       background: white;
-      border-top: 1px solid #e5e7eb;
+      border-top: 1px solid #EEEEEE;
       padding: 0.75rem 1rem;
       padding-bottom: max(0.75rem, env(safe-area-inset-bottom));
 
@@ -496,7 +513,7 @@ import { UiLoadingComponent } from '../../../../shared/components/ui-loading/ui-
             width: 1.25rem;
             height: 1.25rem;
             border-radius: 50%;
-            background: #ef4444;
+            background: var(--color-error, #F44336);
             color: white;
             border: none;
             font-size: 0.875rem;
@@ -525,15 +542,15 @@ import { UiLoadingComponent } from '../../../../shared/components/ui-loading/ui-
       .message-input {
         flex: 1;
         padding: 0.75rem 1rem;
-        border: 2px solid #e5e7eb;
+        border: 2px solid #EEEEEE;
         border-radius: 1.5rem;
         font-size: 0.9375rem;
         outline: none;
         transition: all 0.2s;
 
         &:focus {
-          border-color: #FF6B35;
-          box-shadow: 0 0 0 3px rgba(255, 107, 53, 0.1);
+          border-color: var(--color-primary-500, #FF9800);
+          box-shadow: 0 0 0 3px rgba(255, 152, 0, 0.1);
         }
       }
 
@@ -541,7 +558,7 @@ import { UiLoadingComponent } from '../../../../shared/components/ui-loading/ui-
         width: 2.5rem;
         height: 2.5rem;
         border-radius: 50%;
-        background: linear-gradient(135deg, #FF6B35, #FF9800);
+        background: linear-gradient(135deg, var(--color-primary-500, #FF9800), var(--color-gold-800, #F9A825));
         color: white;
         border: none;
         font-size: 1.125rem;
@@ -549,16 +566,16 @@ import { UiLoadingComponent } from '../../../../shared/components/ui-loading/ui-
         display: flex;
         align-items: center;
         justify-content: center;
-        box-shadow: 0 2px 8px rgba(255, 107, 53, 0.3);
+        box-shadow: 0 2px 8px rgba(255, 152, 0, 0.3);
         transition: all 0.2s;
 
         &:hover:not(:disabled) {
           transform: scale(1.05);
-          box-shadow: 0 4px 12px rgba(255, 107, 53, 0.4);
+          box-shadow: 0 4px 12px rgba(255, 152, 0, 0.4);
         }
 
         &:disabled {
-          background: #94a3b8;
+          background: #9CA3AF;
           cursor: not-allowed;
           transform: none;
           box-shadow: none;
@@ -571,9 +588,9 @@ import { UiLoadingComponent } from '../../../../shared/components/ui-loading/ui-
       bottom: 5rem;
       left: 1rem;
       right: 1rem;
-      background: #fef2f2;
-      border: 1px solid #fecaca;
-      color: #dc2626;
+      background: #FFEBEE;
+      border: 1px solid #FFCDD2;
+      color: var(--color-terracotta, #C62828);
       padding: 0.75rem 1rem;
       border-radius: 0.5rem;
       display: flex;
@@ -587,7 +604,7 @@ import { UiLoadingComponent } from '../../../../shared/components/ui-loading/ui-
 
       .retry-btn {
         margin-left: auto;
-        background: #dc2626;
+        background: var(--color-terracotta, #C62828);
         color: white;
         border: none;
         padding: 0.375rem 0.75rem;
@@ -603,9 +620,10 @@ export class ChatRoomComponent implements OnInit, OnDestroy, AfterViewChecked {
 
   readonly chatService = inject(ChatService);
   readonly store = inject(ChatStore);
-  private readonly authStore = inject(AuthStore);
+  readonly authStore = inject(AuthStore);
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
+  private readonly logger = inject(LoggerService);
 
   messageText = '';
   selectedImages = signal<{ file: File; preview: string }[]>([]);
@@ -657,7 +675,7 @@ export class ChatRoomComponent implements OnInit, OnDestroy, AfterViewChecked {
       // Mark as read
       await this.chatService.markAsRead(id);
     } catch (err) {
-      console.error('Error loading conversation:', err);
+      this.logger.error('ChatRoomComponent', 'Error loading conversation', err);
       this.router.navigate(['/chat']);
     } finally {
       this.store.setLoadingMessages(false);
@@ -701,7 +719,7 @@ export class ChatRoomComponent implements OnInit, OnDestroy, AfterViewChecked {
       });
       this.store.prependMessages(data, hasMore);
     } catch (err) {
-      console.error('Error loading more messages:', err);
+      this.logger.error('ChatRoomComponent', 'Error loading more messages', err);
     } finally {
       this.store.setLoadingMessages(false);
     }
@@ -733,7 +751,7 @@ export class ChatRoomComponent implements OnInit, OnDestroy, AfterViewChecked {
       this.selectedImages.set([]);
       this.shouldScrollToBottom = true;
     } catch (err) {
-      console.error('Error sending message:', err);
+      this.logger.error('ChatRoomComponent', 'Error sending message', err);
     } finally {
       this.store.setSending(false);
     }
@@ -793,31 +811,6 @@ export class ChatRoomComponent implements OnInit, OnDestroy, AfterViewChecked {
     return this.chatService.getConversationName(conversation, currentUserId);
   }
 
-  getInitials(): string {
-    const conversation = this.store.currentConversation();
-    if (!conversation) return '?';
-
-    const currentUserId = this.authStore.user()?.id || '';
-
-    if (conversation.clientId === currentUserId) {
-      const name = conversation.repairer?.repairerProfile?.businessName ||
-        `${conversation.repairer?.firstName || ''} ${conversation.repairer?.lastName || ''}`;
-      return this.extractInitials(name);
-    } else {
-      const firstName = conversation.client?.firstName || '';
-      const lastName = conversation.client?.lastName || '';
-      return (firstName.charAt(0) + lastName.charAt(0)).toUpperCase() || '?';
-    }
-  }
-
-  private extractInitials(name: string): string {
-    const parts = name.trim().split(' ');
-    if (parts.length >= 2) {
-      return (parts[0].charAt(0) + parts[1].charAt(0)).toUpperCase();
-    }
-    return name.charAt(0).toUpperCase() || '?';
-  }
-
   isOwnMessage(message: ChatMessage): boolean {
     return message.senderId === this.authStore.user()?.id;
   }
@@ -832,21 +825,6 @@ export class ChatRoomComponent implements OnInit, OnDestroy, AfterViewChecked {
     const prevDate = new Date(prevMessage.createdAt).toDateString();
 
     return currentDate !== prevDate;
-  }
-
-  formatDate(dateStr: string): string {
-    const date = new Date(dateStr);
-    const now = new Date();
-    const diffDays = Math.floor((now.getTime() - date.getTime()) / (1000 * 60 * 60 * 24));
-
-    if (diffDays === 0) return "Aujourd'hui";
-    if (diffDays === 1) return 'Hier';
-
-    return date.toLocaleDateString('fr-FR', {
-      weekday: 'long',
-      day: 'numeric',
-      month: 'long',
-    });
   }
 
   formatTime(dateStr: string): string {
@@ -874,7 +852,7 @@ export class ChatRoomComponent implements OnInit, OnDestroy, AfterViewChecked {
         container.scrollTop = container.scrollHeight;
       }
     } catch (err) {
-      console.error('Error scrolling to bottom:', err);
+      this.logger.error('ChatRoomComponent', 'Error scrolling to bottom', err);
     }
   }
 }

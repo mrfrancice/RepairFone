@@ -4,12 +4,15 @@ import { Router } from '@angular/router';
 import { ConseilsService, Expert } from '../../services/conseils.service';
 import { ConseilsStore } from '../../stores/conseils.store';
 import { UiHeaderComponent } from '../../../../shared/components/ui-header/ui-header.component';
+import { UiErrorStateComponent } from '../../../../shared/components/ui-error-state/ui-error-state.component';
+import { InitialsPipe } from '../../../../shared/pipes/initials.pipe';
+import { LoggerService } from '../../../../core/services/logger.service';
 
 @Component({
   selector: 'app-expert-list',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [CommonModule, UiHeaderComponent],
+  imports: [CommonModule, UiHeaderComponent, UiErrorStateComponent, InitialsPipe],
   template: `
     <div class="experts-container">
       <ui-header
@@ -44,6 +47,15 @@ import { UiHeaderComponent } from '../../../../shared/components/ui-header/ui-he
             <div class="spinner"></div>
             <p>Chargement des experts...</p>
           </div>
+        } @else if (error()) {
+          <ui-error-state
+            [message]="error()!"
+            severity="error"
+            [showRetry]="true"
+            actionLabel="Modifier ma recherche"
+            (onRetry)="loadExperts()"
+            (onAction)="goBack()"
+          />
         } @else if (store.experts().length === 0) {
           <div class="empty-state">
             <span class="empty-icon">👨‍💻</span>
@@ -62,7 +74,7 @@ import { UiHeaderComponent } from '../../../../shared/components/ui-header/ui-he
                     <img [src]="expert.avatarUrl" [alt]="expert.firstName" />
                   } @else {
                     <div class="avatar-placeholder">
-                      {{ getInitials(expert) }}
+                      {{ expert.firstName | initials : expert.lastName }}
                     </div>
                   }
                   @if (expert.isAvailable) {
@@ -114,7 +126,7 @@ import { UiHeaderComponent } from '../../../../shared/components/ui-header/ui-he
   styles: [`
     .experts-container {
       min-height: 100vh;
-      background: #f9fafb;
+      background: #FAFAFA;
     }
 
     .filters-bar {
@@ -123,7 +135,7 @@ import { UiHeaderComponent } from '../../../../shared/components/ui-header/ui-he
       padding: 0.75rem 1rem;
       padding-top: calc(100px + 0.75rem);
       background: white;
-      border-bottom: 1px solid #e5e7eb;
+      border-bottom: 1px solid #EEEEEE;
       overflow-x: auto;
     }
 
@@ -132,18 +144,18 @@ import { UiHeaderComponent } from '../../../../shared/components/ui-header/ui-he
       align-items: center;
       gap: 0.5rem;
       padding: 0.375rem 0.75rem;
-      background: #FFF4E6;
-      border: 1px solid #FF6B35;
+      background: #FFF3E0;
+      border: 1px solid var(--color-primary-500, #FF9800);
       border-radius: 20px;
       font-size: 0.875rem;
-      color: #FF6B35;
+      color: var(--color-primary-500, #FF9800);
       white-space: nowrap;
     }
 
     .chip-remove {
       background: none;
       border: none;
-      color: #FF6B35;
+      color: var(--color-primary-500, #FF9800);
       font-size: 1.125rem;
       cursor: pointer;
       padding: 0;
@@ -151,7 +163,7 @@ import { UiHeaderComponent } from '../../../../shared/components/ui-header/ui-he
     }
 
     .experts-content {
-      margin-top: 100px;
+      margin-top: var(--header-height, 100px);
       padding: 1.25rem;
       background: white;
       min-height: calc(100vh - 100px);
@@ -173,8 +185,8 @@ import { UiHeaderComponent } from '../../../../shared/components/ui-header/ui-he
     .spinner {
       width: 40px;
       height: 40px;
-      border: 3px solid #e5e7eb;
-      border-top-color: #FF6B35;
+      border: 3px solid #EEEEEE;
+      border-top-color: var(--color-primary-500, #FF9800);
       border-radius: 50%;
       animation: spin 1s linear infinite;
       margin-bottom: 1rem;
@@ -210,8 +222,8 @@ import { UiHeaderComponent } from '../../../../shared/components/ui-header/ui-he
     .expert-card {
       display: flex;
       gap: 1rem;
-      background: #f9fafb;
-      border: 1px solid #e5e7eb;
+      background: #FAFAFA;
+      border: 1px solid #EEEEEE;
       border-radius: 16px;
       padding: 1rem;
       cursor: pointer;
@@ -219,8 +231,8 @@ import { UiHeaderComponent } from '../../../../shared/components/ui-header/ui-he
     }
 
     .expert-card:hover {
-      border-color: #FF6B35;
-      box-shadow: 0 4px 12px rgba(255, 107, 53, 0.15);
+      border-color: var(--color-primary-500, #FF9800);
+      box-shadow: 0 4px 12px rgba(255, 152, 0, 0.15);
       transform: translateY(-2px);
     }
 
@@ -238,7 +250,7 @@ import { UiHeaderComponent } from '../../../../shared/components/ui-header/ui-he
     }
 
     .avatar-placeholder {
-      background: linear-gradient(135deg, #FF6B35 0%, #FF9800 100%);
+      background: linear-gradient(135deg, var(--color-primary-500, #FF9800) 0%, #FF9800 100%);
       color: white;
       display: flex;
       align-items: center;
@@ -258,7 +270,7 @@ import { UiHeaderComponent } from '../../../../shared/components/ui-header/ui-he
     }
 
     .status-dot.available {
-      background: #10b981;
+      background: var(--color-secondary, #4CAF50);
     }
 
     .expert-info {
@@ -281,7 +293,7 @@ import { UiHeaderComponent } from '../../../../shared/components/ui-header/ui-he
     }
 
     .stars {
-      color: #fbbf24;
+      color: var(--color-mustard, #FFC107);
     }
 
     .rating-value {
@@ -304,8 +316,8 @@ import { UiHeaderComponent } from '../../../../shared/components/ui-header/ui-he
 
     .specialty-tag {
       font-size: 0.6875rem;
-      background: linear-gradient(135deg, #FFF4E6, #FFE5D9);
-      color: #E85A24;
+      background: linear-gradient(135deg, #FFF3E0, #FFE5D9);
+      color: var(--color-primary-900, #E65100);
       padding: 0.25rem 0.5rem;
       border-radius: 6px;
       font-weight: 500;
@@ -335,7 +347,7 @@ import { UiHeaderComponent } from '../../../../shared/components/ui-header/ui-he
     .price {
       font-size: 1rem;
       font-weight: 700;
-      color: #FF6B35;
+      color: var(--color-primary-500, #FF9800);
     }
 
     .price-label {
@@ -346,7 +358,7 @@ import { UiHeaderComponent } from '../../../../shared/components/ui-header/ui-he
     .unavailable-badge {
       margin-top: 0.5rem;
       font-size: 0.6875rem;
-      background: #fef2f2;
+      background: #FFEBEE;
       color: #991b1b;
       padding: 0.25rem 0.5rem;
       border-radius: 6px;
@@ -363,12 +375,12 @@ import { UiHeaderComponent } from '../../../../shared/components/ui-header/ui-he
 
     .btn-outline {
       background: white;
-      border: 2px solid #FF6B35;
-      color: #FF6B35;
+      border: 2px solid var(--color-primary-500, #FF9800);
+      color: var(--color-primary-500, #FF9800);
     }
 
     .btn-outline:hover {
-      background: #FFF4E6;
+      background: #FFF3E0;
     }
 
     @media (min-width: 640px) {
@@ -382,6 +394,8 @@ export class ExpertListComponent implements OnInit {
   private readonly router = inject(Router);
   private readonly conseilsService = inject(ConseilsService);
   readonly store = inject(ConseilsStore);
+  private readonly logger = inject(LoggerService);
+  readonly error = signal<string | null>(null);
 
   ngOnInit(): void {
     this.loadExperts();
@@ -389,13 +403,15 @@ export class ExpertListComponent implements OnInit {
 
   async loadExperts(): Promise<void> {
     this.store.setIsLoadingExperts(true);
+    this.error.set(null);
     try {
       const result = await this.conseilsService.getExperts({
         type: this.store.selectedType() || undefined,
       });
       this.store.setExperts(result.data, result.total);
     } catch (err) {
-      console.error('Error loading experts:', err);
+      this.logger.error('ExpertListComponent', 'Error loading experts', err);
+      this.error.set('Impossible de charger la liste des experts');
     } finally {
       this.store.setIsLoadingExperts(false);
     }
@@ -404,10 +420,6 @@ export class ExpertListComponent implements OnInit {
   selectExpert(expert: Expert): void {
     this.store.setSelectedExpert(expert);
     this.router.navigate(['/conseils/expert', expert.id]);
-  }
-
-  getInitials(expert: Expert): string {
-    return `${expert.firstName[0]}${expert.lastName[0]}`.toUpperCase();
   }
 
   getTypeLabel(type: string): string {

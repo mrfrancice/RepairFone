@@ -5,13 +5,15 @@ import { FormsModule } from '@angular/forms';
 import { SearchService, Repairer } from '../../services/search.service';
 import { SearchStore } from '../../stores/search.store';
 import { UiHeaderComponent } from '../../../../shared/components/ui-header/ui-header.component';
+import { UiErrorStateComponent } from '../../../../shared/components/ui-error-state/ui-error-state.component';
 import { ReviewsService } from '../../../reviews/services/reviews.service';
+import { InfiniteScrollDirective } from '../../../../shared/directives/infinite-scroll.directive';
 
 @Component({
   selector: 'app-search-results',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [CommonModule, RouterLink, FormsModule, UiHeaderComponent],
+  imports: [CommonModule, RouterLink, FormsModule, UiHeaderComponent, UiErrorStateComponent, InfiniteScrollDirective],
   template: `
     <div class="results-container">
       <!-- Header -->
@@ -157,11 +159,12 @@ import { ReviewsService } from '../../../reviews/services/reviews.service';
             <p>Recherche en cours...</p>
           </div>
         } @else if (error()) {
-          <div class="error-state">
-            <span class="error-icon">⚠️</span>
-            <p>{{ error() }}</p>
-            <button class="btn btn-primary" (click)="search()">Réessayer</button>
-          </div>
+          <ui-error-state
+            [message]="error()!"
+            severity="error"
+            [showRetry]="true"
+            (onRetry)="search()"
+          />
         } @else if (!store.hasResults()) {
           <div class="empty-state">
             <div class="empty-icon">🔍</div>
@@ -191,8 +194,13 @@ import { ReviewsService } from '../../../reviews/services/reviews.service';
             }
           </div>
 
-          <!-- Results list -->
-          <div class="repairer-list">
+          <!-- Results list with infinite scroll -->
+          <div class="repairer-list"
+               appInfiniteScroll
+               [useWindow]="true"
+               [threshold]="200"
+               [disabled]="isLoadingMore() || !hasMoreResults()"
+               (scrolled)="loadMore()">
             @for (repairer of sortedResults(); track repairer.id) {
               <div
                 class="repairer-card"
@@ -205,7 +213,7 @@ import { ReviewsService } from '../../../reviews/services/reviews.service';
                   >
                     @if (isSelectedForCompare(repairer.id)) {
                       <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
-                        <rect width="20" height="20" rx="4" fill="#2563eb"/>
+                        <rect width="20" height="20" rx="4" fill="var(--color-primary-500, #FF9800)"/>
                         <path d="M14.5 7L8.5 13L5.5 10" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
                       </svg>
                     } @else {
@@ -286,19 +294,16 @@ import { ReviewsService } from '../../../reviews/services/reviews.service';
             }
           </div>
 
-          @if (hasMoreResults()) {
-            <button
-              class="btn btn-outline btn-block load-more-btn"
-              (click)="loadMore()"
-              [disabled]="isLoadingMore()"
-            >
-              @if (isLoadingMore()) {
-                <span class="spinner-small"></span>
-                Chargement...
-              } @else {
-                Voir plus de résultats
-              }
-            </button>
+          <!-- Loading indicator for infinite scroll -->
+          @if (isLoadingMore()) {
+            <div class="loading-more">
+              <span class="spinner-small"></span>
+              <span>Chargement...</span>
+            </div>
+          } @else if (hasMoreResults()) {
+            <div class="scroll-hint">
+              <span>Faites défiler pour voir plus</span>
+            </div>
           }
         }
       </div>
@@ -324,7 +329,7 @@ import { ReviewsService } from '../../../reviews/services/reviews.service';
                       <!-- Grille de rues -->
                       <defs>
                         <pattern id="grid" width="40" height="40" patternUnits="userSpaceOnUse">
-                          <path d="M 40 0 L 0 0 0 40" fill="none" stroke="#e5e7eb" stroke-width="1"/>
+                          <path d="M 40 0 L 0 0 0 40" fill="none" stroke="#EEEEEE" stroke-width="1"/>
                         </pattern>
                       </defs>
                       <rect width="100%" height="100%" fill="#f0f4f0"/>
@@ -335,11 +340,11 @@ import { ReviewsService } from '../../../reviews/services/reviews.service';
                       <rect x="190" y="0" width="20" height="300" fill="#fff" opacity="0.8"/>
 
                       <!-- Cercle de rayon de recherche -->
-                      <circle cx="200" cy="150" [attr.r]="store.searchRadius() * 8" fill="rgba(255, 107, 53, 0.1)" stroke="#FF6B35" stroke-width="2" stroke-dasharray="5,5"/>
+                      <circle cx="200" cy="150" [attr.r]="store.searchRadius() * 8" fill="rgba(255, 152, 0, 0.1)" stroke="var(--color-primary-500, #FF9800)" stroke-width="2" stroke-dasharray="5,5"/>
 
                       <!-- Position utilisateur -->
-                      <circle cx="200" cy="150" r="8" fill="#2563eb"/>
-                      <circle cx="200" cy="150" r="12" fill="rgba(37, 99, 235, 0.3)"/>
+                      <circle cx="200" cy="150" r="8" fill="var(--color-primary-500, #FF9800)"/>
+                      <circle cx="200" cy="150" r="12" fill="rgba(255, 152, 0, 0.3)"/>
                     </svg>
 
                     <!-- Marqueurs des réparateurs -->
@@ -392,7 +397,7 @@ import { ReviewsService } from '../../../reviews/services/reviews.service';
   styles: [`
     .results-container {
       min-height: 100vh;
-      background: #f9fafb;
+      background: #FAFAFA;
     }
 
     .filter-toggle-btn {
@@ -534,7 +539,7 @@ import { ReviewsService } from '../../../reviews/services/reviews.service';
       background: white;
       padding: 1rem;
       margin-top: 260px;
-      border-bottom: 1px solid #e5e7eb;
+      border-bottom: 1px solid #EEEEEE;
     }
 
     .filters-header {
@@ -553,14 +558,14 @@ import { ReviewsService } from '../../../reviews/services/reviews.service';
     .btn-text {
       background: none;
       border: none;
-      color: #FF6B35;
+      color: var(--color-primary-500, #FF9800);
       font-weight: 600;
       cursor: pointer;
       transition: all 0.2s;
     }
 
     .btn-text:hover {
-      color: #E85A24;
+      color: var(--color-primary-900, #E65100);
     }
 
     .filter-group {
@@ -593,7 +598,7 @@ import { ReviewsService } from '../../../reviews/services/reviews.service';
     .checkbox-box {
       width: 20px;
       height: 20px;
-      border: 2px solid #d1d5db;
+      border: 2px solid #D1D5DB;
       border-radius: 4px;
       display: flex;
       align-items: center;
@@ -621,9 +626,9 @@ import { ReviewsService } from '../../../reviews/services/reviews.service';
 
     .filter-option {
       padding: 0.625rem 1rem;
-      min-height: 44px;
-      background: #f9fafb;
-      border: 2px solid #e5e7eb;
+      min-height: 48px;
+      background: #FAFAFA;
+      border: 2px solid #EEEEEE;
       border-radius: 24px;
       font-size: 0.875rem;
       font-weight: 500;
@@ -632,13 +637,13 @@ import { ReviewsService } from '../../../reviews/services/reviews.service';
     }
 
     .filter-option:hover {
-      border-color: #FF6B35;
+      border-color: var(--color-primary-500, #FF9800);
       transform: translateY(-1px);
     }
 
     .filter-option.active {
-      background: linear-gradient(135deg, #FF6B35 0%, #FF9800 100%);
-      border-color: #FF6B35;
+      background: linear-gradient(135deg, var(--color-primary-500, #FF9800) 0%, #FF9800 100%);
+      border-color: var(--color-primary-500, #FF9800);
       color: white;
       font-weight: 600;
     }
@@ -649,7 +654,7 @@ import { ReviewsService } from '../../../reviews/services/reviews.service';
       padding: 0.75rem 1rem;
       overflow-x: auto;
       background: white;
-      border-bottom: 1px solid #e5e7eb;
+      border-bottom: 1px solid #EEEEEE;
       margin-top: 260px;
     }
 
@@ -662,17 +667,17 @@ import { ReviewsService } from '../../../reviews/services/reviews.service';
       align-items: center;
       gap: 0.375rem;
       padding: 0.375rem 0.75rem;
-      background: #f3f4f6;
+      background: #F5F5F5;
       border-radius: 20px;
       font-size: 0.875rem;
       white-space: nowrap;
     }
 
     .filter-chip.active {
-      background: linear-gradient(135deg, #FFF4E6 0%, #FFE8CC 100%);
-      color: #FF6B35;
+      background: linear-gradient(135deg, #FFF3E0 0%, #FFE8CC 100%);
+      color: var(--color-primary-500, #FF9800);
       font-weight: 600;
-      border: 1px solid rgba(255, 107, 53, 0.2);
+      border: 1px solid rgba(255, 152, 0, 0.2);
     }
 
     .chip-remove {
@@ -701,8 +706,8 @@ import { ReviewsService } from '../../../reviews/services/reviews.service';
     .spinner {
       width: 40px;
       height: 40px;
-      border: 3px solid #e5e7eb;
-      border-top-color: #FF6B35;
+      border: 3px solid #EEEEEE;
+      border-top-color: var(--color-primary-500, #FF9800);
       border-radius: 50%;
       animation: spin 1s linear infinite;
       margin-bottom: 1rem;
@@ -769,7 +774,7 @@ import { ReviewsService } from '../../../reviews/services/reviews.service';
     }
 
     .repairer-card.selected {
-      border: 2px solid #2563eb;
+      border: 2px solid var(--color-primary-500, #FF9800);
     }
 
     .compare-checkbox {
@@ -802,7 +807,7 @@ import { ReviewsService } from '../../../reviews/services/reviews.service';
     }
 
     .avatar-placeholder {
-      background: linear-gradient(135deg, #FF6B35 0%, #FF9800 100%);
+      background: linear-gradient(135deg, var(--color-primary-500, #FF9800) 0%, #FF9800 100%);
       color: white;
       display: flex;
       align-items: center;
@@ -917,7 +922,7 @@ import { ReviewsService } from '../../../reviews/services/reviews.service';
 
     .specialty-tag {
       font-size: 0.75rem;
-      background: #f3f4f6;
+      background: #F5F5F5;
       color: #4b5563;
       padding: 0.125rem 0.5rem;
       border-radius: 4px;
@@ -930,15 +935,28 @@ import { ReviewsService } from '../../../reviews/services/reviews.service';
       padding-right: 1rem;
     }
 
-    .load-more-btn {
-      margin-top: 1rem;
+    .loading-more {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+      padding: 1.5rem;
+      color: #6b7280;
+      font-size: 0.875rem;
+    }
+
+    .scroll-hint {
+      text-align: center;
+      padding: 1rem;
+      color: #9ca3af;
+      font-size: 0.75rem;
     }
 
     .spinner-small {
       width: 20px;
       height: 20px;
       border: 2px solid #93c5fd;
-      border-top-color: #2563eb;
+      border-top-color: var(--color-primary-500, #FF9800);
       border-radius: 50%;
       animation: spin 1s linear infinite;
     }
@@ -963,26 +981,26 @@ import { ReviewsService } from '../../../reviews/services/reviews.service';
     }
 
     .btn-primary {
-      background: linear-gradient(135deg, #FF6B35 0%, #FF9800 100%);
+      background: linear-gradient(135deg, var(--color-primary-500, #FF9800) 0%, #FF9800 100%);
       color: white;
-      box-shadow: 0 2px 8px rgba(255, 107, 53, 0.3);
+      box-shadow: 0 2px 8px rgba(255, 152, 0, 0.3);
     }
 
     .btn-primary:hover:not(:disabled) {
-      background: linear-gradient(135deg, #E85A24 0%, #F57C00 100%);
+      background: linear-gradient(135deg, var(--color-primary-900, #E65100) 0%, #F57C00 100%);
       transform: translateY(-1px);
-      box-shadow: 0 4px 12px rgba(255, 107, 53, 0.4);
+      box-shadow: 0 4px 12px rgba(255, 152, 0, 0.4);
     }
 
     .btn-outline {
       background: white;
-      border: 2px solid #FF6B35;
-      color: #FF6B35;
+      border: 2px solid var(--color-primary-500, #FF9800);
+      color: var(--color-primary-500, #FF9800);
       font-weight: 600;
     }
 
     .btn-outline:hover:not(:disabled) {
-      background: linear-gradient(135deg, #FFF4E6 0%, #FFE8CC 100%);
+      background: linear-gradient(135deg, #FFF3E0 0%, #FFE8CC 100%);
       transform: translateY(-1px);
     }
 
@@ -1030,7 +1048,7 @@ import { ReviewsService } from '../../../reviews/services/reviews.service';
       justify-content: space-between;
       align-items: center;
       padding: 1rem 1.5rem;
-      border-bottom: 1px solid #e5e7eb;
+      border-bottom: 1px solid #EEEEEE;
     }
 
     .map-modal-header h2 {
@@ -1040,7 +1058,7 @@ import { ReviewsService } from '../../../reviews/services/reviews.service';
     }
 
     .close-btn {
-      background: #f3f4f6;
+      background: #F5F5F5;
       border: none;
       width: 40px;
       height: 40px;
@@ -1054,7 +1072,7 @@ import { ReviewsService } from '../../../reviews/services/reviews.service';
     }
 
     .close-btn:hover {
-      background: #e5e7eb;
+      background: #EEEEEE;
       color: #1f2937;
     }
 
@@ -1120,7 +1138,7 @@ import { ReviewsService } from '../../../reviews/services/reviews.service';
       left: 50%;
       transform: translateX(-50%);
       background: white;
-      color: #FF6B35;
+      color: var(--color-primary-500, #FF9800);
       font-size: 0.625rem;
       font-weight: 700;
       width: 16px;
@@ -1134,7 +1152,7 @@ import { ReviewsService } from '../../../reviews/services/reviews.service';
 
     .map-repairer-list {
       padding: 1rem;
-      background: #f9fafb;
+      background: #FAFAFA;
     }
 
     .map-repairer-list h3 {
@@ -1156,7 +1174,7 @@ import { ReviewsService } from '../../../reviews/services/reviews.service';
       gap: 0.75rem;
       padding: 0.75rem;
       background: white;
-      border: 1px solid #e5e7eb;
+      border: 1px solid #EEEEEE;
       border-radius: 12px;
       cursor: pointer;
       transition: all 0.2s;
@@ -1165,14 +1183,14 @@ import { ReviewsService } from '../../../reviews/services/reviews.service';
     }
 
     .compact-repairer:hover {
-      border-color: #FF6B35;
-      box-shadow: 0 2px 8px rgba(255, 107, 53, 0.15);
+      border-color: var(--color-primary-500, #FF9800);
+      box-shadow: 0 2px 8px rgba(255, 152, 0, 0.15);
     }
 
     .compact-number {
       width: 24px;
       height: 24px;
-      background: linear-gradient(135deg, #FF6B35 0%, #FF9800 100%);
+      background: linear-gradient(135deg, var(--color-primary-500, #FF9800) 0%, #FF9800 100%);
       color: white;
       border-radius: 50%;
       display: flex;

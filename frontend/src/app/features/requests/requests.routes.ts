@@ -7,20 +7,20 @@ export const REQUESTS_ROUTES: Routes = [
     loadComponent: () =>
       import('./components/request-list/request-list.component').then((m) => m.RequestListComponent),
     canActivate: [authGuard],
-    title: 'Mes demandes - FastRepair',
+    title: 'Mes demandes - RepairFone',
   },
   {
     path: 'new',
     loadComponent: () =>
       import('./components/new-request/new-request.component').then((m) => m.NewRequestComponent),
     canActivate: [authGuard],
-    title: 'Nouvelle demande - FastRepair',
+    title: 'Nouvelle demande - RepairFone',
   },
   {
     path: ':id',
     loadComponent: () =>
       import('./components/request-detail/request-detail.component').then((m) => m.RequestDetailComponent),
     canActivate: [authGuard],
-    title: 'Détails de la demande - FastRepair',
+    title: 'Détails de la demande - RepairFone',
   },
 ];

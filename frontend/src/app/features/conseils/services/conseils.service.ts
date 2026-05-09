@@ -56,6 +56,53 @@ export interface ConseilSession {
   updatedAt: string;
 }
 
+interface ExpertApiResponse {
+  id: string;
+  user?: {
+    firstName?: string;
+    lastName?: string;
+    avatarUrl?: string | null;
+  };
+  firstName?: string;
+  lastName?: string;
+  avatarUrl?: string | null;
+  bio?: string;
+  specialties?: string[];
+  conseilTypes?: ConseilType[];
+  ratingAvg?: number | string | null;
+  rating?: number | string | null;
+  ratingCount?: number | string | null;
+  reviewCount?: number | string | null;
+  responseTime?: number | string | null;
+  pricePerSession?: number | string | null;
+  yearsOfExperience?: number | string | null;
+  isAvailable?: boolean;
+}
+
+function toNumber(value: number | string | null | undefined, fallback = 0): number {
+  if (value === null || value === undefined) return fallback;
+  const n = typeof value === 'number' ? value : parseFloat(value);
+  return Number.isFinite(n) ? n : fallback;
+}
+
+function mapExpertResponse(raw: ExpertApiResponse): Expert {
+  return {
+    id: raw.id,
+    firstName: raw.user?.firstName ?? raw.firstName ?? '',
+    lastName: raw.user?.lastName ?? raw.lastName ?? '',
+    avatarUrl: raw.user?.avatarUrl ?? raw.avatarUrl ?? undefined,
+    bio: raw.bio,
+    specialties: raw.specialties ?? [],
+    conseilTypes: raw.conseilTypes ?? [],
+    rating: toNumber(raw.ratingAvg ?? raw.rating, 0),
+    reviewCount: toNumber(raw.ratingCount ?? raw.reviewCount, 0),
+    responseTime: toNumber(raw.responseTime, 0),
+    pricePerSession: toNumber(raw.pricePerSession, 0),
+    yearsOfExperience: toNumber(raw.yearsOfExperience, 0),
+    isAvailable: raw.isAvailable ?? false,
+  };
+}
+
 @Injectable({ providedIn: 'root' })
 export class ConseilsService {
   private readonly api = inject(ApiService);
@@ -115,11 +162,11 @@ export class ConseilsService {
     limit?: number;
   }): Promise<PaginatedResponse<Expert>> {
     const result = await firstValueFrom(
-      this.api.get<{ data: Expert[]; total: number }>('/conseils/experts', params)
+      this.api.get<{ data: ExpertApiResponse[]; total: number }>('/conseils/experts', params)
     );
     return {
-      data: result.data,
-      total: result.total,
+      data: (result.data ?? []).map(mapExpertResponse),
+      total: result.total ?? 0,
       page: params?.page || 1,
       limit: params?.limit || 20,
     };
@@ -128,9 +175,10 @@ export class ConseilsService {
   // Get expert by ID
   async getExpert(id: string): Promise<Expert | null> {
     try {
-      return await firstValueFrom(
-        this.api.get<Expert>(`/conseils/experts/${id}`)
+      const raw = await firstValueFrom(
+        this.api.get<ExpertApiResponse>(`/conseils/experts/${id}`)
       );
+      return raw ? mapExpertResponse(raw) : null;
     } catch {
       return null;
     }

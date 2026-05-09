@@ -26,41 +26,44 @@ import { CommonModule } from '@angular/common';
   `,
   styles: [`
     .card {
-      background: var(--color-surface, white);
-      border-radius: var(--border-radius-lg, 12px);
-      box-shadow: var(--shadow-sm, 0 1px 3px rgba(0, 0, 0, 0.1));
+      background: var(--color-surface, #FFFFFF);
+      border: 1px solid var(--color-neutral-200, #EEEEEE);
+      border-radius: 1rem;
+      box-shadow: var(--shadow-sm, 0 1px 2px rgba(0, 0, 0, 0.05));
       overflow: hidden;
+      transition: all 200ms cubic-bezier(0.4, 0, 0.2, 1);
     }
 
     .card.clickable {
       cursor: pointer;
-      transition: box-shadow 0.2s, transform 0.2s;
     }
 
     .card.clickable:hover {
-      box-shadow: var(--shadow-md, 0 4px 12px rgba(0, 0, 0, 0.15));
+      box-shadow: var(--shadow-md, 0 4px 12px rgba(0, 0, 0, 0.10));
       transform: translateY(-2px);
     }
 
     .card-header {
-      padding: 1rem 1rem 0;
+      padding: 1.5rem 1.5rem 0;
     }
 
     .card-title {
+      font-family: 'Poppins', 'Inter', sans-serif;
       font-size: 1.125rem;
       font-weight: 600;
-      color: var(--color-text-primary, rgba(0, 0, 0, 0.87));
+      letter-spacing: -0.01em;
+      color: var(--color-neutral-900, #111827);
       margin: 0 0 0.25rem;
     }
 
     .card-subtitle {
       font-size: 0.875rem;
-      color: var(--color-text-secondary, rgba(0, 0, 0, 0.60));
+      color: var(--color-text-secondary, #4B5563);
       margin: 0;
     }
 
     .card-body {
-      padding: 1rem;
+      padding: 1.5rem;
     }
 
     .no-padding .card-body {

@@ -7,14 +7,16 @@ import { ProfileService } from '../../services/profile.service';
 import { RequestsService, RequestStats } from '../../../requests/services/requests.service';
 import { ReviewsService, Review, SubRatings, StepRatingStats, StepRating } from '../../../reviews/services/reviews.service';
 import { SecureStorageService } from '../../../../core/services/secure-storage.service';
+import { LoggerService } from '../../../../core/services/logger.service';
 import { UiHeaderComponent } from '../../../../shared/components/ui-header/ui-header.component';
 import { UiSkeletonComponent } from '../../../../shared/components/ui-skeleton/ui-skeleton.component';
+import { InitialsPipe } from '../../../../shared/pipes/initials.pipe';
 
 @Component({
   selector: 'app-profile-view',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [CommonModule, RouterLink, UiHeaderComponent, UiSkeletonComponent],
+  imports: [CommonModule, RouterLink, UiHeaderComponent, UiSkeletonComponent, InitialsPipe],
   template: `
     <div class="profile-page">
       <!-- Header Banner -->
@@ -25,7 +27,7 @@ import { UiSkeletonComponent } from '../../../../shared/components/ui-skeleton/u
               <img [src]="user()?.avatarUrl" alt="Avatar" />
             } @else {
               <div class="avatar-placeholder">
-                {{ getInitials() }}
+                {{ user()?.firstName | initials : user()?.lastName }}
               </div>
             }
             <div class="avatar-badge" [class]="user()?.role">
@@ -215,7 +217,7 @@ import { UiSkeletonComponent } from '../../../../shared/components/ui-skeleton/u
                 <div class="sub-rating-item">
                   <span class="sub-rating-icon">⏰</span>
                   <div class="sub-rating-info">
-                    <span class="sub-rating-label">Delais</span>
+                    <span class="sub-rating-label">Délais</span>
                     <div class="sub-rating-bar-container">
                       <div class="sub-rating-bar-bg"></div>
                       <div class="sub-rating-bar-fill" [style.width.%]="getCategoryWidth('timeliness')" [style.background]="getCategoryColor('timeliness')"></div>
@@ -250,7 +252,7 @@ import { UiSkeletonComponent } from '../../../../shared/components/ui-skeleton/u
                     <div class="review-header">
                       <div class="review-client">
                         <div class="client-avatar-small">
-                          {{ getClientInitials(review.client?.firstName, review.client?.lastName) }}
+                          {{ review.client?.firstName | initials : review.client?.lastName }}
                         </div>
                         <span class="client-name-small">{{ review.client?.firstName }} {{ review.client?.lastName?.charAt(0) }}.</span>
                       </div>
@@ -356,7 +358,7 @@ import { UiSkeletonComponent } from '../../../../shared/components/ui-skeleton/u
             </div>
             <div class="menu-content">
               <span class="menu-title">Modifier mon profil</span>
-              <span class="menu-desc">Mettre a jour vos informations</span>
+              <span class="menu-desc">Mettre à jour vos informations</span>
             </div>
             <div class="menu-arrow">
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
@@ -374,7 +376,7 @@ import { UiSkeletonComponent } from '../../../../shared/components/ui-skeleton/u
               </div>
               <div class="menu-content">
                 <span class="menu-title">Mes demandes</span>
-                <span class="menu-desc">Voir l'historique des reparations</span>
+                <span class="menu-desc">Voir l'historique des réparations</span>
               </div>
               <div class="menu-arrow">
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
@@ -411,7 +413,7 @@ import { UiSkeletonComponent } from '../../../../shared/components/ui-skeleton/u
             </div>
             <div class="menu-content">
               <span class="menu-title">Revoir l'introduction</span>
-              <span class="menu-desc">Redecouvrir l'application</span>
+              <span class="menu-desc">Redécouvrir l'application</span>
             </div>
             <div class="menu-arrow">
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
@@ -427,8 +429,8 @@ import { UiSkeletonComponent } from '../../../../shared/components/ui-skeleton/u
               </svg>
             </div>
             <div class="menu-content">
-              <span class="menu-title">Deconnexion</span>
-              <span class="menu-desc">Se deconnecter de l'application</span>
+              <span class="menu-title">Déconnexion</span>
+              <span class="menu-desc">Se déconnecter de l'application</span>
             </div>
             <div class="menu-arrow">
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
@@ -459,7 +461,7 @@ import { UiSkeletonComponent } from '../../../../shared/components/ui-skeleton/u
   styles: [`
     .profile-page {
       min-height: 100vh;
-      background: #f8f9fa;
+      background: #FAFAFA;
     }
 
     /* Profile Header Content */
@@ -481,16 +483,16 @@ import { UiSkeletonComponent } from '../../../../shared/components/ui-skeleton/u
       height: 100%;
       border-radius: 50%;
       object-fit: cover;
-      border: 4px solid rgba(255, 255, 255, 0.3);
-      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
+      border: 4px solid white;
+      box-shadow: var(--shadow-warm, 0 8px 24px rgba(255, 152, 0, 0.20));
     }
 
     .avatar-placeholder {
-      background: rgba(255, 255, 255, 0.2);
-      backdrop-filter: blur(10px);
+      background: linear-gradient(135deg, var(--color-primary-500, #FF9800), var(--color-gold-800, #F9A825));
       display: flex;
       align-items: center;
       justify-content: center;
+      font-family: 'Poppins', 'Inter', sans-serif;
       font-size: 2.5rem;
       font-weight: 700;
       color: white;
@@ -511,21 +513,23 @@ import { UiSkeletonComponent } from '../../../../shared/components/ui-skeleton/u
     }
 
     .avatar-badge.repairer {
-      color: #FF6B35;
+      color: var(--color-primary-500, #FF9800);
     }
 
     .avatar-badge.client {
-      color: #3b82f6;
+      color: var(--color-ocean, #1565C0);
     }
 
     .avatar-badge.admin {
-      color: #7c3aed;
-      background: linear-gradient(135deg, #f3e8ff, #e9d5ff);
+      color: var(--color-primary-500, #FF9800);
+      background: linear-gradient(135deg, #FFF3E0, #e9d5ff);
     }
 
     .profile-name {
-      font-size: 1.125rem;
+      font-family: 'Poppins', 'Inter', sans-serif;
+      font-size: 1.25rem;
       font-weight: 700;
+      letter-spacing: -0.01em;
       color: white;
       margin-bottom: 0.25rem;
       line-height: 1.2;
@@ -536,26 +540,27 @@ import { UiSkeletonComponent } from '../../../../shared/components/ui-skeleton/u
       align-items: center;
       justify-content: center;
       gap: 0.375rem;
-      color: rgba(255, 255, 255, 0.9);
-      font-size: 0.75rem;
-      margin-bottom: 0.5rem;
+      color: rgba(255, 255, 255, 0.75);
+      font-size: 0.8125rem;
+      margin-bottom: 0.75rem;
     }
 
     .profile-phone svg {
-      opacity: 0.8;
+      color: var(--color-primary-500, #FF9800);
     }
 
     .profile-role {
       display: inline-flex;
       align-items: center;
       gap: 0.375rem;
-      background: rgba(255, 255, 255, 0.2);
-      backdrop-filter: blur(10px);
-      padding: 0.5rem 1rem;
+      background: linear-gradient(135deg, var(--color-primary-500, #FF9800), var(--color-gold-800, #F9A825));
+      padding: 0.375rem 0.875rem;
       border-radius: 9999px;
-      font-size: 0.875rem;
+      font-family: 'Inter', sans-serif;
+      font-size: 0.75rem;
       font-weight: 600;
       color: white;
+      box-shadow: 0 2px 8px rgba(255, 152, 0, 0.35);
     }
 
     .role-icon {
@@ -565,8 +570,15 @@ import { UiSkeletonComponent } from '../../../../shared/components/ui-skeleton/u
     }
 
     .profile-role.role-admin {
-      background: rgba(124, 58, 237, 0.3);
-      border: 1px solid rgba(124, 58, 237, 0.5);
+      background: linear-gradient(135deg, var(--color-terracotta, #C62828), #8E1B1B);
+      color: white;
+      box-shadow: 0 2px 8px rgba(198, 40, 40, 0.35);
+    }
+
+    .profile-role.role-repairer {
+      background: linear-gradient(135deg, var(--color-secondary, #4CAF50), var(--color-success-dark, #2E7D32));
+      color: white;
+      box-shadow: 0 2px 8px rgba(76, 175, 80, 0.35);
     }
 
     /* Content */
@@ -609,18 +621,18 @@ import { UiSkeletonComponent } from '../../../../shared/components/ui-skeleton/u
     }
 
     .stat-icon.accepted {
-      background: linear-gradient(135deg, #d1fae5, #a7f3d0);
-      color: #047857;
+      background: linear-gradient(135deg, #E8F5E9, #C8E6C9);
+      color: #2E7D32;
     }
 
     .stat-icon.pending {
-      background: linear-gradient(135deg, #fef3c7, #fde68a);
-      color: #b45309;
+      background: linear-gradient(135deg, #FFF8E1, #FFE082);
+      color: #F57C00;
     }
 
     .stat-icon.total {
-      background: linear-gradient(135deg, #FFF4E6, #FFE5D9);
-      color: #E85A24;
+      background: linear-gradient(135deg, #FFF3E0, #FFE5D9);
+      color: var(--color-primary-900, #E65100);
     }
 
     .stat-info {
@@ -657,18 +669,18 @@ import { UiSkeletonComponent } from '../../../../shared/components/ui-skeleton/u
       gap: 0.625rem;
       margin-bottom: 1rem;
       padding-bottom: 0.75rem;
-      border-bottom: 2px solid #f3f4f6;
+      border-bottom: 2px solid #F5F5F5;
     }
 
     .section-icon {
       width: 36px;
       height: 36px;
-      border-radius: 10px;
-      background: linear-gradient(135deg, #FFF4E6, #FFE5D9);
+      border-radius: 12px;
+      background: linear-gradient(135deg, #FFF3E0, #FFE5D9);
       display: flex;
       align-items: center;
       justify-content: center;
-      color: #FF6B35;
+      color: var(--color-primary-500, #FF9800);
     }
 
     .section-header h2 {
@@ -685,7 +697,7 @@ import { UiSkeletonComponent } from '../../../../shared/components/ui-skeleton/u
     }
 
     .info-card {
-      background: #f9fafb;
+      background: #FAFAFA;
       padding: 0.875rem;
       border-radius: 12px;
     }
@@ -719,7 +731,7 @@ import { UiSkeletonComponent } from '../../../../shared/components/ui-skeleton/u
     .info-value.address svg {
       flex-shrink: 0;
       margin-top: 2px;
-      color: #FF6B35;
+      color: var(--color-primary-500, #FF9800);
     }
 
     .rating-display {
@@ -735,11 +747,11 @@ import { UiSkeletonComponent } from '../../../../shared/components/ui-skeleton/u
     }
 
     .stars svg {
-      color: #e5e7eb;
+      color: #EEEEEE;
     }
 
     .stars svg.filled {
-      color: #fbbf24;
+      color: var(--color-mustard, #FFC107);
     }
 
     .rating-text {
@@ -755,13 +767,13 @@ import { UiSkeletonComponent } from '../../../../shared/components/ui-skeleton/u
       border-radius: 9999px;
       font-size: 0.8125rem;
       font-weight: 600;
-      background: #fee2e2;
-      color: #b91c1c;
+      background: #FFEBEE;
+      color: var(--color-terracotta, #C62828);
     }
 
     .status-badge.available {
-      background: #d1fae5;
-      color: #047857;
+      background: #E8F5E9;
+      color: #2E7D32;
     }
 
     .status-dot {
@@ -774,7 +786,7 @@ import { UiSkeletonComponent } from '../../../../shared/components/ui-skeleton/u
     .description-box {
       margin-top: 1rem;
       padding: 0.875rem;
-      background: #f9fafb;
+      background: #FAFAFA;
       border-radius: 12px;
     }
 
@@ -797,9 +809,9 @@ import { UiSkeletonComponent } from '../../../../shared/components/ui-skeleton/u
     }
 
     .tag {
-      background: linear-gradient(135deg, #FFF4E6, #FFE5D9);
+      background: linear-gradient(135deg, #FFF3E0, #FFE5D9);
       border: 1px solid #FFD4B8;
-      color: #E85A24;
+      color: var(--color-primary-900, #E65100);
       padding: 0.375rem 0.875rem;
       border-radius: 9999px;
       font-size: 0.8125rem;
@@ -820,7 +832,7 @@ import { UiSkeletonComponent } from '../../../../shared/components/ui-skeleton/u
       align-items: center;
       gap: 1rem;
       padding: 1rem 1.25rem;
-      border-bottom: 1px solid #f3f4f6;
+      border-bottom: 1px solid #F5F5F5;
       text-decoration: none;
       color: inherit;
       background: none;
@@ -838,7 +850,7 @@ import { UiSkeletonComponent } from '../../../../shared/components/ui-skeleton/u
     }
 
     .menu-item:hover {
-      background: #fafafa;
+      background: #FAFAFA;
     }
 
     .menu-icon {
@@ -852,28 +864,28 @@ import { UiSkeletonComponent } from '../../../../shared/components/ui-skeleton/u
     }
 
     .menu-icon.edit {
-      background: linear-gradient(135deg, #dbeafe, #bfdbfe);
-      color: #2563eb;
+      background: linear-gradient(135deg, var(--color-ocean-50, #E3F2FD), var(--color-ocean-100, #BBDEFB));
+      color: var(--color-ocean, #1565C0);
     }
 
     .menu-icon.requests {
-      background: linear-gradient(135deg, #FFF4E6, #FFE5D9);
-      color: #FF6B35;
+      background: linear-gradient(135deg, var(--color-primary-50, #FFF3E0), var(--color-primary-100, #FFE0B2));
+      color: var(--color-primary-500, #FF9800);
     }
 
     .menu-icon.reviews {
-      background: linear-gradient(135deg, #fef3c7, #fde68a);
-      color: #b45309;
+      background: linear-gradient(135deg, #FFF8E1, var(--color-mustard-light, #FFE082));
+      color: var(--color-warning-dark, #F57C00);
     }
 
     .menu-icon.onboarding {
-      background: linear-gradient(135deg, #f3e8ff, #e9d5ff);
-      color: #7c3aed;
+      background: linear-gradient(135deg, var(--color-primary-50, #FFF3E0), var(--color-primary-100, #FFE0B2));
+      color: var(--color-primary-500, #FF9800);
     }
 
     .menu-icon.logout {
-      background: linear-gradient(135deg, #fee2e2, #fecaca);
-      color: #dc2626;
+      background: linear-gradient(135deg, #FFEBEE, #FFCDD2);
+      color: var(--color-terracotta, #C62828);
     }
 
     .menu-content {
@@ -896,7 +908,7 @@ import { UiSkeletonComponent } from '../../../../shared/components/ui-skeleton/u
     }
 
     .menu-item-danger .menu-title {
-      color: #dc2626;
+      color: var(--color-terracotta, #C62828);
     }
 
     .menu-arrow {
@@ -948,12 +960,12 @@ import { UiSkeletonComponent } from '../../../../shared/components/ui-skeleton/u
     }
 
     .rating-icon {
-      background: linear-gradient(135deg, #fef3c7, #fde68a) !important;
-      color: #b45309 !important;
+      background: linear-gradient(135deg, #FFF8E1, #FFE082) !important;
+      color: #F57C00 !important;
     }
 
     .global-rating-card {
-      background: linear-gradient(135deg, #fff7ed, #ffedd5);
+      background: linear-gradient(135deg, #FFF3E0, #FFE0B2);
       border-radius: 16px;
       padding: 1.5rem;
       text-align: center;
@@ -971,16 +983,16 @@ import { UiSkeletonComponent } from '../../../../shared/components/ui-skeleton/u
     .rating-number {
       font-size: 3rem;
       font-weight: 800;
-      color: #FF6B35;
+      color: var(--color-primary-500, #FF9800);
       line-height: 1;
     }
 
     .rating-number.positive {
-      color: #10b981;
+      color: var(--color-secondary, #4CAF50);
     }
 
     .rating-number.negative {
-      color: #ef4444;
+      color: var(--color-error, #F44336);
     }
 
     .rating-max {
@@ -997,7 +1009,7 @@ import { UiSkeletonComponent } from '../../../../shared/components/ui-skeleton/u
     .gauge-bar {
       position: relative;
       height: 12px;
-      background: linear-gradient(90deg, #ef4444, #f97316, #f59e0b, #22c55e, #10b981);
+      background: linear-gradient(90deg, var(--color-error, #F44336), #f97316, var(--color-mustard, #FFC107), var(--color-secondary, #4CAF50), var(--color-secondary, #4CAF50));
       border-radius: 6px;
       overflow: hidden;
     }
@@ -1025,7 +1037,7 @@ import { UiSkeletonComponent } from '../../../../shared/components/ui-skeleton/u
       display: block;
       font-size: 1rem;
       font-weight: 600;
-      color: #FF6B35;
+      color: var(--color-primary-500, #FF9800);
       margin-bottom: 0.25rem;
     }
 
@@ -1042,7 +1054,7 @@ import { UiSkeletonComponent } from '../../../../shared/components/ui-skeleton/u
       gap: 0.75rem;
       margin-bottom: 1rem;
       padding: 1rem;
-      background: #f9fafb;
+      background: #FAFAFA;
       border-radius: 12px;
     }
 
@@ -1083,7 +1095,7 @@ import { UiSkeletonComponent } from '../../../../shared/components/ui-skeleton/u
       left: 0;
       right: 0;
       bottom: 0;
-      background: linear-gradient(90deg, #fecaca, #fef3c7, #d1fae5);
+      background: linear-gradient(90deg, #FFCDD2, #FFF8E1, #E8F5E9);
       border-radius: 4px;
     }
 
@@ -1099,14 +1111,14 @@ import { UiSkeletonComponent } from '../../../../shared/components/ui-skeleton/u
 
     .sub-rating-bar {
       height: 8px;
-      background: #e5e7eb;
+      background: #EEEEEE;
       border-radius: 4px;
       overflow: hidden;
     }
 
     .sub-rating-fill {
       height: 100%;
-      background: linear-gradient(90deg, #FF6B35, #fbbf24);
+      background: linear-gradient(90deg, var(--color-primary-500, #FF9800), var(--color-mustard, #FFC107));
       border-radius: 4px;
       transition: width 0.3s ease;
     }
@@ -1114,7 +1126,7 @@ import { UiSkeletonComponent } from '../../../../shared/components/ui-skeleton/u
     .sub-rating-value {
       font-size: 0.875rem;
       font-weight: 700;
-      color: #FF6B35;
+      color: var(--color-primary-500, #FF9800);
       min-width: 32px;
       text-align: right;
     }
@@ -1132,11 +1144,11 @@ import { UiSkeletonComponent } from '../../../../shared/components/ui-skeleton/u
     }
 
     .review-card {
-      background: #f9fafb;
+      background: #FAFAFA;
       border-radius: 12px;
       padding: 1rem;
       margin-bottom: 0.75rem;
-      border: 1px solid #e5e7eb;
+      border: 1px solid #EEEEEE;
     }
 
     .review-card:last-child {
@@ -1160,7 +1172,7 @@ import { UiSkeletonComponent } from '../../../../shared/components/ui-skeleton/u
       width: 32px;
       height: 32px;
       border-radius: 50%;
-      background: linear-gradient(135deg, #FF6B35, #FF9800);
+      background: linear-gradient(135deg, var(--color-primary-500, #FF9800), #FF9800);
       color: white;
       display: flex;
       align-items: center;
@@ -1181,11 +1193,11 @@ import { UiSkeletonComponent } from '../../../../shared/components/ui-skeleton/u
     }
 
     .review-rating-small svg {
-      color: #e5e7eb;
+      color: #EEEEEE;
     }
 
     .review-rating-small svg.filled {
-      color: #fbbf24;
+      color: var(--color-mustard, #FFC107);
     }
 
     .review-rating-badge {
@@ -1209,7 +1221,7 @@ import { UiSkeletonComponent } from '../../../../shared/components/ui-skeleton/u
     }
 
     .review-separator {
-      color: #d1d5db;
+      color: #D1D5DB;
     }
 
     .review-step {
@@ -1236,7 +1248,7 @@ import { UiSkeletonComponent } from '../../../../shared/components/ui-skeleton/u
       gap: 0.5rem;
       width: 100%;
       padding: 0.875rem;
-      background: linear-gradient(135deg, #FF6B35, #FF9800);
+      background: linear-gradient(135deg, var(--color-primary-500, #FF9800), #FF9800);
       color: white;
       border: none;
       border-radius: 12px;
@@ -1245,12 +1257,12 @@ import { UiSkeletonComponent } from '../../../../shared/components/ui-skeleton/u
       text-decoration: none;
       cursor: pointer;
       transition: all 0.2s;
-      box-shadow: 0 4px 12px rgba(255, 107, 53, 0.3);
+      box-shadow: 0 4px 12px rgba(255, 152, 0, 0.3);
     }
 
     .see-all-reviews-btn:hover {
       transform: translateY(-2px);
-      box-shadow: 0 6px 16px rgba(255, 107, 53, 0.4);
+      box-shadow: 0 6px 16px rgba(255, 152, 0, 0.4);
     }
 
     /* Skeleton Styles */
@@ -1265,7 +1277,7 @@ import { UiSkeletonComponent } from '../../../../shared/components/ui-skeleton/u
       flex-direction: column;
       gap: 0.75rem;
       padding: 1rem;
-      background: #f9fafb;
+      background: #FAFAFA;
       border-radius: 12px;
     }
   `],
@@ -1278,6 +1290,7 @@ export class ProfileViewComponent implements OnInit {
   private readonly reviewsService = inject(ReviewsService);
   private readonly router = inject(Router);
   private readonly storage = inject(SecureStorageService);
+  private readonly logger = inject(LoggerService);
 
   readonly user = this.authStore.user;
   readonly stats = signal<RequestStats | null>(null);
@@ -1308,7 +1321,7 @@ export class ProfileViewComponent implements OnInit {
         await this.loadReviews();
       }
     } catch (err) {
-      console.error('Error loading profile:', err);
+      this.logger.error('ProfileViewComponent', 'Error loading profile', err);
       this.isLoading.set(false);
       this.isLoadingStats.set(false);
     }
@@ -1328,7 +1341,7 @@ export class ProfileViewComponent implements OnInit {
       this.recentReviews.set(stats.recentRatings || []);
       this.isLoadingReviews.set(false);
     } catch (err) {
-      console.error('Error loading reviews:', err);
+      this.logger.error('ProfileViewComponent', 'Error loading reviews', err);
       this.isLoadingReviews.set(false);
     }
   }
@@ -1350,21 +1363,13 @@ export class ProfileViewComponent implements OnInit {
     }
   }
 
-  getInitials(): string {
-    const user = this.user();
-    if (user?.firstName && user?.lastName) {
-      return `${user.firstName[0]}${user.lastName[0]}`.toUpperCase();
-    }
-    return 'U';
-  }
-
   async logout(): Promise<void> {
     try {
       await this.authService.logout();
       this.storage.remove('rf_onboarding_completed');
       this.router.navigate(['/onboarding']);
     } catch (err) {
-      console.error('Error logging out:', err);
+      this.logger.error('ProfileViewComponent', 'Error logging out', err);
     }
   }
 
@@ -1380,12 +1385,6 @@ export class ProfileViewComponent implements OnInit {
     if (rating >= 1.5) return 'Passable';
     if (rating > 0) return 'Insuffisant';
     return 'Pas encore noté';
-  }
-
-  getClientInitials(firstName?: string, lastName?: string): string {
-    const first = firstName?.charAt(0) || '';
-    const last = lastName?.charAt(0) || '';
-    return (first + last).toUpperCase() || '?';
   }
 
   formatReviewDate(dateStr: string): string {
@@ -1428,11 +1427,11 @@ export class ProfileViewComponent implements OnInit {
 
   getGaugeColor(): string {
     const rating = this.getOverallAverage();
-    if (rating >= 4) return '#10b981';
-    if (rating >= 2) return '#22c55e';
-    if (rating >= 0) return '#f59e0b';
+    if (rating >= 4) return 'var(--color-secondary, #4CAF50)';
+    if (rating >= 2) return 'var(--color-secondary, #4CAF50)';
+    if (rating >= 0) return 'var(--color-mustard, #FFC107)';
     if (rating >= -2) return '#f97316';
-    return '#ef4444';
+    return 'var(--color-error, #F44336)';
   }
 
   getCategoryAverage(category: string): number {
@@ -1446,11 +1445,11 @@ export class ProfileViewComponent implements OnInit {
 
   getCategoryColor(category: string): string {
     const rating = this.getCategoryAverage(category);
-    if (rating >= 4) return '#10b981';
-    if (rating >= 2) return '#22c55e';
-    if (rating >= 0) return '#f59e0b';
+    if (rating >= 4) return 'var(--color-secondary, #4CAF50)';
+    if (rating >= 2) return 'var(--color-secondary, #4CAF50)';
+    if (rating >= 0) return 'var(--color-mustard, #FFC107)';
     if (rating >= -2) return '#f97316';
-    return '#ef4444';
+    return 'var(--color-error, #F44336)';
   }
 
   formatRating(rating: number): string {
@@ -1460,16 +1459,16 @@ export class ProfileViewComponent implements OnInit {
 
   getStepRatingBgColor(rating: number): string {
     if (rating >= 4) return '#dcfce7';
-    if (rating >= 2) return '#d1fae5';
-    if (rating >= 0) return '#fef3c7';
-    if (rating >= -2) return '#ffedd5';
-    return '#fee2e2';
+    if (rating >= 2) return '#E8F5E9';
+    if (rating >= 0) return '#FFF8E1';
+    if (rating >= -2) return '#FFE0B2';
+    return '#FFEBEE';
   }
 
   getStepRatingTextColor(rating: number): string {
-    if (rating >= 4) return '#15803d';
+    if (rating >= 4) return 'var(--color-success-dark, #2E7D32)';
     if (rating >= 2) return '#166534';
-    if (rating >= 0) return '#b45309';
+    if (rating >= 0) return '#F57C00';
     if (rating >= -2) return '#c2410c';
     return '#991b1b';
   }

@@ -5,11 +5,13 @@ import { ActivatedRoute, Router } from '@angular/router';
 import { ConseilsService, Expert } from '../../services/conseils.service';
 import { ConseilsStore } from '../../stores/conseils.store';
 import { AuthStore } from '../../../../core/stores/auth.store';
+import { InitialsPipe } from '../../../../shared/pipes/initials.pipe';
+import { LoggerService } from '../../../../core/services/logger.service';
 
 @Component({
   selector: 'app-expert-detail',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, InitialsPipe],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <div class="detail-container">
@@ -21,8 +23,8 @@ import { AuthStore } from '../../../../core/stores/auth.store';
       } @else if (expert()) {
         <!-- Header -->
         <header class="detail-header">
-          <button class="back-btn" (click)="goBack()">
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+          <button class="back-btn" (click)="goBack()" type="button" aria-label="Retour">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" aria-hidden="true">
               <path d="M15 18L9 12L15 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
             </svg>
           </button>
@@ -33,7 +35,7 @@ import { AuthStore } from '../../../../core/stores/auth.store';
                 <img [src]="expert()?.avatarUrl" [alt]="expert()?.firstName" />
               } @else {
                 <div class="avatar-placeholder">
-                  {{ getInitials() }}
+                  {{ expert()?.firstName | initials : expert()?.lastName }}
                 </div>
               }
               @if (expert()?.isAvailable) {
@@ -165,7 +167,7 @@ import { AuthStore } from '../../../../core/stores/auth.store';
   styles: [`
     .detail-container {
       min-height: 100vh;
-      background: #f9fafb;
+      background: #FAFAFA;
       padding-bottom: 100px;
     }
 
@@ -181,8 +183,8 @@ import { AuthStore } from '../../../../core/stores/auth.store';
     .spinner {
       width: 40px;
       height: 40px;
-      border: 3px solid #e5e7eb;
-      border-top-color: #7c3aed;
+      border: 3px solid #EEEEEE;
+      border-top-color: var(--color-primary-500, #FF9800);
       border-radius: 50%;
       animation: spin 1s linear infinite;
     }
@@ -192,25 +194,37 @@ import { AuthStore } from '../../../../core/stores/auth.store';
     }
 
     .detail-header {
-      background: linear-gradient(135deg, #7c3aed 0%, #5b21b6 100%);
+      background:
+        radial-gradient(ellipse at 92% 50%, rgba(255, 152, 0, 0.22) 0%, transparent 55%),
+        linear-gradient(135deg, #1A1A1A 0%, #0F0F0F 100%);
       color: white;
-      padding: 1rem;
+      padding: 1rem 1.25rem;
       padding-top: calc(1rem + env(safe-area-inset-top, 0));
-      padding-bottom: 2rem;
+      border-bottom: 2px solid var(--color-primary-500, #FF9800);
+      border-bottom-left-radius: 30px;
+      border-bottom-right-radius: 30px;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.35);
     }
 
     .back-btn {
-      background: rgba(255, 255, 255, 0.2);
-      border: none;
+      background: rgba(255, 255, 255, 0.08);
+      border: 1px solid rgba(255, 255, 255, 0.1);
       color: white;
-      width: 40px;
-      height: 40px;
-      border-radius: 10px;
+      width: 44px;
+      height: 44px;
+      border-radius: 12px;
       display: flex;
       align-items: center;
       justify-content: center;
       cursor: pointer;
       margin-bottom: 1rem;
+      transition: all 150ms ease;
+    }
+
+    .back-btn:hover {
+      background: rgba(255, 152, 0, 0.18);
+      border-color: var(--color-primary-500, #FF9800);
+      color: var(--color-primary-500, #FF9800);
     }
 
     .expert-hero {
@@ -254,12 +268,12 @@ import { AuthStore } from '../../../../core/stores/auth.store';
     }
 
     .status-badge.available {
-      background: #10b981;
+      background: var(--color-secondary, #4CAF50);
       color: white;
     }
 
     .status-badge.unavailable {
-      background: #ef4444;
+      background: var(--color-error, #F44336);
       color: white;
     }
 
@@ -278,7 +292,7 @@ import { AuthStore } from '../../../../core/stores/auth.store';
     }
 
     .stars {
-      color: #fbbf24;
+      color: var(--color-mustard, #FFC107);
     }
 
     .rating-value {
@@ -343,7 +357,7 @@ import { AuthStore } from '../../../../core/stores/auth.store';
 
     .specialty-chip {
       background: #faf5ff;
-      color: #7c3aed;
+      color: var(--color-primary-500, #FF9800);
       padding: 0.375rem 0.75rem;
       border-radius: 20px;
       font-size: 0.875rem;
@@ -361,8 +375,8 @@ import { AuthStore } from '../../../../core/stores/auth.store';
       align-items: center;
       gap: 0.5rem;
       padding: 0.75rem;
-      background: #f9fafb;
-      border-radius: 8px;
+      background: #FAFAFA;
+      border-radius: 12px;
     }
 
     .type-icon {
@@ -375,7 +389,7 @@ import { AuthStore } from '../../../../core/stores/auth.store';
     }
 
     .request-section {
-      border: 2px solid #7c3aed;
+      border: 2px solid var(--color-primary-500, #FF9800);
     }
 
     .form-group {
@@ -393,8 +407,8 @@ import { AuthStore } from '../../../../core/stores/auth.store';
     .form-textarea {
       width: 100%;
       padding: 0.75rem 1rem;
-      border: 1px solid #d1d5db;
-      border-radius: 8px;
+      border: 1px solid #D1D5DB;
+      border-radius: 12px;
       font-size: 1rem;
       transition: border-color 0.2s;
     }
@@ -402,7 +416,7 @@ import { AuthStore } from '../../../../core/stores/auth.store';
     .form-input:focus,
     .form-textarea:focus {
       outline: none;
-      border-color: #7c3aed;
+      border-color: var(--color-primary-500, #FF9800);
     }
 
     .form-textarea {
@@ -416,13 +430,13 @@ import { AuthStore } from '../../../../core/stores/auth.store';
       align-items: center;
       padding: 1rem;
       background: #faf5ff;
-      border-radius: 8px;
+      border-radius: 12px;
     }
 
     .price {
       font-size: 1.25rem;
       font-weight: 700;
-      color: #7c3aed;
+      color: var(--color-primary-500, #FF9800);
     }
 
     .detail-footer {
@@ -447,7 +461,7 @@ import { AuthStore } from '../../../../core/stores/auth.store';
     }
 
     .btn-primary {
-      background: #7c3aed;
+      background: var(--color-primary-500, #FF9800);
       color: white;
     }
 
@@ -461,7 +475,7 @@ import { AuthStore } from '../../../../core/stores/auth.store';
     }
 
     .btn-disabled {
-      background: #d1d5db;
+      background: #D1D5DB;
       color: #6b7280;
       cursor: not-allowed;
     }
@@ -477,6 +491,7 @@ export class ExpertDetailComponent implements OnInit {
   private readonly conseilsService = inject(ConseilsService);
   private readonly authStore = inject(AuthStore);
   readonly store = inject(ConseilsStore);
+  private readonly logger = inject(LoggerService);
 
   readonly expert = signal<Expert | null>(null);
   readonly isLoading = signal(true);
@@ -501,7 +516,7 @@ export class ExpertDetailComponent implements OnInit {
         this.store.setSelectedExpert(expert);
       }
     } catch (err) {
-      console.error('Error loading expert:', err);
+      this.logger.error('ExpertDetailComponent', 'Error loading expert', err);
     } finally {
       this.isLoading.set(false);
     }
@@ -538,18 +553,10 @@ export class ExpertDetailComponent implements OnInit {
       this.store.setCurrentSession(session);
       this.router.navigate(['/conseils/chat', session.id]);
     } catch (err) {
-      console.error('Error creating session:', err);
+      this.logger.error('ExpertDetailComponent', 'Error creating session', err);
     } finally {
       this.isSubmitting.set(false);
     }
-  }
-
-  getInitials(): string {
-    const exp = this.expert();
-    if (exp) {
-      return `${exp.firstName[0]}${exp.lastName[0]}`.toUpperCase();
-    }
-    return '';
   }
 
   getStars(rating: number): string {

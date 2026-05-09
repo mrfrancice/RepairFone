@@ -168,11 +168,11 @@ export class RequestsService {
 
   getStatusColor(status: RequestStatus): string {
     const colors: Record<RequestStatus, string> = {
-      pending: '#f59e0b',
-      accepted: '#10b981',
-      rejected: '#ef4444',
-      completed: '#8b5cf6',
-      delivered: '#06b6d4',
+      pending: '#FFC107',
+      accepted: '#4CAF50',
+      rejected: '#F44336',
+      completed: '#FF9800',
+      delivered: '#1565C0',
     };
     return colors[status] || '#6b7280';
   }
@@ -182,6 +182,6 @@ export class RequestsService {
   }
 
   getUrgencyColor(urgency: UrgencyLevel): string {
-    return urgency === 'express' ? '#dc2626' : '#10b981';
+    return urgency === 'express' ? '#C62828' : '#4CAF50';
   }
 }

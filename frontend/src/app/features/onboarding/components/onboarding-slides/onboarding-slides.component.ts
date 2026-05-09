@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
 import { SecureStorageService } from '../../../../core/services/secure-storage.service';
 import { trigger, transition, style, animate, state } from '@angular/animations';
+import { AppLogoComponent } from '../../../../shared/components/app-logo/app-logo.component';
 
 interface OnboardingSlide {
   id: number;
@@ -16,7 +17,7 @@ interface OnboardingSlide {
   selector: 'app-onboarding-slides',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [CommonModule],
+  imports: [CommonModule, AppLogoComponent],
   animations: [
     trigger('fadeSlide', [
       transition(':enter', [
@@ -45,14 +46,7 @@ interface OnboardingSlide {
       <div class="splash-screen" [@splashFade]="showSplash() ? 'visible' : 'hidden'">
         <div class="splash-content">
           <div class="splash-logo" [@scaleIn]>
-            <div class="logo-circle">
-              <svg viewBox="0 0 64 64" fill="none" class="logo-svg">
-                <path d="M32 8C18.745 8 8 18.745 8 32s10.745 24 24 24 24-10.745 24-24S45.255 8 32 8z" fill="#FF6B35"/>
-                <path d="M40 22l-4 4m0 0l-4-4m4 4v12m-8 4h16M24 28c0 4.418 3.582 8 8 8s8-3.582 8-8" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
-                <circle cx="32" cy="20" r="3" fill="white"/>
-              </svg>
-            </div>
-            <h1 class="splash-title">RepairFone</h1>
+            <app-logo size="lg" variant="gradient" />
           </div>
           <p class="splash-tagline">Trouvez un réparateur fiable près de vous</p>
           <div class="splash-loader">
@@ -84,11 +78,7 @@ interface OnboardingSlide {
 
         <!-- Logo -->
         <div class="logo-small">
-          <svg viewBox="0 0 32 32" fill="none" class="logo-icon-small">
-            <path d="M16 4C9.373 4 4 9.373 4 16s5.373 12 12 12 12-5.373 12-12S22.627 4 16 4z" fill="#FF6B35"/>
-            <path d="M20 11l-2 2m0 0l-2-2m2 2v6m-4 2h8" stroke="white" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-          </svg>
-          <span class="logo-text-small">RepairFone</span>
+          <app-logo size="sm" variant="gradient" />
         </div>
 
         <!-- Slides Container -->
@@ -163,6 +153,11 @@ interface OnboardingSlide {
                     Créer un compte
                   </button>
                 </div>
+                <div class="repairer-cta">
+                  <button class="auth-btn auth-btn-repairer" (click)="goToRepairerRegister()">
+                    🔧 Je suis réparateur
+                  </button>
+                </div>
               </div>
             </div>
           }
@@ -172,7 +167,7 @@ interface OnboardingSlide {
         <div class="features-bar">
           <div class="feature">
             <span class="feature-icon">100+</span>
-            <span class="feature-text">Reparateurs</span>
+            <span class="feature-text">Réparateurs</span>
           </div>
           <div class="feature-divider"></div>
           <div class="feature">
@@ -182,7 +177,7 @@ interface OnboardingSlide {
           <div class="feature-divider"></div>
           <div class="feature">
             <span class="feature-icon">24h</span>
-            <span class="feature-text">Delai moyen</span>
+            <span class="feature-text">Délai moyen</span>
           </div>
         </div>
       </div>
@@ -195,7 +190,7 @@ interface OnboardingSlide {
     .splash-screen {
       position: fixed;
       inset: 0;
-      background: linear-gradient(135deg, #FF6B35 0%, #E85A24 50%, #CC4A14 100%);
+      background: linear-gradient(135deg, var(--color-primary-500, #FF9800) 0%, var(--color-primary-900, #E65100) 50%, #CC4A14 100%);
       display: flex;
       flex-direction: column;
       justify-content: center;
@@ -295,7 +290,7 @@ interface OnboardingSlide {
     .onboarding-container {
       min-height: 100vh;
       min-height: 100dvh;
-      background: linear-gradient(180deg, #FFF5F0 0%, #FFFFFF 50%, #FFF8F5 100%);
+      background: linear-gradient(180deg, #FFF3E0 0%, #FFFFFF 50%, #FFF8F5 100%);
       display: flex;
       flex-direction: column;
       padding: 1.5rem;
@@ -322,7 +317,7 @@ interface OnboardingSlide {
     .circle-1 {
       width: 300px;
       height: 300px;
-      background: linear-gradient(135deg, rgba(255, 107, 53, 0.1) 0%, rgba(255, 107, 53, 0.05) 100%);
+      background: linear-gradient(135deg, rgba(255, 152, 0, 0.1) 0%, rgba(255, 152, 0, 0.05) 100%);
       top: -100px;
       right: -100px;
     }
@@ -330,7 +325,7 @@ interface OnboardingSlide {
     .circle-2 {
       width: 200px;
       height: 200px;
-      background: linear-gradient(135deg, rgba(255, 107, 53, 0.08) 0%, rgba(255, 107, 53, 0.02) 100%);
+      background: linear-gradient(135deg, rgba(255, 152, 0, 0.08) 0%, rgba(255, 152, 0, 0.02) 100%);
       bottom: 100px;
       left: -80px;
     }
@@ -338,7 +333,7 @@ interface OnboardingSlide {
     .circle-3 {
       width: 150px;
       height: 150px;
-      background: linear-gradient(135deg, rgba(255, 107, 53, 0.06) 0%, rgba(255, 107, 53, 0.01) 100%);
+      background: linear-gradient(135deg, rgba(255, 152, 0, 0.06) 0%, rgba(255, 152, 0, 0.01) 100%);
       top: 40%;
       right: -50px;
     }
@@ -448,11 +443,11 @@ interface OnboardingSlide {
       justify-content: center;
       width: 48px;
       height: 48px;
-      background: linear-gradient(135deg, #FF6B35 0%, #E85A24 100%);
+      background: linear-gradient(135deg, var(--color-primary-500, #FF9800) 0%, var(--color-primary-900, #E65100) 100%);
       border-radius: 16px;
       font-size: 1.5rem;
       margin-bottom: 1rem;
-      box-shadow: 0 4px 12px rgba(255, 107, 53, 0.3);
+      box-shadow: 0 4px 12px rgba(255, 152, 0, 0.3);
     }
 
     .slide-title {
@@ -488,7 +483,7 @@ interface OnboardingSlide {
       height: 10px;
       border-radius: 5px;
       border: none;
-      background: #E5E7EB;
+      background: #EEEEEE;
       cursor: pointer;
       padding: 0;
       position: relative;
@@ -498,7 +493,7 @@ interface OnboardingSlide {
 
     .dot.active {
       width: 32px;
-      background: rgba(255, 107, 53, 0.2);
+      background: rgba(255, 152, 0, 0.2);
     }
 
     .dot-progress {
@@ -506,7 +501,7 @@ interface OnboardingSlide {
       left: 0;
       top: 0;
       height: 100%;
-      background: #FF6B35;
+      background: var(--color-primary-500, #FF9800);
       border-radius: 5px;
       animation: progress linear forwards;
     }
@@ -542,12 +537,12 @@ interface OnboardingSlide {
     .nav-btn-secondary {
       width: 56px;
       padding: 1rem;
-      background: #F3F4F6;
+      background: #F5F5F5;
       color: #374151;
     }
 
     .nav-btn-secondary:hover:not(:disabled) {
-      background: #E5E7EB;
+      background: #EEEEEE;
     }
 
     .nav-btn-secondary:disabled {
@@ -557,21 +552,21 @@ interface OnboardingSlide {
 
     .nav-btn-primary {
       flex: 1;
-      background: linear-gradient(135deg, #FF6B35 0%, #E85A24 100%);
+      background: linear-gradient(135deg, var(--color-primary-500, #FF9800) 0%, var(--color-primary-900, #E65100) 100%);
       color: white;
-      box-shadow: 0 4px 12px rgba(255, 107, 53, 0.3);
+      box-shadow: 0 4px 12px rgba(255, 152, 0, 0.3);
     }
 
     .nav-btn-primary:hover {
       transform: translateY(-2px);
-      box-shadow: 0 6px 16px rgba(255, 107, 53, 0.4);
+      box-shadow: 0 6px 16px rgba(255, 152, 0, 0.4);
     }
 
     .nav-btn-start {
       flex: 1;
-      background: linear-gradient(135deg, #FF6B35 0%, #E85A24 100%);
+      background: linear-gradient(135deg, var(--color-primary-500, #FF9800) 0%, var(--color-primary-900, #E65100) 100%);
       color: white;
-      box-shadow: 0 4px 12px rgba(255, 107, 53, 0.3);
+      box-shadow: 0 4px 12px rgba(255, 152, 0, 0.3);
       animation: pulse-btn 2s ease-in-out infinite;
     }
 
@@ -583,7 +578,7 @@ interface OnboardingSlide {
     .nav-btn-start:hover {
       animation: none;
       transform: translateY(-2px);
-      box-shadow: 0 6px 16px rgba(255, 107, 53, 0.4);
+      box-shadow: 0 6px 16px rgba(255, 152, 0, 0.4);
     }
 
     /* Final Actions */
@@ -628,22 +623,41 @@ interface OnboardingSlide {
     }
 
     .auth-btn-login {
-      background: #F3F4F6;
+      background: #F5F5F5;
       color: #374151;
     }
 
     .auth-btn-login:hover {
-      background: #E5E7EB;
+      background: #EEEEEE;
     }
 
     .auth-btn-register {
       background: transparent;
-      color: #FF6B35;
-      border: 2px solid #FF6B35;
+      color: var(--color-primary-500, #FF9800);
+      border: 2px solid var(--color-primary-500, #FF9800);
     }
 
     .auth-btn-register:hover {
-      background: rgba(255, 107, 53, 0.1);
+      background: rgba(255, 152, 0, 0.1);
+    }
+
+    .repairer-cta {
+      margin-top: 1rem;
+      padding-top: 1rem;
+      border-top: 1px solid #EEEEEE;
+    }
+
+    .auth-btn-repairer {
+      width: 100%;
+      background: linear-gradient(135deg, #1565C0 0%, #0D47A1 100%);
+      color: white;
+      border: none;
+      font-weight: 600;
+    }
+
+    .auth-btn-repairer:hover {
+      background: linear-gradient(135deg, #1976D2 0%, #1565C0 100%);
+      transform: translateY(-1px);
     }
 
     /* ============================================
@@ -671,7 +685,7 @@ interface OnboardingSlide {
     .feature-icon {
       font-size: 1.125rem;
       font-weight: 700;
-      color: #FF6B35;
+      color: var(--color-primary-500, #FF9800);
     }
 
     .feature-text {
@@ -682,7 +696,7 @@ interface OnboardingSlide {
     .feature-divider {
       width: 1px;
       height: 24px;
-      background: #E5E7EB;
+      background: #EEEEEE;
     }
 
     /* ============================================
@@ -837,6 +851,20 @@ export class OnboardingSlidesComponent implements OnInit, OnDestroy {
     this.completeOnboarding('/auth/register');
   }
 
+  goToRepairerRegister(): void {
+    this.completeOnboardingWithParams('/auth/register', { role: 'repairer' });
+  }
+
+  private async completeOnboardingWithParams(redirectTo: string, queryParams: Record<string, string>): Promise<void> {
+    this.stopAutoPlay();
+    try {
+      await this.storage.set('rf_onboarding_completed', true);
+      this.router.navigate([redirectTo], { queryParams });
+    } catch {
+      this.router.navigate([redirectTo], { queryParams });
+    }
+  }
+
   private async completeOnboarding(redirectTo: string = '/home'): Promise<void> {
     this.stopAutoPlay();
     try {
@@ -850,9 +878,9 @@ export class OnboardingSlidesComponent implements OnInit, OnDestroy {
 
   getIllustrationBg(slideId: number): string {
     const colors = [
-      'linear-gradient(135deg, rgba(255, 107, 53, 0.15) 0%, rgba(255, 107, 53, 0.05) 100%)',
-      'linear-gradient(135deg, rgba(16, 185, 129, 0.15) 0%, rgba(16, 185, 129, 0.05) 100%)',
-      'linear-gradient(135deg, rgba(37, 99, 235, 0.15) 0%, rgba(37, 99, 235, 0.05) 100%)',
+      'linear-gradient(135deg, rgba(255, 152, 0, 0.15) 0%, rgba(255, 152, 0, 0.05) 100%)',
+      'linear-gradient(135deg, rgba(76, 175, 80, 0.15) 0%, rgba(76, 175, 80, 0.05) 100%)',
+      'linear-gradient(135deg, rgba(255, 152, 0, 0.15) 0%, rgba(255, 152, 0, 0.05) 100%)',
     ];
     return colors[slideId - 1] || colors[0];
   }

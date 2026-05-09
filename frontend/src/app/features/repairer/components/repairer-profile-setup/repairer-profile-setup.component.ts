@@ -8,6 +8,8 @@ import { UiCardComponent } from '../../../../shared/components/ui-card/ui-card.c
 import { UiButtonComponent } from '../../../../shared/components/ui-button/ui-button.component';
 import { UiStepperComponent } from '../../../../shared/components/ui-stepper/ui-stepper.component';
 import { UiSliderComponent } from '../../../../shared/components/ui-slider/ui-slider.component';
+import { LoggerService } from '../../../../core/services/logger.service';
+import { UiHeaderComponent } from '../../../../shared/components/ui-header/ui-header.component';
 
 @Component({
   selector: 'app-repairer-profile-setup',
@@ -20,14 +22,14 @@ import { UiSliderComponent } from '../../../../shared/components/ui-slider/ui-sl
     UiButtonComponent,
     UiStepperComponent,
     UiSliderComponent,
+    UiHeaderComponent,
   ],
   template: `
     <div class="profile-setup">
-      <!-- Header -->
-      <header class="header">
-        <h1>Configuration du profil</h1>
-        <p class="subtitle">Configurez votre profil professionnel</p>
-      </header>
+      <ui-header
+        title="Configuration du profil"
+        subtitle="Configurez votre profil professionnel"
+      />
 
       <!-- Stepper -->
       <ui-stepper
@@ -367,27 +369,9 @@ import { UiSliderComponent } from '../../../../shared/components/ui-slider/ui-sl
   styles: [`
     .profile-setup {
       min-height: 100vh;
-      background: #f9fafb;
+      background: #FAFAFA;
+      padding-top: var(--header-height, 100px);
       padding-bottom: 6rem;
-    }
-
-    .header {
-      background: white;
-      padding: 1.5rem 1rem;
-      border-bottom: 1px solid #e5e7eb;
-
-      h1 {
-        font-size: 1.5rem;
-        font-weight: 700;
-        color: #1e293b;
-        margin: 0 0 0.25rem 0;
-      }
-
-      .subtitle {
-        color: #64748b;
-        font-size: 0.875rem;
-        margin: 0;
-      }
     }
 
     .stepper {
@@ -402,12 +386,12 @@ import { UiSliderComponent } from '../../../../shared/components/ui-slider/ui-sl
       h2 {
         font-size: 1.25rem;
         font-weight: 600;
-        color: #1e293b;
+        color: #1F2937;
         margin: 0 0 0.25rem 0;
       }
 
       .step-description {
-        color: #64748b;
+        color: #6B7280;
         font-size: 0.875rem;
         margin: 0 0 1.5rem 0;
       }
@@ -429,11 +413,11 @@ import { UiSliderComponent } from '../../../../shared/components/ui-slider/ui-sl
       transition: all 0.2s;
 
       &:hover {
-        border-color: #cbd5e1;
+        border-color: #D1D5DB;
       }
 
       &.selected {
-        border-color: #FF6B35;
+        border-color: var(--color-primary-500, #FF9800);
         background: #FFF3E0;
 
         .check-indicator {
@@ -450,14 +434,14 @@ import { UiSliderComponent } from '../../../../shared/components/ui-slider/ui-sl
       .type-label {
         display: block;
         font-weight: 600;
-        color: #1e293b;
+        color: #1F2937;
         font-size: 1.125rem;
         margin-bottom: 0.25rem;
       }
 
       .type-desc {
         font-size: 0.875rem;
-        color: #64748b;
+        color: #6B7280;
       }
 
       .check-indicator {
@@ -467,7 +451,7 @@ import { UiSliderComponent } from '../../../../shared/components/ui-slider/ui-sl
         width: 1.5rem;
         height: 1.5rem;
         border-radius: 50%;
-        background: #FF6B35;
+        background: var(--color-primary-500, #FF9800);
         color: white;
         display: flex;
         align-items: center;
@@ -499,8 +483,8 @@ import { UiSliderComponent } from '../../../../shared/components/ui-slider/ui-sl
 
         &:focus {
           outline: none;
-          border-color: #FF6B35;
-          box-shadow: 0 0 0 3px rgba(255, 107, 53, 0.1);
+          border-color: var(--color-primary-500, #FF9800);
+          box-shadow: 0 0 0 3px rgba(255, 152, 0, 0.1);
         }
       }
 
@@ -512,7 +496,7 @@ import { UiSliderComponent } from '../../../../shared/components/ui-slider/ui-sl
       .hint {
         display: block;
         font-size: 0.75rem;
-        color: #94a3b8;
+        color: #9CA3AF;
         margin-top: 0.25rem;
         text-align: right;
       }
@@ -535,11 +519,11 @@ import { UiSliderComponent } from '../../../../shared/components/ui-slider/ui-sl
       transition: all 0.2s;
 
       &:hover {
-        border-color: #cbd5e1;
+        border-color: #D1D5DB;
       }
 
       &.selected {
-        border-color: #FF6B35;
+        border-color: var(--color-primary-500, #FF9800);
         background: #FFF3E0;
 
         .check-indicator {
@@ -556,7 +540,7 @@ import { UiSliderComponent } from '../../../../shared/components/ui-slider/ui-sl
       .specialty-label {
         font-size: 0.8125rem;
         font-weight: 500;
-        color: #1e293b;
+        color: #1F2937;
       }
 
       .check-indicator {
@@ -566,7 +550,7 @@ import { UiSliderComponent } from '../../../../shared/components/ui-slider/ui-sl
         width: 1.25rem;
         height: 1.25rem;
         border-radius: 50%;
-        background: #FF6B35;
+        background: var(--color-primary-500, #FF9800);
         color: white;
         display: flex;
         align-items: center;
@@ -579,7 +563,7 @@ import { UiSliderComponent } from '../../../../shared/components/ui-slider/ui-sl
 
     .selection-count {
       text-align: center;
-      color: #64748b;
+      color: #6B7280;
       font-size: 0.875rem;
       margin-top: 1rem;
     }
@@ -600,14 +584,14 @@ import { UiSliderComponent } from '../../../../shared/components/ui-slider/ui-sl
         span {
           flex: 1;
           font-weight: 500;
-          color: #1e293b;
+          color: #1F2937;
         }
       }
 
       .location-coords {
         margin: 0.75rem 0 0 0;
         font-size: 0.8125rem;
-        color: #64748b;
+        color: #6B7280;
         font-family: monospace;
       }
     }
@@ -625,7 +609,7 @@ import { UiSliderComponent } from '../../../../shared/components/ui-slider/ui-sl
         display: flex;
         justify-content: space-between;
         font-size: 0.75rem;
-        color: #94a3b8;
+        color: #9CA3AF;
         margin-top: 0.25rem;
       }
     }
@@ -655,12 +639,12 @@ import { UiSliderComponent } from '../../../../shared/components/ui-slider/ui-sl
           input[type="checkbox"] {
             width: 1.125rem;
             height: 1.125rem;
-            accent-color: #FF6B35;
+            accent-color: var(--color-primary-500, #FF9800);
           }
 
           .day-name {
             font-weight: 500;
-            color: #1e293b;
+            color: #1F2937;
           }
         }
       }
@@ -678,14 +662,14 @@ import { UiSliderComponent } from '../../../../shared/components/ui-slider/ui-sl
         }
 
         span {
-          color: #64748b;
+          color: #6B7280;
           font-size: 0.8125rem;
         }
       }
 
       .closed-label {
         font-size: 0.8125rem;
-        color: #94a3b8;
+        color: #9CA3AF;
         font-style: italic;
       }
     }
@@ -725,7 +709,7 @@ import { UiSliderComponent } from '../../../../shared/components/ui-slider/ui-sl
 
     .add-photo-btn {
       aspect-ratio: 1;
-      border: 2px dashed #cbd5e1;
+      border: 2px dashed #D1D5DB;
       border-radius: 0.5rem;
       display: flex;
       flex-direction: column;
@@ -736,7 +720,7 @@ import { UiSliderComponent } from '../../../../shared/components/ui-slider/ui-sl
       transition: all 0.2s;
 
       &:hover {
-        border-color: #FF6B35;
+        border-color: var(--color-primary-500, #FF9800);
         background: #FFF3E0;
       }
 
@@ -746,13 +730,13 @@ import { UiSliderComponent } from '../../../../shared/components/ui-slider/ui-sl
 
       .label {
         font-size: 0.75rem;
-        color: #64748b;
+        color: #6B7280;
       }
     }
 
     .photo-hint {
       font-size: 0.75rem;
-      color: #94a3b8;
+      color: #9CA3AF;
       margin-top: 1rem;
       text-align: center;
     }
@@ -816,18 +800,18 @@ import { UiSliderComponent } from '../../../../shared/components/ui-slider/ui-sl
 
       .kyc-label {
         font-weight: 500;
-        color: #1e293b;
+        color: #1F2937;
         font-size: 0.9375rem;
       }
 
       .kyc-desc {
         font-size: 0.75rem;
-        color: #64748b;
+        color: #6B7280;
       }
 
       .upload-btn {
         padding: 0.5rem 1rem;
-        background: #FF6B35;
+        background: var(--color-primary-500, #FF9800);
         color: white;
         border-radius: 0.5rem;
         font-size: 0.8125rem;
@@ -842,7 +826,7 @@ import { UiSliderComponent } from '../../../../shared/components/ui-slider/ui-sl
 
     .kyc-note {
       font-size: 0.8125rem;
-      color: #64748b;
+      color: #6B7280;
       text-align: center;
       margin-top: 1.5rem;
     }
@@ -891,17 +875,17 @@ import { UiSliderComponent } from '../../../../shared/components/ui-slider/ui-sl
       h3 {
         font-size: 1.25rem;
         font-weight: 600;
-        color: #1e293b;
+        color: #1F2937;
         margin: 0 0 0.5rem 0;
       }
 
       p {
-        color: #64748b;
+        color: #6B7280;
         font-size: 0.875rem;
         margin: 0 0 1rem 0;
 
         &.warning {
-          color: #f59e0b;
+          color: var(--color-mustard, #FFC107);
           font-size: 0.8125rem;
         }
       }
@@ -912,6 +896,7 @@ export class RepairerProfileSetupComponent implements OnInit {
   readonly repairerService = inject(RepairerService);
   readonly store = inject(RepairerStore);
   private readonly router = inject(Router);
+  private readonly logger = inject(LoggerService);
 
   readonly isSubmitting = signal(false);
   readonly showSuccess = signal(false);
@@ -973,7 +958,7 @@ export class RepairerProfileSetupComponent implements OnInit {
         this.isDetectingLocation.set(false);
       },
       (error) => {
-        console.error('Geolocation error:', error);
+        this.logger.error('RepairerProfileSetupComponent', 'Geolocation error', error);
         this.isDetectingLocation.set(false);
         alert('Impossible de détecter votre position');
       }
@@ -1055,7 +1040,7 @@ export class RepairerProfileSetupComponent implements OnInit {
           await this.repairerService.uploadKycDocument(type as any, reader.result as string);
           this.kycUploaded.update(uploaded => ({ ...uploaded, [type]: true }));
         } catch (err) {
-          console.error('KYC upload failed:', err);
+          this.logger.error('RepairerProfileSetupComponent', 'KYC upload failed', err);
         }
       };
       reader.readAsDataURL(file);
@@ -1085,7 +1070,7 @@ export class RepairerProfileSetupComponent implements OnInit {
       this.store.setProfile(profile);
       this.showSuccess.set(true);
     } catch (err: any) {
-      console.error('Profile update failed:', err);
+      this.logger.error('RepairerProfileSetupComponent', 'Profile update failed', err);
     } finally {
       this.isSubmitting.set(false);
     }

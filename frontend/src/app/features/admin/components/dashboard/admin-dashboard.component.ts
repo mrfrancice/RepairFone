@@ -6,12 +6,13 @@ import { AuthStore } from '../../../../core/stores/auth.store';
 import { NotificationBellComponent } from '../../../../shared/components/notification-bell/notification-bell.component';
 import { HeaderSearchComponent } from '../../../../shared/components/header-search/header-search.component';
 import { UiSkeletonComponent } from '../../../../shared/components/ui-skeleton/ui-skeleton.component';
+import { InitialsPipe } from '../../../../shared/pipes/initials.pipe';
 
 @Component({
   selector: 'app-admin-dashboard',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [CommonModule, RouterLink, NotificationBellComponent, HeaderSearchComponent, UiSkeletonComponent],
+  imports: [CommonModule, RouterLink, NotificationBellComponent, HeaderSearchComponent, UiSkeletonComponent, InitialsPipe],
   template: `
     <div class="admin-page">
       <!-- Header like home -->
@@ -21,8 +22,8 @@ import { UiSkeletonComponent } from '../../../../shared/components/ui-skeleton/u
             <div class="logo-section">
               <div class="logo-icon">
                 <svg viewBox="0 0 32 32" fill="none">
-                  <path d="M16 4C9.373 4 4 9.373 4 16s5.373 12 12 12 12-5.373 12-12S22.627 4 16 4z" fill="white"/>
-                  <path d="M20 11l-2 2m0 0l-2-2m2 2v6m-4 2h8" stroke="#FF6B35" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                  <path d="M16 4C9.373 4 4 9.373 4 16s5.373 12 12 12 12-5.373 12-12S22.627 4 16 4z" fill="rgba(255,255,255,0.18)"/>
+                  <path d="M20 11l-2 2m0 0l-2-2m2 2v6m-4 2h8" stroke="white" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
                 </svg>
               </div>
               <div class="header-titles">
@@ -43,7 +44,7 @@ import { UiSkeletonComponent } from '../../../../shared/components/ui-skeleton/u
                 <img [src]="authStore.user()?.avatarUrl" alt="Profil" />
               } @else {
                 <div class="profile-placeholder">
-                  {{ getInitials() }}
+                  {{ authStore.user()?.firstName | initials : authStore.user()?.lastName }}
                 </div>
               }
             </button>
@@ -124,7 +125,7 @@ import { UiSkeletonComponent } from '../../../../shared/components/ui-skeleton/u
               </svg>
             </div>
             <p>{{ error() }}</p>
-            <button class="btn btn-primary" (click)="loadData()">Reessayer</button>
+            <button class="btn btn-primary" (click)="loadData()">Réessayer</button>
           </div>
         } @else {
           <!-- Alert Banner for Pending -->
@@ -175,7 +176,7 @@ import { UiSkeletonComponent } from '../../../../shared/components/ui-skeleton/u
                 </div>
                 <div class="stat-info">
                   <span class="stat-value">{{ stats()?.verified || 0 }}</span>
-                  <span class="stat-label">Reparateurs verifies</span>
+                  <span class="stat-label">Réparateurs vérifiés</span>
                 </div>
               </div>
 
@@ -295,7 +296,7 @@ import { UiSkeletonComponent } from '../../../../shared/components/ui-skeleton/u
                 </div>
                 <div class="stat-bar-item">
                   <div class="stat-bar-header">
-                    <span class="stat-bar-label">Reparateurs</span>
+                    <span class="stat-bar-label">Réparateurs</span>
                     <span class="stat-bar-value">{{ dashboard()?.users?.repairers || 0 }}</span>
                   </div>
                   <div class="stat-bar-track">
@@ -358,21 +359,25 @@ import { UiSkeletonComponent } from '../../../../shared/components/ui-skeleton/u
   styles: [`
     .admin-page {
       min-height: 100vh;
-      background: #f8f9fa;
+      background: #FAFAFA;
     }
 
-    /* Header */
+    /* Header sombre charte uniforme */
     .admin-header {
       position: fixed;
       top: 0;
       left: 0;
       right: 0;
       z-index: 100;
-      background: linear-gradient(135deg, #FF6B35 0%, #E85A24 100%);
-      padding: 1.25rem 1.25rem 1.75rem;
-      padding-top: calc(1.25rem + env(safe-area-inset-top, 0));
-      border-radius: 0 0 24px 24px;
-      box-shadow: 0 4px 20px rgba(255, 107, 53, 0.3);
+      background:
+        radial-gradient(ellipse at 92% 50%, rgba(255, 152, 0, 0.22) 0%, transparent 55%),
+        linear-gradient(135deg, #1A1A1A 0%, #0F0F0F 100%);
+      border-bottom-left-radius: 30px;
+      border-bottom-right-radius: 30px;
+      padding: 1rem 1.25rem;
+      padding-top: calc(1rem + env(safe-area-inset-top, 0));
+      border-bottom: 2px solid var(--color-primary-500, #FF9800);
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.35);
     }
 
     .header-top {
@@ -396,11 +401,12 @@ import { UiSkeletonComponent } from '../../../../shared/components/ui-skeleton/u
     .logo-icon {
       width: 40px;
       height: 40px;
-      background: rgba(255, 255, 255, 0.15);
+      background: linear-gradient(135deg, var(--color-primary-500, #FF9800), var(--color-gold-800, #F9A825));
       border-radius: 12px;
       display: flex;
       align-items: center;
       justify-content: center;
+      box-shadow: 0 4px 12px rgba(255, 152, 0, 0.35);
     }
 
     .logo-icon svg {
@@ -414,8 +420,10 @@ import { UiSkeletonComponent } from '../../../../shared/components/ui-skeleton/u
     }
 
     .app-title {
+      font-family: 'Poppins', 'Inter', sans-serif;
       font-size: 1.125rem;
       font-weight: 700;
+      letter-spacing: -0.01em;
       color: white;
       margin: 0;
       line-height: 1.2;
@@ -423,14 +431,14 @@ import { UiSkeletonComponent } from '../../../../shared/components/ui-skeleton/u
 
     .welcome-msg {
       font-size: 0.75rem;
-      color: rgba(255, 255, 255, 0.9);
+      color: rgba(255, 255, 255, 0.65);
       margin: 0;
     }
 
     .header-right {
       display: flex;
       align-items: center;
-      gap: 0.75rem;
+      gap: 0.5rem;
     }
 
     .status-online {
@@ -438,20 +446,21 @@ import { UiSkeletonComponent } from '../../../../shared/components/ui-skeleton/u
       align-items: center;
       gap: 0.375rem;
       padding: 0.375rem 0.75rem;
-      background: rgba(16, 185, 129, 0.2);
+      background: rgba(76, 175, 80, 0.18);
+      border: 1px solid rgba(76, 175, 80, 0.35);
       border-radius: 20px;
       font-size: 0.6875rem;
       font-weight: 600;
-      color: #ecfdf5;
-      backdrop-filter: blur(4px);
+      color: #A5D6A7;
     }
 
     .status-online .status-dot {
       width: 8px;
       height: 8px;
-      background: #10b981;
+      background: var(--color-secondary, #4CAF50);
       border-radius: 50%;
       animation: statusPulse 2s infinite;
+      box-shadow: 0 0 8px rgba(76, 175, 80, 0.6);
     }
 
     @keyframes statusPulse {
@@ -461,31 +470,32 @@ import { UiSkeletonComponent } from '../../../../shared/components/ui-skeleton/u
 
     .role-badge {
       padding: 0.375rem 0.75rem;
-      background: rgba(255, 255, 255, 0.2);
+      background: linear-gradient(135deg, var(--color-primary-500, #FF9800), var(--color-gold-800, #F9A825));
       border-radius: 20px;
       font-size: 0.6875rem;
-      font-weight: 600;
+      font-weight: 700;
       color: white;
       text-transform: uppercase;
       letter-spacing: 0.5px;
-      backdrop-filter: blur(4px);
+      box-shadow: 0 2px 8px rgba(255, 152, 0, 0.35);
     }
 
     .profile-btn {
       width: 40px;
       height: 40px;
       border-radius: 50%;
-      border: 2px solid rgba(255, 255, 255, 0.3);
-      background: rgba(255, 255, 255, 0.1);
+      border: 2px solid var(--color-primary-500, #FF9800);
+      background: rgba(255, 255, 255, 0.08);
       overflow: hidden;
       cursor: pointer;
       padding: 0;
-      transition: all 0.2s;
+      transition: all 150ms ease;
     }
 
     .profile-btn:hover {
-      border-color: rgba(255, 255, 255, 0.5);
+      border-color: var(--color-gold-800, #F9A825);
       transform: scale(1.05);
+      box-shadow: 0 0 0 4px rgba(255, 152, 0, 0.18);
     }
 
     .profile-btn img {
@@ -503,7 +513,7 @@ import { UiSkeletonComponent } from '../../../../shared/components/ui-skeleton/u
       color: white;
       font-weight: 600;
       font-size: 0.875rem;
-      background: rgba(255, 255, 255, 0.15);
+      background: linear-gradient(135deg, var(--color-primary-500, #FF9800), var(--color-gold-800, #F9A825));
     }
 
     /* Container */
@@ -530,7 +540,7 @@ import { UiSkeletonComponent } from '../../../../shared/components/ui-skeleton/u
       width: 48px;
       height: 48px;
       border: 4px solid #FFE5D9;
-      border-top-color: #FF6B35;
+      border-top-color: var(--color-primary-500, #FF9800);
       border-radius: 50%;
       animation: spin 1s linear infinite;
       margin-bottom: 1rem;
@@ -541,7 +551,7 @@ import { UiSkeletonComponent } from '../../../../shared/components/ui-skeleton/u
     }
 
     .error-icon {
-      color: #FF6B35;
+      color: var(--color-primary-500, #FF9800);
       margin-bottom: 1rem;
     }
 
@@ -555,7 +565,7 @@ import { UiSkeletonComponent } from '../../../../shared/components/ui-skeleton/u
       display: flex;
       align-items: center;
       gap: 1rem;
-      background: linear-gradient(135deg, #FFF4E6 0%, #FFE8CC 100%);
+      background: linear-gradient(135deg, #FFF3E0 0%, #FFE8CC 100%);
       border: 2px solid #FFD4B8;
       border-radius: 16px;
       padding: 1rem;
@@ -566,13 +576,13 @@ import { UiSkeletonComponent } from '../../../../shared/components/ui-skeleton/u
 
     .alert-banner:hover {
       transform: translateY(-2px);
-      box-shadow: 0 8px 24px rgba(255, 107, 53, 0.2);
+      box-shadow: 0 8px 24px rgba(255, 152, 0, 0.2);
     }
 
     .alert-icon {
       width: 48px;
       height: 48px;
-      background: linear-gradient(135deg, #FF6B35, #FF9800);
+      background: linear-gradient(135deg, var(--color-primary-500, #FF9800), var(--color-gold-800, #F9A825));
       border-radius: 12px;
       display: flex;
       align-items: center;
@@ -587,18 +597,18 @@ import { UiSkeletonComponent } from '../../../../shared/components/ui-skeleton/u
 
     .alert-content strong {
       display: block;
-      color: #E85A24;
+      color: var(--color-primary-900, #E65100);
       font-size: 1rem;
       margin-bottom: 0.25rem;
     }
 
     .alert-content span {
-      color: #B45309;
+      color: #F57C00;
       font-size: 0.875rem;
     }
 
     .alert-arrow {
-      color: #FF6B35;
+      color: var(--color-primary-500, #FF9800);
     }
 
     /* Section Titles */
@@ -613,7 +623,7 @@ import { UiSkeletonComponent } from '../../../../shared/components/ui-skeleton/u
     }
 
     .section-title svg {
-      color: #FF6B35;
+      color: var(--color-primary-500, #FF9800);
     }
 
     /* Stats Section */
@@ -660,10 +670,10 @@ import { UiSkeletonComponent } from '../../../../shared/components/ui-skeleton/u
       height: 4px;
     }
 
-    .stat-card.primary::before { background: linear-gradient(90deg, #FF6B35, #FF9800); }
-    .stat-card.success::before { background: linear-gradient(90deg, #10b981, #34d399); }
-    .stat-card.warning::before { background: linear-gradient(90deg, #f59e0b, #fbbf24); }
-    .stat-card.danger::before { background: linear-gradient(90deg, #ef4444, #f87171); }
+    .stat-card.primary::before { background: linear-gradient(90deg, var(--color-primary-500, #FF9800), var(--color-gold-800, #F9A825)); }
+    .stat-card.success::before { background: linear-gradient(90deg, var(--color-secondary, #4CAF50), var(--color-secondary-light, #81C784)); }
+    .stat-card.warning::before { background: linear-gradient(90deg, var(--color-mustard, #FFC107), var(--color-primary-700, #F57C00)); }
+    .stat-card.danger::before { background: linear-gradient(90deg, var(--color-error, #F44336), #EF5350); }
 
     .stat-icon-wrapper {
       width: 52px;
@@ -674,10 +684,10 @@ import { UiSkeletonComponent } from '../../../../shared/components/ui-skeleton/u
       justify-content: center;
     }
 
-    .stat-card.primary .stat-icon-wrapper { background: #FFF4E6; color: #FF6B35; }
-    .stat-card.success .stat-icon-wrapper { background: #ecfdf5; color: #10b981; }
-    .stat-card.warning .stat-icon-wrapper { background: #fffbeb; color: #f59e0b; }
-    .stat-card.danger .stat-icon-wrapper { background: #fef2f2; color: #ef4444; }
+    .stat-card.primary .stat-icon-wrapper { background: #FFF3E0; color: var(--color-primary-500, #FF9800); }
+    .stat-card.success .stat-icon-wrapper { background: #E8F5E9; color: var(--color-secondary, #4CAF50); }
+    .stat-card.warning .stat-icon-wrapper { background: #FFF8E1; color: var(--color-mustard, #FFC107); }
+    .stat-card.danger .stat-icon-wrapper { background: #FFEBEE; color: var(--color-error, #F44336); }
 
     .stat-info {
       display: flex;
@@ -733,12 +743,12 @@ import { UiSkeletonComponent } from '../../../../shared/components/ui-skeleton/u
     }
 
     .action-card.highlight {
-      background: linear-gradient(135deg, #FFF9F5 0%, #FFF4E6 100%);
+      background: linear-gradient(135deg, #FFF9F5 0%, #FFF3E0 100%);
       border-color: #FFD4B8;
     }
 
     .action-card.highlight:hover {
-      border-color: #FF6B35;
+      border-color: var(--color-primary-500, #FF9800);
     }
 
     .action-header {
@@ -755,7 +765,7 @@ import { UiSkeletonComponent } from '../../../../shared/components/ui-skeleton/u
       display: flex;
       align-items: center;
       justify-content: center;
-      background: linear-gradient(135deg, #FF6B35, #FF9800);
+      background: linear-gradient(135deg, var(--color-primary-500, #FF9800), var(--color-gold-800, #F9A825));
       color: white;
     }
 
@@ -764,11 +774,11 @@ import { UiSkeletonComponent } from '../../../../shared/components/ui-skeleton/u
     }
 
     .action-icon.blue {
-      background: linear-gradient(135deg, #3b82f6, #60a5fa);
+      background: linear-gradient(135deg, var(--color-ocean, #1565C0), var(--color-ocean-500, #2196F3));
     }
 
     .action-badge {
-      background: linear-gradient(135deg, #ef4444, #f87171);
+      background: linear-gradient(135deg, var(--color-error, #F44336), #EF5350);
       color: white;
       font-size: 0.75rem;
       font-weight: 700;
@@ -798,7 +808,7 @@ import { UiSkeletonComponent } from '../../../../shared/components/ui-skeleton/u
       gap: 0.375rem;
       font-size: 0.875rem;
       font-weight: 600;
-      color: #FF6B35;
+      color: var(--color-primary-500, #FF9800);
     }
 
     /* Details Grid */
@@ -830,11 +840,11 @@ import { UiSkeletonComponent } from '../../../../shared/components/ui-skeleton/u
       color: #374151;
       margin-bottom: 1.25rem;
       padding-bottom: 0.75rem;
-      border-bottom: 1px solid #f3f4f6;
+      border-bottom: 1px solid #F5F5F5;
     }
 
     .detail-title svg {
-      color: #FF6B35;
+      color: var(--color-primary-500, #FF9800);
     }
 
     /* Stat Bars */
@@ -867,11 +877,11 @@ import { UiSkeletonComponent } from '../../../../shared/components/ui-skeleton/u
       color: #1f2937;
     }
 
-    .stat-bar-value.success { color: #10b981; }
+    .stat-bar-value.success { color: var(--color-secondary, #4CAF50); }
 
     .stat-bar-track {
       height: 8px;
-      background: #f3f4f6;
+      background: #F5F5F5;
       border-radius: 4px;
       overflow: hidden;
     }
@@ -882,9 +892,9 @@ import { UiSkeletonComponent } from '../../../../shared/components/ui-skeleton/u
       transition: width 0.5s ease;
     }
 
-    .stat-bar-fill.clients { background: linear-gradient(90deg, #3b82f6, #60a5fa); }
-    .stat-bar-fill.repairers { background: linear-gradient(90deg, #FF6B35, #FF9800); }
-    .stat-bar-fill.active { background: linear-gradient(90deg, #10b981, #34d399); }
+    .stat-bar-fill.clients { background: linear-gradient(90deg, var(--color-ocean, #1565C0), var(--color-ocean-500, #2196F3)); }
+    .stat-bar-fill.repairers { background: linear-gradient(90deg, var(--color-primary-500, #FF9800), var(--color-gold-800, #F9A825)); }
+    .stat-bar-fill.active { background: linear-gradient(90deg, var(--color-secondary, #4CAF50), var(--color-secondary-light, #81C784)); }
 
     /* Status List */
     .status-list {
@@ -897,7 +907,7 @@ import { UiSkeletonComponent } from '../../../../shared/components/ui-skeleton/u
       align-items: center;
       gap: 0.75rem;
       padding: 0.875rem 0;
-      border-bottom: 1px solid #f3f4f6;
+      border-bottom: 1px solid #F5F5F5;
       text-decoration: none;
       transition: all 0.2s;
     }
@@ -907,11 +917,11 @@ import { UiSkeletonComponent } from '../../../../shared/components/ui-skeleton/u
     }
 
     .status-item:hover {
-      background: #f9fafb;
+      background: #FAFAFA;
       margin: 0 -1rem;
       padding-left: 1rem;
       padding-right: 1rem;
-      border-radius: 8px;
+      border-radius: 12px;
     }
 
     .status-dot {
@@ -921,10 +931,10 @@ import { UiSkeletonComponent } from '../../../../shared/components/ui-skeleton/u
       flex-shrink: 0;
     }
 
-    .status-dot.pending { background: linear-gradient(135deg, #f59e0b, #fbbf24); }
-    .status-dot.review { background: linear-gradient(135deg, #3b82f6, #60a5fa); }
-    .status-dot.verified { background: linear-gradient(135deg, #10b981, #34d399); }
-    .status-dot.rejected { background: linear-gradient(135deg, #ef4444, #f87171); }
+    .status-dot.pending { background: linear-gradient(135deg, var(--color-mustard, #FFC107), var(--color-primary-700, #F57C00)); }
+    .status-dot.review { background: linear-gradient(135deg, var(--color-ocean, #1565C0), var(--color-ocean-500, #2196F3)); }
+    .status-dot.verified { background: linear-gradient(135deg, var(--color-secondary, #4CAF50), var(--color-secondary-light, #81C784)); }
+    .status-dot.rejected { background: linear-gradient(135deg, var(--color-error, #F44336), #EF5350); }
     .status-dot.suspended { background: linear-gradient(135deg, #6b7280, #9ca3af); }
 
     .status-label {
@@ -937,7 +947,7 @@ import { UiSkeletonComponent } from '../../../../shared/components/ui-skeleton/u
       font-size: 0.875rem;
       font-weight: 600;
       color: #1f2937;
-      background: #f3f4f6;
+      background: #F5F5F5;
       padding: 0.25rem 0.75rem;
       border-radius: 9999px;
     }
@@ -954,14 +964,14 @@ import { UiSkeletonComponent } from '../../../../shared/components/ui-skeleton/u
     }
 
     .btn-primary {
-      background: linear-gradient(135deg, #FF6B35, #FF9800);
+      background: linear-gradient(135deg, var(--color-primary-500, #FF9800), var(--color-gold-800, #F9A825));
       color: white;
-      box-shadow: 0 4px 14px rgba(255, 107, 53, 0.3);
+      box-shadow: 0 4px 14px rgba(255, 152, 0, 0.3);
     }
 
     .btn-primary:hover {
       transform: translateY(-2px);
-      box-shadow: 0 6px 20px rgba(255, 107, 53, 0.4);
+      box-shadow: 0 6px 20px rgba(255, 152, 0, 0.4);
     }
 
     /* Skeleton Styles */
@@ -996,7 +1006,7 @@ import { UiSkeletonComponent } from '../../../../shared/components/ui-skeleton/u
       gap: 0.5rem;
       margin-bottom: 1.25rem;
       padding-bottom: 0.75rem;
-      border-bottom: 1px solid #f3f4f6;
+      border-bottom: 1px solid #F5F5F5;
     }
 
     .stat-bars-skeleton,
@@ -1032,13 +1042,6 @@ export class AdminDashboardComponent implements OnInit {
   getUserName(): string {
     const user = this.authStore.user();
     return user?.firstName || 'Admin';
-  }
-
-  getInitials(): string {
-    const user = this.authStore.user();
-    const first = user?.firstName?.[0] || '';
-    const last = user?.lastName?.[0] || '';
-    return (first + last).toUpperCase() || 'A';
   }
 
   getRoleLabel(): string {

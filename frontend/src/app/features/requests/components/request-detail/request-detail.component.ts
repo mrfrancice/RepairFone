@@ -8,6 +8,7 @@ import { QuotesService, Quote, QuotePart } from '../../../quotes/services/quotes
 import { AuthStore } from '../../../../core/stores/auth.store';
 import { UiHeaderComponent } from '../../../../shared/components/ui-header/ui-header.component';
 import { StepRatingComponent } from '../../../../shared/components/step-rating/step-rating.component';
+import { LoggerService } from '../../../../core/services/logger.service';
 
 // Interface pour les étapes du timeline
 interface TimelineStep {
@@ -1140,7 +1141,7 @@ interface TimelineStep {
       width: 48px;
       height: 48px;
       border: 4px solid #f1f5f9;
-      border-top-color: #FF6B35;
+      border-top-color: var(--color-primary-500, #FF9800);
       border-radius: 50%;
       animation: spin 1s linear infinite;
     }
@@ -1159,18 +1160,18 @@ interface TimelineStep {
     }
 
     .loading-state p {
-      color: #64748b;
+      color: #6B7280;
     }
 
     .error-icon {
       width: 100px;
       height: 100px;
       border-radius: 50%;
-      background: linear-gradient(135deg, #fff7ed, #ffedd5);
+      background: linear-gradient(135deg, #FFF3E0, #FFE0B2);
       display: flex;
       align-items: center;
       justify-content: center;
-      color: #FF6B35;
+      color: var(--color-primary-500, #FF9800);
       margin-bottom: 1rem;
     }
 
@@ -1182,7 +1183,7 @@ interface TimelineStep {
     }
 
     .error-state p {
-      color: #64748b;
+      color: #6B7280;
       margin-bottom: 1.5rem;
     }
 
@@ -1196,33 +1197,33 @@ interface TimelineStep {
     }
 
     .status-pending {
-      background: linear-gradient(135deg, #fef3c7, #fde68a);
+      background: linear-gradient(135deg, #FFF8E1, #FFE082);
       color: #92400e;
     }
 
     .status-accepted {
-      background: linear-gradient(135deg, #d1fae5, #a7f3d0);
+      background: linear-gradient(135deg, #E8F5E9, #C8E6C9);
       color: #065f46;
     }
 
     .status-rejected {
-      background: linear-gradient(135deg, #fee2e2, #fecaca);
+      background: linear-gradient(135deg, #FFEBEE, #FFCDD2);
       color: #991b1b;
     }
 
     .status-in_progress {
-      background: linear-gradient(135deg, #dbeafe, #bfdbfe);
-      color: #1e40af;
+      background: linear-gradient(135deg, #E3F2FD, #BBDEFB);
+      color: var(--color-ocean, #1565C0);
     }
 
     .status-completed {
-      background: linear-gradient(135deg, #d1fae5, #a7f3d0);
+      background: linear-gradient(135deg, #E8F5E9, #C8E6C9);
       color: #065f46;
     }
 
     .status-cancelled {
       background: linear-gradient(135deg, #f1f5f9, #e2e8f0);
-      color: #475569;
+      color: #4B5563;
     }
 
     .status-completed {
@@ -1271,7 +1272,7 @@ interface TimelineStep {
     /* Content */
     .detail-content {
       padding: 1rem;
-      padding-top: 100px;
+      padding-top: var(--header-height, 100px);
     }
 
     /* Price Duration Card */
@@ -1298,8 +1299,8 @@ interface TimelineStep {
     .price-icon {
       width: 40px;
       height: 40px;
-      border-radius: 10px;
-      background: linear-gradient(135deg, #FF6B35, #FF9800);
+      border-radius: 12px;
+      background: linear-gradient(135deg, var(--color-primary-500, #FF9800), #FF9800);
       display: flex;
       align-items: center;
       justify-content: center;
@@ -1308,7 +1309,7 @@ interface TimelineStep {
     }
 
     .price-icon.icon-blue {
-      background: linear-gradient(135deg, #3b82f6, #60a5fa);
+      background: linear-gradient(135deg, var(--color-ocean, #1565C0), #2196F3);
     }
 
     .price-details {
@@ -1318,7 +1319,7 @@ interface TimelineStep {
 
     .price-label {
       font-size: 0.75rem;
-      color: #64748b;
+      color: #6B7280;
     }
 
     .price-value {
@@ -1351,8 +1352,8 @@ interface TimelineStep {
     .section-icon-wrapper {
       width: 36px;
       height: 36px;
-      border-radius: 10px;
-      background: linear-gradient(135deg, #FF6B35, #FF9800);
+      border-radius: 12px;
+      background: linear-gradient(135deg, var(--color-primary-500, #FF9800), #FF9800);
       display: flex;
       align-items: center;
       justify-content: center;
@@ -1361,46 +1362,46 @@ interface TimelineStep {
     }
 
     .section-icon-wrapper.icon-blue {
-      background: linear-gradient(135deg, #3b82f6, #60a5fa);
+      background: linear-gradient(135deg, var(--color-ocean, #1565C0), #2196F3);
     }
 
     .section-icon-wrapper.icon-green {
-      background: linear-gradient(135deg, #10b981, #34d399);
+      background: linear-gradient(135deg, var(--color-secondary, #4CAF50), #81C784);
     }
 
     .section-icon-wrapper.icon-orange {
-      background: linear-gradient(135deg, #f59e0b, #fbbf24);
+      background: linear-gradient(135deg, var(--color-mustard, #FFC107), var(--color-mustard, #FFC107));
     }
 
     .actions-negotiation {
-      border: 2px solid #f59e0b !important;
-      background: linear-gradient(135deg, #fffbeb, #fef3c7) !important;
+      border: 2px solid var(--color-mustard, #FFC107) !important;
+      background: linear-gradient(135deg, #FFF8E1, #FFF8E1) !important;
     }
 
     .negotiation-hint {
       color: #92400e;
 
       strong {
-        color: #d97706;
+        color: var(--color-primary-700, #F57C00);
         font-size: 1.1em;
       }
     }
 
     .section-icon-wrapper.icon-purple {
-      background: linear-gradient(135deg, #8b5cf6, #a78bfa);
+      background: linear-gradient(135deg, #FF9800, #F9A825);
     }
 
     .section-icon-wrapper.icon-red {
-      background: linear-gradient(135deg, #ef4444, #f87171);
+      background: linear-gradient(135deg, var(--color-error, #F44336), #EF5350);
     }
 
     .description-text {
-      color: #475569;
+      color: #4B5563;
       line-height: 1.6;
       margin: 0;
       padding: 1rem;
       background: #f8fafc;
-      border-radius: 10px;
+      border-radius: 12px;
       font-size: 0.9375rem;
     }
 
@@ -1418,7 +1419,7 @@ interface TimelineStep {
       width: 50px;
       height: 50px;
       border-radius: 12px;
-      background: linear-gradient(135deg, #FF6B35, #FF9800);
+      background: linear-gradient(135deg, var(--color-primary-500, #FF9800), #FF9800);
       display: flex;
       align-items: center;
       justify-content: center;
@@ -1427,7 +1428,7 @@ interface TimelineStep {
     }
 
     .contact-avatar.client {
-      background: linear-gradient(135deg, #3b82f6, #60a5fa);
+      background: linear-gradient(135deg, var(--color-ocean, #1565C0), #2196F3);
     }
 
     .contact-info {
@@ -1445,7 +1446,7 @@ interface TimelineStep {
       display: inline-flex;
       align-items: center;
       gap: 0.375rem;
-      color: #FF6B35;
+      color: var(--color-primary-500, #FF9800);
       text-decoration: none;
       font-size: 0.875rem;
       font-weight: 500;
@@ -1459,7 +1460,7 @@ interface TimelineStep {
       display: flex;
       align-items: center;
       gap: 0.375rem;
-      color: #64748b;
+      color: #6B7280;
       font-size: 0.8125rem;
       margin-top: 0.25rem;
     }
@@ -1468,7 +1469,7 @@ interface TimelineStep {
       width: 44px;
       height: 44px;
       border-radius: 12px;
-      background: linear-gradient(135deg, #10b981, #34d399);
+      background: linear-gradient(135deg, var(--color-secondary, #4CAF50), #81C784);
       display: flex;
       align-items: center;
       justify-content: center;
@@ -1476,18 +1477,18 @@ interface TimelineStep {
       text-decoration: none;
       flex-shrink: 0;
       transition: all 0.2s;
-      box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+      box-shadow: 0 4px 12px rgba(76, 175, 80, 0.3);
     }
 
     .call-btn:hover {
       transform: scale(1.05);
-      box-shadow: 0 6px 16px rgba(16, 185, 129, 0.4);
+      box-shadow: 0 6px 16px rgba(76, 175, 80, 0.4);
     }
 
     /* Rejection Section */
     .rejection-section {
-      background: linear-gradient(135deg, #fef2f2, #fee2e2);
-      border: 1px solid #fecaca;
+      background: linear-gradient(135deg, #FFEBEE, #FFEBEE);
+      border: 1px solid #FFCDD2;
     }
 
     .rejection-reason {
@@ -1496,7 +1497,7 @@ interface TimelineStep {
       margin: 0;
       padding: 1rem;
       background: rgba(255, 255, 255, 0.5);
-      border-radius: 10px;
+      border-radius: 12px;
     }
 
     /* Timeline */
@@ -1532,43 +1533,43 @@ interface TimelineStep {
     }
 
     .dot-pending {
-      background: #f59e0b;
-      color: #f59e0b;
+      background: var(--color-mustard, #FFC107);
+      color: var(--color-mustard, #FFC107);
     }
 
     .dot-accepted {
-      background: #10b981;
-      color: #10b981;
+      background: var(--color-secondary, #4CAF50);
+      color: var(--color-secondary, #4CAF50);
     }
 
     .dot-rejected {
-      background: #ef4444;
-      color: #ef4444;
+      background: var(--color-error, #F44336);
+      color: var(--color-error, #F44336);
     }
 
     .dot-in_progress {
-      background: #3b82f6;
-      color: #3b82f6;
+      background: var(--color-ocean, #1565C0);
+      color: var(--color-ocean, #1565C0);
     }
 
     .dot-completed {
-      background: #10b981;
-      color: #10b981;
+      background: var(--color-secondary, #4CAF50);
+      color: var(--color-secondary, #4CAF50);
     }
 
     .dot-cancelled {
-      background: #64748b;
-      color: #64748b;
+      background: #6B7280;
+      color: #6B7280;
     }
 
     .dot-completed {
-      background: #8b5cf6;
-      color: #8b5cf6;
+      background: #FF9800;
+      color: #FF9800;
     }
 
     .dot-delivered {
-      background: #06b6d4;
-      color: #06b6d4;
+      background: #1565C0;
+      color: #1565C0;
     }
 
     .timeline-line {
@@ -1593,18 +1594,18 @@ interface TimelineStep {
     .text-pending { color: #92400e; }
     .text-accepted { color: #065f46; }
     .text-rejected { color: #991b1b; }
-    .text-in_progress { color: #1e40af; }
+    .text-in_progress { color: var(--color-ocean, #1565C0); }
     .text-completed { color: #5b21b6; }
     .text-delivered { color: #0e7490; }
-    .text-cancelled { color: #475569; }
+    .text-cancelled { color: #4B5563; }
 
     .timeline-comment {
       font-size: 0.875rem;
-      color: #64748b;
+      color: #6B7280;
       margin-top: 0.25rem;
       padding: 0.5rem 0.75rem;
       background: #f8fafc;
-      border-radius: 8px;
+      border-radius: 12px;
     }
 
     .timeline-date {
@@ -1612,7 +1613,7 @@ interface TimelineStep {
       align-items: center;
       gap: 0.375rem;
       font-size: 0.75rem;
-      color: #94a3b8;
+      color: #9CA3AF;
       margin-top: 0.375rem;
     }
 
@@ -1654,30 +1655,30 @@ interface TimelineStep {
     }
 
     .workflow-step.completed .step-icon {
-      background: linear-gradient(135deg, #10b981, #34d399);
+      background: linear-gradient(135deg, var(--color-secondary, #4CAF50), #81C784);
       color: white;
-      box-shadow: 0 4px 12px rgba(16, 185, 129, 0.4);
+      box-shadow: 0 4px 12px rgba(76, 175, 80, 0.4);
     }
 
     .workflow-step.active .step-icon {
-      background: linear-gradient(135deg, #FF6B35, #FF9800);
+      background: linear-gradient(135deg, var(--color-primary-500, #FF9800), #FF9800);
       color: white;
-      box-shadow: 0 4px 12px rgba(255, 107, 53, 0.4);
+      box-shadow: 0 4px 12px rgba(255, 152, 0, 0.4);
       animation: pulse-orange 2s ease-in-out infinite;
     }
 
     .workflow-step.pending .step-icon {
       background: #f1f5f9;
-      color: #94a3b8;
-      border: 2px dashed #cbd5e1;
+      color: #9CA3AF;
+      border: 2px dashed #D1D5DB;
     }
 
     @keyframes pulse-orange {
       0%, 100% {
-        box-shadow: 0 4px 12px rgba(255, 107, 53, 0.4);
+        box-shadow: 0 4px 12px rgba(255, 152, 0, 0.4);
       }
       50% {
-        box-shadow: 0 4px 20px rgba(255, 107, 53, 0.6);
+        box-shadow: 0 4px 20px rgba(255, 152, 0, 0.6);
       }
     }
 
@@ -1695,11 +1696,11 @@ interface TimelineStep {
     }
 
     .workflow-step.completed .step-connector {
-      background: linear-gradient(180deg, #10b981, #34d399);
+      background: linear-gradient(180deg, var(--color-secondary, #4CAF50), #81C784);
     }
 
     .workflow-step.active .step-connector {
-      background: linear-gradient(180deg, #FF6B35, #e2e8f0);
+      background: linear-gradient(180deg, var(--color-primary-500, #FF9800), #e2e8f0);
     }
 
     .workflow-step.pending .step-connector {
@@ -1728,18 +1729,18 @@ interface TimelineStep {
     }
 
     .workflow-step.pending .step-label {
-      color: #94a3b8;
+      color: #9CA3AF;
     }
 
     .step-description {
       font-size: 0.8125rem;
-      color: #64748b;
+      color: #6B7280;
       margin-bottom: 0.375rem;
       line-height: 1.4;
     }
 
     .workflow-step.pending .step-description {
-      color: #cbd5e1;
+      color: #D1D5DB;
     }
 
     .step-date {
@@ -1747,35 +1748,35 @@ interface TimelineStep {
       align-items: center;
       gap: 0.375rem;
       font-size: 0.75rem;
-      color: #94a3b8;
+      color: #9CA3AF;
     }
 
     .workflow-step.completed .step-date {
-      color: #10b981;
+      color: var(--color-secondary, #4CAF50);
     }
 
     .workflow-step.active .step-date {
-      color: #FF6B35;
+      color: var(--color-primary-500, #FF9800);
     }
 
     /* Actions Section */
     .actions-section {
-      border: 2px solid #FF6B35;
-      background: linear-gradient(135deg, #fff7ed, #ffedd5);
+      border: 2px solid var(--color-primary-500, #FF9800);
+      background: linear-gradient(135deg, #FFF3E0, #FFE0B2);
     }
 
     .actions-section.actions-purple {
-      border-color: #8b5cf6;
+      border-color: #FF9800;
       background: linear-gradient(135deg, #f5f3ff, #ede9fe);
     }
 
     .actions-section.actions-cyan {
-      border-color: #06b6d4;
+      border-color: #1565C0;
       background: linear-gradient(135deg, #ecfeff, #cffafe);
     }
 
     .action-hint {
-      color: #64748b;
+      color: #6B7280;
       font-size: 0.875rem;
       margin: 0 0 1rem 0;
       line-height: 1.5;
@@ -1787,7 +1788,7 @@ interface TimelineStep {
     }
 
     .section-icon-wrapper.icon-cyan {
-      background: linear-gradient(135deg, #06b6d4, #22d3ee);
+      background: linear-gradient(135deg, #1565C0, #2196F3);
     }
 
     .alert {
@@ -1795,14 +1796,14 @@ interface TimelineStep {
       align-items: center;
       gap: 0.75rem;
       padding: 0.875rem 1rem;
-      border-radius: 10px;
+      border-radius: 12px;
       margin-bottom: 1rem;
     }
 
     .alert-error {
       background: white;
       color: #991b1b;
-      border: 1px solid #fecaca;
+      border: 1px solid #FFCDD2;
     }
 
     /* Buttons */
@@ -1822,49 +1823,49 @@ interface TimelineStep {
     }
 
     .btn-primary {
-      background: linear-gradient(135deg, #FF6B35, #FF9800);
+      background: linear-gradient(135deg, var(--color-primary-500, #FF9800), #FF9800);
       color: white;
-      box-shadow: 0 4px 15px rgba(255, 107, 53, 0.4);
+      box-shadow: 0 4px 15px rgba(255, 152, 0, 0.4);
     }
 
     .btn-primary:hover {
       transform: translateY(-2px);
-      box-shadow: 0 6px 20px rgba(255, 107, 53, 0.5);
+      box-shadow: 0 6px 20px rgba(255, 152, 0, 0.5);
     }
 
     .btn-success {
       flex: 1;
-      background: linear-gradient(135deg, #10b981, #34d399);
+      background: linear-gradient(135deg, var(--color-secondary, #4CAF50), #81C784);
       color: white;
-      box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+      box-shadow: 0 4px 12px rgba(76, 175, 80, 0.3);
     }
 
     .btn-success:hover:not(:disabled) {
       transform: translateY(-2px);
-      box-shadow: 0 6px 16px rgba(16, 185, 129, 0.4);
+      box-shadow: 0 6px 16px rgba(76, 175, 80, 0.4);
     }
 
     .btn-danger {
       flex: 1;
-      background: linear-gradient(135deg, #ef4444, #f87171);
+      background: linear-gradient(135deg, var(--color-error, #F44336), #EF5350);
       color: white;
-      box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3);
+      box-shadow: 0 4px 12px rgba(244, 67, 54, 0.3);
     }
 
     .btn-danger:hover:not(:disabled) {
       transform: translateY(-2px);
-      box-shadow: 0 6px 16px rgba(239, 68, 68, 0.4);
+      box-shadow: 0 6px 16px rgba(244, 67, 54, 0.4);
     }
 
     .btn-outline-danger {
       background: transparent;
-      color: #ef4444;
-      border: 2px solid #ef4444;
+      color: var(--color-error, #F44336);
+      border: 2px solid var(--color-error, #F44336);
       box-shadow: none;
     }
 
     .btn-outline-danger:hover:not(:disabled) {
-      background: #fef2f2;
+      background: #FFEBEE;
       transform: translateY(-2px);
     }
 
@@ -1886,7 +1887,7 @@ interface TimelineStep {
     }
 
     .negotiation-client-actions .waiting-message {
-      color: #64748b;
+      color: #6B7280;
       font-size: 0.875rem;
       margin-bottom: 0.75rem;
     }
@@ -1898,15 +1899,15 @@ interface TimelineStep {
 
     .btn-secondary {
       background: #e2e8f0;
-      color: #475569;
+      color: #4B5563;
     }
 
     .btn-secondary:hover {
-      background: #cbd5e1;
+      background: #D1D5DB;
     }
 
     .btn-completed {
-      background: linear-gradient(135deg, #8b5cf6, #a78bfa);
+      background: linear-gradient(135deg, #FF9800, #F9A825);
       color: white;
       box-shadow: 0 4px 12px rgba(139, 92, 246, 0.3);
     }
@@ -1917,7 +1918,7 @@ interface TimelineStep {
     }
 
     .btn-delivered {
-      background: linear-gradient(135deg, #06b6d4, #22d3ee);
+      background: linear-gradient(135deg, #1565C0, #2196F3);
       color: white;
       box-shadow: 0 4px 12px rgba(6, 182, 212, 0.3);
     }
@@ -1929,14 +1930,14 @@ interface TimelineStep {
 
     .btn-chat {
       width: 100%;
-      background: linear-gradient(135deg, #FF6B35, #FF9800);
+      background: linear-gradient(135deg, var(--color-primary-500, #FF9800), #FF9800);
       color: white;
-      box-shadow: 0 4px 15px rgba(255, 107, 53, 0.4);
+      box-shadow: 0 4px 15px rgba(255, 152, 0, 0.4);
     }
 
     .btn-chat:hover {
       transform: translateY(-2px);
-      box-shadow: 0 6px 20px rgba(255, 107, 53, 0.5);
+      box-shadow: 0 6px 20px rgba(255, 152, 0, 0.5);
     }
 
     .btn:disabled {
@@ -1951,8 +1952,8 @@ interface TimelineStep {
 
     /* Info & Success Sections */
     .info-section {
-      background: linear-gradient(135deg, #fffbeb, #fef3c7);
-      border: 1px solid #fde68a;
+      background: linear-gradient(135deg, #FFF8E1, #FFF8E1);
+      border: 1px solid #FFE082;
     }
 
     .info-message {
@@ -1965,7 +1966,7 @@ interface TimelineStep {
       width: 48px;
       height: 48px;
       border-radius: 12px;
-      background: linear-gradient(135deg, #f59e0b, #fbbf24);
+      background: linear-gradient(135deg, var(--color-mustard, #FFC107), var(--color-mustard, #FFC107));
       display: flex;
       align-items: center;
       justify-content: center;
@@ -1988,8 +1989,8 @@ interface TimelineStep {
     }
 
     .success-section {
-      background: linear-gradient(135deg, #ecfdf5, #d1fae5);
-      border: 1px solid #a7f3d0;
+      background: linear-gradient(135deg, #E8F5E9, #E8F5E9);
+      border: 1px solid #C8E6C9;
     }
 
     .success-message {
@@ -2002,7 +2003,7 @@ interface TimelineStep {
       width: 48px;
       height: 48px;
       border-radius: 12px;
-      background: linear-gradient(135deg, #10b981, #34d399);
+      background: linear-gradient(135deg, var(--color-secondary, #4CAF50), #81C784);
       display: flex;
       align-items: center;
       justify-content: center;
@@ -2018,7 +2019,7 @@ interface TimelineStep {
     }
 
     .success-text p {
-      color: #047857;
+      color: #2E7D32;
       margin: 0;
       font-size: 0.875rem;
       line-height: 1.5;
@@ -2040,7 +2041,7 @@ interface TimelineStep {
       width: 48px;
       height: 48px;
       border-radius: 12px;
-      background: linear-gradient(135deg, #8b5cf6, #a78bfa);
+      background: linear-gradient(135deg, #FF9800, #F9A825);
       display: flex;
       align-items: center;
       justify-content: center;
@@ -2078,7 +2079,7 @@ interface TimelineStep {
       width: 48px;
       height: 48px;
       border-radius: 12px;
-      background: linear-gradient(135deg, #06b6d4, #22d3ee);
+      background: linear-gradient(135deg, #1565C0, #2196F3);
       display: flex;
       align-items: center;
       justify-content: center;
@@ -2136,11 +2137,11 @@ interface TimelineStep {
       width: 64px;
       height: 64px;
       border-radius: 50%;
-      background: linear-gradient(135deg, #fee2e2, #fecaca);
+      background: linear-gradient(135deg, #FFEBEE, #FFCDD2);
       display: flex;
       align-items: center;
       justify-content: center;
-      color: #ef4444;
+      color: var(--color-error, #F44336);
       margin: 0 auto 1rem;
     }
 
@@ -2152,7 +2153,7 @@ interface TimelineStep {
     }
 
     .modal-subtitle {
-      color: #64748b;
+      color: #6B7280;
       font-size: 0.875rem;
       margin: 0;
     }
@@ -2171,8 +2172,8 @@ interface TimelineStep {
 
     .form-textarea:focus {
       outline: none;
-      border-color: #FF6B35;
-      box-shadow: 0 0 0 3px rgba(255, 107, 53, 0.15);
+      border-color: var(--color-primary-500, #FF9800);
+      box-shadow: 0 0 0 3px rgba(255, 152, 0, 0.15);
     }
 
     .modal-reject-quote .form-group {
@@ -2198,8 +2199,8 @@ interface TimelineStep {
 
     .form-input:focus {
       outline: none;
-      border-color: #FF6B35;
-      box-shadow: 0 0 0 3px rgba(255, 107, 53, 0.15);
+      border-color: var(--color-primary-500, #FF9800);
+      box-shadow: 0 0 0 3px rgba(255, 152, 0, 0.15);
     }
 
     .price-input-wrapper {
@@ -2212,8 +2213,8 @@ interface TimelineStep {
     }
 
     .price-input-wrapper:focus-within {
-      border-color: #FF6B35;
-      box-shadow: 0 0 0 3px rgba(255, 107, 53, 0.15);
+      border-color: var(--color-primary-500, #FF9800);
+      box-shadow: 0 0 0 3px rgba(255, 152, 0, 0.15);
     }
 
     .price-input-wrapper .form-input {
@@ -2229,7 +2230,7 @@ interface TimelineStep {
     .price-currency {
       padding: 0 1rem;
       background: #f8fafc;
-      color: #64748b;
+      color: #6B7280;
       font-weight: 600;
       font-size: 0.875rem;
       border-left: 2px solid #e2e8f0;
@@ -2240,7 +2241,7 @@ interface TimelineStep {
 
     .form-hint {
       font-size: 0.75rem;
-      color: #64748b;
+      color: #6B7280;
       margin-top: 0.5rem;
       margin-bottom: 0;
     }
@@ -2271,8 +2272,8 @@ interface TimelineStep {
 
     /* Quote Section Styles */
     .quote-section {
-      border: 2px solid #10b981;
-      background: linear-gradient(135deg, #ecfdf5, #d1fae5);
+      border: 2px solid var(--color-secondary, #4CAF50);
+      background: linear-gradient(135deg, #E8F5E9, #E8F5E9);
     }
 
     .quote-section h2 {
@@ -2291,23 +2292,23 @@ interface TimelineStep {
     }
 
     .quote-status-pending {
-      background: #fef3c7;
+      background: #FFF8E1;
       color: #92400e;
     }
 
     .quote-status-accepted {
-      background: #d1fae5;
+      background: #E8F5E9;
       color: #065f46;
     }
 
     .quote-status-rejected {
-      background: #fee2e2;
+      background: #FFEBEE;
       color: #991b1b;
     }
 
     .quote-status-expired {
       background: #f1f5f9;
-      color: #475569;
+      color: #4B5563;
     }
 
     .quote-details {
@@ -2329,7 +2330,7 @@ interface TimelineStep {
     }
 
     .quote-label {
-      color: #64748b;
+      color: #6B7280;
       font-size: 0.875rem;
     }
 
@@ -2339,7 +2340,7 @@ interface TimelineStep {
     }
 
     .quote-total {
-      background: #f0fdf4;
+      background: #E8F5E9;
       margin: 0.5rem -1rem -1rem;
       padding: 1rem;
       border-radius: 0 0 12px 12px;
@@ -2377,7 +2378,7 @@ interface TimelineStep {
 
     .quote-notes p {
       margin: 0.375rem 0 0;
-      color: #475569;
+      color: #4B5563;
       font-size: 0.875rem;
       padding: 0.5rem;
       background: #f8fafc;
@@ -2386,13 +2387,13 @@ interface TimelineStep {
     }
 
     .quote-expiry .text-red {
-      color: #dc2626;
+      color: var(--color-terracotta, #C62828);
     }
 
     .quote-actions {
       margin-top: 1rem;
       padding-top: 1rem;
-      border-top: 1px dashed #a7f3d0;
+      border-top: 1px dashed #C8E6C9;
     }
 
     .quote-accepted-message,
@@ -2402,12 +2403,12 @@ interface TimelineStep {
       gap: 0.75rem;
       margin-top: 1rem;
       padding: 1rem;
-      border-radius: 10px;
+      border-radius: 12px;
       font-weight: 500;
     }
 
     .quote-accepted-message {
-      background: #d1fae5;
+      background: #E8F5E9;
       color: #065f46;
     }
 
@@ -2424,9 +2425,9 @@ interface TimelineStep {
       gap: 0.5rem;
       margin: 0;
       padding: 0.75rem;
-      background: #fef3c7;
-      border: 1px solid #f59e0b;
-      border-radius: 8px;
+      background: #FFF8E1;
+      border: 1px solid var(--color-mustard, #FFC107);
+      border-radius: 12px;
       font-size: 0.875rem;
       color: #92400e;
     }
@@ -2434,7 +2435,7 @@ interface TimelineStep {
     .payment-notice svg {
       flex-shrink: 0;
       margin-top: 2px;
-      color: #f59e0b;
+      color: var(--color-mustard, #FFC107);
     }
 
     .btn-payment {
@@ -2444,20 +2445,20 @@ interface TimelineStep {
       gap: 0.5rem;
       width: 100%;
       padding: 1rem 1.5rem;
-      background: linear-gradient(135deg, #FF6B35 0%, #FF9800 100%);
+      background: linear-gradient(135deg, var(--color-primary-500, #FF9800) 0%, #FF9800 100%);
       color: white;
       border: none;
       border-radius: 12px;
       font-size: 1rem;
       font-weight: 600;
       cursor: pointer;
-      box-shadow: 0 4px 14px rgba(255, 107, 53, 0.4);
+      box-shadow: 0 4px 14px rgba(255, 152, 0, 0.4);
       transition: all 0.2s ease;
     }
 
     .btn-payment:hover {
       transform: translateY(-2px);
-      box-shadow: 0 6px 20px rgba(255, 107, 53, 0.5);
+      box-shadow: 0 6px 20px rgba(255, 152, 0, 0.5);
     }
 
     .btn-payment:active {
@@ -2469,7 +2470,7 @@ interface TimelineStep {
     }
 
     .quote-rejected-message {
-      background: #fee2e2;
+      background: #FFEBEE;
       color: #991b1b;
       flex-wrap: wrap;
     }
@@ -2480,14 +2481,14 @@ interface TimelineStep {
       padding-top: 0.5rem;
       border-top: 1px dashed #fca5a5;
       font-weight: 600;
-      color: #7c3aed;
+      color: var(--color-primary-500, #FF9800);
     }
 
     .rejection-detail {
       margin: 0.75rem 0 0 0;
       padding: 0.75rem;
-      background: #fef2f2;
-      border-radius: 8px;
+      background: #FFEBEE;
+      border-radius: 12px;
       font-size: 0.875rem;
       color: #991b1b;
       font-style: italic;
@@ -2500,8 +2501,8 @@ interface TimelineStep {
     }
 
     .icon-gray {
-      background: linear-gradient(135deg, #e2e8f0, #cbd5e1);
-      color: #64748b;
+      background: linear-gradient(135deg, #e2e8f0, #D1D5DB);
+      color: #6B7280;
     }
 
     .quote-history-list {
@@ -2518,8 +2519,8 @@ interface TimelineStep {
     }
 
     .quote-history-item.current {
-      border-color: #FF6B35;
-      box-shadow: 0 0 0 3px rgba(255, 107, 53, 0.1);
+      border-color: var(--color-primary-500, #FF9800);
+      box-shadow: 0 0 0 3px rgba(255, 152, 0, 0.1);
     }
 
     .history-header {
@@ -2537,7 +2538,7 @@ interface TimelineStep {
 
     .history-date {
       font-size: 0.75rem;
-      color: #64748b;
+      color: #6B7280;
     }
 
     .history-status {
@@ -2549,23 +2550,23 @@ interface TimelineStep {
     }
 
     .history-status.status-pending {
-      background: #fef3c7;
+      background: #FFF8E1;
       color: #92400e;
     }
 
     .history-status.status-accepted {
-      background: #d1fae5;
+      background: #E8F5E9;
       color: #065f46;
     }
 
     .history-status.status-rejected {
-      background: #fee2e2;
+      background: #FFEBEE;
       color: #991b1b;
     }
 
     .history-status.status-expired {
       background: #e2e8f0;
-      color: #64748b;
+      color: #6B7280;
     }
 
     .history-details {
@@ -2584,7 +2585,7 @@ interface TimelineStep {
     .history-price .price-label,
     .history-counter-proposal .price-label {
       font-size: 0.875rem;
-      color: #64748b;
+      color: #6B7280;
     }
 
     .history-price .price-value {
@@ -2594,13 +2595,13 @@ interface TimelineStep {
 
     .history-counter-proposal .price-value.counter {
       font-weight: 600;
-      color: #7c3aed;
+      color: var(--color-primary-500, #FF9800);
     }
 
     .history-reason {
       margin: 0.5rem 0 0 0;
       padding: 0.5rem;
-      background: #fef2f2;
+      background: #FFEBEE;
       border-radius: 6px;
       font-size: 0.8125rem;
       color: #991b1b;
@@ -2613,8 +2614,8 @@ interface TimelineStep {
     }
 
     .modal-icon-green {
-      background: linear-gradient(135deg, #d1fae5, #a7f3d0);
-      color: #10b981;
+      background: linear-gradient(135deg, #E8F5E9, #C8E6C9);
+      color: var(--color-secondary, #4CAF50);
     }
 
     .quote-form {
@@ -2636,18 +2637,18 @@ interface TimelineStep {
     .form-input {
       width: 100%;
       padding: 0.75rem 1rem;
-      border: 2px solid #e5e7eb;
-      border-radius: 10px;
+      border: 2px solid #EEEEEE;
+      border-radius: 12px;
       font-size: 1rem;
       transition: all 0.2s;
-      background: #f9fafb;
+      background: #FAFAFA;
     }
 
     .form-input:focus {
       outline: none;
-      border-color: #FF6B35;
+      border-color: var(--color-primary-500, #FF9800);
       background: white;
-      box-shadow: 0 0 0 3px rgba(255, 107, 53, 0.15);
+      box-shadow: 0 0 0 3px rgba(255, 152, 0, 0.15);
     }
 
     .parts-list {
@@ -2680,10 +2681,10 @@ interface TimelineStep {
     .btn-remove-part {
       width: 36px;
       height: 36px;
-      border-radius: 8px;
+      border-radius: 12px;
       border: none;
-      background: #fee2e2;
-      color: #dc2626;
+      background: #FFEBEE;
+      color: var(--color-terracotta, #C62828);
       cursor: pointer;
       display: flex;
       align-items: center;
@@ -2693,7 +2694,7 @@ interface TimelineStep {
     }
 
     .btn-remove-part:hover {
-      background: #fecaca;
+      background: #FFCDD2;
     }
 
     .btn-add-part {
@@ -2701,22 +2702,22 @@ interface TimelineStep {
       align-items: center;
       gap: 0.5rem;
       padding: 0.5rem 1rem;
-      background: #f0fdf4;
-      border: 1px dashed #10b981;
-      border-radius: 8px;
-      color: #059669;
+      background: #E8F5E9;
+      border: 1px dashed var(--color-secondary, #4CAF50);
+      border-radius: 12px;
+      color: var(--color-success-dark, #2E7D32);
       font-size: 0.875rem;
       cursor: pointer;
       transition: all 0.2s;
     }
 
     .btn-add-part:hover {
-      background: #d1fae5;
+      background: #E8F5E9;
     }
 
     .quote-summary {
       background: #f8fafc;
-      border-radius: 10px;
+      border-radius: 12px;
       padding: 1rem;
       margin-top: 1rem;
     }
@@ -2726,7 +2727,7 @@ interface TimelineStep {
       justify-content: space-between;
       padding: 0.5rem 0;
       font-size: 0.875rem;
-      color: #64748b;
+      color: #6B7280;
     }
 
     .summary-total {
@@ -2744,12 +2745,12 @@ interface TimelineStep {
 
     /* Rating Section Styles */
     .rating-section {
-      background: linear-gradient(135deg, #fefce8, #fef9c3);
+      background: linear-gradient(135deg, #fefce8, #FFF8E1);
       border: 1px solid #fde047;
     }
 
     .icon-yellow {
-      background: linear-gradient(135deg, #fbbf24, #f59e0b);
+      background: linear-gradient(135deg, var(--color-mustard, #FFC107), var(--color-mustard, #FFC107));
     }
 
     .rating-intro {
@@ -2779,7 +2780,7 @@ interface TimelineStep {
     }
 
     .rating-step-btn:hover:not(:disabled) {
-      border-color: #f59e0b;
+      border-color: var(--color-mustard, #FFC107);
       transform: translateY(-2px);
       box-shadow: 0 4px 12px rgba(245, 158, 11, 0.2);
     }
@@ -2790,8 +2791,8 @@ interface TimelineStep {
     }
 
     .rating-step-btn.rated {
-      background: #fef9c3;
-      border-color: #10b981;
+      background: #FFF8E1;
+      border-color: var(--color-secondary, #4CAF50);
     }
 
     .rating-step-btn .step-icon {
@@ -2809,7 +2810,7 @@ interface TimelineStep {
       position: absolute;
       top: 0.5rem;
       right: 0.5rem;
-      color: #10b981;
+      color: var(--color-secondary, #4CAF50);
       font-weight: bold;
     }
 
@@ -2817,7 +2818,7 @@ interface TimelineStep {
       margin-top: 1rem;
       padding: 1rem;
       background: white;
-      border-radius: 10px;
+      border-radius: 12px;
       border: 1px solid #fde047;
     }
 
@@ -2844,7 +2845,7 @@ interface TimelineStep {
 
     .rating-cat {
       font-size: 0.8125rem;
-      color: #64748b;
+      color: #6B7280;
     }
 
     .rating-val {
@@ -2860,6 +2861,7 @@ export class RequestDetailComponent implements OnInit {
   private readonly authStore = inject(AuthStore);
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
+  private readonly logger = inject(LoggerService);
 
   readonly request = signal<RepairRequest | null>(null);
   readonly isLoading = signal(true);
@@ -3051,7 +3053,7 @@ export class RequestDetailComponent implements OnInit {
       // Load step ratings
       await this.loadStepRatings();
     } catch (err) {
-      console.error('Error loading request:', err);
+      this.logger.error('RequestDetailComponent', 'Error loading request', err);
     } finally {
       this.isLoading.set(false);
     }
@@ -3066,7 +3068,7 @@ export class RequestDetailComponent implements OnInit {
       const history = await this.quotesService.getQuoteHistoryByRequest(requestId);
       this.quoteHistory.set(history);
     } catch (err) {
-      console.error('Error loading quote:', err);
+      this.logger.error('RequestDetailComponent', 'Error loading quote', err);
       this.quote.set(null);
       this.quoteHistory.set([]);
     }

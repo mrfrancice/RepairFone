@@ -1,5 +1,6 @@
 import { Injectable, signal, computed, effect, inject } from '@angular/core';
 import { SecureStorageService, StorageKeys } from '../services/secure-storage.service';
+import { LoggerService } from '../services/logger.service';
 
 export interface RepairerProfile {
   id: string;
@@ -59,6 +60,7 @@ interface AuthState {
 @Injectable({ providedIn: 'root' })
 export class AuthStore {
   private readonly storage = inject(SecureStorageService);
+  private readonly logger = inject(LoggerService);
 
   private readonly _state = signal<AuthState>({
     user: null,
@@ -98,22 +100,36 @@ export class AuthStore {
     }
   }
 
-  constructor() {
-    this.loadFromStorage();
+  private hydratePromise: Promise<void> | null = null;
 
-    // Persist to secure storage on changes
+  constructor() {
+    // Persist to secure storage on changes (after the initial hydration to avoid clearing it on boot)
     effect(() => {
       const state = this._state();
+      if (!this.hydrated) return; // skip writes until hydrated
       if (state.token && state.user) {
         this.storage.set(StorageKeys.AUTH, {
           token: state.token,
           user: state.user,
-        }).catch(err => console.error('Failed to save auth state:', err));
+        }).catch(err => this.logger.error('AuthStore', 'Failed to save auth state', err));
       } else {
         this.storage.remove(StorageKeys.AUTH);
         this.storage.remove(StorageKeys.REFRESH_TOKEN);
       }
     });
+  }
+
+  private hydrated = false;
+
+  /**
+   * Hydrates the store from secure storage. Call this from APP_INITIALIZER so
+   * route guards see the correct authenticated state on the very first navigation.
+   */
+  hydrate(): Promise<void> {
+    if (!this.hydratePromise) {
+      this.hydratePromise = this.loadFromStorage().finally(() => { this.hydrated = true; });
+    }
+    return this.hydratePromise;
   }
 
   setLoading(isLoading: boolean): void {

@@ -1,4 +1,5 @@
-import { Injectable } from '@angular/core';
+import { Injectable, inject } from '@angular/core';
+import { LoggerService } from './logger.service';
 
 /**
  * Secure storage service with AES-GCM encryption
@@ -7,6 +8,7 @@ import { Injectable } from '@angular/core';
  */
 @Injectable({ providedIn: 'root' })
 export class SecureStorageService {
+  private readonly logger = inject(LoggerService);
   private readonly APP_PREFIX = 'rf_';
   private readonly ENCRYPTION_KEY_NAME = 'rf_enc_key';
   private encryptionKey: CryptoKey | null = null;
@@ -42,7 +44,7 @@ export class SecureStorageService {
       // Store the key for future use
       await this.storeKey(this.encryptionKey);
     } catch (error) {
-      console.error('SecureStorage: Failed to initialize encryption key', error);
+      this.logger.error('SecureStorageService', 'Failed to initialize encryption key', error);
     }
   }
 
@@ -61,7 +63,7 @@ export class SecureStorageService {
       const encrypted = await this.encrypt(serialized);
       localStorage.setItem(this.APP_PREFIX + key, encrypted);
     } catch (error) {
-      console.error('SecureStorage: Failed to store data', error);
+      this.logger.error('SecureStorageService', 'Failed to store data', error);
       throw error;
     }
   }
@@ -88,7 +90,7 @@ export class SecureStorageService {
 
       return payload.d as T;
     } catch (error) {
-      console.error('SecureStorage: Failed to retrieve data', error);
+      this.logger.error('SecureStorageService', 'Failed to retrieve data', error);
       this.remove(key);
       return null;
     }
@@ -282,7 +284,7 @@ export class SecureStorageService {
             );
             resolve(key);
           } catch (error) {
-            console.error('Failed to import key:', error);
+            this.logger.error('SecureStorageService', 'Failed to import key', error);
             resolve(null);
           }
         };

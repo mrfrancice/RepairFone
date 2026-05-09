@@ -7,17 +7,19 @@ import { AuthService } from '../../services/auth.service';
 import { CustomValidators, getErrorMessage } from '../../../../shared/validators/custom-validators';
 import { LocationService, City, Commune, Quarter } from '../../../../core/services/location.service';
 import { SettingsService } from '../../../../core/services/settings.service';
+import { LoggerService } from '../../../../core/services/logger.service';
+import { AppLogoComponent } from '../../../../shared/components/app-logo/app-logo.component';
 
 @Component({
   selector: 'app-register',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [CommonModule, ReactiveFormsModule, RouterLink],
+  imports: [CommonModule, ReactiveFormsModule, RouterLink, AppLogoComponent],
   template: `
     <div class="auth-container">
       <div class="auth-card" [class.wide]="isRepairer() && currentStep() > 3">
         <div class="auth-logo">
-          <span class="logo-icon">*</span>
+          <app-logo size="md" variant="gradient" />
         </div>
         <h1 class="auth-title">Inscription</h1>
         <p class="auth-subtitle">
@@ -857,7 +859,8 @@ import { SettingsService } from '../../../../core/services/settings.service';
       align-items: center;
       justify-content: center;
       padding: 1rem;
-      background: linear-gradient(135deg, #FF6B35 0%, #FF9800 100%);
+      padding-bottom: calc(1rem + var(--bottom-nav-height, 80px) + var(--safe-area-bottom, 0px));
+      background: linear-gradient(135deg, var(--color-primary-500, #FF9800) 0%, var(--color-gold-800, #F9A825) 100%);
     }
 
     .auth-card {
@@ -866,7 +869,7 @@ import { SettingsService } from '../../../../core/services/settings.service';
       padding: 2rem 1.5rem;
       width: 100%;
       max-width: 500px;
-      box-shadow: 0 20px 60px rgba(255, 107, 53, 0.2);
+      box-shadow: 0 20px 60px rgba(255, 152, 0, 0.2);
       transition: max-width 0.3s ease;
     }
 
@@ -885,11 +888,11 @@ import { SettingsService } from '../../../../core/services/settings.service';
       justify-content: center;
       width: 50px;
       height: 50px;
-      background: linear-gradient(135deg, #FF6B35 0%, #FF9800 100%);
+      background: linear-gradient(135deg, var(--color-primary-500, #FF9800) 0%, #FF9800 100%);
       border-radius: 12px;
       font-size: 1.5rem;
       color: white;
-      box-shadow: 0 6px 16px rgba(255, 107, 53, 0.3);
+      box-shadow: 0 6px 16px rgba(255, 152, 0, 0.3);
     }
 
     .auth-title {
@@ -932,7 +935,7 @@ import { SettingsService } from '../../../../core/services/settings.service';
       width: 28px;
       height: 28px;
       border-radius: 50%;
-      background: #e5e7eb;
+      background: #EEEEEE;
       color: #6b7280;
       display: flex;
       align-items: center;
@@ -943,7 +946,7 @@ import { SettingsService } from '../../../../core/services/settings.service';
     }
 
     .step.active .step-number {
-      background: #FF6B35;
+      background: var(--color-primary-500, #FF9800);
       color: white;
     }
 
@@ -959,14 +962,14 @@ import { SettingsService } from '../../../../core/services/settings.service';
     }
 
     .step.active .step-label {
-      color: #FF6B35;
+      color: var(--color-primary-500, #FF9800);
       font-weight: 500;
     }
 
     .step-line {
       width: 30px;
       height: 2px;
-      background: #e5e7eb;
+      background: #EEEEEE;
       margin: 0 0.25rem;
       margin-bottom: 1rem;
       transition: background 0.3s;
@@ -1007,7 +1010,7 @@ import { SettingsService } from '../../../../core/services/settings.service';
     .form-group.indented {
       margin-left: 1rem;
       padding-left: 1rem;
-      border-left: 3px solid #FF6B35;
+      border-left: 3px solid var(--color-primary-500, #FF9800);
     }
 
     .form-group label {
@@ -1019,7 +1022,7 @@ import { SettingsService } from '../../../../core/services/settings.service';
     }
 
     .required {
-      color: #dc2626;
+      color: var(--color-terracotta, #C62828);
     }
 
     .optional {
@@ -1044,11 +1047,11 @@ import { SettingsService } from '../../../../core/services/settings.service';
     .form-input {
       width: 100%;
       padding: 0.75rem 1rem;
-      border: 2px solid #e5e7eb;
-      border-radius: 10px;
+      border: 2px solid #EEEEEE;
+      border-radius: 12px;
       font-size: 1rem;
       transition: all 0.2s;
-      background: #f9fafb;
+      background: #FAFAFA;
     }
 
     .form-input.with-prefix {
@@ -1057,14 +1060,14 @@ import { SettingsService } from '../../../../core/services/settings.service';
 
     .form-input:focus {
       outline: none;
-      border-color: #FF6B35;
+      border-color: var(--color-primary-500, #FF9800);
       background: white;
-      box-shadow: 0 0 0 4px rgba(255, 107, 53, 0.1);
+      box-shadow: 0 0 0 4px rgba(255, 152, 0, 0.1);
     }
 
     .form-input.input-error {
-      border-color: #dc2626;
-      background: #fef2f2;
+      border-color: var(--color-terracotta, #C62828);
+      background: #FFEBEE;
     }
 
     .form-textarea {
@@ -1094,7 +1097,7 @@ import { SettingsService } from '../../../../core/services/settings.service';
 
     .field-error {
       display: block;
-      color: #dc2626;
+      color: var(--color-terracotta, #C62828);
       font-size: 0.75rem;
       margin-top: 0.375rem;
     }
@@ -1123,12 +1126,12 @@ import { SettingsService } from '../../../../core/services/settings.service';
     .bar {
       height: 4px;
       flex: 1;
-      background: #e5e7eb;
+      background: #EEEEEE;
       border-radius: 2px;
       transition: all 0.3s;
     }
 
-    .bar.active.weak { background: #dc2626; }
+    .bar.active.weak { background: var(--color-terracotta, #C62828); }
     .bar.active.medium { background: #FF9800; }
     .bar.active.strong { background: #4CAF50; }
 
@@ -1161,7 +1164,7 @@ import { SettingsService } from '../../../../core/services/settings.service';
       width: 16px;
       height: 16px;
       border-radius: 50%;
-      background: #e5e7eb;
+      background: #EEEEEE;
       display: flex;
       align-items: center;
       justify-content: center;
@@ -1201,20 +1204,20 @@ import { SettingsService } from '../../../../core/services/settings.service';
       align-items: center;
       gap: 1rem;
       padding: 1rem;
-      border: 2px solid #e5e7eb;
+      border: 2px solid #EEEEEE;
       border-radius: 12px;
       transition: all 0.2s;
     }
 
     .profile-option.selected .option-content {
-      border-color: #FF6B35;
-      background: #fff5f0;
+      border-color: var(--color-primary-500, #FF9800);
+      background: #FFF3E0;
     }
 
     .option-icon {
       width: 48px;
       height: 48px;
-      background: #f3f4f6;
+      background: #F5F5F5;
       border-radius: 12px;
       display: flex;
       align-items: center;
@@ -1224,15 +1227,15 @@ import { SettingsService } from '../../../../core/services/settings.service';
     }
 
     .option-icon.client-icon {
-      color: #2563eb;
+      color: var(--color-primary-500, #FF9800);
     }
 
     .option-icon.repairer-icon {
-      color: #FF6B35;
+      color: var(--color-primary-500, #FF9800);
     }
 
     .profile-option.selected .option-icon {
-      background: linear-gradient(135deg, #FF6B35 0%, #FF9800 100%);
+      background: linear-gradient(135deg, var(--color-primary-500, #FF9800) 0%, #FF9800 100%);
       color: white;
     }
 
@@ -1254,7 +1257,7 @@ import { SettingsService } from '../../../../core/services/settings.service';
     .option-check {
       width: 24px;
       height: 24px;
-      border: 2px solid #e5e7eb;
+      border: 2px solid #EEEEEE;
       border-radius: 50%;
       display: flex;
       align-items: center;
@@ -1283,19 +1286,19 @@ import { SettingsService } from '../../../../core/services/settings.service';
       align-items: center;
       gap: 0.75rem;
       padding: 0.75rem 1rem;
-      border: 2px solid #e5e7eb;
-      border-radius: 10px;
+      border: 2px solid #EEEEEE;
+      border-radius: 12px;
       cursor: pointer;
       transition: all 0.2s;
     }
 
     .radio-option:hover {
-      border-color: #FF6B35;
+      border-color: var(--color-primary-500, #FF9800);
     }
 
     .radio-option.selected {
-      border-color: #FF6B35;
-      background: #fff5f0;
+      border-color: var(--color-primary-500, #FF9800);
+      background: #FFF3E0;
     }
 
     .radio-option input {
@@ -1305,14 +1308,14 @@ import { SettingsService } from '../../../../core/services/settings.service';
     .radio-box {
       width: 20px;
       height: 20px;
-      border: 2px solid #d1d5db;
+      border: 2px solid #D1D5DB;
       border-radius: 50%;
       position: relative;
       transition: all 0.2s;
     }
 
     .radio-option.selected .radio-box {
-      border-color: #FF6B35;
+      border-color: var(--color-primary-500, #FF9800);
     }
 
     .radio-option.selected .radio-box::after {
@@ -1323,7 +1326,7 @@ import { SettingsService } from '../../../../core/services/settings.service';
       transform: translate(-50%, -50%);
       width: 10px;
       height: 10px;
-      background: #FF6B35;
+      background: var(--color-primary-500, #FF9800);
       border-radius: 50%;
     }
 
@@ -1339,8 +1342,8 @@ import { SettingsService } from '../../../../core/services/settings.service';
       display: flex;
       align-items: center;
       padding: 0.5rem 0.875rem;
-      background: #f3f4f6;
-      border: 2px solid #e5e7eb;
+      background: #F5F5F5;
+      border: 2px solid #EEEEEE;
       border-radius: 20px;
       cursor: pointer;
       font-size: 0.875rem;
@@ -1352,13 +1355,13 @@ import { SettingsService } from '../../../../core/services/settings.service';
     }
 
     .specialty-chip:hover {
-      border-color: #FF6B35;
+      border-color: var(--color-primary-500, #FF9800);
     }
 
     .specialty-chip.selected {
-      background: #fff5f0;
-      border-color: #FF6B35;
-      color: #FF6B35;
+      background: #FFF3E0;
+      border-color: var(--color-primary-500, #FF9800);
+      color: var(--color-primary-500, #FF9800);
       font-weight: 500;
     }
 
@@ -1368,7 +1371,7 @@ import { SettingsService } from '../../../../core/services/settings.service';
       align-items: center;
       justify-content: space-between;
       padding: 1rem;
-      background: #f9fafb;
+      background: #FAFAFA;
       border-radius: 12px;
       cursor: pointer;
     }
@@ -1401,7 +1404,7 @@ import { SettingsService } from '../../../../core/services/settings.service';
     .toggle-slider {
       position: absolute;
       inset: 0;
-      background: #d1d5db;
+      background: #D1D5DB;
       border-radius: 13px;
       transition: all 0.3s;
     }
@@ -1437,7 +1440,7 @@ import { SettingsService } from '../../../../core/services/settings.service';
     .range-input {
       flex: 1;
       height: 6px;
-      background: #e5e7eb;
+      background: #EEEEEE;
       border-radius: 3px;
       appearance: none;
       outline: none;
@@ -1447,7 +1450,7 @@ import { SettingsService } from '../../../../core/services/settings.service';
       appearance: none;
       width: 20px;
       height: 20px;
-      background: #FF6B35;
+      background: var(--color-primary-500, #FF9800);
       border-radius: 50%;
       cursor: pointer;
     }
@@ -1455,7 +1458,7 @@ import { SettingsService } from '../../../../core/services/settings.service';
     .radius-value {
       min-width: 50px;
       font-weight: 600;
-      color: #FF6B35;
+      color: var(--color-primary-500, #FF9800);
     }
 
     /* Location Section */
@@ -1472,7 +1475,7 @@ import { SettingsService } from '../../../../core/services/settings.service';
     }
 
     .location-box {
-      border: 2px dashed #e5e7eb;
+      border: 2px dashed #EEEEEE;
       border-radius: 12px;
       padding: 1.5rem;
       text-align: center;
@@ -1482,7 +1485,7 @@ import { SettingsService } from '../../../../core/services/settings.service';
     .location-box.has-location {
       border-style: solid;
       border-color: #4CAF50;
-      background: #f0fdf4;
+      background: #E8F5E9;
     }
 
     .location-info {
@@ -1509,8 +1512,8 @@ import { SettingsService } from '../../../../core/services/settings.service';
       align-items: center;
       gap: 0.5rem;
       padding: 0.875rem 1.5rem;
-      background: #f3f4f6;
-      border: 2px solid #e5e7eb;
+      background: #F5F5F5;
+      border: 2px solid #EEEEEE;
       border-radius: 12px;
       font-weight: 600;
       cursor: pointer;
@@ -1518,8 +1521,8 @@ import { SettingsService } from '../../../../core/services/settings.service';
     }
 
     .btn-location:hover:not(:disabled) {
-      border-color: #FF6B35;
-      background: #fff5f0;
+      border-color: var(--color-primary-500, #FF9800);
+      background: #FFF3E0;
     }
 
     .btn-location:disabled {
@@ -1556,7 +1559,7 @@ import { SettingsService } from '../../../../core/services/settings.service';
       top: 2px;
       width: 18px;
       height: 18px;
-      border: 2px solid #d1d5db;
+      border: 2px solid #D1D5DB;
       border-radius: 4px;
       transition: all 0.2s;
     }
@@ -1584,7 +1587,7 @@ import { SettingsService } from '../../../../core/services/settings.service';
     }
 
     .checkbox-label a {
-      color: #FF6B35;
+      color: var(--color-primary-500, #FF9800);
       text-decoration: none;
       font-weight: 500;
     }
@@ -1601,12 +1604,12 @@ import { SettingsService } from '../../../../core/services/settings.service';
       padding: 1rem;
       background: #f0f9ff;
       border: 1px solid #bae6fd;
-      border-radius: 10px;
+      border-radius: 12px;
       margin-bottom: 1.25rem;
     }
 
     .info-box.success {
-      background: #f0fdf4;
+      background: #E8F5E9;
       border-color: #bbf7d0;
     }
 
@@ -1646,14 +1649,14 @@ import { SettingsService } from '../../../../core/services/settings.service';
     }
 
     .btn-primary {
-      background: linear-gradient(135deg, #FF6B35 0%, #FF9800 100%);
+      background: linear-gradient(135deg, var(--color-primary-500, #FF9800) 0%, #FF9800 100%);
       color: white;
-      box-shadow: 0 4px 14px rgba(255, 107, 53, 0.4);
+      box-shadow: 0 4px 14px rgba(255, 152, 0, 0.4);
     }
 
     .btn-primary:hover:not(:disabled) {
       transform: translateY(-2px);
-      box-shadow: 0 6px 20px rgba(255, 107, 53, 0.5);
+      box-shadow: 0 6px 20px rgba(255, 152, 0, 0.5);
     }
 
     .btn-primary:disabled {
@@ -1663,20 +1666,20 @@ import { SettingsService } from '../../../../core/services/settings.service';
 
     .btn-outline {
       background: white;
-      border: 2px solid #e5e7eb;
+      border: 2px solid #EEEEEE;
       color: #374151;
     }
 
     .btn-outline:hover {
-      border-color: #FF6B35;
-      color: #FF6B35;
-      background: #fff5f0;
+      border-color: var(--color-primary-500, #FF9800);
+      color: var(--color-primary-500, #FF9800);
+      background: #FFF3E0;
     }
 
     .btn-text {
       background: none;
       border: none;
-      color: #FF6B35;
+      color: var(--color-primary-500, #FF9800);
       padding: 0.5rem;
       font-size: 0.875rem;
     }
@@ -1697,8 +1700,8 @@ import { SettingsService } from '../../../../core/services/settings.service';
     .spinner-small {
       width: 16px;
       height: 16px;
-      border: 2px solid #d1d5db;
-      border-top-color: #FF6B35;
+      border: 2px solid #D1D5DB;
+      border-top-color: var(--color-primary-500, #FF9800);
       border-radius: 50%;
       animation: spin 0.8s linear infinite;
     }
@@ -1713,7 +1716,7 @@ import { SettingsService } from '../../../../core/services/settings.service';
       align-items: center;
       gap: 0.75rem;
       padding: 0.875rem 1rem;
-      border-radius: 10px;
+      border-radius: 12px;
       margin-bottom: 1.25rem;
     }
 
@@ -1729,13 +1732,13 @@ import { SettingsService } from '../../../../core/services/settings.service';
     }
 
     .alert-error {
-      background: #fef2f2;
+      background: #FFEBEE;
       color: #991b1b;
-      border: 1px solid #fecaca;
+      border: 1px solid #FFCDD2;
     }
 
     .alert-error .alert-icon {
-      background: #dc2626;
+      background: var(--color-terracotta, #C62828);
       color: white;
     }
 
@@ -1746,7 +1749,7 @@ import { SettingsService } from '../../../../core/services/settings.service';
     }
 
     .auth-footer a {
-      color: #FF6B35;
+      color: var(--color-primary-500, #FF9800);
       font-weight: 600;
       text-decoration: none;
     }
@@ -1789,8 +1792,8 @@ import { SettingsService } from '../../../../core/services/settings.service';
       align-items: center;
       justify-content: center;
       gap: 0.25rem;
-      background: #f3f4f6;
-      border: 2px dashed #d1d5db;
+      background: #F5F5F5;
+      border: 2px dashed #D1D5DB;
       border-radius: 50%;
       cursor: pointer;
       color: #9ca3af;
@@ -1798,9 +1801,9 @@ import { SettingsService } from '../../../../core/services/settings.service';
     }
 
     .photo-placeholder:hover {
-      border-color: #FF6B35;
-      color: #FF6B35;
-      background: #fff5f0;
+      border-color: var(--color-primary-500, #FF9800);
+      color: var(--color-primary-500, #FF9800);
+      background: #FFF3E0;
     }
 
     .photo-placeholder span {
@@ -1814,7 +1817,7 @@ import { SettingsService } from '../../../../core/services/settings.service';
       right: 0;
       width: 28px;
       height: 28px;
-      background: #dc2626;
+      background: var(--color-terracotta, #C62828);
       border: 2px solid white;
       border-radius: 50%;
       display: flex;
@@ -1826,7 +1829,7 @@ import { SettingsService } from '../../../../core/services/settings.service';
     }
 
     .photo-remove-btn:hover {
-      background: #b91c1c;
+      background: var(--color-terracotta, #C62828);
       transform: scale(1.1);
     }
 
@@ -1835,9 +1838,9 @@ import { SettingsService } from '../../../../core/services/settings.service';
       align-items: center;
       gap: 0.5rem;
       padding: 0.625rem 1rem;
-      background: #f3f4f6;
-      border: 2px solid #e5e7eb;
-      border-radius: 10px;
+      background: #F5F5F5;
+      border: 2px solid #EEEEEE;
+      border-radius: 12px;
       font-size: 0.875rem;
       font-weight: 500;
       color: #374151;
@@ -1846,9 +1849,9 @@ import { SettingsService } from '../../../../core/services/settings.service';
     }
 
     .btn-upload:hover {
-      border-color: #FF6B35;
-      color: #FF6B35;
-      background: #fff5f0;
+      border-color: var(--color-primary-500, #FF9800);
+      color: var(--color-primary-500, #FF9800);
+      background: #FFF3E0;
     }
 
     /* ID Type Options */
@@ -1864,8 +1867,8 @@ import { SettingsService } from '../../../../core/services/settings.service';
       align-items: center;
       gap: 0.25rem;
       padding: 0.75rem 0.5rem;
-      border: 2px solid #e5e7eb;
-      border-radius: 10px;
+      border: 2px solid #EEEEEE;
+      border-radius: 12px;
       cursor: pointer;
       transition: all 0.2s;
       text-align: center;
@@ -1876,12 +1879,12 @@ import { SettingsService } from '../../../../core/services/settings.service';
     }
 
     .id-type-option:hover {
-      border-color: #FF6B35;
+      border-color: var(--color-primary-500, #FF9800);
     }
 
     .id-type-option.selected {
-      border-color: #FF6B35;
-      background: #fff5f0;
+      border-color: var(--color-primary-500, #FF9800);
+      background: #FFF3E0;
     }
 
     .id-type-icon {
@@ -1927,8 +1930,8 @@ import { SettingsService } from '../../../../core/services/settings.service';
       align-items: center;
       justify-content: center;
       gap: 0.5rem;
-      background: #f9fafb;
-      border: 2px dashed #d1d5db;
+      background: #FAFAFA;
+      border: 2px dashed #D1D5DB;
       border-radius: 12px;
       cursor: pointer;
       color: #9ca3af;
@@ -1936,9 +1939,9 @@ import { SettingsService } from '../../../../core/services/settings.service';
     }
 
     .document-placeholder:hover {
-      border-color: #FF6B35;
-      color: #FF6B35;
-      background: #fff5f0;
+      border-color: var(--color-primary-500, #FF9800);
+      color: var(--color-primary-500, #FF9800);
+      background: #FFF3E0;
     }
 
     .document-placeholder span {
@@ -1952,7 +1955,7 @@ import { SettingsService } from '../../../../core/services/settings.service';
       right: 0.5rem;
       width: 24px;
       height: 24px;
-      background: #dc2626;
+      background: var(--color-terracotta, #C62828);
       border: none;
       border-radius: 50%;
       display: flex;
@@ -1964,7 +1967,7 @@ import { SettingsService } from '../../../../core/services/settings.service';
     }
 
     .document-remove-btn:hover {
-      background: #b91c1c;
+      background: var(--color-terracotta, #C62828);
       transform: scale(1.1);
     }
 
@@ -2013,8 +2016,8 @@ import { SettingsService } from '../../../../core/services/settings.service';
       align-items: center;
       justify-content: center;
       gap: 0.5rem;
-      background: #f9fafb;
-      border: 2px dashed #d1d5db;
+      background: #FAFAFA;
+      border: 2px dashed #D1D5DB;
       border-radius: 12px;
       cursor: pointer;
       color: #9ca3af;
@@ -2022,9 +2025,9 @@ import { SettingsService } from '../../../../core/services/settings.service';
     }
 
     .shop-photo-placeholder:hover {
-      border-color: #FF6B35;
-      color: #FF6B35;
-      background: #fff5f0;
+      border-color: var(--color-primary-500, #FF9800);
+      color: var(--color-primary-500, #FF9800);
+      background: #FFF3E0;
     }
 
     .shop-photo-placeholder span {
@@ -2038,7 +2041,7 @@ import { SettingsService } from '../../../../core/services/settings.service';
       right: 0.5rem;
       width: 24px;
       height: 24px;
-      background: #dc2626;
+      background: var(--color-terracotta, #C62828);
       border: none;
       border-radius: 50%;
       display: flex;
@@ -2050,7 +2053,7 @@ import { SettingsService } from '../../../../core/services/settings.service';
     }
 
     .shop-photo-remove-btn:hover {
-      background: #b91c1c;
+      background: var(--color-terracotta, #C62828);
       transform: scale(1.1);
     }
 
@@ -2105,6 +2108,7 @@ export class RegisterComponent implements OnInit {
   private readonly fb = inject(FormBuilder);
   private readonly locationService = inject(LocationService);
   private readonly settingsService = inject(SettingsService);
+  private readonly logger = inject(LoggerService);
   private readonly destroyRef = inject(DestroyRef);
 
   readonly currentStep = signal(1);
@@ -2265,17 +2269,22 @@ export class RegisterComponent implements OnInit {
     });
   }
 
+  private returnUrl = signal<string | null>(null);
+
   ngOnInit(): void {
     this.settingsService.loadAllSettings().catch(() => {});
     this.loadLocationData();
 
-    // Handle role query parameter (from "Devenez réparateur" CTA)
+    // Handle query parameters (role and returnUrl)
     this.route.queryParams.pipe(
       takeUntilDestroyed(this.destroyRef)
     ).subscribe(params => {
       if (params['role'] === 'repairer') {
         this.registerForm.patchValue({ role: 'repairer' });
         this.isRepairer.set(true);
+      }
+      if (params['returnUrl']) {
+        this.returnUrl.set(params['returnUrl']);
       }
     });
   }
@@ -2408,7 +2417,7 @@ export class RegisterComponent implements OnInit {
   getCurrentLocation(): void {
     if (!navigator.geolocation) {
       this.locationError.set('La géolocalisation n\'est pas supportée par votre navigateur');
-      console.error('Geolocation not supported');
+      this.logger.error('RegisterComponent', 'Geolocation not supported');
       return;
     }
 
@@ -2432,7 +2441,7 @@ export class RegisterComponent implements OnInit {
         this.isGettingLocation.set(false);
       },
       (error) => {
-        console.error('Geolocation error:', error);
+        this.logger.error('RegisterComponent', 'Geolocation error', error);
         this.isGettingLocation.set(false);
         switch (error.code) {
           case error.PERMISSION_DENIED:
@@ -2611,6 +2620,8 @@ export class RegisterComponent implements OnInit {
         queryParams: {
           phone: cleanPhone,
           ...(result.devCode && { devCode: result.devCode }),
+          ...(this.returnUrl() && { returnUrl: this.returnUrl() }),
+          ...(this.isRepairer() && { role: 'repairer' }),
         },
       });
     } catch (err: any) {

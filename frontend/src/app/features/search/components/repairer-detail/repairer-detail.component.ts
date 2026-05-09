@@ -2,12 +2,15 @@ import { Component, inject, signal, OnInit, computed, ChangeDetectionStrategy } 
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
+import { Location } from '@angular/common';
 import { SearchService, Repairer, ServiceType, RepairerReview, Device } from '../../services/search.service';
 import { SearchStore } from '../../stores/search.store';
 import { AuthStore } from '../../../../core/stores/auth.store';
 import { ReviewsService, StepRatingStats, RatingCategory } from '../../../reviews/services/reviews.service';
 import { RequestsService, CreateRequestDto } from '../../../requests/services/requests.service';
 import { UiHeaderComponent } from '../../../../shared/components/ui-header/ui-header.component';
+import { FormatDatePipe } from '../../../../shared/pipes/format-date.pipe';
+import { LoggerService } from '../../../../core/services/logger.service';
 
 interface QualityScore {
   label: string;
@@ -20,7 +23,7 @@ interface QualityScore {
   selector: 'app-repairer-detail',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [CommonModule, RouterLink, FormsModule, UiHeaderComponent],
+  imports: [CommonModule, RouterLink, FormsModule, UiHeaderComponent, FormatDatePipe],
   template: `
     <div class="detail-container">
       @if (isLoading()) {
@@ -33,72 +36,88 @@ interface QualityScore {
         <ui-header
           [title]="repairer()?.repairerProfile?.businessName || getRepairerName()"
           [showBack]="true"
-          backRoute="/search"
+          (onBack)="navigateBack()"
           [showProfile]="true"
         >
           <!-- Share button in header-actions -->
-          <button header-actions class="share-btn" (click)="shareProfile()">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+          <button header-actions class="share-btn" type="button" aria-label="Partager le profil" (click)="shareProfile()">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true">
               <path d="M4 12V20C4 20.5304 4.21071 21.0391 4.58579 21.4142C4.96086 21.7893 5.46957 22 6 22H18C18.5304 22 19.0391 21.7893 19.4142 21.4142C19.7893 21.0391 20 20.5304 20 20V12" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
               <polyline points="16,6 12,2 8,6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
               <line x1="12" y1="2" x2="12" y2="15" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
             </svg>
           </button>
 
-          <!-- Repairer Hero Info inside header -->
-          <div class="repairer-hero">
-            <div class="repairer-avatar">
-              @if (repairer()?.avatarUrl) {
-                <img [src]="repairer()?.avatarUrl" [alt]="getRepairerName()" />
-              } @else {
-                <div class="avatar-placeholder">
-                  {{ getRepairerInitials() }}
-                </div>
-              }
-              @if (repairer()?.repairerProfile?.isVerified) {
-                <span class="verified-badge">✓</span>
-              }
-            </div>
-
-            <div class="badges-row">
-              @if (repairer()?.repairerProfile?.isAvailable) {
-                <span class="badge available">Disponible</span>
-              } @else {
-                <span class="badge unavailable">Indisponible</span>
-              }
-              @if (repairer()?.repairerProfile?.responseTime && repairer()!.repairerProfile.responseTime! < 30) {
-                <span class="badge response">⚡ Réponse rapide</span>
-              }
-              @if (repairer()?.repairerProfile?.isVerified) {
-                <span class="badge verified">✓ Vérifié</span>
-              }
-            </div>
-
-            <div class="repairer-rating">
-              <div class="rating-stars">
-                @for (star of [1, 2, 3, 4, 5]; track star) {
-                  <span class="star" [class.filled]="star <= (repairer()?.repairerProfile?.rating || 0)">★</span>
+          <!-- Repairer Hero Info inside header - Balanced layout -->
+          <div class="repairer-hero-compact">
+            <div class="hero-main">
+              <!-- Avatar à gauche -->
+              <div class="repairer-avatar">
+                @if (repairer()?.avatarUrl) {
+                  <img [src]="repairer()?.avatarUrl" [alt]="getRepairerName()" />
+                } @else {
+                  <div class="avatar-placeholder">
+                    {{ getRepairerInitials() }}
+                  </div>
+                }
+                @if (repairer()?.repairerProfile?.isVerified) {
+                  <span class="verified-badge">✓</span>
                 }
               </div>
-              <span class="rating-value">{{ (repairer()?.repairerProfile?.rating || 0).toFixed(1) }}</span>
-              <span class="review-count">({{ repairer()?.repairerProfile?.reviewCount || 0 }} avis)</span>
+
+              <!-- Rating au centre -->
+              <div class="hero-center">
+                <div class="hero-rating">
+                  <span class="rating-value-big">{{ (repairer()?.repairerProfile?.rating || 0).toFixed(1) }}</span>
+                  <div class="rating-stars">
+                    @for (star of [1, 2, 3, 4, 5]; track star) {
+                      <span class="star" [class.filled]="star <= (repairer()?.repairerProfile?.rating || 0)">★</span>
+                    }
+                  </div>
+                  <span class="review-count">{{ repairer()?.repairerProfile?.reviewCount || 0 }} avis</span>
+                </div>
+              </div>
+
+              <!-- Status à droite -->
+              <div class="hero-right">
+                @if (repairer()?.repairerProfile?.isAvailable) {
+                  <span class="status-badge available">
+                    <span class="status-dot"></span>
+                    Disponible
+                  </span>
+                } @else {
+                  <span class="status-badge unavailable">
+                    <span class="status-dot"></span>
+                    Indisponible
+                  </span>
+                }
+              </div>
             </div>
 
-            <div class="stats-row">
-              <div class="stat">
+            <!-- Stats en bas sur toute la largeur -->
+            <div class="hero-stats-row">
+              <div class="stat-box">
                 <span class="stat-value">{{ repairer()?.repairerProfile?.completedRepairs ?? 0 }}</span>
                 <span class="stat-label">Réparations</span>
               </div>
-              <div class="stat-divider"></div>
-              <div class="stat">
-                <span class="stat-value">{{ repairer()?.repairerProfile?.yearsOfExperience ?? 0 }} ans</span>
+              <div class="stat-box">
+                @if ((repairer()?.repairerProfile?.yearsOfExperience ?? 0) > 0) {
+                  <span class="stat-value">{{ repairer()?.repairerProfile?.yearsOfExperience }} ans</span>
+                } @else {
+                  <span class="stat-value">Nouveau</span>
+                }
                 <span class="stat-label">Expérience</span>
               </div>
-              <div class="stat-divider"></div>
-              <div class="stat">
-                <span class="stat-value">{{ repairer()?.repairerProfile?.acceptanceRate ?? 0 }}%</span>
+              <div class="stat-box">
+                <span class="stat-value">{{ (+(repairer()?.repairerProfile?.acceptanceRate ?? 0)) | number:'1.0-0' }}%</span>
                 <span class="stat-label">Acceptation</span>
               </div>
+              @if (repairer()?.repairerProfile?.responseTime && repairer()!.repairerProfile.responseTime! < 30) {
+                <div class="stat-box highlight">
+                  <span class="stat-value">⚡ {{ repairer()?.repairerProfile?.responseTime }} min</span>
+                  <span class="stat-label">Réponse</span>
+                </div>
+              }
             </div>
           </div>
         </ui-header>
@@ -106,12 +125,46 @@ interface QualityScore {
         <!-- Content -->
         <div class="detail-content">
           <!-- 1. Repair Request Form Section (FIRST) -->
-          <section class="section request-form-section">
+          <section class="section request-form-section" id="request-form">
             <div class="section-header">
               <h2>🔧 Demander une réparation</h2>
             </div>
 
-            @if (!showConfirmation()) {
+            @if (!repairer()?.repairerProfile?.isAvailable) {
+              <!-- Repairer unavailable message -->
+              <div class="unavailable-message">
+                <span class="unavailable-icon">🚫</span>
+                <h3>Réparateur indisponible</h3>
+                <p>Ce réparateur n'est pas disponible actuellement. Vous pouvez le contacter ou revenir plus tard.</p>
+                <button class="btn btn-secondary" (click)="contactRepairer()">
+                  <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                    <path d="M18.3334 14.1V16.6C18.3343 16.8321 18.2867 17.0618 18.1937 17.2745C18.1008 17.4871 17.9644 17.678 17.7934 17.8349C17.6224 17.9918 17.4205 18.1113 17.2006 18.1856C16.9808 18.2599 16.7478 18.2876 16.5167 18.2667C13.9522 17.9881 11.489 17.1118 9.32506 15.7083C7.31151 14.4289 5.60443 12.7218 4.32506 10.7083C2.91673 8.53438 2.04007 6.05923 1.76673 3.48334C1.7459 3.25293 1.77336 3.02068 1.84714 2.80139C1.92092 2.58209 2.03963 2.38063 2.19562 2.20983C2.35162 2.03902 2.54145 1.90258 2.75314 1.80929C2.96483 1.716 3.19374 1.66782 3.42506 1.66801H5.92506C6.32949 1.66372 6.72148 1.80619 7.02812 2.06967C7.33476 2.33316 7.53505 2.69957 7.59173 3.10001C7.69721 3.89998 7.89286 4.68564 8.17506 5.44168C8.28723 5.7399 8.31137 6.06414 8.24495 6.37576C8.17852 6.68738 8.02421 6.97348 7.80006 7.20001L6.74173 8.25834C7.92795 10.3446 9.65549 12.0721 11.7417 13.2583L12.8001 12.2C13.0266 11.9759 13.3127 11.8215 13.6243 11.7551C13.936 11.6887 14.2602 11.7128 14.5584 11.825C15.3145 12.1072 16.1001 12.3029 16.9001 12.4083C17.3049 12.4656 17.6745 12.6695 17.9388 12.9813C18.203 13.2932 18.3436 13.6914 18.3334 14.1Z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                  </svg>
+                  Contacter le réparateur
+                </button>
+              </div>
+            } @else if (!authStore.isAuthenticated()) {
+              <!-- Login required message -->
+              <div class="login-required-message">
+                <span class="login-icon">🔐</span>
+                <h3>Connexion requise</h3>
+                <p>Connectez-vous pour envoyer une demande de réparation à ce réparateur.</p>
+                <div class="login-actions">
+                  <button class="btn btn-primary" (click)="goToLogin()">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+                      <path d="M15 3H19C19.5304 3 20.0391 3.21071 20.4142 3.58579C20.7893 3.96086 21 4.46957 21 5V19C21 19.5304 20.7893 20.0391 20.4142 20.4142C20.0391 20.7893 19.5304 21 19 21H15" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                      <polyline points="10,17 15,12 10,7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                      <line x1="15" y1="12" x2="3" y2="12" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                    Se connecter
+                  </button>
+                  <button class="btn btn-secondary" (click)="goToRegister()">
+                    Créer un compte
+                  </button>
+                </div>
+                <p class="login-hint">Pas encore de compte ? L'inscription est gratuite et rapide.</p>
+              </div>
+            } @else if (!showConfirmation()) {
               <!-- Step 1: Device Selection -->
               <div class="search-step" [class.completed]="currentStep() > 1">
                 <div class="step-header">
@@ -450,8 +503,13 @@ interface QualityScore {
               <h2>Photos de l'atelier</h2>
               <div class="gallery-scroll">
                 @for (photo of galleryPhotos(); track photo; let i = $index) {
-                  <button class="gallery-item" (click)="openGallery(i)">
-                    <img [src]="photo" alt="Photo atelier" />
+                  <button
+                    class="gallery-item"
+                    type="button"
+                    [attr.aria-label]="'Ouvrir la photo ' + (i + 1) + ' sur ' + galleryPhotos().length"
+                    (click)="openGallery(i)"
+                  >
+                    <img [src]="photo" [alt]="'Photo atelier ' + (i + 1)" />
                   </button>
                 }
               </div>
@@ -467,10 +525,10 @@ interface QualityScore {
                   <span class="icon">📍</span>
                   <span>{{ repairer()?.repairerProfile?.address }}</span>
                 </div>
-                @if (repairer()?.repairerProfile?.serviceRadius) {
+                @if ((+(repairer()?.repairerProfile?.serviceRadius ?? 0)) > 0) {
                   <div class="radius-info">
                     <span class="icon">🎯</span>
-                    <span>Intervient dans un rayon de {{ repairer()?.repairerProfile?.serviceRadius }} km</span>
+                    <span>Intervient dans un rayon de {{ (+(repairer()?.repairerProfile?.serviceRadius ?? 0)) | number:'1.0-0' }} km</span>
                   </div>
                 }
                 @if (repairer()?.distance !== undefined) {
@@ -632,7 +690,7 @@ interface QualityScore {
                       @if (review.comment) {
                         <p class="review-comment">{{ review.comment }}</p>
                       }
-                      <span class="review-date">{{ formatDate(review.createdAt) }}</span>
+                      <span class="review-date">{{ review.createdAt | formatDate }}</span>
                     </div>
                   }
                 </div>
@@ -652,10 +710,15 @@ interface QualityScore {
         <!-- Footer CTA -->
         <footer class="detail-footer">
           <div class="footer-content">
-            @if (selectedService()) {
+            @if (formSelectedService()) {
               <div class="selected-service-info">
-                <span class="service-label">{{ selectedService()?.name }}</span>
-                <span class="service-price">{{ selectedService()?.basePrice | number }} FCFA</span>
+                <span class="service-label">{{ formSelectedService()?.name }}</span>
+                <span class="service-price">{{ getTotalPrice() | number }} FCFA</span>
+              </div>
+            } @else if (selectedDevice()) {
+              <div class="selected-service-info">
+                <span class="service-label">{{ selectedDevice()?.brand }} {{ selectedDevice()?.model }}</span>
+                <span class="service-hint">Sélectionnez un service</span>
               </div>
             }
 
@@ -668,13 +731,19 @@ interface QualityScore {
               </button>
               <button
                 class="btn btn-primary"
-                (click)="requestRepair()"
+                (click)="authStore.isAuthenticated() ? scrollToRequestForm() : goToLogin()"
                 [disabled]="!repairer()?.repairerProfile?.isAvailable"
               >
                 @if (!repairer()?.repairerProfile?.isAvailable) {
                   Indisponible
+                } @else if (!authStore.isAuthenticated()) {
+                  Se connecter
+                } @else if (showConfirmation()) {
+                  Voir le récapitulatif
+                } @else if (currentStep() > 1) {
+                  Continuer la demande
                 } @else {
-                  Demander un devis
+                  Faire une demande
                 }
               </button>
             </div>
@@ -702,7 +771,7 @@ interface QualityScore {
   styles: [`
     .detail-container {
       min-height: 100vh;
-      background: #f9fafb;
+      background: #FAFAFA;
       padding-bottom: 200px; /* Space for footer + bottom nav */
     }
 
@@ -718,8 +787,8 @@ interface QualityScore {
     .spinner {
       width: 40px;
       height: 40px;
-      border: 3px solid #e5e7eb;
-      border-top-color: #2563eb;
+      border: 3px solid #EEEEEE;
+      border-top-color: var(--color-primary-500, #FF9800);
       border-radius: 50%;
       animation: spin 1s linear infinite;
     }
@@ -748,26 +817,32 @@ interface QualityScore {
       transform: scale(1.05);
     }
 
-    /* Repairer Hero inside ui-header */
-    .repairer-hero {
-      text-align: center;
-      padding-top: 1rem;
+    /* Repairer Hero Compact - Balanced layout inside ui-header */
+    .repairer-hero-compact {
+      padding: 0.5rem 0;
       color: white;
+    }
+
+    .hero-main {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 0.75rem;
+      margin-bottom: 0.75rem;
     }
 
     .repairer-avatar {
       position: relative;
-      display: inline-block;
-      margin-bottom: 1rem;
+      flex-shrink: 0;
     }
 
     .repairer-avatar img,
     .avatar-placeholder {
-      width: 100px;
-      height: 100px;
+      width: 64px;
+      height: 64px;
       border-radius: 50%;
       object-fit: cover;
-      border: 4px solid rgba(255, 255, 255, 0.3);
+      border: 3px solid rgba(255, 255, 255, 0.3);
     }
 
     .avatar-placeholder {
@@ -776,140 +851,151 @@ interface QualityScore {
       align-items: center;
       justify-content: center;
       font-weight: 600;
-      font-size: 2rem;
+      font-size: 1.25rem;
     }
 
     .verified-badge {
       position: absolute;
-      bottom: 4px;
-      right: 4px;
-      width: 32px;
-      height: 32px;
+      bottom: -2px;
+      right: -2px;
+      width: 20px;
+      height: 20px;
       background: #1565C0;
       color: white;
       border-radius: 50%;
       display: flex;
       align-items: center;
       justify-content: center;
-      font-size: 1rem;
+      font-size: 0.625rem;
       font-weight: 700;
-      border: 4px solid white;
-      box-shadow: 0 2px 8px rgba(21, 101, 192, 0.4);
+      border: 2px solid white;
     }
 
-    .repairer-hero h1 {
-      font-size: 1.5rem;
-      font-weight: 700;
-      margin-bottom: 0.75rem;
+    /* Centre - Rating */
+    .hero-center {
+      flex: 1;
+      text-align: center;
     }
 
-    .badges-row {
+    .hero-rating {
       display: flex;
-      justify-content: center;
-      flex-wrap: wrap;
-      gap: 0.5rem;
-      margin-bottom: 0.75rem;
-    }
-
-    .badge {
-      padding: 0.25rem 0.625rem;
-      border-radius: 20px;
-      font-size: 0.75rem;
-      font-weight: 500;
-    }
-
-    .badge.available {
-      background: rgba(76, 175, 80, 0.25);
-      color: #E8F5E9;
-      font-weight: 600;
-      border: 1px solid rgba(76, 175, 80, 0.3);
-    }
-
-    .badge.unavailable {
-      background: rgba(239, 68, 68, 0.25);
-      color: #FFEBEE;
-      font-weight: 600;
-      border: 1px solid rgba(239, 68, 68, 0.3);
-    }
-
-    .badge.response {
-      background: linear-gradient(135deg, rgba(249, 168, 37, 0.3), rgba(255, 183, 77, 0.3));
-      color: white;
-      font-weight: 600;
-      border: 1px solid rgba(249, 168, 37, 0.4);
-    }
-
-    .badge.verified {
-      background: rgba(21, 101, 192, 0.25);
-      color: #E3F2FD;
-      font-weight: 600;
-      border: 1px solid rgba(21, 101, 192, 0.3);
-    }
-
-    .repairer-rating {
-      display: flex;
+      flex-direction: column;
       align-items: center;
-      justify-content: center;
-      gap: 0.5rem;
-      margin-bottom: 1rem;
+      gap: 0.125rem;
+    }
+
+    .rating-value-big {
+      font-size: 1.75rem;
+      font-weight: 800;
+      line-height: 1;
     }
 
     .rating-stars {
       display: flex;
+      gap: 2px;
     }
 
     .star {
-      font-size: 1.125rem;
+      font-size: 0.875rem;
       color: rgba(255, 255, 255, 0.3);
     }
 
     .star.filled {
-      color: #fbbf24;
-    }
-
-    .rating-value {
-      font-weight: 700;
-      font-size: 1.125rem;
+      color: var(--color-mustard, #FFC107);
     }
 
     .review-count {
-      opacity: 0.8;
+      font-size: 0.6875rem;
+      opacity: 0.75;
     }
 
-    .stats-row {
+    /* Droite - Status */
+    .hero-right {
+      flex-shrink: 0;
+    }
+
+    .status-badge {
       display: flex;
-      justify-content: center;
       align-items: center;
-      gap: 1rem;
-      padding: 1rem;
+      gap: 0.375rem;
+      padding: 0.375rem 0.75rem;
+      border-radius: 20px;
+      font-size: 0.75rem;
+      font-weight: 600;
+    }
+
+    .status-badge.available {
+      background: rgba(76, 175, 80, 0.25);
+      border: 1px solid rgba(76, 175, 80, 0.4);
+    }
+
+    .status-badge.unavailable {
+      background: rgba(244, 67, 54, 0.25);
+      border: 1px solid rgba(244, 67, 54, 0.4);
+    }
+
+    .status-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      animation: pulse 2s infinite;
+    }
+
+    .status-badge.available .status-dot {
+      background: #4CAF50;
+    }
+
+    .status-badge.unavailable .status-dot {
+      background: var(--color-error, #F44336);
+      animation: none;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.5; }
+    }
+
+    /* Stats Row - full width */
+    .hero-stats-row {
+      display: flex;
+      justify-content: space-around;
       background: rgba(255, 255, 255, 0.1);
       border-radius: 12px;
+      padding: 0.5rem 0.25rem;
     }
 
-    .stat {
+    .stat-box {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
       text-align: center;
+      padding: 0 0.5rem;
     }
 
-    .stat-value {
-      display: block;
-      font-size: 1.25rem;
+    .stat-box .stat-value {
+      font-size: 0.9375rem;
       font-weight: 700;
+      line-height: 1.2;
     }
 
-    .stat-label {
-      font-size: 0.75rem;
-      opacity: 0.8;
+    .stat-box .stat-label {
+      font-size: 0.625rem;
+      opacity: 0.75;
+      text-transform: uppercase;
+      letter-spacing: 0.3px;
     }
 
-    .stat-divider {
-      width: 1px;
-      height: 30px;
-      background: rgba(255, 255, 255, 0.2);
+    .stat-box.highlight {
+      color: var(--color-mustard, #FFC107);
+    }
+
+    .stat-box.highlight .stat-label {
+      opacity: 0.9;
     }
 
     .detail-content {
       padding: 1rem;
-      padding-top: 420px; /* Space for fixed ui-header with repairer hero */
+      padding-top: 260px; /* Space for fixed ui-header with balanced repairer hero */
     }
 
     .section {
@@ -978,7 +1064,7 @@ interface QualityScore {
     .rating-count-badge {
       font-size: 0.75rem;
       color: #6b7280;
-      background: #f3f4f6;
+      background: #F5F5F5;
       padding: 0.25rem 0.5rem;
       border-radius: 12px;
     }
@@ -988,7 +1074,7 @@ interface QualityScore {
       align-items: center;
       gap: 1rem;
       padding: 1rem;
-      background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%);
+      background: linear-gradient(135deg, #E8F5E9 0%, #dcfce7 100%);
       border-radius: 12px;
       margin-bottom: 1rem;
       border: 1px solid #bbf7d0;
@@ -1050,7 +1136,7 @@ interface QualityScore {
 
     .quality-bar {
       height: 10px;
-      background: #e5e7eb;
+      background: #EEEEEE;
       border-radius: 5px;
       overflow: hidden;
       box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.1);
@@ -1094,14 +1180,14 @@ interface QualityScore {
     }
 
     .specialty-chip {
-      background: linear-gradient(135deg, #FFF4E6 0%, #FFE8CC 100%);
-      color: #FF6B35;
+      background: linear-gradient(135deg, #FFF3E0 0%, #FFE8CC 100%);
+      color: var(--color-primary-500, #FF9800);
       padding: 0.5rem 1rem;
       border-radius: 20px;
       font-size: 0.875rem;
       font-weight: 600;
-      border: 1px solid rgba(255, 107, 53, 0.2);
-      box-shadow: 0 2px 4px rgba(255, 107, 53, 0.1);
+      border: 1px solid rgba(255, 152, 0, 0.2);
+      box-shadow: 0 2px 4px rgba(255, 152, 0, 0.1);
     }
 
     /* Location */
@@ -1131,7 +1217,7 @@ interface QualityScore {
       width: 100%;
       height: 120px;
       background: linear-gradient(135deg, #e0f2fe 0%, #bae6fd 100%);
-      border: 2px solid #0ea5e9;
+      border: 2px solid var(--color-ocean, #1565C0);
       border-radius: 12px;
       color: #0369a1;
       cursor: pointer;
@@ -1177,22 +1263,22 @@ interface QualityScore {
       display: flex;
       align-items: center;
       padding: 1rem;
-      border: 2px solid #e5e7eb;
+      border: 2px solid #EEEEEE;
       border-radius: 12px;
       cursor: pointer;
       transition: all 0.2s;
     }
 
     .service-item:hover {
-      border-color: #FF6B35;
+      border-color: var(--color-primary-500, #FF9800);
       transform: translateX(4px);
-      box-shadow: 0 2px 8px rgba(255, 107, 53, 0.15);
+      box-shadow: 0 2px 8px rgba(255, 152, 0, 0.15);
     }
 
     .service-item.selected {
-      border-color: #FF6B35;
-      background: linear-gradient(135deg, #FFF4E6 0%, #FFE8CC 100%);
-      box-shadow: 0 4px 12px rgba(255, 107, 53, 0.2);
+      border-color: var(--color-primary-500, #FF9800);
+      background: linear-gradient(135deg, #FFF3E0 0%, #FFE8CC 100%);
+      box-shadow: 0 4px 12px rgba(255, 152, 0, 0.2);
     }
 
     .service-info {
@@ -1259,7 +1345,7 @@ interface QualityScore {
 
     .review-item {
       padding-bottom: 1rem;
-      border-bottom: 1px solid #e5e7eb;
+      border-bottom: 1px solid #EEEEEE;
     }
 
     .review-item:last-child {
@@ -1283,7 +1369,7 @@ interface QualityScore {
     .reviewer-avatar {
       width: 32px;
       height: 32px;
-      background: #e5e7eb;
+      background: #EEEEEE;
       color: #6b7280;
       border-radius: 50%;
       display: flex;
@@ -1304,11 +1390,11 @@ interface QualityScore {
 
     .star-small {
       font-size: 0.875rem;
-      color: #e5e7eb;
+      color: #EEEEEE;
     }
 
     .star-small.filled {
-      color: #fbbf24;
+      color: var(--color-mustard, #FFC107);
     }
 
     .review-comment {
@@ -1326,19 +1412,19 @@ interface QualityScore {
     .btn-show-more {
       background: none;
       border: none;
-      color: #FF6B35;
+      color: var(--color-primary-500, #FF9800);
       font-weight: 600;
       cursor: pointer;
       padding: 0.75rem;
       width: 100%;
       margin-top: 0.5rem;
       transition: all 0.2s;
-      border-radius: 8px;
+      border-radius: 12px;
     }
 
     .btn-show-more:hover {
-      background: #FFF4E6;
-      color: #E85A24;
+      background: #FFF3E0;
+      color: var(--color-primary-900, #E65100);
     }
 
     /* Footer */
@@ -1350,7 +1436,7 @@ interface QualityScore {
       background: white;
       padding: 1rem;
       box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.15);
-      border-top: 1px solid #e5e7eb;
+      border-top: 1px solid #EEEEEE;
       z-index: 50;
     }
 
@@ -1365,9 +1451,9 @@ interface QualityScore {
       align-items: center;
       margin-bottom: 0.75rem;
       padding: 0.75rem 1rem;
-      background: linear-gradient(135deg, #FFF4E6 0%, #FFE8CC 100%);
-      border-radius: 10px;
-      border: 1px solid rgba(255, 107, 53, 0.2);
+      background: linear-gradient(135deg, #FFF3E0 0%, #FFE8CC 100%);
+      border-radius: 12px;
+      border: 1px solid rgba(255, 152, 0, 0.2);
     }
 
     .service-label {
@@ -1378,8 +1464,14 @@ interface QualityScore {
 
     .selected-service-info .service-price {
       font-weight: 700;
-      color: #FF6B35;
+      color: var(--color-primary-500, #FF9800);
       font-size: 1rem;
+    }
+
+    .selected-service-info .service-hint {
+      font-size: 0.75rem;
+      color: #6b7280;
+      font-style: italic;
     }
 
     .footer-actions {
@@ -1404,27 +1496,27 @@ interface QualityScore {
     }
 
     .btn-primary {
-      background: linear-gradient(135deg, #FF6B35 0%, #FF9800 100%);
+      background: linear-gradient(135deg, var(--color-primary-500, #FF9800) 0%, #FF9800 100%);
       color: white;
-      box-shadow: 0 4px 16px rgba(255, 107, 53, 0.35);
+      box-shadow: 0 4px 16px rgba(255, 152, 0, 0.35);
       font-weight: 700;
       font-size: 1rem;
       letter-spacing: 0.3px;
     }
 
     .btn-primary:hover:not(:disabled) {
-      background: linear-gradient(135deg, #E85A24 0%, #F57C00 100%);
+      background: linear-gradient(135deg, var(--color-primary-900, #E65100) 0%, #F57C00 100%);
       transform: translateY(-2px);
-      box-shadow: 0 6px 20px rgba(255, 107, 53, 0.45);
+      box-shadow: 0 6px 20px rgba(255, 152, 0, 0.45);
     }
 
     .btn-primary:active:not(:disabled) {
       transform: translateY(0);
-      box-shadow: 0 2px 8px rgba(255, 107, 53, 0.3);
+      box-shadow: 0 2px 8px rgba(255, 152, 0, 0.3);
     }
 
     .btn-primary:disabled {
-      background: #d1d5db;
+      background: #D1D5DB;
       color: #9ca3af;
       cursor: not-allowed;
       transform: none;
@@ -1433,15 +1525,15 @@ interface QualityScore {
 
     .btn-secondary {
       background: white;
-      color: #FF6B35;
-      border: 2px solid #FF6B35;
+      color: var(--color-primary-500, #FF9800);
+      border: 2px solid var(--color-primary-500, #FF9800);
       font-weight: 600;
     }
 
     .btn-secondary:hover {
-      background: linear-gradient(135deg, #FFF4E6 0%, #FFE8CC 100%);
+      background: linear-gradient(135deg, #FFF3E0 0%, #FFE8CC 100%);
       transform: translateY(-2px);
-      box-shadow: 0 4px 12px rgba(255, 107, 53, 0.15);
+      box-shadow: 0 4px 12px rgba(255, 152, 0, 0.15);
     }
 
     .btn-secondary svg {
@@ -1508,18 +1600,93 @@ interface QualityScore {
     /* Request Form Section */
     .request-form-section {
       background: linear-gradient(135deg, #FFF9F5 0%, #FFF4ED 100%);
-      border: 2px solid rgba(255, 107, 53, 0.15);
+      border: 2px solid rgba(255, 152, 0, 0.15);
     }
 
     .request-form-section h2 {
-      color: #FF6B35;
+      color: var(--color-primary-500, #FF9800);
+    }
+
+    /* Unavailable Message */
+    .unavailable-message {
+      text-align: center;
+      padding: 2rem 1rem;
+    }
+
+    .unavailable-icon {
+      font-size: 3rem;
+      display: block;
+      margin-bottom: 1rem;
+    }
+
+    .unavailable-message h3 {
+      font-size: 1.125rem;
+      font-weight: 600;
+      color: var(--color-error, #F44336);
+      margin: 0 0 0.5rem;
+    }
+
+    .unavailable-message p {
+      font-size: 0.875rem;
+      color: #6b7280;
+      margin: 0 0 1.5rem;
+      line-height: 1.5;
+    }
+
+    .unavailable-message .btn {
+      display: inline-flex;
+    }
+
+    /* Login Required Message */
+    .login-required-message {
+      text-align: center;
+      padding: 2rem 1rem;
+    }
+
+    .login-icon {
+      font-size: 3rem;
+      display: block;
+      margin-bottom: 1rem;
+    }
+
+    .login-required-message h3 {
+      font-size: 1.125rem;
+      font-weight: 600;
+      color: #1f2937;
+      margin: 0 0 0.5rem;
+    }
+
+    .login-required-message p {
+      font-size: 0.875rem;
+      color: #6b7280;
+      margin: 0 0 1.5rem;
+      line-height: 1.5;
+    }
+
+    .login-actions {
+      display: flex;
+      gap: 0.75rem;
+      justify-content: center;
+      margin-bottom: 1rem;
+    }
+
+    .login-actions .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .login-hint {
+      font-size: 0.75rem;
+      color: #9ca3af;
+      margin: 0;
     }
 
     /* Search Step - matching /search page */
     .search-step {
       margin-bottom: 1.5rem;
       padding-bottom: 1.5rem;
-      border-bottom: 1px solid #f3f4f6;
+      border-bottom: 1px solid #F5F5F5;
     }
 
     .search-step:last-of-type {
@@ -1532,7 +1699,7 @@ interface QualityScore {
     }
 
     .search-step.completed .step-indicator {
-      background: #10b981;
+      background: var(--color-secondary, #4CAF50);
     }
 
     .step-header {
@@ -1552,7 +1719,7 @@ interface QualityScore {
     .step-indicator {
       width: 28px;
       height: 28px;
-      background: #e5e7eb;
+      background: #EEEEEE;
       color: #6b7280;
       border-radius: 50%;
       display: flex;
@@ -1564,7 +1731,7 @@ interface QualityScore {
     }
 
     .step-indicator.active {
-      background: #FF6B35;
+      background: var(--color-primary-500, #FF9800);
       color: white;
     }
 
@@ -1585,22 +1752,22 @@ interface QualityScore {
       align-items: center;
       gap: 0.375rem;
       padding: 1rem 0.5rem;
-      background: #f9fafb;
-      border: 2px solid #e5e7eb;
+      background: #FAFAFA;
+      border: 2px solid #EEEEEE;
       border-radius: 12px;
       cursor: pointer;
       transition: all 0.2s;
     }
 
     .category-btn:hover:not(:disabled) {
-      border-color: #FF6B35;
-      background: #FFF4E6;
+      border-color: var(--color-primary-500, #FF9800);
+      background: #FFF3E0;
       transform: translateY(-2px);
     }
 
     .category-btn.active {
-      background: linear-gradient(135deg, #FF6B35 0%, #FF9800 100%);
-      border-color: #FF6B35;
+      background: linear-gradient(135deg, var(--color-primary-500, #FF9800) 0%, #FF9800 100%);
+      border-color: var(--color-primary-500, #FF9800);
       color: white;
     }
 
@@ -1648,8 +1815,8 @@ interface QualityScore {
       align-items: center;
       gap: 0.375rem;
       padding: 0.5rem 0.75rem;
-      background: #f9fafb;
-      border: 1px solid #e5e7eb;
+      background: #FAFAFA;
+      border: 1px solid #EEEEEE;
       border-radius: 20px;
       cursor: pointer;
       transition: all 0.2s;
@@ -1658,14 +1825,14 @@ interface QualityScore {
     }
 
     .brand-btn:hover {
-      border-color: #FF6B35;
+      border-color: var(--color-primary-500, #FF9800);
       transform: translateY(-1px);
     }
 
     .brand-btn.active {
-      background: #FFF4E6;
-      border-color: #FF6B35;
-      color: #FF6B35;
+      background: #FFF3E0;
+      border-color: var(--color-primary-500, #FF9800);
+      color: var(--color-primary-500, #FF9800);
       font-weight: 600;
     }
 
@@ -1689,22 +1856,22 @@ interface QualityScore {
       align-items: center;
       justify-content: space-between;
       padding: 0.75rem 1rem;
-      background: #f9fafb;
-      border: 1px solid #e5e7eb;
-      border-radius: 10px;
+      background: #FAFAFA;
+      border: 1px solid #EEEEEE;
+      border-radius: 12px;
       cursor: pointer;
       transition: all 0.2s;
       text-align: left;
     }
 
     .device-btn:hover {
-      border-color: #FF6B35;
+      border-color: var(--color-primary-500, #FF9800);
       transform: translateX(4px);
     }
 
     .device-btn.active {
-      background: #FFF4E6;
-      border-color: #FF6B35;
+      background: #FFF3E0;
+      border-color: var(--color-primary-500, #FF9800);
     }
 
     .device-name {
@@ -1730,8 +1897,8 @@ interface QualityScore {
       align-items: center;
       gap: 0.75rem;
       padding: 0.875rem 1rem;
-      background: #f9fafb;
-      border: 2px solid #e5e7eb;
+      background: #FAFAFA;
+      border: 2px solid #EEEEEE;
       border-radius: 12px;
       cursor: pointer;
       transition: all 0.2s;
@@ -1739,13 +1906,13 @@ interface QualityScore {
     }
 
     .problem-btn:hover {
-      border-color: #FF6B35;
+      border-color: var(--color-primary-500, #FF9800);
       transform: translateX(4px);
     }
 
     .problem-btn.active {
-      background: linear-gradient(135deg, #FFF4E6 0%, #FFE8CC 100%);
-      border-color: #FF6B35;
+      background: linear-gradient(135deg, #FFF3E0 0%, #FFE8CC 100%);
+      border-color: var(--color-primary-500, #FF9800);
       border-width: 2px;
     }
 
@@ -1785,8 +1952,8 @@ interface QualityScore {
     .other-problem-input textarea {
       width: 100%;
       padding: 0.75rem 1rem;
-      border: 1px solid #d1d5db;
-      border-radius: 10px;
+      border: 1px solid #D1D5DB;
+      border-radius: 12px;
       font-size: 1rem;
       resize: vertical;
       font-family: inherit;
@@ -1794,8 +1961,8 @@ interface QualityScore {
 
     .other-problem-input textarea:focus {
       outline: none;
-      border-color: #FF6B35;
-      box-shadow: 0 0 0 3px rgba(255, 107, 53, 0.1);
+      border-color: var(--color-primary-500, #FF9800);
+      box-shadow: 0 0 0 3px rgba(255, 152, 0, 0.1);
     }
 
     /* Service Mode Grid */
@@ -1811,22 +1978,22 @@ interface QualityScore {
       align-items: center;
       text-align: center;
       padding: 1.25rem 0.75rem;
-      background: #f9fafb;
-      border: 2px solid #e5e7eb;
+      background: #FAFAFA;
+      border: 2px solid #EEEEEE;
       border-radius: 16px;
       cursor: pointer;
       transition: all 0.2s;
     }
 
     .service-mode-btn:hover {
-      border-color: #FF6B35;
+      border-color: var(--color-primary-500, #FF9800);
       transform: translateY(-4px);
-      box-shadow: 0 4px 12px rgba(255, 107, 53, 0.15);
+      box-shadow: 0 4px 12px rgba(255, 152, 0, 0.15);
     }
 
     .service-mode-btn.active {
-      background: linear-gradient(135deg, #FF6B35 0%, #FF9800 100%);
-      border-color: #FF6B35;
+      background: linear-gradient(135deg, var(--color-primary-500, #FF9800) 0%, #FF9800 100%);
+      border-color: var(--color-primary-500, #FF9800);
       color: white;
     }
 
@@ -1836,8 +2003,8 @@ interface QualityScore {
     }
 
     .service-mode-btn.express-mode.active {
-      background: linear-gradient(135deg, #f59e0b 0%, #fbbf24 100%);
-      border-color: #f59e0b;
+      background: linear-gradient(135deg, var(--color-mustard, #FFC107) 0%, var(--color-mustard, #FFC107) 100%);
+      border-color: var(--color-mustard, #FFC107);
     }
 
     .mode-icon {
@@ -1868,7 +2035,7 @@ interface QualityScore {
       align-items: flex-start;
       gap: 0.75rem;
       padding: 1rem;
-      background: linear-gradient(135deg, #FFF4E6 0%, #FFE8CC 100%);
+      background: linear-gradient(135deg, #FFF3E0 0%, #FFE8CC 100%);
       border-left: 4px solid #F9A825;
       border-radius: 12px;
       margin-top: 1rem;
@@ -1907,7 +2074,7 @@ interface QualityScore {
       align-items: center;
       gap: 0.75rem;
       padding: 0.875rem 1rem;
-      background: #f0fdf4;
+      background: #E8F5E9;
       border-radius: 12px;
       cursor: pointer;
       transition: all 0.2s;
@@ -1930,14 +2097,14 @@ interface QualityScore {
     .btn-text {
       background: none;
       border: none;
-      color: #2563eb;
+      color: var(--color-primary-500, #FF9800);
       font-weight: 500;
       cursor: pointer;
       padding: 0.5rem;
     }
 
     .btn-text:hover {
-      color: #1d4ed8;
+      color: var(--color-primary-900, #E65100);
     }
 
     /* Form Actions */
@@ -2009,7 +2176,7 @@ interface QualityScore {
       justify-content: space-between;
       align-items: flex-start;
       padding: 0.75rem 0;
-      border-bottom: 1px solid #f3f4f6;
+      border-bottom: 1px solid #F5F5F5;
     }
 
     .recap-item:last-child {
@@ -2033,7 +2200,7 @@ interface QualityScore {
     }
 
     .recap-value.express {
-      color: #f59e0b;
+      color: var(--color-mustard, #FFC107);
     }
 
     .recap-item.description .recap-value {
@@ -2058,12 +2225,12 @@ interface QualityScore {
     }
 
     .price-row.supplement {
-      color: #f59e0b;
+      color: var(--color-mustard, #FFC107);
       font-size: 0.875rem;
     }
 
     .price-row.total {
-      border-top: 2px solid #e5e7eb;
+      border-top: 2px solid #EEEEEE;
       margin-top: 0.5rem;
       padding-top: 0.75rem;
       font-weight: 700;
@@ -2075,7 +2242,7 @@ interface QualityScore {
     }
 
     .price-row.total .price-value {
-      color: #FF6B35;
+      color: var(--color-primary-500, #FF9800);
       font-size: 1.125rem;
     }
 
@@ -2095,11 +2262,13 @@ interface QualityScore {
 export class RepairerDetailComponent implements OnInit {
   private readonly searchService = inject(SearchService);
   private readonly searchStore = inject(SearchStore);
-  private readonly authStore = inject(AuthStore);
+  readonly authStore = inject(AuthStore); // Public for template access
   private readonly requestsService = inject(RequestsService);
   readonly reviewsService = inject(ReviewsService);
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
+  private readonly location = inject(Location);
+  private readonly logger = inject(LoggerService);
 
   readonly Math = Math; // Expose Math for template
 
@@ -2184,7 +2353,7 @@ export class RepairerDetailComponent implements OnInit {
       }
     } catch (err) {
       // Keep default categories ['smartphone', 'computer']
-      console.error('Error loading categories:', err);
+      this.logger.error('RepairerDetailComponent', 'Error loading categories', err);
     }
   }
 
@@ -2203,20 +2372,52 @@ export class RepairerDetailComponent implements OnInit {
       // Load step rating stats for the repairer
       this.loadStepRatingStats(id);
 
-      // Load service types if a device is selected
-      const selectedDevice = this.searchStore.selectedDevice();
-      if (selectedDevice) {
-        const services = await this.searchService.getServiceTypes(selectedDevice.id);
+      // Pre-fill form with SearchStore data if available
+      const storeDevice = this.searchStore.selectedDevice();
+      if (storeDevice) {
+        // Pre-fill device selection
+        this.selectedCategory.set(storeDevice.category || 'smartphone');
+        this.selectedBrand.set(storeDevice.brand);
+        this.selectedDevice.set(storeDevice);
+
+        // Load brands for category
+        try {
+          const brands = await this.searchService.getDeviceBrands(storeDevice.category || 'smartphone');
+          this.brands.set(brands);
+        } catch {
+          // Ignore brand loading errors
+        }
+
+        // Load devices for brand
+        try {
+          const result = await this.searchService.getDevices({
+            category: storeDevice.category,
+            brand: storeDevice.brand,
+          });
+          this.devices.set(result.data);
+        } catch {
+          // Ignore device loading errors
+        }
+
+        // Load service types for device
+        const services = await this.searchService.getServiceTypes(storeDevice.id);
         this.serviceTypes.set(services);
+        this.formServiceTypes.set(services);
 
         // Pre-select service if one was chosen in search
-        const selectedServiceType = this.searchStore.selectedServiceType();
-        if (selectedServiceType) {
-          this.selectedService.set(selectedServiceType);
+        const storeServiceType = this.searchStore.selectedServiceType();
+        if (storeServiceType) {
+          this.selectedService.set(storeServiceType);
+          this.formSelectedService.set(storeServiceType);
+          // Move to step 2 or 3 depending on what's selected
+          this.currentStep.set(2);
+        } else {
+          // Device selected, move to step 2
+          this.currentStep.set(2);
         }
       }
     } catch (err) {
-      console.error('Error loading repairer:', err);
+      this.logger.error('RepairerDetailComponent', 'Error loading repairer', err);
     } finally {
       this.isLoading.set(false);
     }
@@ -2228,17 +2429,17 @@ export class RepairerDetailComponent implements OnInit {
       this.stepRatingStats.set(stats);
     } catch (err) {
       // Silently fail - step ratings are optional
-      console.error('Error loading step rating stats:', err);
+      this.logger.error('RepairerDetailComponent', 'Error loading step rating stats', err);
     }
   }
 
   getQualityBarGradient(rating: number): string {
     // Return a color based on the rating (-5 to 5)
-    if (rating >= 3) return 'linear-gradient(90deg, #22c55e, #10b981)';
-    if (rating >= 1) return 'linear-gradient(90deg, #84cc16, #22c55e)';
-    if (rating >= -1) return 'linear-gradient(90deg, #f59e0b, #eab308)';
-    if (rating >= -3) return 'linear-gradient(90deg, #f97316, #ef4444)';
-    return 'linear-gradient(90deg, #ef4444, #dc2626)';
+    if (rating >= 3) return 'linear-gradient(90deg, var(--color-secondary, #4CAF50), var(--color-secondary, #4CAF50))';
+    if (rating >= 1) return 'linear-gradient(90deg, #84cc16, var(--color-secondary, #4CAF50))';
+    if (rating >= -1) return 'linear-gradient(90deg, var(--color-mustard, #FFC107), #eab308)';
+    if (rating >= -3) return 'linear-gradient(90deg, #f97316, var(--color-error, #F44336))';
+    return 'linear-gradient(90deg, var(--color-error, #F44336), var(--color-terracotta, #C62828))';
   }
 
   selectService(service: ServiceType): void {
@@ -2347,6 +2548,31 @@ export class RepairerDetailComponent implements OnInit {
     this.router.navigate(['/search/results']);
   }
 
+  navigateBack(): void {
+    // Use browser history to go back to the previous page
+    // This ensures correct behavior whether coming from /home or /search
+    this.location.back();
+  }
+
+  scrollToRequestForm(): void {
+    const element = document.getElementById('request-form');
+    if (element) {
+      element.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+  }
+
+  goToLogin(): void {
+    this.router.navigate(['/auth/login'], {
+      queryParams: { returnUrl: this.router.url },
+    });
+  }
+
+  goToRegister(): void {
+    this.router.navigate(['/auth/register'], {
+      queryParams: { returnUrl: this.router.url },
+    });
+  }
+
   getRepairerName(): string {
     const r = this.repairer();
     if (r?.firstName && r?.lastName) {
@@ -2368,15 +2594,6 @@ export class RepairerDetailComponent implements OnInit {
       return `${Math.round(km * 1000)} m`;
     }
     return `${km.toFixed(1)} km`;
-  }
-
-  formatDate(dateStr: string): string {
-    const date = new Date(dateStr);
-    return date.toLocaleDateString('fr-FR', {
-      day: 'numeric',
-      month: 'short',
-      year: 'numeric',
-    });
   }
 
   // ==========================================
@@ -2425,7 +2642,7 @@ export class RepairerDetailComponent implements OnInit {
       const brands = await this.searchService.getDeviceBrands(category);
       this.brands.set(brands);
     } catch (err) {
-      console.error('Error loading brands:', err);
+      this.logger.error('RepairerDetailComponent', 'Error loading brands', err);
       this.brands.set([]);
     } finally {
       this.isLoadingBrands.set(false);
@@ -2444,7 +2661,7 @@ export class RepairerDetailComponent implements OnInit {
       });
       this.devices.set(result.data);
     } catch (err) {
-      console.error('Error loading devices:', err);
+      this.logger.error('RepairerDetailComponent', 'Error loading devices', err);
       this.devices.set([]);
     } finally {
       this.isLoadingModels.set(false);
@@ -2474,7 +2691,7 @@ export class RepairerDetailComponent implements OnInit {
         const services = await this.searchService.getServiceTypes(this.selectedDevice()!.id);
         this.formServiceTypes.set(services);
       } catch (err) {
-        console.error('Error loading services:', err);
+        this.logger.error('RepairerDetailComponent', 'Error loading services', err);
         this.formServiceTypes.set([]);
       } finally {
         this.isLoadingServices.set(false);
@@ -2560,7 +2777,7 @@ export class RepairerDetailComponent implements OnInit {
         queryParams: { success: 'true' },
       });
     } catch (err) {
-      console.error('Error creating request:', err);
+      this.logger.error('RepairerDetailComponent', 'Error creating request', err);
       alert('Erreur lors de l\'envoi de la demande. Veuillez réessayer.');
     } finally {
       this.isSubmitting.set(false);

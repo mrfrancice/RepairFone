@@ -24,8 +24,8 @@ import { NotificationService } from '../../../core/services/notification.service
       display: flex;
       align-items: center;
       justify-content: center;
-      min-width: 44px;
-      min-height: 44px;
+      min-width: 48px;
+      min-height: 48px;
       text-decoration: none;
       border-radius: var(--border-radius-md, 8px);
       transition: background 0.15s ease;

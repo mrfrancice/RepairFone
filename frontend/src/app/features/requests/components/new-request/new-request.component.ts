@@ -11,6 +11,8 @@ import { UiImageUploadComponent, UploadedImage } from '../../../../shared/compon
 import { UiButtonComponent } from '../../../../shared/components/ui-button/ui-button.component';
 import { UiStepperComponent, StepConfig } from '../../../../shared/components/ui-stepper/ui-stepper.component';
 import { UiHeaderComponent } from '../../../../shared/components/ui-header/ui-header.component';
+import { FormatDatePipe } from '../../../../shared/pipes/format-date.pipe';
+import { LoggerService } from '../../../../core/services/logger.service';
 
 interface DraftData {
   step: number;
@@ -38,7 +40,7 @@ interface RequestStep {
   selector: 'app-new-request',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [CommonModule, FormsModule, UiImageUploadComponent, UiButtonComponent, UiStepperComponent, UiHeaderComponent],
+  imports: [CommonModule, FormsModule, UiImageUploadComponent, UiButtonComponent, UiStepperComponent, UiHeaderComponent, FormatDatePipe],
   template: `
     <div class="new-request-container">
       <!-- Header -->
@@ -303,7 +305,7 @@ interface RequestStep {
                   @if (preferredDate) {
                     <div class="summary-row">
                       <span class="summary-label">Date souhaitée</span>
-                      <span class="summary-value">{{ formatDate(preferredDate) }}</span>
+                      <span class="summary-value">{{ preferredDate | formatDate:'long' }}</span>
                     </div>
                   }
                   @if (preferredTime) {
@@ -458,51 +460,13 @@ interface RequestStep {
   styles: [`
     .new-request-container {
       min-height: 100vh;
-      background: #FFF5F0;
-    }
-
-    .request-header {
-      display: flex;
-      align-items: center;
-      gap: 1rem;
-      padding: 1rem;
-      background: linear-gradient(135deg, #FF6B35 0%, #FF9800 100%);
-      color: white;
-      box-shadow: 0 2px 8px rgba(255, 107, 53, 0.2);
-    }
-
-    .back-btn {
-      width: 44px;
-      height: 44px;
-      border-radius: 50%;
-      border: none;
-      background: rgba(255, 255, 255, 0.2);
-      color: white;
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 1.5rem;
-      transition: all 0.2s;
-      min-width: 44px;
-    }
-
-    .back-btn:hover {
-      background: rgba(255, 255, 255, 0.3);
-      transform: scale(1.05);
-    }
-
-    .request-header h1 {
-      margin: 0;
-      font-size: 1.25rem;
-      font-weight: 600;
-      color: white;
+      background: #FFF3E0;
     }
 
     .stepper-wrapper {
       background: white;
       padding: 1rem;
-      padding-top: 100px;
+      padding-top: var(--header-height, 100px);
       box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
     }
 
@@ -519,7 +483,7 @@ interface RequestStep {
       width: 48px;
       height: 48px;
       border: 4px solid #FFE5D9;
-      border-top-color: #FF6B35;
+      border-top-color: var(--color-primary-500, #FF9800);
       border-radius: 50%;
       animation: spin 1s linear infinite;
     }
@@ -528,7 +492,7 @@ interface RequestStep {
       width: 18px;
       height: 18px;
       border: 3px solid #FFE5D9;
-      border-top-color: #FF6B35;
+      border-top-color: var(--color-primary-500, #FF9800);
       border-radius: 50%;
       animation: spin 1s linear infinite;
       display: inline-block;
@@ -556,7 +520,7 @@ interface RequestStep {
 
     .alert-error {
       background: #FFF0F0;
-      color: #DC2626;
+      color: var(--color-terracotta, #C62828);
       border: 2px solid #FCA5A5;
     }
 
@@ -599,7 +563,7 @@ interface RequestStep {
     }
 
     .required {
-      color: #dc2626;
+      color: var(--color-terracotta, #C62828);
     }
 
     .field-hint {
@@ -622,14 +586,14 @@ interface RequestStep {
     .form-input:focus,
     .form-textarea:focus {
       outline: none;
-      border-color: #FF6B35;
-      box-shadow: 0 0 0 4px rgba(255, 107, 53, 0.15);
+      border-color: var(--color-primary-500, #FF9800);
+      box-shadow: 0 0 0 4px rgba(255, 152, 0, 0.15);
     }
 
     .form-input.invalid,
     .form-textarea.invalid {
-      border-color: #DC2626;
-      box-shadow: 0 0 0 4px rgba(220, 38, 38, 0.1);
+      border-color: var(--color-terracotta, #C62828);
+      box-shadow: 0 0 0 4px rgba(198, 40, 40, 0.1);
     }
 
     .form-textarea {
@@ -645,7 +609,7 @@ interface RequestStep {
     }
 
     .field-error {
-      color: #dc2626;
+      color: var(--color-terracotta, #C62828);
       font-size: 0.75rem;
     }
 
@@ -656,7 +620,7 @@ interface RequestStep {
     }
 
     .char-count.warning {
-      color: #f59e0b;
+      color: var(--color-mustard, #FFC107);
     }
 
     .form-row {
@@ -676,7 +640,7 @@ interface RequestStep {
       flex-direction: column;
       align-items: center;
       padding: 1.25rem;
-      border: 2px solid #e5e7eb;
+      border: 2px solid #EEEEEE;
       border-radius: 16px;
       cursor: pointer;
       transition: all 0.2s;
@@ -685,16 +649,16 @@ interface RequestStep {
     }
 
     .option-card:hover {
-      border-color: #FF6B35;
-      background: #FFF5F0;
+      border-color: var(--color-primary-500, #FF9800);
+      background: #FFF3E0;
       transform: translateY(-2px);
-      box-shadow: 0 4px 12px rgba(255, 107, 53, 0.15);
+      box-shadow: 0 4px 12px rgba(255, 152, 0, 0.15);
     }
 
     .option-card.selected {
-      border-color: #FF6B35;
-      background: #FFF5F0;
-      box-shadow: 0 4px 12px rgba(255, 107, 53, 0.2);
+      border-color: var(--color-primary-500, #FF9800);
+      background: #FFF3E0;
+      box-shadow: 0 4px 12px rgba(255, 152, 0, 0.2);
     }
 
     .option-card input {
@@ -720,7 +684,7 @@ interface RequestStep {
 
     .option-fee {
       font-size: 0.75rem;
-      color: #f59e0b;
+      color: var(--color-mustard, #FFC107);
       margin-top: 0.5rem;
       font-weight: 500;
     }
@@ -749,8 +713,8 @@ interface RequestStep {
     }
 
     .location-btn:hover:not(:disabled) {
-      border-color: #2563eb;
-      background: #eff6ff;
+      border-color: var(--color-primary-500, #FF9800);
+      background: #E3F2FD;
     }
 
     .location-btn:disabled {
@@ -767,16 +731,16 @@ interface RequestStep {
     .urgency-option {
       display: block;
       padding: 1rem;
-      border: 2px solid #e5e7eb;
+      border: 2px solid #EEEEEE;
       border-radius: 12px;
       cursor: pointer;
       transition: all 0.2s;
     }
 
     .urgency-option:hover {
-      border-color: #FF6B35;
+      border-color: var(--color-primary-500, #FF9800);
       transform: translateY(-1px);
-      box-shadow: 0 2px 8px rgba(255, 107, 53, 0.1);
+      box-shadow: 0 2px 8px rgba(255, 152, 0, 0.1);
     }
 
     .urgency-option.selected {
@@ -786,9 +750,9 @@ interface RequestStep {
     }
 
     .urgency-option.express.selected {
-      border-color: #FF6B35;
-      background: #FFF5F0;
-      box-shadow: 0 2px 8px rgba(255, 107, 53, 0.2);
+      border-color: var(--color-primary-500, #FF9800);
+      background: #FFF3E0;
+      box-shadow: 0 2px 8px rgba(255, 152, 0, 0.2);
     }
 
     .urgency-option input {
@@ -828,7 +792,7 @@ interface RequestStep {
     }
 
     .urgency-price.express {
-      color: #FF6B35;
+      color: var(--color-primary-500, #FF9800);
       font-weight: 700;
     }
 
@@ -843,7 +807,7 @@ interface RequestStep {
 
     .summary-section {
       padding: 1rem;
-      border-bottom: 1px solid #e5e7eb;
+      border-bottom: 1px solid #EEEEEE;
     }
 
     .summary-section:last-child {
@@ -881,7 +845,7 @@ interface RequestStep {
     }
 
     .summary-value.express {
-      color: #dc2626;
+      color: var(--color-terracotta, #C62828);
     }
 
     .repairer-summary {
@@ -895,7 +859,7 @@ interface RequestStep {
       height: 48px;
       border-radius: 50%;
       overflow: hidden;
-      background: #e5e7eb;
+      background: #EEEEEE;
     }
 
     .repairer-avatar img {
@@ -910,7 +874,7 @@ interface RequestStep {
       display: flex;
       align-items: center;
       justify-content: center;
-      background: linear-gradient(135deg, #FF6B35 0%, #FF9800 100%);
+      background: linear-gradient(135deg, var(--color-primary-500, #FF9800) 0%, #FF9800 100%);
       color: white;
       font-weight: 600;
     }
@@ -931,7 +895,7 @@ interface RequestStep {
     }
 
     .summary-section.pricing {
-      background: linear-gradient(135deg, #FFF5F0 0%, #FFFFFF 100%);
+      background: linear-gradient(135deg, #FFF3E0 0%, #FFFFFF 100%);
     }
 
     .price-row {
@@ -942,7 +906,7 @@ interface RequestStep {
     }
 
     .price-row.supplement {
-      color: #FF6B35;
+      color: var(--color-primary-500, #FF9800);
       font-weight: 600;
     }
 
@@ -962,7 +926,7 @@ interface RequestStep {
     }
 
     .total-amount {
-      color: #FF6B35;
+      color: var(--color-primary-500, #FF9800);
       font-size: 1.25rem;
     }
 
@@ -982,7 +946,7 @@ interface RequestStep {
     .photos-preview img {
       width: 60px;
       height: 60px;
-      border-radius: 8px;
+      border-radius: 12px;
       object-fit: cover;
     }
 
@@ -1008,7 +972,7 @@ interface RequestStep {
     }
 
     .terms-checkbox a {
-      color: #FF6B35;
+      color: var(--color-primary-500, #FF9800);
       font-weight: 500;
     }
 
@@ -1070,7 +1034,7 @@ interface RequestStep {
     }
 
     .success-info {
-      background: #f9fafb;
+      background: #FAFAFA;
       border-radius: 12px;
       padding: 1rem;
       margin-bottom: 1.5rem;
@@ -1131,6 +1095,7 @@ export class NewRequestComponent implements OnInit {
   private readonly router = inject(Router);
   private readonly route = inject(ActivatedRoute);
   private readonly destroyRef = inject(DestroyRef);
+  private readonly logger = inject(LoggerService);
 
   // Draft auto-save
   private readonly DRAFT_KEY = 'repair_request_draft';
@@ -1225,7 +1190,7 @@ export class NewRequestComponent implements OnInit {
           this.clearDraft();
         }
       } catch (e) {
-        console.error('Error parsing draft:', e);
+        this.logger.error('NewRequestComponent', 'Error parsing draft', e);
         this.clearDraft();
       }
     }
@@ -1273,7 +1238,7 @@ export class NewRequestComponent implements OnInit {
         this.urgency = draft.urgency || 'normal';
         this.currentStep.set(draft.step || 0);
       } catch (e) {
-        console.error('Error loading draft:', e);
+        this.logger.error('NewRequestComponent', 'Error loading draft', e);
       }
     }
     this.showDraftDialog.set(false);
@@ -1341,7 +1306,7 @@ export class NewRequestComponent implements OnInit {
       const mode = this.store.serviceMode();
       this.deliveryMode = mode === 'home' ? 'at_home' : 'in_shop';
     } catch (err) {
-      console.error('Error loading data:', err);
+      this.logger.error('NewRequestComponent', 'Error loading data', err);
       this.router.navigate(['/search']);
     } finally {
       this.isLoading.set(false);
@@ -1374,7 +1339,7 @@ export class NewRequestComponent implements OnInit {
         this.clientAddress = `${this.clientLatitude.toFixed(6)}, ${this.clientLongitude.toFixed(6)}`;
       }
     } catch (err) {
-      console.error('Error getting location:', err);
+      this.logger.error('NewRequestComponent', 'Error getting location', err);
       this.error.set('Impossible de détecter votre position');
     } finally {
       this.isDetectingLocation.set(false);
@@ -1429,17 +1394,6 @@ export class NewRequestComponent implements OnInit {
     const basePrice = this.serviceType()?.basePrice || 0;
     const supplement = this.urgency === 'express' ? this.getExpressSupplement() : 0;
     return basePrice + supplement;
-  }
-
-  formatDate(dateStr: string): string {
-    if (!dateStr) return '';
-    const date = new Date(dateStr);
-    return date.toLocaleDateString('fr-FR', {
-      weekday: 'long',
-      day: 'numeric',
-      month: 'long',
-      year: 'numeric'
-    });
   }
 
   async submit(): Promise<void> {

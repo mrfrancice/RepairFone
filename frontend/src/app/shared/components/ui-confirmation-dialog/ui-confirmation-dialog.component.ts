@@ -212,7 +212,7 @@ export class ConfirmationService {
     }
 
     .type-danger .dialog-icon {
-      background: var(--color-primary-50, #FFF3E0);
+      background: var(--color-error-light, #FFEBEE);
       color: var(--color-error, #F44336);
     }
 
@@ -227,9 +227,11 @@ export class ConfirmationService {
     }
 
     .dialog-title {
+      font-family: 'Poppins', 'Inter', sans-serif;
       font-size: 1.125rem;
       font-weight: 600;
-      color: var(--color-text-primary, rgba(0, 0, 0, 0.87));
+      letter-spacing: -0.01em;
+      color: var(--color-neutral-900, #111827);
       margin: 0 0 0.5rem;
     }
 
@@ -248,13 +250,14 @@ export class ConfirmationService {
 
     .btn {
       flex: 1;
-      padding: 0.75rem 1rem;
-      min-height: 44px;
-      border-radius: 8px;
+      padding: 0 1rem;
+      min-height: 48px;
+      border-radius: 1rem;
+      font-family: 'Inter', sans-serif;
       font-weight: 600;
       font-size: 0.9375rem;
       cursor: pointer;
-      transition: all 0.2s;
+      transition: all 150ms ease;
       border: none;
     }
 
@@ -273,12 +276,13 @@ export class ConfirmationService {
     }
 
     .btn-primary {
-      background: var(--color-info, #2196F3);
+      background: var(--color-primary-500, #FF9800);
       color: white;
+      box-shadow: var(--shadow-warm, 0 8px 24px rgba(255, 152, 0, 0.20));
     }
 
     .btn-primary:hover {
-      background: var(--color-info-dark, #1565C0);
+      background: var(--color-primary-900, #E65100);
     }
 
     .btn-danger {

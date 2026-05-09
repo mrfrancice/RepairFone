@@ -5,6 +5,7 @@ import { catchError, switchMap, throwError, BehaviorSubject, filter, take } from
 import { fromPromise } from 'rxjs/internal/observable/innerFrom';
 import { AuthStore } from '../stores/auth.store';
 import { ApiService } from '../services/api.service';
+import { LoggerService } from '../services/logger.service';
 
 interface TokenResponse {
   accessToken: string;
@@ -18,6 +19,7 @@ export const refreshTokenInterceptor: HttpInterceptorFn = (req, next) => {
   const router = inject(Router);
   const authStore = inject(AuthStore);
   const api = inject(ApiService);
+  const logger = inject(LoggerService);
 
   // Skip refresh for auth endpoints
   if (req.url.includes('/auth/login') ||
@@ -33,7 +35,7 @@ export const refreshTokenInterceptor: HttpInterceptorFn = (req, next) => {
         return fromPromise(
           authStore.getRefreshToken().then(refreshToken => {
             if (refreshToken) {
-              return handleTokenRefresh(req, next, authStore, api, router);
+              return handleTokenRefresh(req, next, authStore, api, router, logger);
             }
             return throwError(() => error);
           })
@@ -50,7 +52,8 @@ function handleTokenRefresh(
   next: HttpHandlerFn,
   authStore: AuthStore,
   api: ApiService,
-  router: Router
+  router: Router,
+  logger: LoggerService
 ) {
   if (!isRefreshing) {
     isRefreshing = true;
@@ -71,7 +74,7 @@ function handleTokenRefresh(
           authStore.setToken(response.accessToken);
           if (response.refreshToken) {
             authStore.setRefreshToken(response.refreshToken).catch(err =>
-              console.error('Failed to save refresh token:', err)
+              logger.error('RefreshTokenInterceptor', 'Failed to save refresh token', err)
             );
           }
           refreshTokenSubject.next(response.accessToken);

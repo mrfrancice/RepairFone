@@ -138,9 +138,10 @@ import { ControlValueAccessor, NG_VALUE_ACCESSOR, FormsModule } from '@angular/f
     }
 
     .input-label {
-      font-size: 0.875rem;
-      font-weight: 500;
-      color: var(--color-neutral-700, #616161);
+      font-family: 'Inter', sans-serif;
+      font-size: 0.8125rem;
+      font-weight: 600;
+      color: var(--color-neutral-800, #1F2937);
     }
 
     .required {
@@ -164,14 +165,15 @@ import { ControlValueAccessor, NG_VALUE_ACCESSOR, FormsModule } from '@angular/f
 
     .input-field {
       width: 100%;
-      padding: 0.75rem 1rem;
-      min-height: 44px;
-      border: 1px solid var(--color-neutral-300, #E0E0E0);
-      border-radius: var(--border-radius-md, 8px);
-      font-size: 1rem;
-      font-family: inherit;
-      background: var(--color-surface, white);
-      transition: border-color var(--transition-fast, 150ms), box-shadow var(--transition-fast, 150ms);
+      padding: 0 1rem;
+      min-height: 48px;
+      border: 1.5px solid var(--color-neutral-300, #D1D5DB);
+      border-radius: 0.75rem;
+      font-size: 0.9375rem;
+      font-family: 'Inter', system-ui, sans-serif;
+      color: var(--color-neutral-900, #111827);
+      background: var(--color-surface, #FFFFFF);
+      transition: border-color 150ms ease, box-shadow 150ms ease;
     }
 
     .input-container:has(.input-icon) .input-field {
@@ -181,7 +183,7 @@ import { ControlValueAccessor, NG_VALUE_ACCESSOR, FormsModule } from '@angular/f
     .input-field:focus {
       outline: none;
       border-color: var(--color-primary-500, #FF9800);
-      box-shadow: 0 0 0 3px rgba(255, 152, 0, 0.15);
+      box-shadow: 0 0 0 4px rgba(255, 152, 0, 0.12);
     }
 
     .input-field:disabled {
@@ -191,12 +193,13 @@ import { ControlValueAccessor, NG_VALUE_ACCESSOR, FormsModule } from '@angular/f
     }
 
     .input-field::placeholder {
-      color: var(--color-neutral-400, #BDBDBD);
+      color: var(--color-neutral-400, #9CA3AF);
     }
 
     textarea.input-field {
       resize: vertical;
-      min-height: 80px;
+      min-height: 96px;
+      padding: 0.75rem 1rem;
     }
 
     .has-error .input-field {
@@ -204,7 +207,7 @@ import { ControlValueAccessor, NG_VALUE_ACCESSOR, FormsModule } from '@angular/f
     }
 
     .has-error .input-field:focus {
-      box-shadow: 0 0 0 3px rgba(244, 67, 54, 0.15);
+      box-shadow: 0 0 0 4px rgba(244, 67, 54, 0.10);
     }
 
     .toggle-password,
@@ -217,8 +220,8 @@ import { ControlValueAccessor, NG_VALUE_ACCESSOR, FormsModule } from '@angular/f
       padding: 0.5rem;
       font-size: 1rem;
       color: var(--color-neutral-500, #6B7280);
-      min-width: 44px;
-      min-height: 44px;
+      min-width: 48px;
+      min-height: 48px;
       display: flex;
       align-items: center;
       justify-content: center;
@@ -249,7 +252,7 @@ import { ControlValueAccessor, NG_VALUE_ACCESSOR, FormsModule } from '@angular/f
       align-items: flex-start;
       gap: 0.375rem;
       padding: 0.5rem 0.75rem;
-      background: var(--color-error-light, #FEF2F2);
+      background: var(--color-error-light, #FFEBEE);
       border-radius: var(--border-radius-md, 8px);
       border-left: 3px solid var(--color-error, #F44336);
       margin-top: 0.375rem;
@@ -330,7 +333,7 @@ import { ControlValueAccessor, NG_VALUE_ACCESSOR, FormsModule } from '@angular/f
       align-items: flex-start;
       gap: 0.375rem;
       padding: 0.5rem 0.75rem;
-      background: var(--color-success-light, #F0FDF4);
+      background: var(--color-success-light, #E8F5E9);
       border-radius: var(--border-radius-md, 8px);
       border-left: 3px solid var(--color-success, #4CAF50);
       margin-top: 0.375rem;

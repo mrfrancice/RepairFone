@@ -5,19 +5,20 @@ import { Router, RouterLink } from '@angular/router';
 import { AuthService } from '../../services/auth.service';
 import { CustomValidators, getErrorMessage } from '../../../../shared/validators/custom-validators';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { AppLogoComponent } from '../../../../shared/components/app-logo/app-logo.component';
 
 type Step = 'phone' | 'otp' | 'password' | 'success';
 
 @Component({
   selector: 'app-forgot-password',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, RouterLink],
+  imports: [CommonModule, ReactiveFormsModule, RouterLink, AppLogoComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <div class="auth-container">
       <div class="auth-card">
         <div class="auth-logo">
-          <span class="logo-icon">*</span>
+          <app-logo size="md" variant="gradient" />
         </div>
 
         @if (currentStep() !== 'success') {
@@ -250,7 +251,8 @@ type Step = 'phone' | 'otp' | 'password' | 'success';
       align-items: center;
       justify-content: center;
       padding: 1rem;
-      background: linear-gradient(135deg, #2563eb 0%, #1e40af 100%);
+      padding-bottom: calc(1rem + var(--bottom-nav-height, 80px) + var(--safe-area-bottom, 0px));
+      background: linear-gradient(135deg, var(--color-primary-500, #FF9800) 0%, var(--color-gold-800, #F9A825) 100%);
     }
 
     .auth-card {
@@ -273,7 +275,7 @@ type Step = 'phone' | 'otp' | 'password' | 'success';
       justify-content: center;
       width: 50px;
       height: 50px;
-      background: linear-gradient(135deg, #2563eb 0%, #1e40af 100%);
+      background: linear-gradient(135deg, var(--color-primary-500, #FF9800) 0%, var(--color-ocean, #1565C0) 100%);
       border-radius: 12px;
       font-size: 1.5rem;
       color: white;
@@ -290,7 +292,7 @@ type Step = 'phone' | 'otp' | 'password' | 'success';
     }
 
     .back-btn:hover {
-      color: #2563eb;
+      color: var(--color-primary-500, #FF9800);
     }
 
     .auth-title {
@@ -336,11 +338,11 @@ type Step = 'phone' | 'otp' | 'password' | 'success';
     .form-input {
       width: 100%;
       padding: 0.875rem 1rem;
-      border: 2px solid #e5e7eb;
-      border-radius: 10px;
+      border: 2px solid #EEEEEE;
+      border-radius: 12px;
       font-size: 1rem;
       transition: all 0.2s;
-      background: #f9fafb;
+      background: #FAFAFA;
     }
 
     .form-input.with-prefix {
@@ -349,14 +351,14 @@ type Step = 'phone' | 'otp' | 'password' | 'success';
 
     .form-input:focus {
       outline: none;
-      border-color: #2563eb;
+      border-color: var(--color-primary-500, #FF9800);
       background: white;
-      box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.1);
+      box-shadow: 0 0 0 4px rgba(255, 152, 0, 0.1);
     }
 
     .form-input.input-error {
-      border-color: #dc2626;
-      background: #fef2f2;
+      border-color: var(--color-terracotta, #C62828);
+      background: #FFEBEE;
     }
 
     .toggle-password {
@@ -371,7 +373,7 @@ type Step = 'phone' | 'otp' | 'password' | 'success';
 
     .field-error {
       display: block;
-      color: #dc2626;
+      color: var(--color-terracotta, #C62828);
       font-size: 0.75rem;
       margin-top: 0.375rem;
     }
@@ -389,22 +391,22 @@ type Step = 'phone' | 'otp' | 'password' | 'success';
       text-align: center;
       font-size: 1.5rem;
       font-weight: 600;
-      border: 2px solid #e5e7eb;
-      border-radius: 10px;
-      background: #f9fafb;
+      border: 2px solid #EEEEEE;
+      border-radius: 12px;
+      background: #FAFAFA;
       transition: all 0.2s;
     }
 
     .otp-input:focus {
       outline: none;
-      border-color: #2563eb;
+      border-color: var(--color-primary-500, #FF9800);
       background: white;
-      box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.1);
+      box-shadow: 0 0 0 4px rgba(255, 152, 0, 0.1);
     }
 
     .otp-input.filled {
-      border-color: #2563eb;
-      background: #eff6ff;
+      border-color: var(--color-primary-500, #FF9800);
+      background: #E3F2FD;
     }
 
     .resend-section {
@@ -415,7 +417,7 @@ type Step = 'phone' | 'otp' | 'password' | 'success';
     .resend-btn {
       background: none;
       border: none;
-      color: #2563eb;
+      color: var(--color-primary-500, #FF9800);
       font-weight: 500;
       cursor: pointer;
     }
@@ -442,14 +444,14 @@ type Step = 'phone' | 'otp' | 'password' | 'success';
     .bar {
       height: 4px;
       flex: 1;
-      background: #e5e7eb;
+      background: #EEEEEE;
       border-radius: 2px;
       transition: all 0.3s;
     }
 
-    .bar.active.weak { background: #dc2626; }
-    .bar.active.medium { background: #f59e0b; }
-    .bar.active.strong { background: #10b981; }
+    .bar.active.weak { background: var(--color-terracotta, #C62828); }
+    .bar.active.medium { background: var(--color-mustard, #FFC107); }
+    .bar.active.strong { background: var(--color-secondary, #4CAF50); }
 
     .strength-label {
       font-size: 0.75rem;
@@ -466,7 +468,7 @@ type Step = 'phone' | 'otp' | 'password' | 'success';
     .success-icon {
       width: 80px;
       height: 80px;
-      background: #10b981;
+      background: var(--color-secondary, #4CAF50);
       color: white;
       border-radius: 50%;
       display: flex;
@@ -483,7 +485,7 @@ type Step = 'phone' | 'otp' | 'password' | 'success';
       justify-content: center;
       gap: 0.5rem;
       padding: 0.875rem 1.5rem;
-      border-radius: 10px;
+      border-radius: 12px;
       font-weight: 600;
       font-size: 1rem;
       border: none;
@@ -493,14 +495,14 @@ type Step = 'phone' | 'otp' | 'password' | 'success';
     }
 
     .btn-primary {
-      background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+      background: linear-gradient(135deg, var(--color-primary-500, #FF9800) 0%, var(--color-primary-900, #E65100) 100%);
       color: white;
-      box-shadow: 0 4px 14px rgba(37, 99, 235, 0.3);
+      box-shadow: 0 4px 14px rgba(255, 152, 0, 0.3);
     }
 
     .btn-primary:hover:not(:disabled) {
       transform: translateY(-1px);
-      box-shadow: 0 6px 20px rgba(37, 99, 235, 0.4);
+      box-shadow: 0 6px 20px rgba(255, 152, 0, 0.4);
     }
 
     .btn-primary:disabled {
@@ -530,7 +532,7 @@ type Step = 'phone' | 'otp' | 'password' | 'success';
       align-items: center;
       gap: 0.75rem;
       padding: 0.875rem 1rem;
-      border-radius: 10px;
+      border-radius: 12px;
       margin-bottom: 1.25rem;
     }
 
@@ -543,14 +545,14 @@ type Step = 'phone' | 'otp' | 'password' | 'success';
       justify-content: center;
       font-size: 0.75rem;
       flex-shrink: 0;
-      background: #dc2626;
+      background: var(--color-terracotta, #C62828);
       color: white;
     }
 
     .alert-error {
-      background: #fef2f2;
+      background: #FFEBEE;
       color: #991b1b;
-      border: 1px solid #fecaca;
+      border: 1px solid #FFCDD2;
     }
 
     .auth-footer {
@@ -560,7 +562,7 @@ type Step = 'phone' | 'otp' | 'password' | 'success';
     }
 
     .auth-footer a {
-      color: #2563eb;
+      color: var(--color-primary-500, #FF9800);
       font-weight: 600;
       text-decoration: none;
     }

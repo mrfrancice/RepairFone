@@ -7,6 +7,6 @@ export const TRACKING_ROUTES: Routes = [
     loadComponent: () =>
       import('./components/tracking-view/tracking-view.component').then((m) => m.TrackingViewComponent),
     canActivate: [authGuard],
-    title: 'Suivi en temps réel - FastRepair',
+    title: 'Suivi en temps réel - RepairFone',
   },
 ];

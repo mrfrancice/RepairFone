@@ -6,6 +6,8 @@ import { AdminService, RepairerForVerification, VerificationStats } from '../../
 import { AuthStore } from '../../../../core/stores/auth.store';
 import { NotificationBellComponent } from '../../../../shared/components/notification-bell/notification-bell.component';
 import { HeaderSearchComponent } from '../../../../shared/components/header-search/header-search.component';
+import { InitialsPipe } from '../../../../shared/pipes/initials.pipe';
+import { StatusLabelsService, VerificationStatus } from '../../../../shared/services/status-labels.service';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 
 type StatusFilter = 'all' | 'pending' | 'under_review' | 'verified' | 'rejected' | 'suspended';
@@ -14,7 +16,7 @@ type StatusFilter = 'all' | 'pending' | 'under_review' | 'verified' | 'rejected'
   selector: 'app-repairers-verification',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [CommonModule, FormsModule, NotificationBellComponent, HeaderSearchComponent],
+  imports: [CommonModule, FormsModule, NotificationBellComponent, HeaderSearchComponent, InitialsPipe],
   template: `
     <div class="admin-page">
       <!-- Header like home -->
@@ -43,7 +45,7 @@ type StatusFilter = 'all' | 'pending' | 'under_review' | 'verified' | 'rejected'
                 <img [src]="authStore.user()?.avatarUrl" alt="Profil" />
               } @else {
                 <div class="profile-placeholder">
-                  {{ getUserInitials() }}
+                  {{ authStore.user()?.firstName | initials : authStore.user()?.lastName }}
                 </div>
               }
             </button>
@@ -132,7 +134,7 @@ type StatusFilter = 'all' | 'pending' | 'under_review' | 'verified' | 'rejected'
               </svg>
             </div>
             <p>{{ error() }}</p>
-            <button class="btn btn-primary" (click)="loadRepairers()">Reessayer</button>
+            <button class="btn btn-primary" (click)="loadRepairers()">Réessayer</button>
           </div>
         } @else if (repairers().length === 0) {
           <div class="empty-state">
@@ -155,7 +157,7 @@ type StatusFilter = 'all' | 'pending' | 'under_review' | 'verified' | 'rejected'
                       @if (repairer.user?.avatarUrl) {
                         <img [src]="repairer.user?.avatarUrl" [alt]="repairer.businessName" />
                       } @else {
-                        <span>{{ getInitials(repairer) }}</span>
+                        <span>{{ repairer.user?.firstName | initials : repairer.user?.lastName }}</span>
                       }
                     </div>
                     <div class="info-content">
@@ -167,7 +169,7 @@ type StatusFilter = 'all' | 'pending' | 'under_review' | 'verified' | 'rejected'
                   <div class="card-actions">
                     <span class="status-badge" [class]="repairer.verificationStatus">
                       <span class="badge-dot"></span>
-                      {{ getStatusLabel(repairer.verificationStatus) }}
+                      {{ statusLabels.getVerificationStatusLabel(repairer.verificationStatus) }}
                     </span>
                     <div class="expand-btn" [class.expanded]="expandedId() === repairer.id">
                       <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
@@ -522,7 +524,7 @@ type StatusFilter = 'all' | 'pending' | 'under_review' | 'verified' | 'rejected'
             <div class="modal-body">
               <div class="repairer-preview">
                 <div class="preview-avatar">
-                  {{ getInitials(selectedRepairer()!) }}
+                  {{ selectedRepairer()?.user?.firstName | initials : selectedRepairer()?.user?.lastName }}
                 </div>
                 <div class="preview-info">
                   <strong>{{ selectedRepairer()?.businessName }}</strong>
@@ -579,7 +581,7 @@ type StatusFilter = 'all' | 'pending' | 'under_review' | 'verified' | 'rejected'
             <div class="modal-body">
               <div class="repairer-preview">
                 <div class="preview-avatar warning">
-                  {{ getInitials(selectedRepairer()!) }}
+                  {{ selectedRepairer()?.user?.firstName | initials : selectedRepairer()?.user?.lastName }}
                 </div>
                 <div class="preview-info">
                   <strong>{{ selectedRepairer()?.businessName }}</strong>
@@ -618,7 +620,7 @@ type StatusFilter = 'all' | 'pending' | 'under_review' | 'verified' | 'rejected'
   styles: [`
     .admin-page {
       min-height: 100vh;
-      background: #f8f9fa;
+      background: #FAFAFA;
     }
 
     /* Header */
@@ -628,11 +630,15 @@ type StatusFilter = 'all' | 'pending' | 'under_review' | 'verified' | 'rejected'
       left: 0;
       right: 0;
       z-index: 100;
-      background: linear-gradient(135deg, #FF6B35 0%, #E85A24 100%);
-      padding: 1.25rem;
-      padding-top: calc(1.25rem + env(safe-area-inset-top, 0));
-      border-radius: 0 0 24px 24px;
-      box-shadow: 0 4px 20px rgba(255, 107, 53, 0.3);
+      background:
+        radial-gradient(ellipse at 92% 50%, rgba(255, 152, 0, 0.22) 0%, transparent 55%),
+        linear-gradient(135deg, #1A1A1A 0%, #0F0F0F 100%);
+      border-bottom-left-radius: 30px;
+      border-bottom-right-radius: 30px;
+      padding: 1rem 1.25rem;
+      padding-top: calc(1rem + env(safe-area-inset-top, 0));
+      border-bottom: 2px solid var(--color-primary-500, #FF9800);
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.35);
     }
 
     .header-top {
@@ -648,21 +654,23 @@ type StatusFilter = 'all' | 'pending' | 'under_review' | 'verified' | 'rejected'
     }
 
     .back-btn {
-      width: 40px;
-      height: 40px;
+      width: 44px;
+      height: 44px;
       border-radius: 12px;
-      background: rgba(255, 255, 255, 0.15);
-      border: none;
+      background: rgba(255, 255, 255, 0.08);
+      border: 1px solid rgba(255, 255, 255, 0.1);
       display: flex;
       align-items: center;
       justify-content: center;
       color: white;
       cursor: pointer;
-      transition: all 0.2s;
+      transition: all 150ms ease;
     }
 
     .back-btn:hover {
-      background: rgba(255, 255, 255, 0.25);
+      background: rgba(255, 152, 0, 0.18);
+      border-color: var(--color-primary-500, #FF9800);
+      color: var(--color-primary-500, #FF9800);
     }
 
     .header-titles {
@@ -671,8 +679,10 @@ type StatusFilter = 'all' | 'pending' | 'under_review' | 'verified' | 'rejected'
     }
 
     .app-title {
+      font-family: 'Poppins', 'Inter', sans-serif;
       font-size: 1.125rem;
       font-weight: 700;
+      letter-spacing: -0.01em;
       color: white;
       margin: 0;
       line-height: 1.2;
@@ -680,14 +690,14 @@ type StatusFilter = 'all' | 'pending' | 'under_review' | 'verified' | 'rejected'
 
     .welcome-msg {
       font-size: 0.75rem;
-      color: rgba(255, 255, 255, 0.9);
+      color: rgba(255, 255, 255, 0.65);
       margin: 0;
     }
 
     .header-right {
       display: flex;
       align-items: center;
-      gap: 0.75rem;
+      gap: 0.5rem;
     }
 
     .status-online {
@@ -695,20 +705,21 @@ type StatusFilter = 'all' | 'pending' | 'under_review' | 'verified' | 'rejected'
       align-items: center;
       gap: 0.375rem;
       padding: 0.375rem 0.75rem;
-      background: rgba(16, 185, 129, 0.2);
+      background: rgba(76, 175, 80, 0.18);
+      border: 1px solid rgba(76, 175, 80, 0.35);
       border-radius: 20px;
       font-size: 0.6875rem;
       font-weight: 600;
-      color: #ecfdf5;
-      backdrop-filter: blur(4px);
+      color: #A5D6A7;
     }
 
     .status-online .status-dot {
       width: 8px;
       height: 8px;
-      background: #10b981;
+      background: var(--color-secondary, #4CAF50);
       border-radius: 50%;
       animation: statusPulse 2s infinite;
+      box-shadow: 0 0 8px rgba(76, 175, 80, 0.6);
     }
 
     @keyframes statusPulse {
@@ -718,31 +729,32 @@ type StatusFilter = 'all' | 'pending' | 'under_review' | 'verified' | 'rejected'
 
     .role-badge {
       padding: 0.375rem 0.75rem;
-      background: rgba(255, 255, 255, 0.2);
+      background: linear-gradient(135deg, var(--color-primary-500, #FF9800), var(--color-gold-800, #F9A825));
       border-radius: 20px;
       font-size: 0.6875rem;
-      font-weight: 600;
+      font-weight: 700;
       color: white;
       text-transform: uppercase;
       letter-spacing: 0.5px;
-      backdrop-filter: blur(4px);
+      box-shadow: 0 2px 8px rgba(255, 152, 0, 0.35);
     }
 
     .profile-btn {
       width: 40px;
       height: 40px;
       border-radius: 50%;
-      border: 2px solid rgba(255, 255, 255, 0.3);
-      background: rgba(255, 255, 255, 0.1);
+      border: 2px solid var(--color-primary-500, #FF9800);
+      background: rgba(255, 255, 255, 0.08);
       overflow: hidden;
       cursor: pointer;
       padding: 0;
-      transition: all 0.2s;
+      transition: all 150ms ease;
     }
 
     .profile-btn:hover {
-      border-color: rgba(255, 255, 255, 0.5);
+      border-color: var(--color-gold-800, #F9A825);
       transform: scale(1.05);
+      box-shadow: 0 0 0 4px rgba(255, 152, 0, 0.18);
     }
 
     .profile-btn img {
@@ -760,7 +772,7 @@ type StatusFilter = 'all' | 'pending' | 'under_review' | 'verified' | 'rejected'
       color: white;
       font-weight: 600;
       font-size: 0.875rem;
-      background: rgba(255, 255, 255, 0.15);
+      background: linear-gradient(135deg, var(--color-primary-500, #FF9800), var(--color-gold-800, #F9A825));
     }
 
     /* Container */
@@ -788,7 +800,7 @@ type StatusFilter = 'all' | 'pending' | 'under_review' | 'verified' | 'rejected'
       align-items: center;
       gap: 0.5rem;
       padding: 0.625rem 1rem;
-      border: 2px solid #e5e7eb;
+      border: 2px solid #EEEEEE;
       border-radius: 12px;
       background: white;
       color: #6b7280;
@@ -800,8 +812,8 @@ type StatusFilter = 'all' | 'pending' | 'under_review' | 'verified' | 'rejected'
     }
 
     .status-tab:hover {
-      border-color: #d1d5db;
-      background: #f9fafb;
+      border-color: #D1D5DB;
+      background: #FAFAFA;
     }
 
     .status-tab.active {
@@ -811,23 +823,23 @@ type StatusFilter = 'all' | 'pending' | 'under_review' | 'verified' | 'rejected'
     }
 
     .status-tab.pending.active {
-      background: linear-gradient(135deg, #f59e0b, #fbbf24);
-      border-color: #f59e0b;
+      background: linear-gradient(135deg, var(--color-mustard, #FFC107), var(--color-primary-700, #F57C00));
+      border-color: var(--color-mustard, #FFC107);
     }
 
     .status-tab.review.active {
-      background: linear-gradient(135deg, #3b82f6, #60a5fa);
-      border-color: #3b82f6;
+      background: linear-gradient(135deg, var(--color-ocean, #1565C0), var(--color-ocean-500, #2196F3));
+      border-color: var(--color-ocean, #1565C0);
     }
 
     .status-tab.verified.active {
-      background: linear-gradient(135deg, #10b981, #34d399);
-      border-color: #10b981;
+      background: linear-gradient(135deg, var(--color-secondary, #4CAF50), var(--color-secondary-light, #81C784));
+      border-color: var(--color-secondary, #4CAF50);
     }
 
     .status-tab.rejected.active {
-      background: linear-gradient(135deg, #ef4444, #f87171);
-      border-color: #ef4444;
+      background: linear-gradient(135deg, var(--color-error, #F44336), #EF5350);
+      border-color: var(--color-error, #F44336);
     }
 
     .status-tab.suspended.active {
@@ -877,7 +889,7 @@ type StatusFilter = 'all' | 'pending' | 'under_review' | 'verified' | 'rejected'
       width: 48px;
       height: 48px;
       border: 4px solid #FFE5D9;
-      border-top-color: #FF6B35;
+      border-top-color: var(--color-primary-500, #FF9800);
       border-radius: 50%;
       animation: spin 1s linear infinite;
       margin-bottom: 1rem;
@@ -888,13 +900,13 @@ type StatusFilter = 'all' | 'pending' | 'under_review' | 'verified' | 'rejected'
     }
 
     .error-icon, .empty-icon {
-      color: #FF6B35;
+      color: var(--color-primary-500, #FF9800);
       margin-bottom: 1rem;
       opacity: 0.8;
     }
 
     .empty-icon {
-      color: #d1d5db;
+      color: #D1D5DB;
     }
 
     .error-state p, .empty-state p {
@@ -929,7 +941,7 @@ type StatusFilter = 'all' | 'pending' | 'under_review' | 'verified' | 'rejected'
     }
 
     .repairer-card.expanded {
-      box-shadow: 0 8px 40px rgba(255, 107, 53, 0.15);
+      box-shadow: 0 8px 40px rgba(255, 152, 0, 0.15);
     }
 
     .card-header {
@@ -942,7 +954,7 @@ type StatusFilter = 'all' | 'pending' | 'under_review' | 'verified' | 'rejected'
     }
 
     .card-header:hover {
-      background: #fafafa;
+      background: #FAFAFA;
     }
 
     .repairer-info {
@@ -955,7 +967,7 @@ type StatusFilter = 'all' | 'pending' | 'under_review' | 'verified' | 'rejected'
       width: 56px;
       height: 56px;
       border-radius: 16px;
-      background: linear-gradient(135deg, #FF6B35, #FF9800);
+      background: linear-gradient(135deg, var(--color-primary-500, #FF9800), var(--color-gold-800, #F9A825));
       display: flex;
       align-items: center;
       justify-content: center;
@@ -966,10 +978,10 @@ type StatusFilter = 'all' | 'pending' | 'under_review' | 'verified' | 'rejected'
       flex-shrink: 0;
     }
 
-    .avatar.verified { background: linear-gradient(135deg, #10b981, #34d399); }
-    .avatar.pending { background: linear-gradient(135deg, #f59e0b, #fbbf24); }
-    .avatar.under_review { background: linear-gradient(135deg, #3b82f6, #60a5fa); }
-    .avatar.rejected { background: linear-gradient(135deg, #ef4444, #f87171); }
+    .avatar.verified { background: linear-gradient(135deg, var(--color-secondary, #4CAF50), var(--color-secondary-light, #81C784)); }
+    .avatar.pending { background: linear-gradient(135deg, var(--color-mustard, #FFC107), var(--color-primary-700, #F57C00)); }
+    .avatar.under_review { background: linear-gradient(135deg, var(--color-ocean, #1565C0), var(--color-ocean-500, #2196F3)); }
+    .avatar.rejected { background: linear-gradient(135deg, var(--color-error, #F44336), #EF5350); }
     .avatar.suspended { background: linear-gradient(135deg, #6b7280, #9ca3af); }
 
     .avatar img {
@@ -1018,17 +1030,17 @@ type StatusFilter = 'all' | 'pending' | 'under_review' | 'verified' | 'rejected'
       background: currentColor;
     }
 
-    .status-badge.pending { background: #fef3c7; color: #b45309; }
-    .status-badge.under_review { background: #dbeafe; color: #1d4ed8; }
-    .status-badge.verified { background: #d1fae5; color: #047857; }
-    .status-badge.rejected { background: #fee2e2; color: #b91c1c; }
-    .status-badge.suspended { background: #f3f4f6; color: #4b5563; }
+    .status-badge.pending { background: #FFF8E1; color: #F57C00; }
+    .status-badge.under_review { background: #E3F2FD; color: var(--color-primary-900, #E65100); }
+    .status-badge.verified { background: #E8F5E9; color: #2E7D32; }
+    .status-badge.rejected { background: #FFEBEE; color: var(--color-terracotta, #C62828); }
+    .status-badge.suspended { background: #F5F5F5; color: #4b5563; }
 
     .expand-btn {
       width: 36px;
       height: 36px;
-      border-radius: 10px;
-      background: #f3f4f6;
+      border-radius: 12px;
+      background: #F5F5F5;
       display: flex;
       align-items: center;
       justify-content: center;
@@ -1037,7 +1049,7 @@ type StatusFilter = 'all' | 'pending' | 'under_review' | 'verified' | 'rejected'
     }
 
     .expand-btn.expanded {
-      background: #FF6B35;
+      background: var(--color-primary-500, #FF9800);
       color: white;
       transform: rotate(180deg);
     }
@@ -1045,8 +1057,8 @@ type StatusFilter = 'all' | 'pending' | 'under_review' | 'verified' | 'rejected'
     /* Card Details */
     .card-details {
       padding: 1.5rem;
-      background: linear-gradient(180deg, #fafafa 0%, #ffffff 100%);
-      border-top: 1px solid #f3f4f6;
+      background: linear-gradient(180deg, #FAFAFA 0%, #ffffff 100%);
+      border-top: 1px solid #F5F5F5;
     }
 
     .detail-section {
@@ -1063,11 +1075,11 @@ type StatusFilter = 'all' | 'pending' | 'under_review' | 'verified' | 'rejected'
       gap: 0.5rem;
       margin-bottom: 1rem;
       padding-bottom: 0.75rem;
-      border-bottom: 2px solid #f3f4f6;
+      border-bottom: 2px solid #F5F5F5;
     }
 
     .section-header svg {
-      color: #FF6B35;
+      color: var(--color-primary-500, #FF9800);
     }
 
     .section-header h4 {
@@ -1092,7 +1104,7 @@ type StatusFilter = 'all' | 'pending' | 'under_review' | 'verified' | 'rejected'
       background: white;
       padding: 1rem;
       border-radius: 12px;
-      border: 1px solid #f3f4f6;
+      border: 1px solid #F5F5F5;
     }
 
     .detail-item.full {
@@ -1116,14 +1128,14 @@ type StatusFilter = 'all' | 'pending' | 'under_review' | 'verified' | 'rejected'
     }
 
     .detail-value.highlight {
-      color: #FF6B35;
+      color: var(--color-primary-500, #FF9800);
       font-weight: 600;
     }
 
     .gps-coords {
       font-family: monospace;
       font-size: 0.8125rem;
-      color: #3b82f6;
+      color: var(--color-ocean, #1565C0);
     }
 
     .not-provided {
@@ -1143,8 +1155,8 @@ type StatusFilter = 'all' | 'pending' | 'under_review' | 'verified' | 'rejected'
       align-items: center;
       gap: 0.5rem;
       padding: 0.75rem 1rem;
-      background: linear-gradient(135deg, #eff6ff, #dbeafe);
-      color: #2563eb;
+      background: linear-gradient(135deg, #E3F2FD, #E3F2FD);
+      color: var(--color-primary-500, #FF9800);
       border-radius: 12px;
       font-size: 0.875rem;
       font-weight: 500;
@@ -1153,7 +1165,7 @@ type StatusFilter = 'all' | 'pending' | 'under_review' | 'verified' | 'rejected'
     }
 
     .doc-link:hover {
-      background: linear-gradient(135deg, #dbeafe, #bfdbfe);
+      background: linear-gradient(135deg, #E3F2FD, #BBDEFB);
       transform: translateY(-2px);
     }
 
@@ -1165,9 +1177,9 @@ type StatusFilter = 'all' | 'pending' | 'under_review' | 'verified' | 'rejected'
 
     .specialty-chip {
       padding: 0.5rem 1rem;
-      background: linear-gradient(135deg, #FFF4E6, #FFE5D9);
+      background: linear-gradient(135deg, #FFF3E0, #FFE5D9);
       border: 1px solid #FFD4B8;
-      color: #E85A24;
+      color: var(--color-primary-900, #E65100);
       border-radius: 9999px;
       font-size: 0.875rem;
       font-weight: 500;
@@ -1176,7 +1188,7 @@ type StatusFilter = 'all' | 'pending' | 'under_review' | 'verified' | 'rejected'
     .shop-photo-container {
       border-radius: 16px;
       overflow: hidden;
-      border: 2px solid #f3f4f6;
+      border: 2px solid #F5F5F5;
     }
 
     .shop-photo {
@@ -1187,7 +1199,7 @@ type StatusFilter = 'all' | 'pending' | 'under_review' | 'verified' | 'rejected'
     }
 
     .notes-box {
-      background: linear-gradient(135deg, #fffbeb, #fef3c7);
+      background: linear-gradient(135deg, #FFF8E1, #FFF8E1);
       border: 1px solid #fcd34d;
       padding: 1rem;
       border-radius: 12px;
@@ -1204,7 +1216,7 @@ type StatusFilter = 'all' | 'pending' | 'under_review' | 'verified' | 'rejected'
       flex-wrap: wrap;
       gap: 1rem;
       padding: 1rem 0;
-      border-top: 1px solid #f3f4f6;
+      border-top: 1px solid #F5F5F5;
       margin-top: 1rem;
     }
 
@@ -1221,11 +1233,11 @@ type StatusFilter = 'all' | 'pending' | 'under_review' | 'verified' | 'rejected'
     }
 
     .meta-item.success {
-      color: #047857;
+      color: #2E7D32;
     }
 
     .meta-item.success svg {
-      color: #10b981;
+      color: var(--color-secondary, #4CAF50);
     }
 
     /* Action Buttons */
@@ -1235,7 +1247,7 @@ type StatusFilter = 'all' | 'pending' | 'under_review' | 'verified' | 'rejected'
       gap: 0.75rem;
       margin-top: 1.5rem;
       padding-top: 1.5rem;
-      border-top: 2px solid #f3f4f6;
+      border-top: 2px solid #F5F5F5;
     }
 
     .btn {
@@ -1258,40 +1270,40 @@ type StatusFilter = 'all' | 'pending' | 'under_review' | 'verified' | 'rejected'
     }
 
     .btn-primary {
-      background: linear-gradient(135deg, #FF6B35, #FF9800);
+      background: linear-gradient(135deg, var(--color-primary-500, #FF9800), var(--color-gold-800, #F9A825));
       color: white;
-      box-shadow: 0 4px 14px rgba(255, 107, 53, 0.3);
+      box-shadow: 0 4px 14px rgba(255, 152, 0, 0.3);
     }
 
     .btn-primary:hover:not(:disabled) {
       transform: translateY(-2px);
-      box-shadow: 0 6px 20px rgba(255, 107, 53, 0.4);
+      box-shadow: 0 6px 20px rgba(255, 152, 0, 0.4);
     }
 
     .btn-success {
-      background: linear-gradient(135deg, #10b981, #34d399);
+      background: linear-gradient(135deg, var(--color-secondary, #4CAF50), var(--color-secondary-light, #81C784));
       color: white;
-      box-shadow: 0 4px 14px rgba(16, 185, 129, 0.3);
+      box-shadow: 0 4px 14px rgba(76, 175, 80, 0.3);
     }
 
     .btn-success:hover:not(:disabled) {
       transform: translateY(-2px);
-      box-shadow: 0 6px 20px rgba(16, 185, 129, 0.4);
+      box-shadow: 0 6px 20px rgba(76, 175, 80, 0.4);
     }
 
     .btn-danger {
-      background: linear-gradient(135deg, #ef4444, #f87171);
+      background: linear-gradient(135deg, var(--color-error, #F44336), #EF5350);
       color: white;
-      box-shadow: 0 4px 14px rgba(239, 68, 68, 0.3);
+      box-shadow: 0 4px 14px rgba(244, 67, 54, 0.3);
     }
 
     .btn-danger:hover:not(:disabled) {
       transform: translateY(-2px);
-      box-shadow: 0 6px 20px rgba(239, 68, 68, 0.4);
+      box-shadow: 0 6px 20px rgba(244, 67, 54, 0.4);
     }
 
     .btn-warning {
-      background: linear-gradient(135deg, #f59e0b, #fbbf24);
+      background: linear-gradient(135deg, var(--color-mustard, #FFC107), var(--color-primary-700, #F57C00));
       color: white;
       box-shadow: 0 4px 14px rgba(245, 158, 11, 0.3);
     }
@@ -1302,7 +1314,7 @@ type StatusFilter = 'all' | 'pending' | 'under_review' | 'verified' | 'rejected'
     }
 
     .btn-review {
-      background: linear-gradient(135deg, #3b82f6, #60a5fa);
+      background: linear-gradient(135deg, var(--color-ocean, #1565C0), var(--color-ocean-500, #2196F3));
       color: white;
       box-shadow: 0 4px 14px rgba(59, 130, 246, 0.3);
     }
@@ -1314,13 +1326,13 @@ type StatusFilter = 'all' | 'pending' | 'under_review' | 'verified' | 'rejected'
 
     .btn-outline {
       background: white;
-      border: 2px solid #e5e7eb;
+      border: 2px solid #EEEEEE;
       color: #374151;
     }
 
     .btn-outline:hover:not(:disabled) {
-      border-color: #d1d5db;
-      background: #f9fafb;
+      border-color: #D1D5DB;
+      background: #FAFAFA;
     }
 
     /* Pagination */
@@ -1341,7 +1353,7 @@ type StatusFilter = 'all' | 'pending' | 'under_review' | 'verified' | 'rejected'
       align-items: center;
       gap: 0.5rem;
       padding: 0.75rem 1.25rem;
-      border: 2px solid #e5e7eb;
+      border: 2px solid #EEEEEE;
       border-radius: 12px;
       background: white;
       color: #374151;
@@ -1352,8 +1364,8 @@ type StatusFilter = 'all' | 'pending' | 'under_review' | 'verified' | 'rejected'
     }
 
     .pagination-btn:hover:not(:disabled) {
-      border-color: #FF6B35;
-      color: #FF6B35;
+      border-color: var(--color-primary-500, #FF9800);
+      color: var(--color-primary-500, #FF9800);
     }
 
     .pagination-btn:disabled {
@@ -1371,10 +1383,10 @@ type StatusFilter = 'all' | 'pending' | 'under_review' | 'verified' | 'rejected'
       display: flex;
       align-items: center;
       justify-content: center;
-      background: linear-gradient(135deg, #FF6B35, #FF9800);
+      background: linear-gradient(135deg, var(--color-primary-500, #FF9800), var(--color-gold-800, #F9A825));
       color: white;
       font-weight: 700;
-      border-radius: 10px;
+      border-radius: 12px;
     }
 
     /* Modal */
@@ -1421,15 +1433,15 @@ type StatusFilter = 'all' | 'pending' | 'under_review' | 'verified' | 'rejected'
     }
 
     .modal-header.success {
-      background: linear-gradient(135deg, #10b981, #059669);
+      background: linear-gradient(135deg, var(--color-secondary, #4CAF50), var(--color-success-dark, #2E7D32));
     }
 
     .modal-header.danger {
-      background: linear-gradient(135deg, #ef4444, #dc2626);
+      background: linear-gradient(135deg, var(--color-error, #F44336), var(--color-terracotta, #C62828));
     }
 
     .modal-header.warning {
-      background: linear-gradient(135deg, #f59e0b, #d97706);
+      background: linear-gradient(135deg, var(--color-mustard, #FFC107), var(--color-primary-700, #F57C00));
     }
 
     .modal-icon {
@@ -1451,7 +1463,7 @@ type StatusFilter = 'all' | 'pending' | 'under_review' | 'verified' | 'rejected'
     .close-btn {
       width: 36px;
       height: 36px;
-      border-radius: 10px;
+      border-radius: 12px;
       background: rgba(255, 255, 255, 0.15);
       border: none;
       color: white;
@@ -1475,7 +1487,7 @@ type StatusFilter = 'all' | 'pending' | 'under_review' | 'verified' | 'rejected'
       align-items: center;
       gap: 1rem;
       padding: 1rem;
-      background: #f9fafb;
+      background: #FAFAFA;
       border-radius: 12px;
       margin-bottom: 1.5rem;
     }
@@ -1484,7 +1496,7 @@ type StatusFilter = 'all' | 'pending' | 'under_review' | 'verified' | 'rejected'
       width: 48px;
       height: 48px;
       border-radius: 12px;
-      background: linear-gradient(135deg, #FF6B35, #FF9800);
+      background: linear-gradient(135deg, var(--color-primary-500, #FF9800), var(--color-gold-800, #F9A825));
       display: flex;
       align-items: center;
       justify-content: center;
@@ -1493,7 +1505,7 @@ type StatusFilter = 'all' | 'pending' | 'under_review' | 'verified' | 'rejected'
     }
 
     .preview-avatar.warning {
-      background: linear-gradient(135deg, #f59e0b, #fbbf24);
+      background: linear-gradient(135deg, var(--color-mustard, #FFC107), var(--color-primary-700, #F57C00));
     }
 
     .preview-info {
@@ -1525,13 +1537,13 @@ type StatusFilter = 'all' | 'pending' | 'under_review' | 'verified' | 'rejected'
     }
 
     .required {
-      color: #ef4444;
+      color: var(--color-error, #F44336);
     }
 
     .form-group textarea {
       width: 100%;
       padding: 1rem;
-      border: 2px solid #e5e7eb;
+      border: 2px solid #EEEEEE;
       border-radius: 12px;
       resize: none;
       font-family: inherit;
@@ -1541,8 +1553,8 @@ type StatusFilter = 'all' | 'pending' | 'under_review' | 'verified' | 'rejected'
 
     .form-group textarea:focus {
       outline: none;
-      border-color: #FF6B35;
-      box-shadow: 0 0 0 4px rgba(255, 107, 53, 0.1);
+      border-color: var(--color-primary-500, #FF9800);
+      box-shadow: 0 0 0 4px rgba(255, 152, 0, 0.1);
     }
 
     .modal-footer {
@@ -1550,8 +1562,8 @@ type StatusFilter = 'all' | 'pending' | 'under_review' | 'verified' | 'rejected'
       justify-content: flex-end;
       gap: 0.75rem;
       padding: 1.25rem;
-      border-top: 1px solid #f3f4f6;
-      background: #fafafa;
+      border-top: 1px solid #F5F5F5;
+      background: #FAFAFA;
     }
 
     .spinner-small {
@@ -1570,6 +1582,7 @@ export class RepairersVerificationComponent implements OnInit {
   private readonly router = inject(Router);
   private readonly destroyRef = inject(DestroyRef);
   readonly authStore = inject(AuthStore);
+  readonly statusLabels = inject(StatusLabelsService);
 
   readonly isLoading = signal(true);
   readonly isProcessing = signal(false);
@@ -1654,25 +1667,6 @@ export class RepairersVerificationComponent implements OnInit {
     const s = this.stats();
     if (!s) return 0;
     return s.pending + s.underReview + s.verified + s.rejected + s.suspended;
-  }
-
-  getStatusLabel(status: string): string {
-    const labels: Record<string, string> = {
-      pending: 'En attente',
-      under_review: 'En revision',
-      verified: 'Verifie',
-      rejected: 'Rejete',
-      suspended: 'Suspendu',
-    };
-    return labels[status] || status;
-  }
-
-  getInitials(repairer: RepairerForVerification | null): string {
-    if (!repairer) return 'R';
-    if (repairer.user?.firstName && repairer.user?.lastName) {
-      return `${repairer.user.firstName[0]}${repairer.user.lastName[0]}`.toUpperCase();
-    }
-    return repairer.businessName?.substring(0, 2).toUpperCase() || 'R';
   }
 
   previousPage(): void {
@@ -1775,13 +1769,6 @@ export class RepairersVerificationComponent implements OnInit {
       admin: 'Admin',
     };
     return labels[role || ''] || 'Utilisateur';
-  }
-
-  getUserInitials(): string {
-    const user = this.authStore.user();
-    const first = user?.firstName?.[0] || '';
-    const last = user?.lastName?.[0] || '';
-    return (first + last).toUpperCase() || 'A';
   }
 
   goToProfile(): void {

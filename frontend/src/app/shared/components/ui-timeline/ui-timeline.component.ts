@@ -4,6 +4,7 @@ import {
   ChangeDetectionStrategy,
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { FormatDatePipe } from '../../pipes/format-date.pipe';
 
 export interface TimelineItem {
   id: string;
@@ -26,7 +27,7 @@ export type TimelinePosition = 'left' | 'right' | 'alternate';
   selector: 'ui-timeline',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [CommonModule],
+  imports: [CommonModule, FormatDatePipe],
   template: `
     <div
       class="timeline"
@@ -76,7 +77,7 @@ export type TimelinePosition = 'left' | 'right' | 'alternate';
               @if (item.date || item.time) {
                 <span class="timeline-datetime">
                   @if (item.date) {
-                    <span class="date">{{ formatDate(item.date) }}</span>
+                    <span class="date">{{ item.date | formatDate }}</span>
                   }
                   @if (item.time) {
                     <span class="time">{{ item.time }}</span>
@@ -158,9 +159,9 @@ export type TimelinePosition = 'left' | 'right' | 'alternate';
     }
 
     .timeline-item.current .timeline-indicator {
-      background: var(--color-info, #2196F3);
+      background: var(--color-primary-500, #FF9800);
       color: white;
-      box-shadow: 0 0 0 4px rgba(33, 150, 243, 0.2);
+      box-shadow: 0 0 0 4px rgba(255, 152, 0, 0.20);
     }
 
     .timeline-item.pending .timeline-indicator {
@@ -226,9 +227,11 @@ export type TimelinePosition = 'left' | 'right' | 'alternate';
     }
 
     .timeline-title {
+      font-family: 'Poppins', 'Inter', sans-serif;
       font-size: 0.9375rem;
       font-weight: 600;
-      color: var(--color-text-primary, rgba(0, 0, 0, 0.87));
+      letter-spacing: -0.005em;
+      color: var(--color-neutral-900, #111827);
       margin: 0;
     }
 
@@ -341,13 +344,4 @@ export class UiTimelineComponent {
     this.items = value;
   }
 
-  formatDate(date: string | Date): string {
-    if (!date) return '';
-    const d = typeof date === 'string' ? new Date(date) : date;
-    return d.toLocaleDateString('fr-FR', {
-      day: 'numeric',
-      month: 'short',
-      year: d.getFullYear() !== new Date().getFullYear() ? 'numeric' : undefined,
-    });
-  }
 }

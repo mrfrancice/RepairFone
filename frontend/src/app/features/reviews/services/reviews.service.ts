@@ -225,11 +225,11 @@ export class ReviewsService {
 
   // Get rating color
   getRatingColor(rating: number): string {
-    if (rating >= 4.5) return '#10b981';
-    if (rating >= 3.5) return '#22c55e';
-    if (rating >= 2.5) return '#f59e0b';
+    if (rating >= 4.5) return '#4CAF50';
+    if (rating >= 3.5) return '#4CAF50';
+    if (rating >= 2.5) return '#FFC107';
     if (rating >= 1.5) return '#f97316';
-    return '#ef4444';
+    return '#F44336';
   }
 
   // Format date for display
@@ -368,11 +368,11 @@ export class ReviewsService {
 
   // Get step rating color based on value (-5 to 5)
   getStepRatingColor(rating: number): string {
-    if (rating >= 4) return '#10b981';  // Green - Excellent
-    if (rating >= 2) return '#22c55e';  // Light green - Good
-    if (rating >= 0) return '#f59e0b';  // Yellow - Neutral
+    if (rating >= 4) return '#4CAF50';  // Green - Excellent
+    if (rating >= 2) return '#4CAF50';  // Light green - Good
+    if (rating >= 0) return '#FFC107';  // Yellow - Neutral
     if (rating >= -2) return '#f97316'; // Orange - Poor
-    return '#ef4444';                    // Red - Very poor
+    return '#F44336';                    // Red - Very poor
   }
 
   // Get step rating label based on value (-5 to 5)

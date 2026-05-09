@@ -169,7 +169,7 @@ export interface SearchSuggestion {
       display: flex;
       align-items: center;
       background: white;
-      border: 1px solid #d1d5db;
+      border: 1px solid #D1D5DB;
       border-radius: 12px;
       padding: 0 1rem;
       gap: 0.75rem;
@@ -177,12 +177,12 @@ export interface SearchSuggestion {
     }
 
     .search-container.focused .search-input-wrapper {
-      border-color: #2563eb;
-      box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+      border-color: var(--color-primary-500, #FF9800);
+      box-shadow: 0 0 0 3px rgba(255, 152, 0, 0.12);
     }
 
     .search-container.disabled .search-input-wrapper {
-      background: #f3f4f6;
+      background: #F5F5F5;
       opacity: 0.7;
     }
 
@@ -212,7 +212,7 @@ export interface SearchSuggestion {
 
     .search-container.focused .search-icon,
     .search-container.has-value .search-icon {
-      color: #2563eb;
+      color: var(--color-primary-500, #FF9800);
     }
 
     /* Input */
@@ -244,7 +244,7 @@ export interface SearchSuggestion {
 
     /* Loading */
     .search-loading {
-      color: #2563eb;
+      color: var(--color-primary-500, #FF9800);
       display: flex;
     }
 
@@ -265,8 +265,8 @@ export interface SearchSuggestion {
       display: flex;
       align-items: center;
       justify-content: center;
-      min-width: 44px;
-      min-height: 44px;
+      min-width: 48px;
+      min-height: 48px;
       border: none;
       background: transparent;
       border-radius: var(--border-radius-md, 8px);
@@ -279,13 +279,13 @@ export interface SearchSuggestion {
 
     .clear-btn svg {
       padding: 4px;
-      background: #f3f4f6;
+      background: #F5F5F5;
       border-radius: 50%;
       transition: background 0.2s;
     }
 
     .clear-btn:hover svg {
-      background: #e5e7eb;
+      background: #EEEEEE;
     }
 
     .clear-btn:hover {
@@ -302,10 +302,10 @@ export interface SearchSuggestion {
       display: flex;
       align-items: center;
       justify-content: center;
-      min-width: 44px;
-      min-height: 44px;
+      min-width: 48px;
+      min-height: 48px;
       border: none;
-      background: #2563eb;
+      background: var(--color-primary-500, #FF9800);
       border-radius: 8px;
       color: white;
       cursor: pointer;
@@ -315,7 +315,7 @@ export interface SearchSuggestion {
     }
 
     .action-btn:hover:not(:disabled) {
-      background: #1d4ed8;
+      background: var(--color-primary-900, #E65100);
     }
 
     .action-btn:disabled {
@@ -335,7 +335,7 @@ export interface SearchSuggestion {
       left: 0;
       right: 0;
       background: white;
-      border: 1px solid #e5e7eb;
+      border: 1px solid #EEEEEE;
       border-radius: 12px;
       box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
       z-index: 50;
@@ -348,7 +348,7 @@ export interface SearchSuggestion {
     }
 
     .dropdown-section + .dropdown-section {
-      border-top: 1px solid #e5e7eb;
+      border-top: 1px solid #EEEEEE;
     }
 
     .section-header {
@@ -368,13 +368,13 @@ export interface SearchSuggestion {
 
     .clear-history {
       font-size: 0.75rem;
-      color: #2563eb;
+      color: var(--color-primary-500, #FF9800);
       background: none;
       border: none;
       cursor: pointer;
       padding: 0.5rem;
       margin: -0.5rem;
-      min-height: 44px;
+      min-height: 48px;
       display: flex;
       align-items: center;
       border-radius: var(--border-radius-sm, 4px);
@@ -383,7 +383,7 @@ export interface SearchSuggestion {
 
     .clear-history:hover {
       text-decoration: underline;
-      background: var(--color-neutral-100, #f3f4f6);
+      background: var(--color-neutral-100, #F5F5F5);
     }
 
     .clear-history:focus-visible {
@@ -396,19 +396,19 @@ export interface SearchSuggestion {
       align-items: center;
       gap: 0.75rem;
       padding: 0.75rem 1rem;
-      min-height: 44px;
+      min-height: 48px;
       cursor: pointer;
       transition: background 0.15s;
     }
 
     .suggestion-item:hover {
-      background: #f3f4f6;
+      background: #F5F5F5;
     }
 
     .suggestion-item:focus-visible {
       outline: 2px solid var(--color-primary, #FF9800);
       outline-offset: -2px;
-      background: #f3f4f6;
+      background: #F5F5F5;
     }
 
     .suggestion-icon {

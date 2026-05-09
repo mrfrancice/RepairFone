@@ -4,6 +4,8 @@ import { RouterLink, ActivatedRoute, Router } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { AdminService, UserForAdmin } from '../../services/admin.service';
 import { UiHeaderComponent } from '../../../../shared/components/ui-header/ui-header.component';
+import { InitialsPipe } from '../../../../shared/pipes/initials.pipe';
+import { StatusLabelsService, UserStatus } from '../../../../shared/services/status-labels.service';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 
 type RoleFilter = 'all' | 'client' | 'repairer';
@@ -13,7 +15,7 @@ type StatusFilter = 'all' | 'pending' | 'active' | 'suspended' | 'deactivated';
   selector: 'app-users-management',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [CommonModule, RouterLink, FormsModule, UiHeaderComponent],
+  imports: [CommonModule, RouterLink, FormsModule, UiHeaderComponent, InitialsPipe],
   template: `
     <div class="admin-page">
       <!-- Header Banner -->
@@ -83,7 +85,7 @@ type StatusFilter = 'all' | 'pending' | 'active' | 'suspended' | 'deactivated';
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
                   <path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z" stroke="currentColor" stroke-width="2"/>
                 </svg>
-                Reparateurs
+                Réparateurs
               </button>
             </div>
           </div>
@@ -137,7 +139,7 @@ type StatusFilter = 'all' | 'pending' | 'active' | 'suspended' | 'deactivated';
               </svg>
             </div>
             <p>{{ error() }}</p>
-            <button class="btn btn-primary" (click)="loadUsers()">Reessayer</button>
+            <button class="btn btn-primary" (click)="loadUsers()">Réessayer</button>
           </div>
         } @else if (users().length === 0) {
           <div class="empty-state">
@@ -159,7 +161,7 @@ type StatusFilter = 'all' | 'pending' | 'active' | 'suspended' | 'deactivated';
                     @if (user.avatarUrl) {
                       <img [src]="user.avatarUrl" [alt]="getUserName(user)" />
                     } @else {
-                      <span>{{ getInitials(user) }}</span>
+                      <span>{{ user.firstName | initials : user.lastName }}</span>
                     }
                     <span class="status-indicator" [class]="user.status"></span>
                   </div>
@@ -194,7 +196,7 @@ type StatusFilter = 'all' | 'pending' | 'active' | 'suspended' | 'deactivated';
                         {{ getRoleLabel(user.role) }}
                       </span>
                       <span class="status-badge" [class]="user.status">
-                        {{ getStatusLabel(user.status) }}
+                        {{ statusLabels.getUserStatusLabel(user.status) }}
                       </span>
                       @if (user.repairerProfile) {
                         <span class="business-badge">
@@ -363,7 +365,7 @@ type StatusFilter = 'all' | 'pending' | 'active' | 'suspended' | 'deactivated';
             <div class="modal-body">
               <div class="user-preview">
                 <div class="preview-avatar" [class]="selectedUser()?.role">
-                  {{ getInitials(selectedUser()!) }}
+                  {{ selectedUser()?.firstName | initials : selectedUser()?.lastName }}
                 </div>
                 <div class="preview-info">
                   <strong>{{ getUserName(selectedUser()!) }}</strong>
@@ -401,13 +403,13 @@ type StatusFilter = 'all' | 'pending' | 'active' | 'suspended' | 'deactivated';
   styles: [`
     .admin-page {
       min-height: 100vh;
-      background: #f8f9fa;
+      background: #FAFAFA;
     }
 
     /* Container */
     .admin-container {
       padding: 1rem;
-      padding-top: 100px;
+      padding-top: var(--header-height, 100px);
       max-width: 1200px;
       margin: 0 auto;
     }
@@ -422,7 +424,7 @@ type StatusFilter = 'all' | 'pending' | 'active' | 'suspended' | 'deactivated';
       align-items: center;
       gap: 0.75rem;
       background: white;
-      border: 2px solid #e5e7eb;
+      border: 2px solid #EEEEEE;
       border-radius: 16px;
       padding: 0.875rem 1rem;
       transition: all 0.2s;
@@ -430,8 +432,8 @@ type StatusFilter = 'all' | 'pending' | 'active' | 'suspended' | 'deactivated';
     }
 
     .search-bar:focus-within {
-      border-color: #FF6B35;
-      box-shadow: 0 0 0 4px rgba(255, 107, 53, 0.1);
+      border-color: var(--color-primary-500, #FF9800);
+      box-shadow: 0 0 0 4px rgba(255, 152, 0, 0.1);
     }
 
     .search-bar svg {
@@ -454,9 +456,9 @@ type StatusFilter = 'all' | 'pending' | 'active' | 'suspended' | 'deactivated';
     .clear-search {
       width: 28px;
       height: 28px;
-      border-radius: 8px;
+      border-radius: 12px;
       border: none;
-      background: #f3f4f6;
+      background: #F5F5F5;
       color: #6b7280;
       cursor: pointer;
       display: flex;
@@ -466,7 +468,7 @@ type StatusFilter = 'all' | 'pending' | 'active' | 'suspended' | 'deactivated';
     }
 
     .clear-search:hover {
-      background: #e5e7eb;
+      background: #EEEEEE;
       color: #374151;
     }
 
@@ -506,7 +508,7 @@ type StatusFilter = 'all' | 'pending' | 'active' | 'suspended' | 'deactivated';
     }
 
     .filter-group label svg {
-      color: #FF6B35;
+      color: var(--color-primary-500, #FF9800);
     }
 
     .filter-buttons {
@@ -520,8 +522,8 @@ type StatusFilter = 'all' | 'pending' | 'active' | 'suspended' | 'deactivated';
       align-items: center;
       gap: 0.375rem;
       padding: 0.5rem 1rem;
-      border: 2px solid #e5e7eb;
-      border-radius: 10px;
+      border: 2px solid #EEEEEE;
+      border-radius: 12px;
       background: white;
       color: #6b7280;
       font-size: 0.875rem;
@@ -531,8 +533,8 @@ type StatusFilter = 'all' | 'pending' | 'active' | 'suspended' | 'deactivated';
     }
 
     .filter-btn:hover {
-      border-color: #d1d5db;
-      background: #f9fafb;
+      border-color: #D1D5DB;
+      background: #FAFAFA;
     }
 
     .filter-btn.active {
@@ -542,23 +544,23 @@ type StatusFilter = 'all' | 'pending' | 'active' | 'suspended' | 'deactivated';
     }
 
     .filter-btn.client.active {
-      background: linear-gradient(135deg, #3b82f6, #60a5fa);
-      border-color: #3b82f6;
+      background: linear-gradient(135deg, var(--color-ocean, #1565C0), var(--color-ocean-500, #2196F3));
+      border-color: var(--color-ocean, #1565C0);
     }
 
     .filter-btn.repairer.active {
-      background: linear-gradient(135deg, #FF6B35, #FF9800);
-      border-color: #FF6B35;
+      background: linear-gradient(135deg, var(--color-primary-500, #FF9800), var(--color-gold-800, #F9A825));
+      border-color: var(--color-primary-500, #FF9800);
     }
 
     .filter-btn.active-status.active {
-      background: linear-gradient(135deg, #10b981, #34d399);
-      border-color: #10b981;
+      background: linear-gradient(135deg, var(--color-secondary, #4CAF50), var(--color-secondary-light, #81C784));
+      border-color: var(--color-secondary, #4CAF50);
     }
 
     .filter-btn.suspended-status.active {
-      background: linear-gradient(135deg, #f59e0b, #fbbf24);
-      border-color: #f59e0b;
+      background: linear-gradient(135deg, var(--color-mustard, #FFC107), var(--color-primary-700, #F57C00));
+      border-color: var(--color-mustard, #FFC107);
     }
 
     .status-dot {
@@ -568,11 +570,11 @@ type StatusFilter = 'all' | 'pending' | 'active' | 'suspended' | 'deactivated';
     }
 
     .status-dot.active {
-      background: #10b981;
+      background: var(--color-secondary, #4CAF50);
     }
 
     .status-dot.suspended {
-      background: #f59e0b;
+      background: var(--color-mustard, #FFC107);
     }
 
     .filter-btn.active .status-dot {
@@ -596,7 +598,7 @@ type StatusFilter = 'all' | 'pending' | 'active' | 'suspended' | 'deactivated';
       width: 48px;
       height: 48px;
       border: 4px solid #FFE5D9;
-      border-top-color: #FF6B35;
+      border-top-color: var(--color-primary-500, #FF9800);
       border-radius: 50%;
       animation: spin 1s linear infinite;
       margin-bottom: 1rem;
@@ -607,13 +609,13 @@ type StatusFilter = 'all' | 'pending' | 'active' | 'suspended' | 'deactivated';
     }
 
     .error-icon, .empty-icon {
-      color: #FF6B35;
+      color: var(--color-primary-500, #FF9800);
       margin-bottom: 1rem;
       opacity: 0.8;
     }
 
     .empty-icon {
-      color: #d1d5db;
+      color: #D1D5DB;
     }
 
     .error-state p, .empty-state p {
@@ -657,7 +659,7 @@ type StatusFilter = 'all' | 'pending' | 'active' | 'suspended' | 'deactivated';
       width: 64px;
       height: 64px;
       border-radius: 18px;
-      background: linear-gradient(135deg, #3b82f6, #60a5fa);
+      background: linear-gradient(135deg, var(--color-ocean, #1565C0), var(--color-ocean-500, #2196F3));
       display: flex;
       align-items: center;
       justify-content: center;
@@ -670,15 +672,15 @@ type StatusFilter = 'all' | 'pending' | 'active' | 'suspended' | 'deactivated';
     }
 
     .avatar.client {
-      background: linear-gradient(135deg, #3b82f6, #60a5fa);
+      background: linear-gradient(135deg, var(--color-ocean, #1565C0), var(--color-ocean-500, #2196F3));
     }
 
     .avatar.repairer {
-      background: linear-gradient(135deg, #FF6B35, #FF9800);
+      background: linear-gradient(135deg, var(--color-primary-500, #FF9800), var(--color-gold-800, #F9A825));
     }
 
     .avatar.admin {
-      background: linear-gradient(135deg, #8b5cf6, #a78bfa);
+      background: linear-gradient(135deg, var(--color-primary-500, #FF9800), var(--color-gold-800, #F9A825));
     }
 
     .avatar img {
@@ -697,9 +699,9 @@ type StatusFilter = 'all' | 'pending' | 'active' | 'suspended' | 'deactivated';
       border: 3px solid white;
     }
 
-    .status-indicator.pending { background: #f59e0b; }
-    .status-indicator.active { background: #10b981; }
-    .status-indicator.suspended { background: #ef4444; }
+    .status-indicator.pending { background: var(--color-mustard, #FFC107); }
+    .status-indicator.active { background: var(--color-secondary, #4CAF50); }
+    .status-indicator.suspended { background: var(--color-error, #F44336); }
     .status-indicator.deactivated { background: #6b7280; }
 
     .user-info {
@@ -746,17 +748,17 @@ type StatusFilter = 'all' | 'pending' | 'active' | 'suspended' | 'deactivated';
       letter-spacing: 0.3px;
     }
 
-    .role-badge.client { background: #dbeafe; color: #1d4ed8; }
-    .role-badge.repairer { background: #FFF4E6; color: #E85A24; }
-    .role-badge.admin { background: #f3e8ff; color: #7c3aed; }
+    .role-badge.client { background: #E3F2FD; color: var(--color-primary-900, #E65100); }
+    .role-badge.repairer { background: #FFF3E0; color: var(--color-primary-900, #E65100); }
+    .role-badge.admin { background: #FFF3E0; color: var(--color-primary-500, #FF9800); }
 
-    .status-badge.pending { background: #fef3c7; color: #b45309; }
-    .status-badge.active { background: #d1fae5; color: #047857; }
-    .status-badge.suspended { background: #fee2e2; color: #b91c1c; }
-    .status-badge.deactivated { background: #f3f4f6; color: #4b5563; }
+    .status-badge.pending { background: #FFF8E1; color: #F57C00; }
+    .status-badge.active { background: #E8F5E9; color: #2E7D32; }
+    .status-badge.suspended { background: #FFEBEE; color: var(--color-terracotta, #C62828); }
+    .status-badge.deactivated { background: #F5F5F5; color: #4b5563; }
 
     .business-badge {
-      background: #f3f4f6;
+      background: #F5F5F5;
       color: #374151;
     }
 
@@ -765,8 +767,8 @@ type StatusFilter = 'all' | 'pending' | 'active' | 'suspended' | 'deactivated';
       grid-template-columns: repeat(3, 1fr);
       gap: 0.75rem;
       padding: 1rem 0;
-      border-top: 1px solid #f3f4f6;
-      border-bottom: 1px solid #f3f4f6;
+      border-top: 1px solid #F5F5F5;
+      border-bottom: 1px solid #F5F5F5;
       margin-bottom: 1rem;
     }
 
@@ -785,12 +787,12 @@ type StatusFilter = 'all' | 'pending' | 'active' | 'suspended' | 'deactivated';
     .detail-icon {
       width: 32px;
       height: 32px;
-      border-radius: 8px;
-      background: #f9fafb;
+      border-radius: 12px;
+      background: #FAFAFA;
       display: flex;
       align-items: center;
       justify-content: center;
-      color: #FF6B35;
+      color: var(--color-primary-500, #FF9800);
       flex-shrink: 0;
     }
 
@@ -824,8 +826,8 @@ type StatusFilter = 'all' | 'pending' | 'active' | 'suspended' | 'deactivated';
       align-items: center;
       gap: 0.25rem;
       padding: 0.125rem 0.5rem;
-      background: linear-gradient(135deg, #d1fae5, #a7f3d0);
-      color: #047857;
+      background: linear-gradient(135deg, var(--color-secondary-50, #E8F5E9), var(--color-secondary-100, #C8E6C9));
+      color: #2E7D32;
       border-radius: 4px;
       font-size: 0.625rem;
       font-weight: 600;
@@ -865,29 +867,29 @@ type StatusFilter = 'all' | 'pending' | 'active' | 'suspended' | 'deactivated';
     }
 
     .btn-primary {
-      background: linear-gradient(135deg, #FF6B35, #FF9800);
+      background: linear-gradient(135deg, var(--color-primary-500, #FF9800), var(--color-gold-800, #F9A825));
       color: white;
-      box-shadow: 0 4px 14px rgba(255, 107, 53, 0.3);
+      box-shadow: 0 4px 14px rgba(255, 152, 0, 0.3);
     }
 
     .btn-primary:hover:not(:disabled) {
       transform: translateY(-2px);
-      box-shadow: 0 6px 20px rgba(255, 107, 53, 0.4);
+      box-shadow: 0 6px 20px rgba(255, 152, 0, 0.4);
     }
 
     .btn-success {
-      background: linear-gradient(135deg, #10b981, #34d399);
+      background: linear-gradient(135deg, var(--color-secondary, #4CAF50), var(--color-secondary-light, #81C784));
       color: white;
-      box-shadow: 0 4px 14px rgba(16, 185, 129, 0.3);
+      box-shadow: 0 4px 14px rgba(76, 175, 80, 0.3);
     }
 
     .btn-success:hover:not(:disabled) {
       transform: translateY(-2px);
-      box-shadow: 0 6px 20px rgba(16, 185, 129, 0.4);
+      box-shadow: 0 6px 20px rgba(76, 175, 80, 0.4);
     }
 
     .btn-warning {
-      background: linear-gradient(135deg, #f59e0b, #fbbf24);
+      background: linear-gradient(135deg, var(--color-mustard, #FFC107), var(--color-primary-700, #F57C00));
       color: white;
       box-shadow: 0 4px 14px rgba(245, 158, 11, 0.3);
     }
@@ -899,13 +901,13 @@ type StatusFilter = 'all' | 'pending' | 'active' | 'suspended' | 'deactivated';
 
     .btn-outline {
       background: white;
-      border: 2px solid #e5e7eb;
+      border: 2px solid #EEEEEE;
       color: #374151;
     }
 
     .btn-outline:hover:not(:disabled) {
-      border-color: #FF6B35;
-      color: #FF6B35;
+      border-color: var(--color-primary-500, #FF9800);
+      color: var(--color-primary-500, #FF9800);
     }
 
     /* Pagination */
@@ -926,7 +928,7 @@ type StatusFilter = 'all' | 'pending' | 'active' | 'suspended' | 'deactivated';
       align-items: center;
       gap: 0.5rem;
       padding: 0.75rem 1.25rem;
-      border: 2px solid #e5e7eb;
+      border: 2px solid #EEEEEE;
       border-radius: 12px;
       background: white;
       color: #374151;
@@ -937,8 +939,8 @@ type StatusFilter = 'all' | 'pending' | 'active' | 'suspended' | 'deactivated';
     }
 
     .pagination-btn:hover:not(:disabled) {
-      border-color: #FF6B35;
-      color: #FF6B35;
+      border-color: var(--color-primary-500, #FF9800);
+      color: var(--color-primary-500, #FF9800);
     }
 
     .pagination-btn:disabled {
@@ -956,10 +958,10 @@ type StatusFilter = 'all' | 'pending' | 'active' | 'suspended' | 'deactivated';
       display: flex;
       align-items: center;
       justify-content: center;
-      background: linear-gradient(135deg, #FF6B35, #FF9800);
+      background: linear-gradient(135deg, var(--color-primary-500, #FF9800), var(--color-gold-800, #F9A825));
       color: white;
       font-weight: 700;
-      border-radius: 10px;
+      border-radius: 12px;
     }
 
     /* Modal */
@@ -1006,7 +1008,7 @@ type StatusFilter = 'all' | 'pending' | 'active' | 'suspended' | 'deactivated';
     }
 
     .modal-header.warning {
-      background: linear-gradient(135deg, #f59e0b, #d97706);
+      background: linear-gradient(135deg, var(--color-mustard, #FFC107), var(--color-primary-700, #F57C00));
     }
 
     .modal-icon {
@@ -1028,7 +1030,7 @@ type StatusFilter = 'all' | 'pending' | 'active' | 'suspended' | 'deactivated';
     .close-btn {
       width: 36px;
       height: 36px;
-      border-radius: 10px;
+      border-radius: 12px;
       background: rgba(255, 255, 255, 0.15);
       border: none;
       color: white;
@@ -1052,7 +1054,7 @@ type StatusFilter = 'all' | 'pending' | 'active' | 'suspended' | 'deactivated';
       align-items: center;
       gap: 1rem;
       padding: 1rem;
-      background: #f9fafb;
+      background: #FAFAFA;
       border-radius: 12px;
       margin-bottom: 1.5rem;
     }
@@ -1061,7 +1063,7 @@ type StatusFilter = 'all' | 'pending' | 'active' | 'suspended' | 'deactivated';
       width: 48px;
       height: 48px;
       border-radius: 12px;
-      background: linear-gradient(135deg, #3b82f6, #60a5fa);
+      background: linear-gradient(135deg, var(--color-ocean, #1565C0), var(--color-ocean-500, #2196F3));
       display: flex;
       align-items: center;
       justify-content: center;
@@ -1070,7 +1072,7 @@ type StatusFilter = 'all' | 'pending' | 'active' | 'suspended' | 'deactivated';
     }
 
     .preview-avatar.repairer {
-      background: linear-gradient(135deg, #FF6B35, #FF9800);
+      background: linear-gradient(135deg, var(--color-primary-500, #FF9800), var(--color-gold-800, #F9A825));
     }
 
     .preview-info {
@@ -1104,7 +1106,7 @@ type StatusFilter = 'all' | 'pending' | 'active' | 'suspended' | 'deactivated';
     .form-group textarea {
       width: 100%;
       padding: 1rem;
-      border: 2px solid #e5e7eb;
+      border: 2px solid #EEEEEE;
       border-radius: 12px;
       resize: none;
       font-family: inherit;
@@ -1114,8 +1116,8 @@ type StatusFilter = 'all' | 'pending' | 'active' | 'suspended' | 'deactivated';
 
     .form-group textarea:focus {
       outline: none;
-      border-color: #FF6B35;
-      box-shadow: 0 0 0 4px rgba(255, 107, 53, 0.1);
+      border-color: var(--color-primary-500, #FF9800);
+      box-shadow: 0 0 0 4px rgba(255, 152, 0, 0.1);
     }
 
     .modal-footer {
@@ -1123,8 +1125,8 @@ type StatusFilter = 'all' | 'pending' | 'active' | 'suspended' | 'deactivated';
       justify-content: flex-end;
       gap: 0.75rem;
       padding: 1.25rem;
-      border-top: 1px solid #f3f4f6;
-      background: #fafafa;
+      border-top: 1px solid #F5F5F5;
+      background: #FAFAFA;
     }
 
     .spinner-small {
@@ -1142,6 +1144,7 @@ export class UsersManagementComponent implements OnInit {
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
   private readonly destroyRef = inject(DestroyRef);
+  readonly statusLabels = inject(StatusLabelsService);
 
   readonly isLoading = signal(true);
   readonly isProcessing = signal(false);
@@ -1242,14 +1245,6 @@ export class UsersManagementComponent implements OnInit {
     return 'Utilisateur';
   }
 
-  getInitials(user: UserForAdmin | null): string {
-    if (!user) return 'U';
-    if (user.firstName && user.lastName) {
-      return `${user.firstName[0]}${user.lastName[0]}`.toUpperCase();
-    }
-    return 'U';
-  }
-
   getRoleLabel(role: string): string {
     const labels: Record<string, string> = {
       client: 'Client',
@@ -1257,16 +1252,6 @@ export class UsersManagementComponent implements OnInit {
       admin: 'Admin',
     };
     return labels[role] || role;
-  }
-
-  getStatusLabel(status: string): string {
-    const labels: Record<string, string> = {
-      pending: 'En attente',
-      active: 'Actif',
-      suspended: 'Suspendu',
-      deactivated: 'Desactive',
-    };
-    return labels[status] || status;
   }
 
   previousPage(): void {

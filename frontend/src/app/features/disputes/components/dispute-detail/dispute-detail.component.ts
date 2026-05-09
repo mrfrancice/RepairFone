@@ -8,6 +8,9 @@ import { UiCardComponent } from '../../../../shared/components/ui-card/ui-card.c
 import { UiButtonComponent } from '../../../../shared/components/ui-button/ui-button.component';
 import { UiLoadingComponent } from '../../../../shared/components/ui-loading/ui-loading.component';
 import { UiPriceDisplayComponent } from '../../../../shared/components/ui-price-display/ui-price-display.component';
+import { FormatDatePipe } from '../../../../shared/pipes/format-date.pipe';
+import { LoggerService } from '../../../../core/services/logger.service';
+import { UiHeaderComponent } from '../../../../shared/components/ui-header/ui-header.component';
 
 @Component({
   selector: 'app-dispute-detail',
@@ -21,16 +24,16 @@ import { UiPriceDisplayComponent } from '../../../../shared/components/ui-price-
     UiButtonComponent,
     UiLoadingComponent,
     UiPriceDisplayComponent,
+    FormatDatePipe,
+    UiHeaderComponent,
   ],
   template: `
     <div class="dispute-detail">
-      <!-- Header -->
-      <header class="header">
-        <button class="back-btn" routerLink="/disputes">
-          ← Retour
-        </button>
-        <h1>Litige #{{ dispute()?.id?.slice(0, 8) }}</h1>
-      </header>
+      <ui-header
+        [title]="'Litige #' + (dispute()?.id?.slice(0, 8) || '')"
+        [showBack]="true"
+        backRoute="/disputes"
+      />
 
       <!-- Loading -->
       @if (isLoading()) {
@@ -72,7 +75,7 @@ import { UiPriceDisplayComponent } from '../../../../shared/components/ui-price-
             <span class="reason-icon">{{ disputesService.getReasonIcon(dispute()!.reason) }}</span>
             <div class="reason-info">
               <span class="reason-label">{{ disputesService.getReasonLabel(dispute()!.reason) }}</span>
-              <span class="reason-date">Signalé le {{ formatDate(dispute()!.createdAt) }}</span>
+              <span class="reason-date">Signalé le {{ dispute()!.createdAt | formatDate:'long' }}</span>
             </div>
           </div>
           <p class="reason-description">{{ dispute()!.description }}</p>
@@ -147,7 +150,7 @@ import { UiPriceDisplayComponent } from '../../../../shared/components/ui-price-
               <div class="message" [class.own]="isOwnMessage(message)" [class.support]="message.senderType === 'support'">
                 <div class="message-header">
                   <span class="sender">{{ getSenderLabel(message) }}</span>
-                  <span class="time">{{ formatTime(message.createdAt) }}</span>
+                  <span class="time">{{ message.createdAt | formatDate:'time' }}</span>
                 </div>
                 <div class="message-content">
                   <p>{{ message.message }}</p>
@@ -225,28 +228,8 @@ import { UiPriceDisplayComponent } from '../../../../shared/components/ui-price-
   styles: [`
     .dispute-detail {
       padding: 1rem;
+      padding-top: calc(var(--header-height, 100px) + 1rem);
       padding-bottom: 5rem;
-    }
-
-    .header {
-      margin-bottom: 1.5rem;
-
-      .back-btn {
-        background: none;
-        border: none;
-        color: #3b82f6;
-        font-size: 0.875rem;
-        padding: 0;
-        margin-bottom: 0.5rem;
-        cursor: pointer;
-      }
-
-      h1 {
-        font-size: 1.25rem;
-        font-weight: 700;
-        color: #1e293b;
-        margin: 0;
-      }
     }
 
     .loading-container {
@@ -255,16 +238,16 @@ import { UiPriceDisplayComponent } from '../../../../shared/components/ui-price-
       align-items: center;
       gap: 1rem;
       padding: 3rem;
-      color: #64748b;
+      color: #6B7280;
     }
 
     .error-card {
       padding: 1.5rem;
       text-align: center;
-      background: #fef2f2;
+      background: #FFEBEE;
 
       p {
-        color: #dc2626;
+        color: var(--color-terracotta, #C62828);
         margin: 0 0 1rem 0;
       }
     }
@@ -312,7 +295,7 @@ import { UiPriceDisplayComponent } from '../../../../shared/components/ui-price-
       h3 {
         font-size: 0.75rem;
         font-weight: 600;
-        color: #64748b;
+        color: #6B7280;
         text-transform: uppercase;
         letter-spacing: 0.05em;
         margin: 0 0 0.75rem 0;
@@ -339,17 +322,17 @@ import { UiPriceDisplayComponent } from '../../../../shared/components/ui-price-
 
       .reason-label {
         font-weight: 600;
-        color: #1e293b;
+        color: #1F2937;
       }
 
       .reason-date {
         font-size: 0.75rem;
-        color: #94a3b8;
+        color: #9CA3AF;
       }
 
       .reason-description {
         font-size: 0.875rem;
-        color: #475569;
+        color: #4B5563;
         line-height: 1.6;
         margin: 0;
         padding-top: 0.75rem;
@@ -398,21 +381,21 @@ import { UiPriceDisplayComponent } from '../../../../shared/components/ui-price-
 
       .device-name {
         font-weight: 600;
-        color: #1e293b;
+        color: #1F2937;
       }
 
       .service-type {
         font-size: 0.8125rem;
-        color: #64748b;
+        color: #6B7280;
       }
 
       .arrow {
-        color: #94a3b8;
+        color: #9CA3AF;
       }
     }
 
     .resolution-card {
-      background: #f0fdf4;
+      background: #E8F5E9;
       border-color: #bbf7d0;
 
       h3 {
@@ -438,7 +421,7 @@ import { UiPriceDisplayComponent } from '../../../../shared/components/ui-price-
 
         .label {
           font-size: 0.875rem;
-          color: #15803d;
+          color: var(--color-success-dark, #2E7D32);
         }
       }
 
@@ -456,7 +439,7 @@ import { UiPriceDisplayComponent } from '../../../../shared/components/ui-price-
       h3 {
         font-size: 1rem;
         font-weight: 600;
-        color: #1e293b;
+        color: #1F2937;
         margin: 0 0 1rem 0;
       }
     }
@@ -467,7 +450,7 @@ import { UiPriceDisplayComponent } from '../../../../shared/components/ui-price-
 
       p {
         margin: 0;
-        color: #64748b;
+        color: #6B7280;
         font-size: 0.875rem;
       }
     }
@@ -489,7 +472,7 @@ import { UiPriceDisplayComponent } from '../../../../shared/components/ui-price-
         margin-left: auto;
 
         .message-content {
-          background: #3b82f6;
+          background: var(--color-ocean, #1565C0);
           color: white;
 
           p {
@@ -500,7 +483,7 @@ import { UiPriceDisplayComponent } from '../../../../shared/components/ui-price-
 
       &.support {
         .message-content {
-          background: #fef3c7;
+          background: #FFF8E1;
           border-color: #fcd34d;
         }
 
@@ -520,12 +503,12 @@ import { UiPriceDisplayComponent } from '../../../../shared/components/ui-price-
       .sender {
         font-size: 0.75rem;
         font-weight: 600;
-        color: #64748b;
+        color: #6B7280;
       }
 
       .time {
         font-size: 0.625rem;
-        color: #94a3b8;
+        color: #9CA3AF;
       }
 
       .message-content {
@@ -537,7 +520,7 @@ import { UiPriceDisplayComponent } from '../../../../shared/components/ui-price-
         p {
           margin: 0;
           font-size: 0.875rem;
-          color: #1e293b;
+          color: #1F2937;
           line-height: 1.5;
         }
       }
@@ -597,7 +580,7 @@ import { UiPriceDisplayComponent } from '../../../../shared/components/ui-price-
         width: 2.5rem;
         height: 2.5rem;
         border-radius: 50%;
-        background: #3b82f6;
+        background: var(--color-ocean, #1565C0);
         color: white;
         border: none;
         font-size: 1rem;
@@ -608,11 +591,11 @@ import { UiPriceDisplayComponent } from '../../../../shared/components/ui-price-
         transition: background 0.2s;
 
         &:hover:not(:disabled) {
-          background: #2563eb;
+          background: var(--color-primary-500, #FF9800);
         }
 
         &:disabled {
-          background: #cbd5e1;
+          background: #D1D5DB;
           cursor: not-allowed;
         }
       }
@@ -641,7 +624,7 @@ import { UiPriceDisplayComponent } from '../../../../shared/components/ui-price-
           width: 1.25rem;
           height: 1.25rem;
           border-radius: 50%;
-          background: #ef4444;
+          background: var(--color-error, #F44336);
           color: white;
           border: none;
           font-size: 0.75rem;
@@ -699,6 +682,7 @@ export class DisputeDetailComponent implements OnInit {
   private readonly router = inject(Router);
   readonly disputesService = inject(DisputesService);
   readonly store = inject(DisputesStore);
+  private readonly logger = inject(LoggerService);
 
   readonly isLoading = signal(false);
   readonly error = signal<string | null>(null);
@@ -737,11 +721,11 @@ export class DisputeDetailComponent implements OnInit {
   getStatusGradient(): string {
     const status = this.dispute()?.status;
     const gradients: Record<string, string> = {
-      open: 'linear-gradient(135deg, #f59e0b, #d97706)',
-      in_review: 'linear-gradient(135deg, #3b82f6, #1d4ed8)',
-      resolved: 'linear-gradient(135deg, #10b981, #059669)',
+      open: 'linear-gradient(135deg, var(--color-mustard, #FFC107), var(--color-primary-700, #F57C00))',
+      in_review: 'linear-gradient(135deg, var(--color-ocean, #1565C0), var(--color-primary-900, #E65100))',
+      resolved: 'linear-gradient(135deg, var(--color-secondary, #4CAF50), var(--color-success-dark, #2E7D32))',
       closed: 'linear-gradient(135deg, #6b7280, #4b5563)',
-      rejected: 'linear-gradient(135deg, #ef4444, #dc2626)',
+      rejected: 'linear-gradient(135deg, var(--color-error, #F44336), var(--color-terracotta, #C62828))',
     };
     return gradients[status || 'open'];
   }
@@ -762,23 +746,6 @@ export class DisputeDetailComponent implements OnInit {
     const dispute = this.dispute();
     if (!dispute) return '';
     return this.disputesService.getEstimatedResolutionTime(dispute);
-  }
-
-  formatDate(dateStr: string): string {
-    const date = new Date(dateStr);
-    return date.toLocaleDateString('fr-FR', {
-      day: 'numeric',
-      month: 'long',
-      year: 'numeric',
-    });
-  }
-
-  formatTime(dateStr: string): string {
-    const date = new Date(dateStr);
-    return date.toLocaleTimeString('fr-FR', {
-      hour: '2-digit',
-      minute: '2-digit',
-    });
   }
 
   isOwnMessage(message: DisputeMessage): boolean {
@@ -857,7 +824,7 @@ export class DisputeDetailComponent implements OnInit {
         }
       }, 100);
     } catch (err: any) {
-      console.error('Failed to send message:', err);
+      this.logger.error('DisputeDetailComponent', 'Failed to send message', err);
     } finally {
       this.isSending.set(false);
     }
@@ -879,7 +846,7 @@ export class DisputeDetailComponent implements OnInit {
       const updated = await this.disputesService.cancelDispute(dispute.id);
       this.store.setCurrentDispute(updated);
     } catch (err: any) {
-      console.error('Failed to cancel dispute:', err);
+      this.logger.error('DisputeDetailComponent', 'Failed to cancel dispute', err);
     }
   }
 }

@@ -5,6 +5,7 @@ import { NotificationService, AppNotification } from '../../../../core/services/
 import { UiLoadingComponent } from '../../../../shared/components/ui-loading/ui-loading.component';
 import { UiEmptyStateComponent } from '../../../../shared/components/ui-empty-state/ui-empty-state.component';
 import { UiHeaderComponent } from '../../../../shared/components/ui-header/ui-header.component';
+import { InfiniteScrollDirective } from '../../../../shared/directives/infinite-scroll.directive';
 
 @Component({
   selector: 'app-notification-list',
@@ -15,6 +16,7 @@ import { UiHeaderComponent } from '../../../../shared/components/ui-header/ui-he
     UiLoadingComponent,
     UiEmptyStateComponent,
     UiHeaderComponent,
+    InfiniteScrollDirective,
   ],
   template: `
     <div class="notification-list">
@@ -89,7 +91,12 @@ import { UiHeaderComponent } from '../../../../shared/components/ui-header/ui-he
 
       <!-- Notifications -->
       @if (filteredNotifications().length > 0) {
-        <div class="notifications">
+        <div class="notifications"
+             appInfiniteScroll
+             [useWindow]="true"
+             [threshold]="200"
+             [disabled]="notificationService.isLoading() || !hasMore()"
+             (scrolled)="loadMore()">
           @for (notification of filteredNotifications(); track notification.id) {
             <div
               class="notification-item"
@@ -120,18 +127,12 @@ import { UiHeaderComponent } from '../../../../shared/components/ui-header/ui-he
             </div>
           }
 
-          @if (hasMore()) {
-            <button
-              class="load-more"
-              [disabled]="notificationService.isLoading()"
-              (click)="loadMore()"
-            >
-              @if (notificationService.isLoading()) {
-                <ui-loading size="sm" />
-              } @else {
-                Charger plus
-              }
-            </button>
+          <!-- Loading indicator for infinite scroll -->
+          @if (notificationService.isLoading() && filteredNotifications().length > 0) {
+            <div class="loading-more">
+              <ui-loading size="sm" />
+              <span>Chargement...</span>
+            </div>
           }
         </div>
       }
@@ -140,43 +141,36 @@ import { UiHeaderComponent } from '../../../../shared/components/ui-header/ui-he
   styles: [`
     .notification-list {
       min-height: 100vh;
-      background: #f9fafb;
-      padding-top: 100px;
+      background: #FAFAFA;
+      padding-top: var(--header-height, 100px);
       padding-bottom: 5rem;
     }
 
-    .header {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      padding: 1.5rem 1rem 1rem;
-      background: white;
-      border-bottom: 1px solid #e5e7eb;
+    .mark-all-btn {
+      background: rgba(255, 255, 255, 0.08);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      color: var(--color-primary-500, #FF9800);
+      font-size: 0.875rem;
+      font-weight: 500;
+      cursor: pointer;
+      padding: 0.375rem 0.75rem;
+      border-radius: 8px;
+      transition: all 150ms ease;
+    }
 
-      h1 {
-        font-size: 1.5rem;
-        font-weight: 700;
-        color: #1e293b;
-        margin: 0;
-      }
-
-      .mark-all-btn {
-        background: none;
-        border: none;
-        color: #3b82f6;
-        font-size: 0.875rem;
-        font-weight: 500;
-        cursor: pointer;
-      }
+    .mark-all-btn:hover {
+      background: rgba(255, 152, 0, 0.18);
+      border-color: var(--color-primary-500, #FF9800);
     }
 
     .push-banner {
       display: flex;
       align-items: center;
       justify-content: space-between;
-      padding: 1rem;
-      background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+      padding: 1rem 1.25rem;
+      background: linear-gradient(135deg, var(--color-primary-500, #FF9800) 0%, var(--color-gold-800, #F9A825) 100%);
       color: white;
+      box-shadow: var(--shadow-warm, 0 8px 24px rgba(255, 152, 0, 0.20));
 
       .banner-content {
         display: flex;
@@ -203,13 +197,19 @@ import { UiHeaderComponent } from '../../../../shared/components/ui-header/ui-he
 
       .enable-btn {
         background: white;
-        color: #3b82f6;
+        color: var(--color-primary-900, #E65100);
         border: none;
-        padding: 0.5rem 1rem;
-        border-radius: 0.375rem;
+        padding: 0.625rem 1.25rem;
+        border-radius: 0.75rem;
+        font-family: 'Inter', sans-serif;
         font-weight: 600;
         font-size: 0.875rem;
         cursor: pointer;
+        transition: transform 150ms ease;
+      }
+
+      .enable-btn:hover {
+        transform: translateY(-1px);
       }
     }
 
@@ -218,34 +218,36 @@ import { UiHeaderComponent } from '../../../../shared/components/ui-header/ui-he
       gap: 0.5rem;
       padding: 1rem;
       background: white;
-      border-bottom: 1px solid #e5e7eb;
+      border-bottom: 1px solid #EEEEEE;
 
       .filter-btn {
         display: flex;
         align-items: center;
         gap: 0.375rem;
         padding: 0.5rem 1rem;
-        background: #f1f5f9;
+        background: var(--color-neutral-100, #F5F5F5);
         border: none;
         border-radius: 9999px;
-        color: #64748b;
+        color: var(--color-neutral-600, #4B5563);
+        font-family: 'Inter', sans-serif;
         font-size: 0.875rem;
-        font-weight: 500;
+        font-weight: 600;
         cursor: pointer;
-        transition: all 0.2s;
+        transition: all 150ms ease;
 
         &.active {
-          background: #3b82f6;
+          background: var(--color-primary-500, #FF9800);
           color: white;
+          box-shadow: var(--shadow-warm, 0 8px 24px rgba(255, 152, 0, 0.20));
 
           .badge {
             background: white;
-            color: #3b82f6;
+            color: var(--color-primary-900, #E65100);
           }
         }
 
         .badge {
-          background: #3b82f6;
+          background: var(--color-ocean, #1565C0);
           color: white;
           font-size: 0.75rem;
           padding: 0.125rem 0.375rem;
@@ -262,7 +264,7 @@ import { UiHeaderComponent } from '../../../../shared/components/ui-header/ui-he
       align-items: center;
       gap: 1rem;
       padding: 3rem;
-      color: #64748b;
+      color: #6B7280;
     }
 
     .notifications {
@@ -284,7 +286,7 @@ import { UiHeaderComponent } from '../../../../shared/components/ui-header/ui-he
       }
 
       &.unread {
-        background: #eff6ff;
+        background: #E3F2FD;
 
         .title {
           font-weight: 600;
@@ -297,7 +299,7 @@ import { UiHeaderComponent } from '../../../../shared/components/ui-header/ui-he
           top: 0;
           bottom: 0;
           width: 3px;
-          background: #3b82f6;
+          background: var(--color-primary-500, #FF9800);
         }
       }
     }
@@ -326,27 +328,27 @@ import { UiHeaderComponent } from '../../../../shared/components/ui-header/ui-he
 
         .type {
           font-size: 0.75rem;
-          color: #3b82f6;
+          color: var(--color-ocean, #1565C0);
           font-weight: 500;
           text-transform: uppercase;
         }
 
         .time {
           font-size: 0.75rem;
-          color: #94a3b8;
+          color: #9CA3AF;
         }
       }
 
       .title {
         font-size: 0.9375rem;
         font-weight: 500;
-        color: #1e293b;
+        color: #1F2937;
         margin: 0 0 0.25rem;
       }
 
       .message {
         font-size: 0.8125rem;
-        color: #64748b;
+        color: #6B7280;
         margin: 0;
         overflow: hidden;
         text-overflow: ellipsis;
@@ -359,7 +361,7 @@ import { UiHeaderComponent } from '../../../../shared/components/ui-header/ui-he
     .delete-btn {
       background: none;
       border: none;
-      color: #94a3b8;
+      color: #9CA3AF;
       font-size: 1.25rem;
       cursor: pointer;
       padding: 0.25rem;
@@ -371,32 +373,18 @@ import { UiHeaderComponent } from '../../../../shared/components/ui-header/ui-he
       }
 
       &:hover {
-        color: #ef4444;
+        color: var(--color-error, #F44336);
       }
     }
 
-    .load-more {
+    .loading-more {
       display: flex;
       align-items: center;
       justify-content: center;
-      width: 100%;
-      padding: 1rem;
-      background: white;
-      border: none;
-      border-top: 1px solid #f1f5f9;
-      color: #3b82f6;
+      gap: 0.5rem;
+      padding: 1.5rem;
+      color: #6B7280;
       font-size: 0.875rem;
-      font-weight: 500;
-      cursor: pointer;
-
-      &:hover:not(:disabled) {
-        background: #f8fafc;
-      }
-
-      &:disabled {
-        cursor: not-allowed;
-        opacity: 0.7;
-      }
     }
   `]
 })

@@ -115,7 +115,7 @@ import { ControlValueAccessor, NG_VALUE_ACCESSOR } from '@angular/forms';
     .slider-value {
       font-size: 0.9375rem;
       font-weight: 600;
-      color: #2563eb;
+      color: var(--color-primary-500, #FF9800);
     }
 
     .slider-track-container {
@@ -141,7 +141,7 @@ import { ControlValueAccessor, NG_VALUE_ACCESSOR } from '@angular/forms';
     .slider-track {
       position: relative;
       height: 6px;
-      background: #e5e7eb;
+      background: #EEEEEE;
       border-radius: 3px;
       flex: 1;
       cursor: pointer;
@@ -152,7 +152,7 @@ import { ControlValueAccessor, NG_VALUE_ACCESSOR } from '@angular/forms';
       left: 0;
       top: 0;
       height: 100%;
-      background: #2563eb;
+      background: var(--color-primary-500, #FF9800);
       border-radius: 3px;
       transition: width 0.1s ease;
     }
@@ -179,13 +179,13 @@ import { ControlValueAccessor, NG_VALUE_ACCESSOR } from '@angular/forms';
       width: 20px;
       height: 20px;
       background: white;
-      border: 2px solid #2563eb;
+      border: 2px solid var(--color-primary-500, #FF9800);
       border-radius: 50%;
       transition: box-shadow 0.2s ease, transform 0.1s ease;
     }
 
     .slider-thumb:hover::before {
-      box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.2);
+      box-shadow: 0 0 0 4px rgba(255, 152, 0, 0.20);
     }
 
     .slider-thumb.dragging {
@@ -193,7 +193,7 @@ import { ControlValueAccessor, NG_VALUE_ACCESSOR } from '@angular/forms';
     }
 
     .slider-thumb.dragging::before {
-      box-shadow: 0 0 0 6px rgba(37, 99, 235, 0.2);
+      box-shadow: 0 0 0 6px rgba(255, 152, 0, 0.20);
       transform: scale(1.1);
     }
 
@@ -234,7 +234,7 @@ import { ControlValueAccessor, NG_VALUE_ACCESSOR } from '@angular/forms';
       top: 50%;
       width: 4px;
       height: 4px;
-      background: #d1d5db;
+      background: #D1D5DB;
       border-radius: 50%;
       transform: translate(-50%, -50%);
     }

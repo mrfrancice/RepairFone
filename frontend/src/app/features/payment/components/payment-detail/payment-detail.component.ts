@@ -7,6 +7,9 @@ import { UiCardComponent } from '../../../../shared/components/ui-card/ui-card.c
 import { UiButtonComponent } from '../../../../shared/components/ui-button/ui-button.component';
 import { UiLoadingComponent } from '../../../../shared/components/ui-loading/ui-loading.component';
 import { UiPriceDisplayComponent } from '../../../../shared/components/ui-price-display/ui-price-display.component';
+import { FormatDatePipe } from '../../../../shared/pipes/format-date.pipe';
+import { LoggerService } from '../../../../core/services/logger.service';
+import { UiHeaderComponent } from '../../../../shared/components/ui-header/ui-header.component';
 
 @Component({
   selector: 'app-payment-detail',
@@ -20,16 +23,12 @@ import { UiPriceDisplayComponent } from '../../../../shared/components/ui-price-
     UiButtonComponent,
     UiLoadingComponent,
     UiPriceDisplayComponent,
+    FormatDatePipe,
+    UiHeaderComponent,
   ],
   template: `
     <div class="payment-detail">
-      <!-- Header -->
-      <header class="header">
-        <button class="back-btn" (click)="goBack()">
-          ← Retour
-        </button>
-        <h1>Détail du paiement</h1>
-      </header>
+      <ui-header title="Détail du paiement" [showBack]="true" (onBack)="goBack()" />
 
       <!-- Loading -->
       @if (isLoading()) {
@@ -102,7 +101,7 @@ import { UiPriceDisplayComponent } from '../../../../shared/components/ui-price-
 
           <div class="info-row">
             <span class="label">Date</span>
-            <span class="value">{{ formatDate(payment()!.paidAt || payment()!.createdAt) }}</span>
+            <span class="value">{{ (payment()!.paidAt || payment()!.createdAt) | formatDate:'datetime' }}</span>
           </div>
         </ui-card>
 
@@ -234,28 +233,8 @@ import { UiPriceDisplayComponent } from '../../../../shared/components/ui-price-
   styles: [`
     .payment-detail {
       padding: 1rem;
+      padding-top: calc(var(--header-height, 100px) + 1rem);
       padding-bottom: 5rem;
-    }
-
-    .header {
-      margin-bottom: 1.5rem;
-
-      .back-btn {
-        background: none;
-        border: none;
-        color: #3b82f6;
-        font-size: 0.875rem;
-        padding: 0;
-        margin-bottom: 0.5rem;
-        cursor: pointer;
-      }
-
-      h1 {
-        font-size: 1.5rem;
-        font-weight: 700;
-        color: #1e293b;
-        margin: 0;
-      }
     }
 
     .loading-container {
@@ -264,16 +243,16 @@ import { UiPriceDisplayComponent } from '../../../../shared/components/ui-price-
       align-items: center;
       gap: 1rem;
       padding: 3rem;
-      color: #64748b;
+      color: #6B7280;
     }
 
     .error-card {
       padding: 1.5rem;
       text-align: center;
-      background: #fef2f2;
+      background: #FFEBEE;
 
       p {
-        color: #dc2626;
+        color: var(--color-terracotta, #C62828);
         margin: 0 0 1rem 0;
       }
     }
@@ -313,7 +292,7 @@ import { UiPriceDisplayComponent } from '../../../../shared/components/ui-price-
       h3 {
         font-size: 0.875rem;
         font-weight: 600;
-        color: #64748b;
+        color: #6B7280;
         text-transform: uppercase;
         letter-spacing: 0.05em;
         margin: 0 0 1rem 0;
@@ -332,12 +311,12 @@ import { UiPriceDisplayComponent } from '../../../../shared/components/ui-price-
       }
 
       .label {
-        color: #64748b;
+        color: #6B7280;
         font-size: 0.875rem;
       }
 
       .value {
-        color: #1e293b;
+        color: #1F2937;
         font-weight: 500;
         font-size: 0.9375rem;
 
@@ -371,7 +350,7 @@ import { UiPriceDisplayComponent } from '../../../../shared/components/ui-price-
       padding: 0.75rem 0;
 
       .label {
-        color: #64748b;
+        color: #6B7280;
         font-size: 0.875rem;
       }
 
@@ -382,7 +361,7 @@ import { UiPriceDisplayComponent } from '../../../../shared/components/ui-price-
 
         .label {
           font-weight: 600;
-          color: #1e293b;
+          color: #1F2937;
         }
       }
     }
@@ -405,12 +384,12 @@ import { UiPriceDisplayComponent } from '../../../../shared/components/ui-price-
 
       .device-name {
         font-weight: 600;
-        color: #1e293b;
+        color: #1F2937;
       }
 
       .service-type {
         font-size: 0.8125rem;
-        color: #64748b;
+        color: #6B7280;
       }
     }
 
@@ -427,7 +406,7 @@ import { UiPriceDisplayComponent } from '../../../../shared/components/ui-price-
         width: 3rem;
         height: 3rem;
         border-radius: 50%;
-        background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+        background: linear-gradient(135deg, var(--color-ocean, #1565C0), var(--color-primary-900, #E65100));
         color: white;
         display: flex;
         align-items: center;
@@ -444,12 +423,12 @@ import { UiPriceDisplayComponent } from '../../../../shared/components/ui-price-
 
       .repairer-name {
         font-weight: 600;
-        color: #1e293b;
+        color: #1F2937;
       }
 
       .repairer-label {
         font-size: 0.75rem;
-        color: #10b981;
+        color: var(--color-secondary, #4CAF50);
       }
     }
 
@@ -484,12 +463,12 @@ import { UiPriceDisplayComponent } from '../../../../shared/components/ui-price-
       h3 {
         font-size: 1.125rem;
         font-weight: 600;
-        color: #1e293b;
+        color: #1F2937;
         margin: 0 0 0.5rem 0;
       }
 
       p {
-        color: #64748b;
+        color: #6B7280;
         font-size: 0.875rem;
         margin: 0 0 1rem 0;
       }
@@ -505,7 +484,7 @@ import { UiPriceDisplayComponent } from '../../../../shared/components/ui-price-
 
         &:focus {
           outline: none;
-          border-color: #3b82f6;
+          border-color: var(--color-ocean, #1565C0);
         }
       }
 
@@ -521,6 +500,7 @@ export class PaymentDetailComponent implements OnInit {
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
   readonly paymentService = inject(PaymentService);
+  private readonly logger = inject(LoggerService);
 
   readonly payment = signal<Payment | null>(null);
   readonly isLoading = signal(false);
@@ -561,12 +541,12 @@ export class PaymentDetailComponent implements OnInit {
   getStatusGradient(): string {
     const status = this.payment()?.status;
     const gradients: Record<string, string> = {
-      pending: 'linear-gradient(135deg, #f59e0b, #d97706)',
-      processing: 'linear-gradient(135deg, #3b82f6, #1d4ed8)',
-      completed: 'linear-gradient(135deg, #10b981, #059669)',
-      failed: 'linear-gradient(135deg, #ef4444, #dc2626)',
-      refunded: 'linear-gradient(135deg, #8b5cf6, #7c3aed)',
-      blocked: 'linear-gradient(135deg, #dc2626, #b91c1c)',
+      pending: 'linear-gradient(135deg, var(--color-mustard, #FFC107), var(--color-primary-700, #F57C00))',
+      processing: 'linear-gradient(135deg, var(--color-ocean, #1565C0), var(--color-primary-900, #E65100))',
+      completed: 'linear-gradient(135deg, var(--color-secondary, #4CAF50), var(--color-success-dark, #2E7D32))',
+      failed: 'linear-gradient(135deg, var(--color-error, #F44336), var(--color-terracotta, #C62828))',
+      refunded: 'linear-gradient(135deg, #FF9800, var(--color-primary-500, #FF9800))',
+      blocked: 'linear-gradient(135deg, var(--color-terracotta, #C62828), var(--color-terracotta, #C62828))',
     };
     return gradients[status || 'pending'];
   }
@@ -630,17 +610,6 @@ export class PaymentDetailComponent implements OnInit {
     return (first + last).toUpperCase();
   }
 
-  formatDate(dateStr: string): string {
-    const date = new Date(dateStr);
-    return date.toLocaleDateString('fr-FR', {
-      day: 'numeric',
-      month: 'long',
-      year: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit',
-    });
-  }
-
   canRequestRefund(): boolean {
     const payment = this.payment();
     if (!payment) return false;
@@ -674,7 +643,7 @@ export class PaymentDetailComponent implements OnInit {
       this.showRefundModal.set(false);
     } catch (err: any) {
       // Show error in toast
-      console.error('Refund request failed:', err);
+      this.logger.error('PaymentDetailComponent', 'Refund request failed', err);
     } finally {
       this.isSubmitting.set(false);
     }

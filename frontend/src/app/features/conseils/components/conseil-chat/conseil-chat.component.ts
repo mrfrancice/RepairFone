@@ -4,6 +4,8 @@ import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import { ConseilsService, ConseilSession, ConseilMessage } from '../../services/conseils.service';
 import { ConseilsStore } from '../../stores/conseils.store';
+import { StatusLabelsService, SessionStatus } from '../../../../shared/services/status-labels.service';
+import { LoggerService } from '../../../../core/services/logger.service';
 
 @Component({
   selector: 'app-conseil-chat',
@@ -34,7 +36,7 @@ import { ConseilsStore } from '../../stores/conseils.store';
             </div>
             <div class="expert-details">
               <span class="expert-name">{{ session()?.expert?.firstName }} {{ session()?.expert?.lastName }}</span>
-              <span class="session-status">{{ getStatusLabel() }}</span>
+              <span class="session-status">{{ statusLabels.getSessionStatusLabel($any(session()?.status)) }}</span>
             </div>
           </div>
         }
@@ -129,7 +131,7 @@ import { ConseilsStore } from '../../stores/conseils.store';
       display: flex;
       flex-direction: column;
       height: 100vh;
-      background: #f9fafb;
+      background: #FAFAFA;
     }
 
     .chat-header {
@@ -138,25 +140,33 @@ import { ConseilsStore } from '../../stores/conseils.store';
       gap: 0.75rem;
       padding: 0.75rem 1rem;
       padding-top: calc(0.75rem + env(safe-area-inset-top, 0));
-      background: white;
-      border-bottom: 1px solid #e5e7eb;
+      background:
+        radial-gradient(ellipse at 92% 50%, rgba(255, 152, 0, 0.22) 0%, transparent 55%),
+        linear-gradient(135deg, #1A1A1A 0%, #0F0F0F 100%);
+      border-bottom-left-radius: 30px;
+      border-bottom-right-radius: 30px;
+      border-bottom: 2px solid var(--color-primary-500, #FF9800);
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.35);
     }
 
     .back-btn, .menu-btn {
-      background: none;
-      border: none;
-      color: #374151;
+      background: rgba(255, 255, 255, 0.08);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      color: white;
       width: 40px;
       height: 40px;
       display: flex;
       align-items: center;
       justify-content: center;
       cursor: pointer;
-      border-radius: 8px;
+      border-radius: 12px;
+      transition: all 150ms ease;
     }
 
     .back-btn:hover, .menu-btn:hover {
-      background: #f3f4f6;
+      background: rgba(255, 152, 0, 0.18);
+      border-color: var(--color-primary-500, #FF9800);
+      color: var(--color-primary-500, #FF9800);
     }
 
     .expert-info {
@@ -179,7 +189,7 @@ import { ConseilsStore } from '../../stores/conseils.store';
     }
 
     .avatar-placeholder {
-      background: linear-gradient(135deg, #7c3aed 0%, #5b21b6 100%);
+      background: linear-gradient(135deg, var(--color-primary-500, #FF9800) 0%, var(--color-gold-800, #F9A825) 100%);
       color: white;
       display: flex;
       align-items: center;
@@ -199,7 +209,7 @@ import { ConseilsStore } from '../../stores/conseils.store';
     }
 
     .status-dot.online {
-      background: #10b981;
+      background: var(--color-secondary, #4CAF50);
     }
 
     .expert-details {
@@ -209,12 +219,12 @@ import { ConseilsStore } from '../../stores/conseils.store';
 
     .expert-name {
       font-weight: 600;
-      color: #1f2937;
+      color: white;
     }
 
     .session-status {
       font-size: 0.75rem;
-      color: #6b7280;
+      color: rgba(255, 255, 255, 0.65);
     }
 
     .chat-messages {
@@ -232,8 +242,8 @@ import { ConseilsStore } from '../../stores/conseils.store';
     .spinner {
       width: 32px;
       height: 32px;
-      border: 3px solid #e5e7eb;
-      border-top-color: #7c3aed;
+      border: 3px solid #EEEEEE;
+      border-top-color: var(--color-primary-500, #FF9800);
       border-radius: 50%;
       animation: spin 1s linear infinite;
     }
@@ -293,7 +303,7 @@ import { ConseilsStore } from '../../stores/conseils.store';
     }
 
     .message.sent .message-bubble {
-      background: #7c3aed;
+      background: var(--color-primary-500, #FF9800);
       color: white;
       border-bottom-right-radius: 4px;
     }
@@ -321,7 +331,7 @@ import { ConseilsStore } from '../../stores/conseils.store';
     .attachment-image {
       max-width: 200px;
       max-height: 150px;
-      border-radius: 8px;
+      border-radius: 12px;
       object-fit: cover;
     }
 
@@ -340,7 +350,7 @@ import { ConseilsStore } from '../../stores/conseils.store';
       padding: 0.75rem 1rem;
       padding-bottom: calc(0.75rem + env(safe-area-inset-bottom, 0));
       background: white;
-      border-top: 1px solid #e5e7eb;
+      border-top: 1px solid #EEEEEE;
     }
 
     .pending-notice,
@@ -353,12 +363,12 @@ import { ConseilsStore } from '../../stores/conseils.store';
       padding: 0.75rem;
       background: #faf5ff;
       border-radius: 24px;
-      color: #7c3aed;
+      color: var(--color-primary-500, #FF9800);
       font-size: 0.875rem;
     }
 
     .ended-notice {
-      background: #f3f4f6;
+      background: #F5F5F5;
       color: #6b7280;
     }
 
@@ -380,14 +390,14 @@ import { ConseilsStore } from '../../stores/conseils.store';
     }
 
     .attach-btn:hover {
-      background: #f3f4f6;
-      color: #7c3aed;
+      background: #F5F5F5;
+      color: var(--color-primary-500, #FF9800);
     }
 
     .chat-input {
       flex: 1;
       padding: 0.75rem 1rem;
-      border: 1px solid #e5e7eb;
+      border: 1px solid #EEEEEE;
       border-radius: 24px;
       font-size: 1rem;
       outline: none;
@@ -395,11 +405,11 @@ import { ConseilsStore } from '../../stores/conseils.store';
     }
 
     .chat-input:focus {
-      border-color: #7c3aed;
+      border-color: var(--color-primary-500, #FF9800);
     }
 
     .send-btn {
-      background: #7c3aed;
+      background: var(--color-primary-500, #FF9800);
       border: none;
       color: white;
       width: 44px;
@@ -417,7 +427,7 @@ import { ConseilsStore } from '../../stores/conseils.store';
     }
 
     .send-btn:disabled {
-      background: #d1d5db;
+      background: #D1D5DB;
       cursor: not-allowed;
     }
   `],
@@ -429,6 +439,8 @@ export class ConseilChatComponent implements OnInit, AfterViewChecked {
   private readonly route = inject(ActivatedRoute);
   private readonly conseilsService = inject(ConseilsService);
   readonly store = inject(ConseilsStore);
+  readonly statusLabels = inject(StatusLabelsService);
+  private readonly logger = inject(LoggerService);
 
   readonly session = signal<ConseilSession | null>(null);
   readonly isSending = signal(false);
@@ -464,7 +476,7 @@ export class ConseilChatComponent implements OnInit, AfterViewChecked {
       this.session.set(session);
       this.store.setCurrentSession(session);
     } catch (err) {
-      console.error('Error loading session:', err);
+      this.logger.error('ConseilChatComponent', 'Error loading session', err);
     }
   }
 
@@ -475,7 +487,7 @@ export class ConseilChatComponent implements OnInit, AfterViewChecked {
       this.store.setMessages(result.data);
       this.shouldScrollToBottom = true;
     } catch (err) {
-      console.error('Error loading messages:', err);
+      this.logger.error('ConseilChatComponent', 'Error loading messages', err);
     } finally {
       this.store.setIsLoadingMessages(false);
     }
@@ -496,7 +508,7 @@ export class ConseilChatComponent implements OnInit, AfterViewChecked {
       this.store.addMessage(message);
       this.shouldScrollToBottom = true;
     } catch (err) {
-      console.error('Error sending message:', err);
+      this.logger.error('ConseilChatComponent', 'Error sending message', err);
       this.newMessage = content; // Restore message on error
     } finally {
       this.isSending.set(false);
@@ -520,18 +532,6 @@ export class ConseilChatComponent implements OnInit, AfterViewChecked {
       return `${expert.firstName[0]}${expert.lastName[0]}`.toUpperCase();
     }
     return 'E';
-  }
-
-  getStatusLabel(): string {
-    const status = this.session()?.status;
-    const labels: Record<string, string> = {
-      pending: 'En attente',
-      accepted: 'Acceptée',
-      in_progress: 'En cours',
-      completed: 'Terminée',
-      cancelled: 'Annulée',
-    };
-    return labels[status || ''] || 'Inconnu';
   }
 
   formatTime(dateStr: string): string {

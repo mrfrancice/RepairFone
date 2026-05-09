@@ -10,6 +10,7 @@ import {
   UiModalComponent,
 } from '@app/shared';
 import { UiHeaderComponent } from '../../../../shared/components/ui-header/ui-header.component';
+import { LoggerService } from '../../../../core/services/logger.service';
 
 // Liste prédéfinie des pièces détachées
 const AVAILABLE_PARTS: { name: string; defaultPrice: number; category: string }[] = [
@@ -314,14 +315,14 @@ interface SelectedPart {
       min-height: 100vh;
       background: var(--color-neutral-50, #f8fafc);
       padding-bottom: 180px;
-      padding-top: 100px; /* Space for fixed header */
+      padding-top: var(--header-height, 100px); /* Space for fixed header */
     }
 
     /* ==================== ERROR STATE ==================== */
     .error-container {
       text-align: center;
       padding: 3rem 1rem;
-      color: var(--color-text-secondary, #64748b);
+      color: var(--color-text-secondary, #6B7280);
     }
 
     .btn-link {
@@ -385,7 +386,7 @@ interface SelectedPart {
       display: flex;
       align-items: center;
       justify-content: center;
-      border: 2px solid rgba(255, 107, 53, 0.15);
+      border: 2px solid rgba(255, 152, 0, 0.15);
     }
 
     .device-icon {
@@ -399,7 +400,7 @@ interface SelectedPart {
     .device-name {
       font-size: 1.125rem;
       font-weight: 700;
-      color: #1e293b;
+      color: #1F2937;
       margin: 0 0 0.5rem 0;
     }
 
@@ -416,8 +417,8 @@ interface SelectedPart {
       gap: 0.25rem;
       font-size: 0.8125rem;
       font-weight: 500;
-      color: #FF6B35;
-      background: rgba(255, 107, 53, 0.1);
+      color: var(--color-primary-500, #FF9800);
+      background: rgba(255, 152, 0, 0.1);
       padding: 0.375rem 0.75rem;
       border-radius: 2rem;
     }
@@ -425,8 +426,8 @@ interface SelectedPart {
     .express-badge {
       display: inline-flex;
       align-items: center;
-      background: linear-gradient(135deg, #fef3c7, #fde68a);
-      color: #b45309;
+      background: linear-gradient(135deg, #FFF8E1, #FFE082);
+      color: #F57C00;
       padding: 0.375rem 0.75rem;
       border-radius: 2rem;
       font-size: 0.8125rem;
@@ -444,7 +445,7 @@ interface SelectedPart {
       display: block;
       font-size: 0.75rem;
       font-weight: 600;
-      color: #94a3b8;
+      color: #9CA3AF;
       text-transform: uppercase;
       letter-spacing: 0.5px;
       margin-bottom: 0.5rem;
@@ -452,7 +453,7 @@ interface SelectedPart {
 
     .problem-description {
       font-size: 0.9375rem;
-      color: #475569;
+      color: #4B5563;
       margin: 0;
       padding: 0.875rem;
       background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
@@ -463,8 +464,8 @@ interface SelectedPart {
 
     /* ==================== ALERT CARD ==================== */
     .alert-card {
-      background: linear-gradient(135deg, #ecfdf5, #d1fae5);
-      border: 2px solid #10b981;
+      background: linear-gradient(135deg, #E8F5E9, #E8F5E9);
+      border: 2px solid var(--color-secondary, #4CAF50);
       border-radius: 1.25rem;
       padding: 1.25rem;
       margin: 0 0 1rem;
@@ -472,12 +473,12 @@ interface SelectedPart {
       justify-content: space-between;
       align-items: center;
       gap: 1rem;
-      box-shadow: 0 4px 15px rgba(16, 185, 129, 0.15);
+      box-shadow: 0 4px 15px rgba(76, 175, 80, 0.15);
     }
 
     .alert-content h4 {
       margin: 0 0 0.5rem;
-      color: #047857;
+      color: #2E7D32;
       font-size: 1rem;
       font-weight: 600;
     }
@@ -485,7 +486,7 @@ interface SelectedPart {
     .proposal-amount {
       font-size: 1.375rem;
       font-weight: 700;
-      color: #059669;
+      color: var(--color-success-dark, #2E7D32);
       margin: 0;
     }
 
@@ -497,7 +498,7 @@ interface SelectedPart {
     }
 
     .use-proposal-btn {
-      background: linear-gradient(135deg, #10b981, #059669);
+      background: linear-gradient(135deg, var(--color-secondary, #4CAF50), var(--color-success-dark, #2E7D32));
       color: white;
       border: none;
       padding: 0.75rem 1.25rem;
@@ -505,13 +506,13 @@ interface SelectedPart {
       font-weight: 600;
       cursor: pointer;
       white-space: nowrap;
-      box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+      box-shadow: 0 4px 12px rgba(76, 175, 80, 0.3);
       transition: all 0.2s;
     }
 
     .use-proposal-btn:hover {
       transform: translateY(-1px);
-      box-shadow: 0 6px 16px rgba(16, 185, 129, 0.4);
+      box-shadow: 0 6px 16px rgba(76, 175, 80, 0.4);
     }
 
     /* ==================== SECTION TITLE ==================== */
@@ -521,7 +522,7 @@ interface SelectedPart {
       gap: 0.5rem;
       font-size: 1.0625rem;
       font-weight: 700;
-      color: #1e293b;
+      color: #1F2937;
       margin: 0 0 1rem;
       padding-bottom: 0.75rem;
       border-bottom: 2px solid #f1f5f9;
@@ -529,7 +530,7 @@ interface SelectedPart {
 
     .section-hint {
       font-size: 0.8125rem;
-      color: #94a3b8;
+      color: #9CA3AF;
       margin: -0.5rem 0 1rem;
       padding-left: 0.25rem;
     }
@@ -547,7 +548,7 @@ interface SelectedPart {
       display: block;
       font-size: 0.8125rem;
       font-weight: 600;
-      color: #475569;
+      color: #4B5563;
       margin-bottom: 0.5rem;
       text-transform: uppercase;
       letter-spacing: 0.3px;
@@ -566,9 +567,9 @@ interface SelectedPart {
 
     .form-input:focus, .form-select:focus, .form-textarea:focus {
       outline: none;
-      border-color: #FF6B35;
+      border-color: var(--color-primary-500, #FF9800);
       background: white;
-      box-shadow: 0 0 0 4px rgba(255, 107, 53, 0.1);
+      box-shadow: 0 0 0 4px rgba(255, 152, 0, 0.1);
     }
 
     .form-row {
@@ -599,14 +600,14 @@ interface SelectedPart {
 
     .part-chip:hover {
       background: linear-gradient(135deg, #f1f5f9, #e2e8f0);
-      border-color: #cbd5e1;
+      border-color: #D1D5DB;
     }
 
     .part-chip.selected {
-      background: linear-gradient(135deg, #fff7ed, #ffedd5);
-      border-color: #FF6B35;
-      color: #FF6B35;
-      box-shadow: 0 2px 8px rgba(255, 107, 53, 0.2);
+      background: linear-gradient(135deg, #FFF3E0, #FFE0B2);
+      border-color: var(--color-primary-500, #FF9800);
+      color: var(--color-primary-500, #FF9800);
+      box-shadow: 0 2px 8px rgba(255, 152, 0, 0.2);
     }
 
     .part-name {
@@ -614,7 +615,7 @@ interface SelectedPart {
     }
 
     .part-price {
-      color: #94a3b8;
+      color: #9CA3AF;
       font-size: 0.75rem;
       font-weight: 500;
     }
@@ -625,7 +626,7 @@ interface SelectedPart {
 
     .check-icon {
       font-weight: bold;
-      color: #FF6B35;
+      color: var(--color-primary-500, #FF9800);
     }
 
     /* ==================== SELECTED PARTS ==================== */
@@ -638,7 +639,7 @@ interface SelectedPart {
     .selected-parts h4 {
       font-size: 0.875rem;
       font-weight: 600;
-      color: #64748b;
+      color: #6B7280;
       margin: 0 0 0.75rem;
       text-transform: uppercase;
       letter-spacing: 0.3px;
@@ -650,16 +651,16 @@ interface SelectedPart {
       align-items: center;
       padding: 0.75rem;
       margin-bottom: 0.5rem;
-      background: linear-gradient(135deg, #fff7ed, #ffedd5);
+      background: linear-gradient(135deg, #FFF3E0, #FFE0B2);
       border-radius: 0.75rem;
-      border: 1px solid rgba(255, 107, 53, 0.2);
+      border: 1px solid rgba(255, 152, 0, 0.2);
       flex-wrap: wrap;
       gap: 0.5rem;
     }
 
     .part-label {
       font-weight: 600;
-      color: #1e293b;
+      color: #1F2937;
       font-size: 0.9375rem;
     }
 
@@ -668,7 +669,7 @@ interface SelectedPart {
       align-items: center;
       gap: 0.5rem;
       font-size: 0.8125rem;
-      color: #64748b;
+      color: #6B7280;
       font-weight: 500;
     }
 
@@ -683,7 +684,7 @@ interface SelectedPart {
 
     .qty-input:focus {
       outline: none;
-      border-color: #FF6B35;
+      border-color: var(--color-primary-500, #FF9800);
     }
 
     .price-input-small {
@@ -697,18 +698,18 @@ interface SelectedPart {
 
     .price-input-small:focus {
       outline: none;
-      border-color: #FF6B35;
+      border-color: var(--color-primary-500, #FF9800);
     }
 
     .fcfa {
       font-size: 0.8125rem;
       font-weight: 600;
-      color: #94a3b8;
+      color: #9CA3AF;
     }
 
     /* ==================== SUMMARY CARD ==================== */
     .summary-card {
-      background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+      background: linear-gradient(135deg, #1F2937 0%, #111827 100%);
       color: white;
       border-radius: 1.25rem;
       box-shadow: 0 8px 30px rgba(15, 23, 42, 0.3);
@@ -737,7 +738,7 @@ interface SelectedPart {
       margin: 0.5rem -0.75rem;
       padding: 0.625rem 0.75rem;
       border-radius: 0.5rem;
-      color: #fbbf24;
+      color: var(--color-mustard, #FFC107);
       font-weight: 500;
     }
 
@@ -754,7 +755,7 @@ interface SelectedPart {
 
     .total-amount {
       font-size: 1.5rem;
-      color: #FF6B35;
+      color: var(--color-primary-500, #FF9800);
       font-weight: 800;
     }
 
@@ -773,15 +774,15 @@ interface SelectedPart {
     }
 
     .error-banner {
-      background: linear-gradient(135deg, #fef2f2, #fee2e2);
-      color: #dc2626;
+      background: linear-gradient(135deg, #FFEBEE, #FFEBEE);
+      color: var(--color-terracotta, #C62828);
       padding: 0.875rem;
       border-radius: 0.75rem;
       margin-bottom: 0.75rem;
       text-align: center;
       font-size: 0.875rem;
       font-weight: 500;
-      border: 1px solid rgba(220, 38, 38, 0.2);
+      border: 1px solid rgba(198, 40, 40, 0.2);
     }
 
     /* ==================== SUCCESS MODAL CONTENT ==================== */
@@ -796,7 +797,7 @@ interface SelectedPart {
     }
 
     .success-content p {
-      color: var(--color-text-secondary, #64748b);
+      color: var(--color-text-secondary, #6B7280);
       margin: 0;
     }
 
@@ -818,6 +819,7 @@ export class QuoteCreateComponent implements OnInit {
   private readonly quotesService = inject(QuotesService);
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
+  private readonly logger = inject(LoggerService);
 
   // Signals
   readonly request = signal<RepairerRequest | null>(null);
@@ -888,7 +890,7 @@ export class QuoteCreateComponent implements OnInit {
         this.lastRejectedQuote.set(lastRejected);
       }
     } catch (err) {
-      console.error('Error loading request:', err);
+      this.logger.error('QuoteCreateComponent', 'Error loading request', err);
       this.errorMessage.set('Erreur lors du chargement de la demande');
     } finally {
       this.isLoading.set(false);

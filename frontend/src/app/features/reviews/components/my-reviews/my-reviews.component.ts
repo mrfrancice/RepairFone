@@ -2,18 +2,22 @@ import { Component, inject, signal, OnInit, ChangeDetectionStrategy } from '@ang
 import { CommonModule } from '@angular/common';
 import { ReviewsService, Review, StepRating, StepRatingStats } from '../../services/reviews.service';
 import { AuthStore } from '../../../../core/stores/auth.store';
+import { LoggerService } from '../../../../core/services/logger.service';
 import { UiHeaderComponent } from '../../../../shared/components/ui-header/ui-header.component';
+import { UiErrorStateComponent } from '../../../../shared/components/ui-error-state/ui-error-state.component';
+import { FormatDatePipe } from '../../../../shared/pipes/format-date.pipe';
+import { InitialsPipe } from '../../../../shared/pipes/initials.pipe';
 
 @Component({
   selector: 'app-my-reviews',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [CommonModule, UiHeaderComponent],
+  imports: [CommonModule, UiHeaderComponent, UiErrorStateComponent, FormatDatePipe, InitialsPipe],
   template: `
     <div class="reviews-container">
       <ui-header
         title="Mes avis"
-        subtitle="Evaluations clients reçues"
+        subtitle="Évaluations clients reçues"
         [showBack]="true"
         [showProfile]="true"
         backRoute="/profile"
@@ -25,6 +29,13 @@ import { UiHeaderComponent } from '../../../../shared/components/ui-header/ui-he
             <div class="spinner"></div>
             <p>Chargement...</p>
           </div>
+        } @else if (error()) {
+          <ui-error-state
+            [message]="error()!"
+            severity="error"
+            [showRetry]="true"
+            (onRetry)="loadReviews()"
+          />
         } @else {
           <!-- Stats Summary -->
           @if (stats()) {
@@ -57,24 +68,24 @@ import { UiHeaderComponent } from '../../../../shared/components/ui-header/ui-he
           @if (stepRatings().length === 0) {
             <div class="empty-state">
               <div class="empty-icon">⭐</div>
-              <h3>Aucune evaluation</h3>
-              <p>Vous n'avez pas encore reçu d'evaluation de vos clients</p>
+              <h3>Aucune évaluation</h3>
+              <p>Vous n'avez pas encore reçu d'évaluation de vos clients</p>
             </div>
           } @else {
-            <h3 class="section-title">Dernieres evaluations</h3>
+            <h3 class="section-title">Dernières évaluations</h3>
             <div class="reviews-list">
               @for (rating of stepRatings(); track rating.id) {
                 <div class="review-card">
                   <div class="review-header">
                     <div class="reviewer-info">
                       <div class="reviewer-avatar">
-                        {{ getInitials(rating.client?.firstName, rating.client?.lastName) }}
+                        {{ rating.client?.firstName | initials : rating.client?.lastName }}
                       </div>
                       <div class="reviewer-details">
                         <span class="reviewer-name">
                           {{ rating.client?.firstName || 'Client' }} {{ rating.client?.lastName?.charAt(0) }}.
                         </span>
-                        <span class="review-date">{{ formatDate(rating.createdAt) }}</span>
+                        <span class="review-date">{{ rating.createdAt | formatDate }}</span>
                       </div>
                     </div>
                     <div class="review-rating-badge" [style.background]="getRatingBgColor(rating.rating)">
@@ -101,12 +112,12 @@ import { UiHeaderComponent } from '../../../../shared/components/ui-header/ui-he
   styles: [`
     .reviews-container {
       min-height: 100vh;
-      background: #f9fafb;
+      background: #FAFAFA;
     }
 
     .reviews-content {
       padding: 1rem;
-      padding-top: 100px;
+      padding-top: var(--header-height, 100px);
       padding-bottom: 2rem;
     }
 
@@ -118,8 +129,8 @@ import { UiHeaderComponent } from '../../../../shared/components/ui-header/ui-he
     .spinner {
       width: 40px;
       height: 40px;
-      border: 3px solid #e5e7eb;
-      border-top-color: #FF6B35;
+      border: 3px solid #EEEEEE;
+      border-top-color: var(--color-primary-500, #FF9800);
       border-radius: 50%;
       animation: spin 1s linear infinite;
       margin: 0 auto 1rem;
@@ -159,7 +170,7 @@ import { UiHeaderComponent } from '../../../../shared/components/ui-header/ui-he
       align-items: center;
       gap: 1rem;
       padding-bottom: 1rem;
-      border-bottom: 1px solid #e5e7eb;
+      border-bottom: 1px solid #EEEEEE;
       margin-bottom: 1rem;
     }
 
@@ -196,8 +207,8 @@ import { UiHeaderComponent } from '../../../../shared/components/ui-header/ui-he
       align-items: center;
       gap: 0.5rem;
       padding: 0.5rem;
-      background: #f9fafb;
-      border-radius: 8px;
+      background: #FAFAFA;
+      border-radius: 12px;
     }
 
     .cat-icon {
@@ -254,7 +265,7 @@ import { UiHeaderComponent } from '../../../../shared/components/ui-header/ui-he
       width: 40px;
       height: 40px;
       border-radius: 50%;
-      background: linear-gradient(135deg, #FF6B35, #FF9800);
+      background: linear-gradient(135deg, var(--color-primary-500, #FF9800), #FF9800);
       color: white;
       display: flex;
       align-items: center;
@@ -300,13 +311,13 @@ import { UiHeaderComponent } from '../../../../shared/components/ui-header/ui-he
     }
 
     .review-category-tag {
-      background: #fff7ed;
+      background: #FFF3E0;
       color: #c2410c;
     }
 
     .review-step-tag {
       background: #f1f5f9;
-      color: #475569;
+      color: #4B5563;
     }
 
     .review-comment {
@@ -315,18 +326,20 @@ import { UiHeaderComponent } from '../../../../shared/components/ui-header/ui-he
       font-size: 0.9375rem;
       margin: 0;
       padding: 0.75rem;
-      background: #f9fafb;
-      border-radius: 8px;
+      background: #FAFAFA;
+      border-radius: 12px;
     }
   `],
 })
 export class MyReviewsComponent implements OnInit {
   private readonly reviewsService = inject(ReviewsService);
   private readonly authStore = inject(AuthStore);
+  private readonly logger = inject(LoggerService);
 
   readonly stepRatings = signal<StepRating[]>([]);
   readonly stats = signal<StepRatingStats | null>(null);
   readonly isLoading = signal(true);
+  readonly error = signal<string | null>(null);
 
   readonly categoryList = [
     { key: 'communication', label: 'Communication', icon: '💬' },
@@ -341,10 +354,14 @@ export class MyReviewsComponent implements OnInit {
 
   async loadReviews(): Promise<void> {
     this.isLoading.set(true);
+    this.error.set(null);
 
     try {
       const repairerProfileId = this.authStore.user()?.repairerProfile?.id;
       if (!repairerProfileId) {
+        // Pas de profil réparateur (ex: client) — afficher empty state plutôt que page blanche
+        this.stats.set(null);
+        this.stepRatings.set([]);
         this.isLoading.set(false);
         return;
       }
@@ -352,8 +369,9 @@ export class MyReviewsComponent implements OnInit {
       const result = await this.reviewsService.getRepairerStepRatingStats(repairerProfileId);
       this.stats.set(result);
       this.stepRatings.set(result.recentRatings || []);
-    } catch (err) {
-      console.error('Error loading reviews:', err);
+    } catch (err: any) {
+      this.logger.error('MyReviewsComponent', 'Error loading reviews', err);
+      this.error.set(err.message || 'Impossible de charger les avis');
     } finally {
       this.isLoading.set(false);
     }
@@ -364,11 +382,11 @@ export class MyReviewsComponent implements OnInit {
   }
 
   getScoreColor(rating: number): string {
-    if (rating >= 4) return '#10b981';
-    if (rating >= 2) return '#22c55e';
-    if (rating >= 0) return '#f59e0b';
+    if (rating >= 4) return 'var(--color-secondary, #4CAF50)';
+    if (rating >= 2) return 'var(--color-secondary, #4CAF50)';
+    if (rating >= 0) return 'var(--color-mustard, #FFC107)';
     if (rating >= -2) return '#f97316';
-    return '#ef4444';
+    return 'var(--color-error, #F44336)';
   }
 
   getScoreLabel(rating: number): string {
@@ -386,24 +404,18 @@ export class MyReviewsComponent implements OnInit {
 
   getRatingBgColor(rating: number): string {
     if (rating >= 4) return '#dcfce7';
-    if (rating >= 2) return '#d1fae5';
-    if (rating >= 0) return '#fef3c7';
-    if (rating >= -2) return '#ffedd5';
-    return '#fee2e2';
+    if (rating >= 2) return '#E8F5E9';
+    if (rating >= 0) return '#FFF8E1';
+    if (rating >= -2) return '#FFE0B2';
+    return '#FFEBEE';
   }
 
   getRatingTextColor(rating: number): string {
-    if (rating >= 4) return '#15803d';
+    if (rating >= 4) return 'var(--color-success-dark, #2E7D32)';
     if (rating >= 2) return '#166534';
-    if (rating >= 0) return '#b45309';
+    if (rating >= 0) return '#F57C00';
     if (rating >= -2) return '#c2410c';
     return '#991b1b';
-  }
-
-  getInitials(firstName?: string, lastName?: string): string {
-    const first = firstName?.charAt(0) || '';
-    const last = lastName?.charAt(0) || '';
-    return (first + last).toUpperCase() || '?';
   }
 
   getCategoryLabel(category: string): string {
@@ -427,20 +439,4 @@ export class MyReviewsComponent implements OnInit {
     return labels[step] || step;
   }
 
-  formatDate(dateStr: string): string {
-    const date = new Date(dateStr);
-    const now = new Date();
-    const diffMs = now.getTime() - date.getTime();
-    const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
-
-    if (diffDays === 0) return "Aujourd'hui";
-    if (diffDays === 1) return 'Hier';
-    if (diffDays < 7) return `Il y a ${diffDays} jours`;
-
-    return date.toLocaleDateString('fr-FR', {
-      day: 'numeric',
-      month: 'short',
-      year: 'numeric',
-    });
-  }
 }

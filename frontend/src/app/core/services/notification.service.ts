@@ -1,5 +1,6 @@
 import { Injectable, inject, signal } from '@angular/core';
 import { ApiService } from './api.service';
+import { LoggerService } from './logger.service';
 import { firstValueFrom } from 'rxjs';
 
 export type NotificationType =
@@ -50,6 +51,7 @@ interface PushSubscriptionPayload {
 @Injectable({ providedIn: 'root' })
 export class NotificationService {
   private readonly api = inject(ApiService);
+  private readonly logger = inject(LoggerService);
 
   // State
   readonly notifications = signal<AppNotification[]>([]);
@@ -100,7 +102,7 @@ export class NotificationService {
 
       this.unreadCount.set(response.unread);
     } catch (err) {
-      console.error('Error loading notifications:', err);
+      this.logger.error('NotificationService', 'Error loading notifications', err);
     } finally {
       this.isLoading.set(false);
     }
@@ -121,7 +123,7 @@ export class NotificationService {
 
       this.unreadCount.update((count) => Math.max(0, count - 1));
     } catch (err) {
-      console.error('Error marking notification as read:', err);
+      this.logger.error('NotificationService', 'Error marking notification as read', err);
     }
   }
 
@@ -138,7 +140,7 @@ export class NotificationService {
 
       this.unreadCount.set(0);
     } catch (err) {
-      console.error('Error marking all notifications as read:', err);
+      this.logger.error('NotificationService', 'Error marking all notifications as read', err);
     }
   }
 
@@ -158,7 +160,7 @@ export class NotificationService {
         this.unreadCount.update((count) => Math.max(0, count - 1));
       }
     } catch (err) {
-      console.error('Error deleting notification:', err);
+      this.logger.error('NotificationService', 'Error deleting notification', err);
     }
   }
 
@@ -169,7 +171,7 @@ export class NotificationService {
         this.api.get<NotificationPreferences>('/notifications/preferences')
       );
     } catch (err) {
-      console.error('Error loading notification preferences:', err);
+      this.logger.error('NotificationService', 'Error loading notification preferences', err);
       return {
         push: false,
         sms: true,
@@ -186,7 +188,7 @@ export class NotificationService {
         this.api.put<void>('/notifications/preferences', preferences)
       );
     } catch (err) {
-      console.error('Error updating notification preferences:', err);
+      this.logger.error('NotificationService', 'Error updating notification preferences', err);
       throw err;
     }
   }
@@ -218,7 +220,7 @@ export class NotificationService {
       this.pushEnabled.set(false);
       return false;
     } catch (err) {
-      console.error('Error requesting push permission:', err);
+      this.logger.error('NotificationService', 'Error requesting push permission', err);
       return false;
     }
   }
@@ -257,7 +259,7 @@ export class NotificationService {
         this.api.post<void>('/notifications/subscribe', payload)
       );
     } catch (err) {
-      console.error('Error subscribing to push:', err);
+      this.logger.error('NotificationService', 'Error subscribing to push', err);
       throw err;
     }
   }
@@ -282,7 +284,7 @@ export class NotificationService {
 
       this.pushEnabled.set(false);
     } catch (err) {
-      console.error('Error unsubscribing from push:', err);
+      this.logger.error('NotificationService', 'Error unsubscribing from push', err);
     }
   }
 

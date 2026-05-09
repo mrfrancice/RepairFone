@@ -307,10 +307,10 @@ export class RepairerService {
 
   getVerificationStatusColor(status: VerificationStatus): string {
     const colors: Record<VerificationStatus, string> = {
-      pending: '#f59e0b',
-      under_review: '#3b82f6',
-      verified: '#10b981',
-      rejected: '#ef4444',
+      pending: '#FFC107',
+      under_review: '#1565C0',
+      verified: '#4CAF50',
+      rejected: '#F44336',
       suspended: '#6b7280',
     };
     return colors[status] || '#6b7280';
@@ -318,10 +318,10 @@ export class RepairerService {
 
   getBadgeInfo(type: RepairerBadge['type']): { label: string; icon: string; color: string } {
     const badges: Record<string, { label: string; icon: string; color: string }> = {
-      verified: { label: 'Vérifié', icon: '✓', color: '#10b981' },
-      fast_response: { label: 'Réponse rapide', icon: '⚡', color: '#f59e0b' },
+      verified: { label: 'Vérifié', icon: '✓', color: '#4CAF50' },
+      fast_response: { label: 'Réponse rapide', icon: '⚡', color: '#FFC107' },
       top_rated: { label: 'Top noté', icon: '⭐', color: '#eab308' },
-      expert: { label: 'Expert', icon: '🏆', color: '#8b5cf6' },
+      expert: { label: 'Expert', icon: '🏆', color: '#FF9800' },
     };
     return badges[type] || { label: type, icon: '🔹', color: '#6b7280' };
   }
@@ -339,10 +339,10 @@ export class RepairerService {
   }
 
   getQualityScoreColor(score: number): string {
-    if (score >= 90) return '#10b981';
-    if (score >= 75) return '#22c55e';
-    if (score >= 60) return '#f59e0b';
+    if (score >= 90) return '#4CAF50';
+    if (score >= 75) return '#4CAF50';
+    if (score >= 60) return '#FFC107';
     if (score >= 40) return '#f97316';
-    return '#ef4444';
+    return '#F44336';
   }
 }

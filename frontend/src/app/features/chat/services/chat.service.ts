@@ -1,6 +1,7 @@
 import { Injectable, inject, signal, OnDestroy } from '@angular/core';
 import { firstValueFrom } from 'rxjs';
 import { ApiService } from '../../../core/services/api.service';
+import { LoggerService } from '../../../core/services/logger.service';
 
 export interface ChatMessage {
   id: string;
@@ -67,6 +68,7 @@ type WebSocketMessage =
 @Injectable({ providedIn: 'root' })
 export class ChatService implements OnDestroy {
   private readonly api = inject(ApiService);
+  private readonly logger = inject(LoggerService);
   private ws: WebSocket | null = null;
   private reconnectAttempts = 0;
   private readonly maxReconnectAttempts = 5;
@@ -111,7 +113,7 @@ export class ChatService implements OnDestroy {
           const message: WebSocketMessage = JSON.parse(event.data);
           this.handleWebSocketMessage(message);
         } catch (err) {
-          console.error('Failed to parse WebSocket message:', err);
+          this.logger.error('ChatService', 'Failed to parse WebSocket message', err);
         }
       };
 
@@ -129,11 +131,11 @@ export class ChatService implements OnDestroy {
       };
 
       this.ws.onerror = (error) => {
-        console.error('WebSocket error:', error);
+        this.logger.error('ChatService', 'WebSocket error', error);
         this.connectionError.set('Erreur de connexion');
       };
     } catch (err) {
-      console.error('Failed to create WebSocket:', err);
+      this.logger.error('ChatService', 'Failed to create WebSocket', err);
       this.isConnecting.set(false);
       this.connectionError.set('Impossible de se connecter au chat');
     }

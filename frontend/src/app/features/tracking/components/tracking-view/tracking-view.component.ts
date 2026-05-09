@@ -7,28 +7,27 @@ import { UiMapComponent, MapMarker, MapRoute } from '../../../../shared/componen
 import { UiTimelineComponent, TimelineStep } from '../../../../shared/components/ui-timeline/ui-timeline.component';
 import { UiButtonComponent } from '../../../../shared/components/ui-button/ui-button.component';
 import { StepRatingComponent } from '../../../../shared/components/step-rating/step-rating.component';
+import { FormatDatePipe } from '../../../../shared/pipes/format-date.pipe';
+import { LoggerService } from '../../../../core/services/logger.service';
+import { UiHeaderComponent } from '../../../../shared/components/ui-header/ui-header.component';
 
 @Component({
   selector: 'app-tracking-view',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [CommonModule, RouterLink, UiMapComponent, UiTimelineComponent, UiButtonComponent, StepRatingComponent],
+  imports: [CommonModule, RouterLink, UiMapComponent, UiTimelineComponent, UiButtonComponent, StepRatingComponent, FormatDatePipe, UiHeaderComponent],
   template: `
     <div class="tracking-container">
-      <header class="tracking-header">
-        <button class="back-btn" (click)="goBack()">
-          <span>←</span>
-        </button>
-        <div class="header-content">
-          <h1>Suivi de réparation</h1>
-          @if (request()) {
-            <span class="request-id">#{{ request()?.id?.slice(0, 8)?.toUpperCase() }}</span>
-          }
-        </div>
+      <ui-header
+        title="Suivi de réparation"
+        [subtitle]="request() ? '#' + (request()?.id?.slice(0, 8)?.toUpperCase() || '') : ''"
+        [showBack]="true"
+        (onBack)="goBack()"
+      >
         @if (lastRefresh()) {
-          <span class="last-update">{{ getTimeAgo(lastRefresh()!) }}</span>
+          <span header-actions class="last-update">{{ getTimeAgo(lastRefresh()!) }}</span>
         }
-      </header>
+      </ui-header>
 
       @if (isLoading()) {
         <div class="loading-state">
@@ -132,7 +131,7 @@ import { StepRatingComponent } from '../../../../shared/components/step-rating/s
               @if (request()?.preferredDate) {
                 <div class="detail-item">
                   <span class="detail-label">Date souhaitée</span>
-                  <span class="detail-value">{{ formatDate(request()?.preferredDate) }}</span>
+                  <span class="detail-value">{{ request()?.preferredDate | formatDate:'long' }}</span>
                 </div>
               }
             </div>
@@ -206,7 +205,7 @@ import { StepRatingComponent } from '../../../../shared/components/step-rating/s
                       @if (entry.comment) {
                         <span class="history-comment">{{ entry.comment }}</span>
                       }
-                      <span class="history-time">{{ formatDateTime(entry.createdAt) }}</span>
+                      <span class="history-time">{{ entry.createdAt | formatDate:'datetime' }}</span>
                     </div>
                   </div>
                 }
@@ -309,60 +308,14 @@ import { StepRatingComponent } from '../../../../shared/components/step-rating/s
   styles: [`
     .tracking-container {
       min-height: 100vh;
-      background: #FFF5F0;
+      background: #FFF3E0;
+      padding-top: var(--header-height, 100px);
       padding-bottom: 2rem;
-    }
-
-    .tracking-header {
-      display: flex;
-      align-items: center;
-      gap: 1rem;
-      padding: 1rem;
-      background: linear-gradient(135deg, #FF6B35 0%, #FF9800 100%);
-      color: white;
-      box-shadow: 0 2px 12px rgba(255, 107, 53, 0.3);
-    }
-
-    .back-btn {
-      width: 44px;
-      height: 44px;
-      border-radius: 50%;
-      border: none;
-      background: rgba(255, 255, 255, 0.2);
-      color: white;
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 1.5rem;
-      transition: all 0.2s;
-      min-width: 44px;
-    }
-
-    .back-btn:hover {
-      background: rgba(255, 255, 255, 0.3);
-      transform: scale(1.05);
-    }
-
-    .header-content {
-      flex: 1;
-    }
-
-    .tracking-header h1 {
-      margin: 0;
-      font-size: 1.25rem;
-      font-weight: 600;
-    }
-
-    .request-id {
-      font-size: 0.75rem;
-      opacity: 0.8;
-      font-family: monospace;
     }
 
     .last-update {
       font-size: 0.75rem;
-      opacity: 0.8;
+      color: rgba(255, 255, 255, 0.7);
       white-space: nowrap;
     }
 
@@ -385,7 +338,7 @@ import { StepRatingComponent } from '../../../../shared/components/step-rating/s
       width: 48px;
       height: 48px;
       border: 4px solid #FFE5D9;
-      border-top-color: #FF6B35;
+      border-top-color: var(--color-primary-500, #FF9800);
       border-radius: 50%;
       animation: spin 1s linear infinite;
     }
@@ -484,7 +437,7 @@ import { StepRatingComponent } from '../../../../shared/components/step-rating/s
       padding: 0.5rem 0.875rem;
       border-radius: 12px;
       font-size: 0.8125rem;
-      color: #FF6B35;
+      color: var(--color-primary-500, #FF9800);
       cursor: pointer;
       display: flex;
       align-items: center;
@@ -495,10 +448,10 @@ import { StepRatingComponent } from '../../../../shared/components/step-rating/s
     }
 
     .refresh-btn:hover:not(:disabled) {
-      border-color: #FF6B35;
-      background: #FFF5F0;
+      border-color: var(--color-primary-500, #FF9800);
+      background: #FFF3E0;
       transform: translateY(-1px);
-      box-shadow: 0 2px 8px rgba(255, 107, 53, 0.15);
+      box-shadow: 0 2px 8px rgba(255, 152, 0, 0.15);
     }
 
     .refresh-btn:disabled {
@@ -515,7 +468,7 @@ import { StepRatingComponent } from '../../../../shared/components/step-rating/s
     }
 
     .quote-badge.pending {
-      background: #FFF4E6;
+      background: #FFF3E0;
       color: #F9A825;
       border: 1px solid #F9A825;
     }
@@ -527,7 +480,7 @@ import { StepRatingComponent } from '../../../../shared/components/step-rating/s
     }
 
     .quote-card {
-      background: linear-gradient(135deg, #FFF5F0 0%, #FFFFFF 100%);
+      background: linear-gradient(135deg, var(--color-primary-50, #FFF3E0) 0%, #FFFFFF 100%);
       border-radius: 16px;
       overflow: hidden;
       border: 2px solid #FFE5D9;
@@ -545,7 +498,7 @@ import { StepRatingComponent } from '../../../../shared/components/step-rating/s
     }
 
     .quote-row.supplement {
-      color: #FF6B35;
+      color: var(--color-primary-500, #FF9800);
       font-weight: 600;
     }
 
@@ -572,13 +525,13 @@ import { StepRatingComponent } from '../../../../shared/components/step-rating/s
     }
 
     .total-amount {
-      color: #FF6B35;
+      color: var(--color-primary-500, #FF9800);
       font-size: 1.5rem;
     }
 
     .quote-meta {
       padding: 0.75rem 1rem;
-      background: #e5e7eb;
+      background: #EEEEEE;
       display: flex;
       flex-direction: column;
       gap: 0.5rem;
@@ -626,7 +579,7 @@ import { StepRatingComponent } from '../../../../shared/components/step-rating/s
 
     /* Map Section */
     .map-placeholder {
-      background: #f3f4f6;
+      background: #F5F5F5;
       border-radius: 12px;
       height: 150px;
       display: flex;
@@ -644,8 +597,8 @@ import { StepRatingComponent } from '../../../../shared/components/step-rating/s
     .distance-info {
       margin-top: 0.75rem;
       padding: 0.5rem 0.75rem;
-      background: #f3f4f6;
-      border-radius: 8px;
+      background: #F5F5F5;
+      border-radius: 12px;
       font-size: 0.875rem;
       color: #4b5563;
     }
@@ -676,7 +629,7 @@ import { StepRatingComponent } from '../../../../shared/components/step-rating/s
     .description-section {
       margin-top: 1rem;
       padding-top: 1rem;
-      border-top: 1px solid #e5e7eb;
+      border-top: 1px solid #EEEEEE;
     }
 
     .description-text {
@@ -700,7 +653,7 @@ import { StepRatingComponent } from '../../../../shared/components/step-rating/s
     .images-grid img {
       width: 80px;
       height: 80px;
-      border-radius: 8px;
+      border-radius: 12px;
       object-fit: cover;
       cursor: pointer;
       transition: transform 0.2s;
@@ -716,7 +669,7 @@ import { StepRatingComponent } from '../../../../shared/components/step-rating/s
       align-items: center;
       gap: 1rem;
       padding: 1rem;
-      background: #f9fafb;
+      background: #FAFAFA;
       border-radius: 12px;
     }
 
@@ -734,7 +687,7 @@ import { StepRatingComponent } from '../../../../shared/components/step-rating/s
     }
 
     .avatar-placeholder {
-      background: linear-gradient(135deg, #FF6B35 0%, #FF9800 100%);
+      background: linear-gradient(135deg, var(--color-primary-500, #FF9800) 0%, var(--color-gold-800, #F9A825) 100%);
       color: white;
       display: flex;
       align-items: center;
@@ -768,7 +721,7 @@ import { StepRatingComponent } from '../../../../shared/components/step-rating/s
 
     .repairer-rating {
       font-size: 0.875rem;
-      color: #f59e0b;
+      color: var(--color-mustard, #FFC107);
     }
 
     .rating-count {
@@ -815,15 +768,15 @@ import { StepRatingComponent } from '../../../../shared/components/step-rating/s
     }
 
     .chat-btn {
-      background: #FF6B35;
+      background: var(--color-primary-500, #FF9800);
       color: white;
-      box-shadow: 0 2px 8px rgba(255, 107, 53, 0.3);
+      box-shadow: 0 2px 8px rgba(255, 152, 0, 0.3);
     }
 
     .chat-btn:hover {
       background: #FF5722;
       transform: scale(1.05);
-      box-shadow: 0 4px 12px rgba(255, 107, 53, 0.4);
+      box-shadow: 0 4px 12px rgba(255, 152, 0, 0.4);
     }
 
     /* History Section */
@@ -878,7 +831,7 @@ import { StepRatingComponent } from '../../../../shared/components/step-rating/s
 
     /* Rating Section */
     .rating-section {
-      background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+      background: linear-gradient(135deg, #FFF8E1 0%, #FFE082 100%);
       border-radius: 16px;
       padding: 1.25rem;
     }
@@ -912,7 +865,7 @@ import { StepRatingComponent } from '../../../../shared/components/step-rating/s
     }
 
     .rating-step-btn:hover:not(:disabled) {
-      border-color: #f59e0b;
+      border-color: var(--color-mustard, #FFC107);
       transform: translateY(-2px);
       box-shadow: 0 4px 12px rgba(245, 158, 11, 0.2);
     }
@@ -923,8 +876,8 @@ import { StepRatingComponent } from '../../../../shared/components/step-rating/s
     }
 
     .rating-step-btn.rated {
-      background: #fef3c7;
-      border-color: #10b981;
+      background: #FFF8E1;
+      border-color: var(--color-secondary, #4CAF50);
     }
 
     .step-icon {
@@ -935,12 +888,12 @@ import { StepRatingComponent } from '../../../../shared/components/step-rating/s
       flex: 1;
       text-align: left;
       font-weight: 500;
-      color: #1e293b;
+      color: #1F2937;
     }
 
     .rated-badge {
       font-size: 0.75rem;
-      color: #10b981;
+      color: var(--color-secondary, #4CAF50);
       font-weight: 600;
     }
 
@@ -969,12 +922,12 @@ import { StepRatingComponent } from '../../../../shared/components/step-rating/s
       align-items: center;
       background: white;
       padding: 0.5rem 0.75rem;
-      border-radius: 8px;
+      border-radius: 12px;
       font-size: 0.8125rem;
     }
 
     .rating-category {
-      color: #64748b;
+      color: #6B7280;
     }
 
     .rating-value {
@@ -996,7 +949,7 @@ import { StepRatingComponent } from '../../../../shared/components/step-rating/s
     .image-modal img {
       max-width: 100%;
       max-height: 90vh;
-      border-radius: 8px;
+      border-radius: 12px;
     }
 
     .close-modal-btn {
@@ -1019,6 +972,7 @@ export class TrackingViewComponent implements OnInit, OnDestroy {
   readonly reviewsService = inject(ReviewsService);
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
+  private readonly logger = inject(LoggerService);
 
   readonly request = signal<RepairRequest | null>(null);
   readonly isLoading = signal(true);
@@ -1133,7 +1087,7 @@ export class TrackingViewComponent implements OnInit, OnDestroy {
       return {
         start: { latitude: clientLat, longitude: clientLng },
         end: { latitude: repairerLat, longitude: repairerLng },
-        color: '#2563eb'
+        color: 'var(--color-primary-500, #FF9800)'
       };
     }
     return undefined;
@@ -1197,7 +1151,7 @@ export class TrackingViewComponent implements OnInit, OnDestroy {
       // Load step ratings for this request
       await this.loadStepRatings();
     } catch (err) {
-      console.error('Error loading request:', err);
+      this.logger.error('TrackingViewComponent', 'Error loading request', err);
     } finally {
       this.isLoading.set(false);
     }
@@ -1233,7 +1187,7 @@ export class TrackingViewComponent implements OnInit, OnDestroy {
         lng: position.coords.longitude
       });
     } catch (err) {
-      console.error('Error getting user location:', err);
+      this.logger.error('TrackingViewComponent', 'Error getting user location', err);
     }
   }
 
@@ -1249,9 +1203,9 @@ export class TrackingViewComponent implements OnInit, OnDestroy {
   getStatusBannerColor(): string {
     const status = this.request()?.status;
     const colors: Record<string, string> = {
-      pending: 'linear-gradient(135deg, #F9A825 0%, #FF9800 100%)',
-      accepted: 'linear-gradient(135deg, #10B981 0%, #4CAF50 100%)',
-      rejected: 'linear-gradient(135deg, #E53935 0%, #C62828 100%)',
+      pending: 'linear-gradient(135deg, var(--color-gold-800, #F9A825) 0%, var(--color-primary-500, #FF9800) 100%)',
+      accepted: 'linear-gradient(135deg, var(--color-secondary, #4CAF50) 0%, var(--color-success-dark, #2E7D32) 100%)',
+      rejected: 'linear-gradient(135deg, var(--color-error, #F44336) 0%, var(--color-terracotta, #C62828) 100%)',
     };
     return colors[status || 'pending'] || colors['pending'];
   }
@@ -1304,25 +1258,6 @@ export class TrackingViewComponent implements OnInit, OnDestroy {
   getMaskedPhoneLink(): string {
     // In production, this would use a masked phone number service
     return `tel:${this.request()?.repairer?.phone}`;
-  }
-
-  formatDate(dateStr?: string): string {
-    if (!dateStr) return '';
-    return new Date(dateStr).toLocaleDateString('fr-FR', {
-      day: 'numeric',
-      month: 'long',
-      year: 'numeric'
-    });
-  }
-
-  formatDateTime(dateStr?: string): string {
-    if (!dateStr) return '';
-    return new Date(dateStr).toLocaleString('fr-FR', {
-      day: 'numeric',
-      month: 'short',
-      hour: '2-digit',
-      minute: '2-digit'
-    });
   }
 
   getTimeAgo(date: Date): string {

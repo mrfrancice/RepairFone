@@ -7,25 +7,24 @@ import { UiButtonComponent } from '../../../../shared/components/ui-button/ui-bu
 import { UiTabsComponent } from '../../../../shared/components/ui-tabs/ui-tabs.component';
 import { UiBadgeComponent } from '../../../../shared/components/ui-badge/ui-badge.component';
 import { UiSkeletonComponent } from '../../../../shared/components/ui-skeleton/ui-skeleton.component';
+import { UiErrorStateComponent } from '../../../../shared/components/ui-error-state/ui-error-state.component';
+import { FormatDatePipe } from '../../../../shared/pipes/format-date.pipe';
 import { TabItem } from '../../../../shared/models';
+import { LoggerService } from '../../../../core/services/logger.service';
+import { UiHeaderComponent } from '../../../../shared/components/ui-header/ui-header.component';
 
 @Component({
   selector: 'app-quote-list',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [CommonModule, RouterLink, UiButtonComponent, UiTabsComponent, UiBadgeComponent, UiSkeletonComponent],
+  imports: [CommonModule, RouterLink, UiButtonComponent, UiTabsComponent, UiBadgeComponent, UiSkeletonComponent, UiErrorStateComponent, FormatDatePipe, UiHeaderComponent],
   template: `
     <div class="quotes-container">
-      <!-- Header -->
-      <header class="quotes-header">
-        <button class="back-btn" routerLink="/requests">
-          <span>←</span>
-        </button>
-        <h1>Mes devis</h1>
+      <ui-header title="Mes devis" [showBack]="true" backRoute="/requests">
         @if (store.pendingCount() > 0) {
-          <span class="pending-badge">{{ store.pendingCount() }}</span>
+          <span header-actions class="pending-badge">{{ store.pendingCount() }}</span>
         }
-      </header>
+      </ui-header>
 
       <!-- Filters -->
       <div class="filters-section">
@@ -53,6 +52,13 @@ import { TabItem } from '../../../../shared/models';
             </div>
           }
         </div>
+      } @else if (error()) {
+        <ui-error-state
+          [message]="error()!"
+          severity="error"
+          [showRetry]="true"
+          (onRetry)="loadQuotes()"
+        />
       } @else if (store.filteredQuotes().length === 0) {
         <div class="empty-state">
           <span class="empty-icon">📋</span>
@@ -123,7 +129,7 @@ import { TabItem } from '../../../../shared/models';
               <!-- Quote Footer -->
               <div class="quote-footer">
                 <span class="quote-date">
-                  Reçu le {{ formatDate(quote.createdAt) }}
+                  Reçu le {{ quote.createdAt | formatDate }}
                 </span>
                 @if (quote.status === 'pending') {
                   @if (quotesService.isExpired(quote)) {
@@ -157,40 +163,12 @@ import { TabItem } from '../../../../shared/models';
     .quotes-container {
       min-height: 100vh;
       background: #f5f5f5;
+      padding-top: var(--header-height, 100px);
       padding-bottom: 2rem;
     }
 
-    .quotes-header {
-      display: flex;
-      align-items: center;
-      gap: 1rem;
-      padding: 1rem;
-      background: white;
-      border-bottom: 1px solid #eee;
-    }
-
-    .back-btn {
-      width: 40px;
-      height: 40px;
-      border-radius: 50%;
-      border: none;
-      background: #f5f5f5;
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 1.25rem;
-    }
-
-    .quotes-header h1 {
-      flex: 1;
-      margin: 0;
-      font-size: 1.25rem;
-      font-weight: 600;
-    }
-
     .pending-badge {
-      background: #ef4444;
+      background: var(--color-error, #F44336);
       color: white;
       padding: 0.25rem 0.75rem;
       border-radius: 20px;
@@ -223,7 +201,7 @@ import { TabItem } from '../../../../shared/models';
     }
 
     .filter-tab.active {
-      background: #2563eb;
+      background: var(--color-primary-500, #FF9800);
       color: white;
     }
 
@@ -331,7 +309,7 @@ import { TabItem } from '../../../../shared/models';
       height: 48px;
       border-radius: 50%;
       overflow: hidden;
-      background: #e5e7eb;
+      background: #EEEEEE;
     }
 
     .repairer-avatar img {
@@ -346,7 +324,7 @@ import { TabItem } from '../../../../shared/models';
       display: flex;
       align-items: center;
       justify-content: center;
-      background: #2563eb;
+      background: var(--color-primary-500, #FF9800);
       color: white;
       font-weight: 600;
     }
@@ -363,7 +341,7 @@ import { TabItem } from '../../../../shared/models';
 
     .repairer-rating {
       font-size: 0.75rem;
-      color: #f59e0b;
+      color: var(--color-mustard, #FFC107);
     }
 
     .quote-amount {
@@ -374,7 +352,7 @@ import { TabItem } from '../../../../shared/models';
       display: block;
       font-size: 1.5rem;
       font-weight: 700;
-      color: #2563eb;
+      color: var(--color-primary-500, #FF9800);
     }
 
     .currency {
@@ -387,7 +365,7 @@ import { TabItem } from '../../../../shared/models';
       flex-direction: column;
       gap: 0.5rem;
       padding: 1rem;
-      background: #f9fafb;
+      background: #FAFAFA;
       border-radius: 12px;
       margin-bottom: 1rem;
     }
@@ -417,18 +395,18 @@ import { TabItem } from '../../../../shared/models';
 
     .expiry-badge {
       padding: 0.25rem 0.5rem;
-      background: #f3f4f6;
+      background: #F5F5F5;
       border-radius: 4px;
       color: #6b7280;
     }
 
     .expiry-badge.warning {
-      background: #fef3c7;
+      background: #FFF8E1;
       color: #92400e;
     }
 
     .expiry-badge.expired {
-      background: #fef2f2;
+      background: #FFEBEE;
       color: #991b1b;
     }
 
@@ -438,7 +416,7 @@ import { TabItem } from '../../../../shared/models';
       gap: 0.75rem;
       margin-top: 1rem;
       padding-top: 1rem;
-      border-top: 1px solid #e5e7eb;
+      border-top: 1px solid #EEEEEE;
     }
   `]
 })
@@ -446,8 +424,10 @@ export class QuoteListComponent implements OnInit {
   readonly quotesService = inject(QuotesService);
   readonly store = inject(QuotesStore);
   private readonly router = inject(Router);
+  private readonly logger = inject(LoggerService);
 
   readonly isLoading = signal(true);
+  readonly error = signal<string | null>(null);
 
   readonly filterTabs: TabItem[] = [
     { id: 'all', label: 'Tous' },
@@ -462,11 +442,13 @@ export class QuoteListComponent implements OnInit {
 
   async loadQuotes(): Promise<void> {
     this.isLoading.set(true);
+    this.error.set(null);
     try {
       const result = await this.quotesService.getQuotes();
       this.store.setQuotes(result.data, result.total);
-    } catch (err) {
-      console.error('Error loading quotes:', err);
+    } catch (err: any) {
+      this.logger.error('QuoteListComponent', 'Error loading quotes', err);
+      this.error.set(err.message || 'Impossible de charger les devis');
     } finally {
       this.isLoading.set(false);
     }
@@ -506,14 +488,6 @@ export class QuoteListComponent implements OnInit {
     return name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
   }
 
-  formatDate(dateStr: string): string {
-    return new Date(dateStr).toLocaleDateString('fr-FR', {
-      day: 'numeric',
-      month: 'short',
-      year: 'numeric'
-    });
-  }
-
   getExpiryText(quote: Quote): string {
     const days = this.quotesService.getDaysUntilExpiry(quote);
     if (days <= 0) return 'aujourd\'hui';
@@ -535,7 +509,7 @@ export class QuoteListComponent implements OnInit {
         queryParams: { requestId: quote.requestId, quoteId: quote.id }
       });
     } catch (err) {
-      console.error('Error accepting quote:', err);
+      this.logger.error('QuoteListComponent', 'Error accepting quote', err);
     }
   }
 
@@ -546,7 +520,7 @@ export class QuoteListComponent implements OnInit {
       await this.quotesService.rejectQuote(quote.id);
       this.store.updateQuote(quote.id, { status: 'rejected' });
     } catch (err) {
-      console.error('Error rejecting quote:', err);
+      this.logger.error('QuoteListComponent', 'Error rejecting quote', err);
     }
   }
 }

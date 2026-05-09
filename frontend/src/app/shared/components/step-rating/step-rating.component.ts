@@ -128,12 +128,13 @@ import {
     .rating-icon {
       width: 48px;
       height: 48px;
-      background: linear-gradient(135deg, var(--color-primary-600, #FB8C00), var(--color-primary-800, #EF6C00));
-      border-radius: 12px;
+      background: linear-gradient(135deg, var(--color-primary-500, #FF9800), var(--color-gold-800, #F9A825));
+      border-radius: 1rem;
       display: flex;
       align-items: center;
       justify-content: center;
       font-size: 1.5rem;
+      box-shadow: var(--shadow-warm, 0 8px 24px rgba(255, 152, 0, 0.20));
     }
 
     .rating-info {
@@ -141,9 +142,11 @@ import {
     }
 
     .rating-info h3 {
+      font-family: 'Poppins', 'Inter', sans-serif;
       font-size: 1.125rem;
       font-weight: 600;
-      color: var(--color-text-primary, rgba(0, 0, 0, 0.87));
+      letter-spacing: -0.01em;
+      color: var(--color-neutral-900, #111827);
       margin: 0;
     }
 
@@ -154,8 +157,8 @@ import {
     }
 
     .close-btn {
-      min-width: 44px;
-      min-height: 44px;
+      min-width: 48px;
+      min-height: 48px;
       border-radius: 50%;
       border: none;
       background: var(--color-neutral-100, #F5F5F5);
@@ -327,17 +330,19 @@ import {
 
     .btn {
       flex: 1;
-      padding: 0.875rem 1.5rem;
-      min-height: 44px;
-      border-radius: 10px;
+      padding: 0 1.5rem;
+      min-height: 48px;
+      border-radius: 1rem;
+      font-family: 'Inter', sans-serif;
       font-size: 0.9375rem;
       font-weight: 600;
       cursor: pointer;
-      transition: all 0.2s;
+      transition: all 150ms ease;
       display: flex;
       align-items: center;
       justify-content: center;
       gap: 0.5rem;
+      border: none;
     }
 
     .btn:disabled {
@@ -361,14 +366,14 @@ import {
     }
 
     .btn-primary {
-      background: linear-gradient(135deg, var(--color-primary-600, #FB8C00), var(--color-primary-800, #EF6C00));
-      border: none;
+      background: linear-gradient(135deg, var(--color-primary-500, #FF9800), var(--color-gold-800, #F9A825));
       color: white;
+      box-shadow: var(--shadow-warm, 0 8px 24px rgba(255, 152, 0, 0.20));
     }
 
     .btn-primary:hover:not(:disabled) {
       transform: translateY(-1px);
-      box-shadow: 0 4px 12px rgba(255, 152, 0, 0.3);
+      box-shadow: 0 12px 32px rgba(255, 152, 0, 0.30);
     }
 
     .spinner {
@@ -386,11 +391,11 @@ import {
 
     .error-message {
       margin-top: 1rem;
-      padding: 0.75rem;
-      background: var(--color-primary-50, #FFF3E0);
-      border: 1px solid var(--color-error-light, #EF5350);
-      border-radius: 8px;
-      color: var(--color-error, #F44336);
+      padding: 0.75rem 1rem;
+      background: var(--color-error-light, #FFEBEE);
+      border-left: 4px solid var(--color-terracotta, #C62828);
+      border-radius: 0.75rem;
+      color: var(--color-error-dark, #C62828);
       font-size: 0.875rem;
       text-align: center;
     }

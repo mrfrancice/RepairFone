@@ -8,6 +8,8 @@ import { UiCardComponent } from '../../../../shared/components/ui-card/ui-card.c
 import { UiButtonComponent } from '../../../../shared/components/ui-button/ui-button.component';
 import { UiLoadingComponent } from '../../../../shared/components/ui-loading/ui-loading.component';
 import { UiStepperComponent } from '../../../../shared/components/ui-stepper/ui-stepper.component';
+import { LoggerService } from '../../../../core/services/logger.service';
+import { UiHeaderComponent } from '../../../../shared/components/ui-header/ui-header.component';
 
 @Component({
   selector: 'app-new-review',
@@ -21,15 +23,16 @@ import { UiStepperComponent } from '../../../../shared/components/ui-stepper/ui-
     UiButtonComponent,
     UiLoadingComponent,
     UiStepperComponent,
+    UiHeaderComponent,
   ],
   template: `
     <div class="new-review">
-      <!-- Header -->
-      <header class="header">
-        <button class="back-btn" (click)="goBack()">← Retour</button>
-        <h1>Laisser un avis</h1>
-        <p class="subtitle">Partagez votre expérience</p>
-      </header>
+      <ui-header
+        title="Laisser un avis"
+        subtitle="Partagez votre expérience"
+        [showBack]="true"
+        (onBack)="goBack()"
+      />
 
       <!-- Loading -->
       @if (isLoading()) {
@@ -306,37 +309,9 @@ import { UiStepperComponent } from '../../../../shared/components/ui-stepper/ui-
   styles: [`
     .new-review {
       min-height: 100vh;
-      background: #f9fafb;
+      background: #FAFAFA;
+      padding-top: var(--header-height, 100px);
       padding-bottom: 6rem;
-    }
-
-    .header {
-      background: white;
-      padding: 1rem;
-      border-bottom: 1px solid #e5e7eb;
-
-      .back-btn {
-        background: none;
-        border: none;
-        color: #3b82f6;
-        font-size: 0.875rem;
-        cursor: pointer;
-        padding: 0;
-        margin-bottom: 0.5rem;
-      }
-
-      h1 {
-        font-size: 1.5rem;
-        font-weight: 700;
-        color: #1e293b;
-        margin: 0 0 0.25rem 0;
-      }
-
-      .subtitle {
-        color: #64748b;
-        font-size: 0.875rem;
-        margin: 0;
-      }
     }
 
     .loading-container {
@@ -345,7 +320,7 @@ import { UiStepperComponent } from '../../../../shared/components/ui-stepper/ui-
       align-items: center;
       gap: 1rem;
       padding: 3rem;
-      color: #64748b;
+      color: #6B7280;
     }
 
     .error-card {
@@ -354,7 +329,7 @@ import { UiStepperComponent } from '../../../../shared/components/ui-stepper/ui-
       text-align: center;
 
       p {
-        color: #dc2626;
+        color: var(--color-terracotta, #C62828);
         margin: 0 0 1rem 0;
       }
     }
@@ -371,12 +346,12 @@ import { UiStepperComponent } from '../../../../shared/components/ui-stepper/ui-
       h2 {
         font-size: 1.25rem;
         font-weight: 600;
-        color: #1e293b;
+        color: #1F2937;
         margin: 0 0 0.25rem 0;
       }
 
       .step-description {
-        color: #64748b;
+        color: #6B7280;
         font-size: 0.875rem;
         margin: 0 0 1.5rem 0;
       }
@@ -410,12 +385,12 @@ import { UiStepperComponent } from '../../../../shared/components/ui-stepper/ui-
 
       .device-name {
         font-weight: 600;
-        color: #1e293b;
+        color: #1F2937;
       }
 
       .service-type {
         font-size: 0.8125rem;
-        color: #64748b;
+        color: #6B7280;
       }
 
       .repairer-info {
@@ -424,11 +399,11 @@ import { UiStepperComponent } from '../../../../shared/components/ui-stepper/ui-
         font-size: 0.875rem;
 
         .label {
-          color: #64748b;
+          color: #6B7280;
         }
 
         .value {
-          color: #1e293b;
+          color: #1F2937;
           font-weight: 500;
         }
       }
@@ -446,12 +421,12 @@ import { UiStepperComponent } from '../../../../shared/components/ui-stepper/ui-
       border: none;
       font-size: 3rem;
       cursor: pointer;
-      color: #d1d5db;
+      color: #D1D5DB;
       transition: color 0.2s, transform 0.2s;
 
       &.active,
       &.hover {
-        color: #f59e0b;
+        color: var(--color-mustard, #FFC107);
       }
 
       &:hover {
@@ -498,12 +473,12 @@ import { UiStepperComponent } from '../../../../shared/components/ui-stepper/ui-
 
       .sub-rating-label {
         font-weight: 600;
-        color: #1e293b;
+        color: #1F2937;
       }
 
       .sub-rating-desc {
         font-size: 0.75rem;
-        color: #64748b;
+        color: #6B7280;
       }
 
       .sub-rating-stars {
@@ -534,7 +509,7 @@ import { UiStepperComponent } from '../../../../shared/components/ui-stepper/ui-
 
         &:focus {
           outline: none;
-          border-color: #3b82f6;
+          border-color: var(--color-ocean, #1565C0);
           box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
         }
       }
@@ -542,7 +517,7 @@ import { UiStepperComponent } from '../../../../shared/components/ui-stepper/ui-
       .char-hint {
         display: block;
         font-size: 0.75rem;
-        color: #94a3b8;
+        color: #9CA3AF;
         margin-top: 0.25rem;
         text-align: right;
       }
@@ -559,7 +534,7 @@ import { UiStepperComponent } from '../../../../shared/components/ui-stepper/ui-
 
       .photos-hint {
         font-size: 0.75rem;
-        color: #94a3b8;
+        color: #9CA3AF;
         margin: 0 0 0.75rem 0;
       }
     }
@@ -602,7 +577,7 @@ import { UiStepperComponent } from '../../../../shared/components/ui-stepper/ui-
 
     .add-photo-btn {
       aspect-ratio: 1;
-      border: 2px dashed #cbd5e1;
+      border: 2px dashed #D1D5DB;
       border-radius: 0.5rem;
       display: flex;
       flex-direction: column;
@@ -613,8 +588,8 @@ import { UiStepperComponent } from '../../../../shared/components/ui-stepper/ui-
       transition: all 0.2s;
 
       &:hover {
-        border-color: #3b82f6;
-        background: #eff6ff;
+        border-color: var(--color-ocean, #1565C0);
+        background: #E3F2FD;
       }
 
       .icon {
@@ -623,7 +598,7 @@ import { UiStepperComponent } from '../../../../shared/components/ui-stepper/ui-
 
       .label {
         font-size: 0.75rem;
-        color: #64748b;
+        color: #6B7280;
       }
     }
 
@@ -642,7 +617,7 @@ import { UiStepperComponent } from '../../../../shared/components/ui-stepper/ui-
           display: block;
           font-size: 0.75rem;
           font-weight: 600;
-          color: #64748b;
+          color: #6B7280;
           text-transform: uppercase;
           letter-spacing: 0.05em;
           margin-bottom: 0.5rem;
@@ -660,10 +635,10 @@ import { UiStepperComponent } from '../../../../shared/components/ui-stepper/ui-
 
           span {
             font-size: 1.5rem;
-            color: #d1d5db;
+            color: #D1D5DB;
 
             &.active {
-              color: #f59e0b;
+              color: var(--color-mustard, #FFC107);
             }
           }
         }
@@ -692,7 +667,7 @@ import { UiStepperComponent } from '../../../../shared/components/ui-stepper/ui-
         .name {
           flex: 1;
           font-size: 0.875rem;
-          color: #475569;
+          color: #4B5563;
         }
 
         .mini-stars {
@@ -701,10 +676,10 @@ import { UiStepperComponent } from '../../../../shared/components/ui-stepper/ui-
 
           span {
             font-size: 0.875rem;
-            color: #d1d5db;
+            color: #D1D5DB;
 
             &.active {
-              color: #f59e0b;
+              color: var(--color-mustard, #FFC107);
             }
           }
         }
@@ -712,7 +687,7 @@ import { UiStepperComponent } from '../../../../shared/components/ui-stepper/ui-
 
       .recap-comment {
         font-size: 0.875rem;
-        color: #475569;
+        color: #4B5563;
         line-height: 1.6;
         margin: 0;
       }
@@ -732,10 +707,10 @@ import { UiStepperComponent } from '../../../../shared/components/ui-stepper/ui-
 
     .error-alert {
       padding: 0.875rem;
-      background: #fef2f2;
-      border: 1px solid #fecaca;
+      background: #FFEBEE;
+      border: 1px solid #FFCDD2;
       border-radius: 0.5rem;
-      color: #dc2626;
+      color: var(--color-terracotta, #C62828);
       font-size: 0.875rem;
       margin-top: 1rem;
     }
@@ -784,12 +759,12 @@ import { UiStepperComponent } from '../../../../shared/components/ui-stepper/ui-
       h3 {
         font-size: 1.25rem;
         font-weight: 600;
-        color: #1e293b;
+        color: #1F2937;
         margin: 0 0 0.5rem 0;
       }
 
       p {
-        color: #64748b;
+        color: #6B7280;
         font-size: 0.875rem;
         margin: 0 0 1.5rem 0;
       }
@@ -807,6 +782,7 @@ export class NewReviewComponent implements OnInit {
   private readonly requestsService = inject(RequestsService);
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
+  private readonly logger = inject(LoggerService);
 
   readonly request = signal<RepairRequest | null>(null);
   readonly isLoading = signal(true);
@@ -856,7 +832,7 @@ export class NewReviewComponent implements OnInit {
 
       this.request.set(request);
     } catch (err) {
-      console.error('Error loading request:', err);
+      this.logger.error('NewReviewComponent', 'Error loading request', err);
     } finally {
       this.isLoading.set(false);
     }

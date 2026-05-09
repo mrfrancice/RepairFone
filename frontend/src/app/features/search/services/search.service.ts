@@ -1,6 +1,7 @@
 import { Injectable, inject, signal } from '@angular/core';
 import { firstValueFrom, catchError, of } from 'rxjs';
 import { ApiService } from '../../../core/services/api.service';
+import { LoggerService } from '../../../core/services/logger.service';
 
 export interface Device {
   id: string;
@@ -102,6 +103,7 @@ export interface SearchResult {
 @Injectable({ providedIn: 'root' })
 export class SearchService {
   private readonly api = inject(ApiService);
+  private readonly logger = inject(LoggerService);
 
   readonly isLoading = signal(false);
   readonly error = signal<string | null>(null);
@@ -279,7 +281,7 @@ export class SearchService {
         formattedAddress,
       };
     } catch (error) {
-      console.error('Reverse geocoding error:', error);
+      this.logger.error('SearchService', 'Reverse geocoding error', error);
       // Return fallback with coordinates
       return {
         address: 'Position détectée',

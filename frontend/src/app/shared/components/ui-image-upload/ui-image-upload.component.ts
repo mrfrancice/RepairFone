@@ -165,7 +165,7 @@ export interface UploadedImage {
     }
 
     .required {
-      color: #dc2626;
+      color: var(--color-terracotta, #C62828);
       margin-left: 0.125rem;
     }
 
@@ -181,19 +181,19 @@ export interface UploadedImage {
       width: 100px;
       height: 100px;
       border-radius: 50%;
-      background: #f3f4f6;
+      background: #F5F5F5;
       display: flex;
       align-items: center;
       justify-content: center;
       overflow: hidden;
       cursor: pointer;
       position: relative;
-      border: 3px solid #e5e7eb;
+      border: 3px solid #EEEEEE;
       transition: border-color 0.2s;
     }
 
     .avatar-preview:hover {
-      border-color: #2563eb;
+      border-color: var(--color-primary-500, #FF9800);
     }
 
     .avatar-preview img {
@@ -231,18 +231,18 @@ export interface UploadedImage {
     .change-btn {
       background: none;
       border: none;
-      color: #2563eb;
+      color: var(--color-primary-500, #FF9800);
       font-size: 0.875rem;
       cursor: pointer;
       padding: 0.75rem 1rem;
-      min-height: 44px;
+      min-height: 48px;
       border-radius: var(--border-radius-md, 8px);
       transition: background 0.15s ease;
     }
 
     .change-btn:hover {
       text-decoration: underline;
-      background: var(--color-neutral-100, #f3f4f6);
+      background: var(--color-neutral-100, #F5F5F5);
     }
 
     .change-btn:focus-visible {
@@ -268,7 +268,7 @@ export interface UploadedImage {
       aspect-ratio: 1;
       border-radius: 8px;
       overflow: hidden;
-      background: #f3f4f6;
+      background: #F5F5F5;
     }
 
     .image-item img {
@@ -288,7 +288,7 @@ export interface UploadedImage {
 
     .progress-bar {
       height: 100%;
-      background: #2563eb;
+      background: var(--color-primary-500, #FF9800);
       transition: width 0.3s;
     }
 
@@ -298,7 +298,7 @@ export interface UploadedImage {
       right: 4px;
       width: 20px;
       height: 20px;
-      background: #dc2626;
+      background: var(--color-terracotta, #C62828);
       color: white;
       border-radius: 50%;
       display: flex;
@@ -312,8 +312,8 @@ export interface UploadedImage {
       position: absolute;
       top: 0;
       right: 0;
-      min-width: 44px;
-      min-height: 44px;
+      min-width: 48px;
+      min-height: 48px;
       background: transparent;
       color: white;
       border: none;
@@ -358,7 +358,7 @@ export interface UploadedImage {
       aspect-ratio: 1;
       min-width: 80px;
       min-height: 80px;
-      border: 2px dashed #d1d5db;
+      border: 2px dashed #D1D5DB;
       border-radius: 8px;
       display: flex;
       flex-direction: column;
@@ -367,13 +367,13 @@ export interface UploadedImage {
       gap: 0.25rem;
       cursor: pointer;
       transition: all 0.2s;
-      background: #fafafa;
+      background: #FAFAFA;
     }
 
     .add-image-btn:hover,
     .add-image-btn.dragover {
-      border-color: #2563eb;
-      background: #eff6ff;
+      border-color: var(--color-primary-500, #FF9800);
+      background: #E3F2FD;
     }
 
     .add-image-btn:focus-visible {
@@ -399,19 +399,19 @@ export interface UploadedImage {
 
     /* Dropzone Mode */
     .dropzone {
-      border: 2px dashed #d1d5db;
+      border: 2px dashed #D1D5DB;
       border-radius: 12px;
       padding: 2rem;
       text-align: center;
       cursor: pointer;
       transition: all 0.2s;
-      background: #fafafa;
+      background: #FAFAFA;
     }
 
     .dropzone:hover,
     .dropzone.dragover {
-      border-color: #2563eb;
-      background: #eff6ff;
+      border-color: var(--color-primary-500, #FF9800);
+      background: #E3F2FD;
     }
 
     .dropzone.has-files {
@@ -455,7 +455,7 @@ export interface UploadedImage {
       padding: 0.5rem;
       background: white;
       border-radius: 8px;
-      border: 1px solid #e5e7eb;
+      border: 1px solid #EEEEEE;
     }
 
     .file-thumbnail {
@@ -482,8 +482,8 @@ export interface UploadedImage {
       font-size: 1.25rem;
       cursor: pointer;
       padding: 0.5rem;
-      min-width: 44px;
-      min-height: 44px;
+      min-width: 48px;
+      min-height: 48px;
       display: flex;
       align-items: center;
       justify-content: center;
@@ -492,8 +492,8 @@ export interface UploadedImage {
     }
 
     .file-remove:hover {
-      color: #dc2626;
-      background: var(--color-error-light, #fef2f2);
+      color: var(--color-terracotta, #C62828);
+      background: var(--color-error-light, #FFEBEE);
     }
 
     .file-remove:focus-visible {
@@ -502,7 +502,7 @@ export interface UploadedImage {
     }
 
     .add-more {
-      color: #2563eb;
+      color: var(--color-primary-500, #FF9800);
       font-size: 0.875rem;
       margin: 0.5rem 0 0;
     }
@@ -510,12 +510,12 @@ export interface UploadedImage {
     /* Error State */
     .has-error .dropzone,
     .has-error .add-image-btn {
-      border-color: #dc2626;
+      border-color: var(--color-terracotta, #C62828);
     }
 
     .error-message {
       font-size: 0.75rem;
-      color: #dc2626;
+      color: var(--color-terracotta, #C62828);
     }
   `]
 })

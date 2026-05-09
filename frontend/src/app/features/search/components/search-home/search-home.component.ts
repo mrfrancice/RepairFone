@@ -5,6 +5,7 @@ import { Router, ActivatedRoute } from '@angular/router';
 import { SearchService, Device, ServiceType, LocationDetails } from '../../services/search.service';
 import { SearchStore } from '../../stores/search.store';
 import { UiHeaderComponent } from '../../../../shared/components/ui-header/ui-header.component';
+import { LoggerService } from '../../../../core/services/logger.service';
 
 interface Problem {
   id: string;
@@ -279,12 +280,12 @@ interface Problem {
   styles: [`
     .search-container {
       min-height: 100vh;
-      background: #f9fafb;
+      background: #FAFAFA;
     }
 
     .search-card {
       margin: 0;
-      margin-top: 100px;
+      margin-top: var(--header-height, 100px);
       background: white;
       border-radius: 0;
       padding: 1.25rem;
@@ -304,9 +305,9 @@ interface Problem {
     }
 
     .alert-error {
-      background: #fef2f2;
+      background: #FFEBEE;
       color: #991b1b;
-      border: 1px solid #fecaca;
+      border: 1px solid #FFCDD2;
     }
 
     .alert-content {
@@ -327,7 +328,7 @@ interface Problem {
       color: #991b1b;
       border: 1px solid #991b1b;
       padding: 0.5rem 0.875rem;
-      border-radius: 8px;
+      border-radius: 12px;
       font-weight: 600;
       font-size: 0.8125rem;
       cursor: pointer;
@@ -335,16 +336,16 @@ interface Problem {
     }
 
     .btn-retry:hover {
-      background: #fef2f2;
+      background: #FFEBEE;
       transform: translateY(-1px);
     }
 
     .btn-use-default {
-      background: #2563eb;
+      background: var(--color-primary-500, #FF9800);
       color: white;
       border: none;
       padding: 0.5rem 0.875rem;
-      border-radius: 8px;
+      border-radius: 12px;
       font-weight: 600;
       font-size: 0.8125rem;
       cursor: pointer;
@@ -352,14 +353,14 @@ interface Problem {
     }
 
     .btn-use-default:hover {
-      background: #1d4ed8;
+      background: var(--color-primary-900, #E65100);
       transform: translateY(-1px);
     }
 
     .search-step {
       margin-bottom: 1.5rem;
       padding-bottom: 1.5rem;
-      border-bottom: 1px solid #f3f4f6;
+      border-bottom: 1px solid #F5F5F5;
     }
 
     .search-step:last-of-type {
@@ -372,7 +373,7 @@ interface Problem {
     }
 
     .search-step.completed .step-indicator {
-      background: #10b981;
+      background: var(--color-secondary, #4CAF50);
     }
 
     .step-header {
@@ -385,7 +386,7 @@ interface Problem {
     .step-indicator {
       width: 28px;
       height: 28px;
-      background: #e5e7eb;
+      background: #EEEEEE;
       color: #6b7280;
       border-radius: 50%;
       display: flex;
@@ -397,7 +398,7 @@ interface Problem {
     }
 
     .step-indicator.active {
-      background: #FF6B35;
+      background: var(--color-primary-500, #FF9800);
       color: white;
     }
 
@@ -411,7 +412,7 @@ interface Problem {
       align-items: flex-start;
       gap: 0.75rem;
       padding: 1rem;
-      background: linear-gradient(135deg, #FFF4E6 0%, #FFE8CC 100%);
+      background: linear-gradient(135deg, #FFF3E0 0%, #FFE8CC 100%);
       border-left: 4px solid #F9A825;
       border-radius: 12px;
       margin-bottom: 1.5rem;
@@ -456,7 +457,7 @@ interface Problem {
       align-items: center;
       justify-content: space-between;
       padding: 0.875rem;
-      background: #f0fdf4;
+      background: #E8F5E9;
       border-radius: 12px;
     }
 
@@ -486,13 +487,13 @@ interface Problem {
 
     .location-city {
       font-size: 0.8125rem;
-      color: #15803d;
+      color: var(--color-success-dark, #2E7D32);
       font-weight: 500;
     }
 
     .location-coords {
       font-size: 0.6875rem;
-      color: #22c55e;
+      color: var(--color-secondary, #4CAF50);
       font-family: monospace;
       background: rgba(22, 163, 74, 0.1);
       padding: 0.125rem 0.375rem;
@@ -509,7 +510,7 @@ interface Problem {
     .btn-text {
       background: none;
       border: none;
-      color: #2563eb;
+      color: var(--color-primary-500, #FF9800);
       font-weight: 500;
       cursor: pointer;
       padding: 0.5rem;
@@ -520,8 +521,8 @@ interface Problem {
       align-items: center;
       justify-content: center;
       gap: 0.5rem;
-      background: #eff6ff;
-      color: #2563eb;
+      background: #E3F2FD;
+      color: var(--color-primary-500, #FF9800);
       border: 2px dashed #93c5fd;
     }
 
@@ -537,22 +538,22 @@ interface Problem {
       align-items: center;
       gap: 0.375rem;
       padding: 1rem 0.5rem;
-      background: #f9fafb;
-      border: 2px solid #e5e7eb;
+      background: #FAFAFA;
+      border: 2px solid #EEEEEE;
       border-radius: 12px;
       cursor: pointer;
       transition: all 0.2s;
     }
 
     .category-btn:hover:not(:disabled) {
-      border-color: #FF6B35;
-      background: #FFF4E6;
+      border-color: var(--color-primary-500, #FF9800);
+      background: #FFF3E0;
       transform: translateY(-2px);
     }
 
     .category-btn.active {
-      background: linear-gradient(135deg, #FF6B35 0%, #FF9800 100%);
-      border-color: #FF6B35;
+      background: linear-gradient(135deg, var(--color-primary-500, #FF9800) 0%, #FF9800 100%);
+      border-color: var(--color-primary-500, #FF9800);
       color: white;
     }
 
@@ -598,8 +599,8 @@ interface Problem {
       align-items: center;
       gap: 0.375rem;
       padding: 0.5rem 0.75rem;
-      background: #f9fafb;
-      border: 1px solid #e5e7eb;
+      background: #FAFAFA;
+      border: 1px solid #EEEEEE;
       border-radius: 20px;
       cursor: pointer;
       transition: all 0.2s;
@@ -608,14 +609,14 @@ interface Problem {
     }
 
     .brand-btn:hover {
-      border-color: #FF6B35;
+      border-color: var(--color-primary-500, #FF9800);
       transform: translateY(-1px);
     }
 
     .brand-btn.active {
-      background: #FFF4E6;
-      border-color: #FF6B35;
-      color: #FF6B35;
+      background: #FFF3E0;
+      border-color: var(--color-primary-500, #FF9800);
+      color: var(--color-primary-500, #FF9800);
       font-weight: 600;
     }
 
@@ -638,22 +639,22 @@ interface Problem {
       align-items: center;
       justify-content: space-between;
       padding: 0.75rem 1rem;
-      background: #f9fafb;
-      border: 1px solid #e5e7eb;
-      border-radius: 10px;
+      background: #FAFAFA;
+      border: 1px solid #EEEEEE;
+      border-radius: 12px;
       cursor: pointer;
       transition: all 0.2s;
       text-align: left;
     }
 
     .device-btn:hover {
-      border-color: #FF6B35;
+      border-color: var(--color-primary-500, #FF9800);
       transform: translateX(4px);
     }
 
     .device-btn.active {
-      background: #FFF4E6;
-      border-color: #FF6B35;
+      background: #FFF3E0;
+      border-color: var(--color-primary-500, #FF9800);
     }
 
     .device-name {
@@ -670,7 +671,7 @@ interface Problem {
     .btn-show-more {
       background: none;
       border: none;
-      color: #FF6B35;
+      color: var(--color-primary-500, #FF9800);
       font-weight: 600;
       cursor: pointer;
       padding: 0.5rem;
@@ -679,7 +680,7 @@ interface Problem {
     }
 
     .btn-show-more:hover {
-      color: #E85A24;
+      color: var(--color-primary-900, #E65100);
     }
 
     .problems-list {
@@ -693,8 +694,8 @@ interface Problem {
       align-items: center;
       gap: 0.75rem;
       padding: 0.875rem 1rem;
-      background: #f9fafb;
-      border: 2px solid #e5e7eb;
+      background: #FAFAFA;
+      border: 2px solid #EEEEEE;
       border-radius: 12px;
       cursor: pointer;
       transition: all 0.2s;
@@ -702,13 +703,13 @@ interface Problem {
     }
 
     .problem-btn:hover {
-      border-color: #FF6B35;
+      border-color: var(--color-primary-500, #FF9800);
       transform: translateX(4px);
     }
 
     .problem-btn.active {
-      background: linear-gradient(135deg, #FFF4E6 0%, #FFE8CC 100%);
-      border-color: #FF6B35;
+      background: linear-gradient(135deg, #FFF3E0 0%, #FFE8CC 100%);
+      border-color: var(--color-primary-500, #FF9800);
       border-width: 2px;
     }
 
@@ -756,16 +757,16 @@ interface Problem {
     .other-problem-input textarea {
       width: 100%;
       padding: 0.75rem 1rem;
-      border: 1px solid #d1d5db;
-      border-radius: 10px;
+      border: 1px solid #D1D5DB;
+      border-radius: 12px;
       font-size: 1rem;
       resize: vertical;
     }
 
     .other-problem-input textarea:focus {
       outline: none;
-      border-color: #FF6B35;
-      box-shadow: 0 0 0 3px rgba(255, 107, 53, 0.1);
+      border-color: var(--color-primary-500, #FF9800);
+      box-shadow: 0 0 0 3px rgba(255, 152, 0, 0.1);
     }
 
     .btn {
@@ -783,22 +784,22 @@ interface Problem {
     }
 
     .btn-primary {
-      background: linear-gradient(135deg, #FF6B35 0%, #FF9800 100%);
+      background: linear-gradient(135deg, var(--color-primary-500, #FF9800) 0%, #FF9800 100%);
       color: white;
-      box-shadow: 0 4px 12px rgba(255, 107, 53, 0.3);
+      box-shadow: 0 4px 12px rgba(255, 152, 0, 0.3);
       min-height: 56px;
       font-weight: 700;
     }
 
     .btn-primary:hover:not(:disabled) {
-      background: linear-gradient(135deg, #E85A24 0%, #F57C00 100%);
+      background: linear-gradient(135deg, var(--color-primary-900, #E65100) 0%, #F57C00 100%);
       transform: translateY(-2px);
-      box-shadow: 0 6px 16px rgba(255, 107, 53, 0.4);
+      box-shadow: 0 6px 16px rgba(255, 152, 0, 0.4);
     }
 
     .btn-primary:active:not(:disabled) {
       transform: translateY(0);
-      box-shadow: 0 2px 8px rgba(255, 107, 53, 0.3);
+      box-shadow: 0 2px 8px rgba(255, 152, 0, 0.3);
     }
 
     .btn-primary:disabled {
@@ -843,6 +844,7 @@ export class SearchHomeComponent implements OnInit {
   private readonly router = inject(Router);
   private readonly route = inject(ActivatedRoute);
   readonly store = inject(SearchStore);
+  private readonly logger = inject(LoggerService);
 
   readonly categories = signal<string[]>([]);
   readonly brands = signal<string[]>([]);
@@ -947,7 +949,7 @@ export class SearchHomeComponent implements OnInit {
         this.categories.set(['smartphone', 'computer']);
       }
     } catch (err) {
-      console.error('Error loading categories:', err);
+      this.logger.error('SearchHomeComponent', 'Error loading categories', err);
       // Fallback to default categories
       this.categories.set(['smartphone', 'computer']);
     }
@@ -1024,7 +1026,7 @@ export class SearchHomeComponent implements OnInit {
       this.brands.set(brands);
       await this.loadDevices();
     } catch (err) {
-      console.error('Error loading brands:', err);
+      this.logger.error('SearchHomeComponent', 'Error loading brands', err);
     }
   }
 
@@ -1044,7 +1046,7 @@ export class SearchHomeComponent implements OnInit {
       });
       this.devices.set(result.data);
     } catch (err) {
-      console.error('Error loading devices:', err);
+      this.logger.error('SearchHomeComponent', 'Error loading devices', err);
     }
   }
 
@@ -1061,7 +1063,7 @@ export class SearchHomeComponent implements OnInit {
       const services = await this.searchService.getServiceTypes(device.id);
       this.serviceTypes.set(services);
     } catch (err) {
-      console.error('Error loading service types:', err);
+      this.logger.error('SearchHomeComponent', 'Error loading service types', err);
     }
   }
 

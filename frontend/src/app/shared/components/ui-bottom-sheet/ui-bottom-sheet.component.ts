@@ -146,7 +146,7 @@ export type BottomSheetSize = 'auto' | 'half' | 'full';
       display: flex;
       justify-content: center;
       align-items: center;
-      min-height: 44px;
+      min-height: 48px;
       padding: 8px 0;
       cursor: grab;
     }
@@ -170,9 +170,11 @@ export type BottomSheetSize = 'auto' | 'half' | 'full';
     }
 
     .bottom-sheet-title {
+      font-family: 'Poppins', 'Inter', sans-serif;
       font-size: 1.125rem;
       font-weight: 600;
-      color: var(--color-text-primary, rgba(0, 0, 0, 0.87));
+      letter-spacing: -0.01em;
+      color: var(--color-neutral-900, #111827);
       margin: 0;
       padding-right: 2.5rem;
     }
@@ -187,8 +189,8 @@ export type BottomSheetSize = 'auto' | 'half' | 'full';
       position: absolute;
       top: 0.75rem;
       right: 0.75rem;
-      min-width: 44px;
-      min-height: 44px;
+      min-width: 48px;
+      min-height: 48px;
       border: none;
       background: var(--color-neutral-100, #F5F5F5);
       border-radius: 50%;

@@ -29,9 +29,10 @@ export type AlertType = 'info' | 'success' | 'warning' | 'error';
       display: flex;
       align-items: flex-start;
       gap: 0.75rem;
-      padding: 1rem;
-      border-radius: var(--border-radius-md, 8px);
-      border: 1px solid;
+      padding: 1rem 1.25rem;
+      border-radius: 1rem;
+      border-left: 4px solid;
+      font-family: 'Inter', sans-serif;
     }
 
     .alert-icon {
@@ -47,11 +48,14 @@ export type AlertType = 'info' | 'success' | 'warning' | 'error';
     }
 
     .alert-title {
+      font-family: 'Poppins', 'Inter', sans-serif;
       font-weight: 600;
+      letter-spacing: -0.005em;
     }
 
     .alert-message {
       font-size: 0.875rem;
+      line-height: 1.5;
     }
 
     .alert-close {
@@ -61,7 +65,7 @@ export type AlertType = 'info' | 'success' | 'warning' | 'error';
       padding: 0.25rem;
       font-size: 1rem;
       opacity: 0.6;
-      transition: opacity var(--transition-fast, 150ms);
+      transition: opacity 150ms ease;
     }
 
     .alert-close:hover {
@@ -70,25 +74,25 @@ export type AlertType = 'info' | 'success' | 'warning' | 'error';
 
     .alert-info {
       background: var(--color-ocean-50, #E3F2FD);
-      border-color: var(--color-info-light, #64B5F6);
+      border-color: var(--color-ocean, #1565C0);
       color: var(--color-info-dark, #1565C0);
     }
 
     .alert-success {
       background: var(--color-secondary-50, #E8F5E9);
-      border-color: var(--color-success-light, #81C784);
+      border-color: var(--color-success, #4CAF50);
       color: var(--color-success-dark, #2E7D32);
     }
 
     .alert-warning {
-      background: var(--color-gold-50, #FFFDE7);
-      border-color: var(--color-warning-light, #FFD54F);
-      color: var(--color-warning-dark, #F57C00);
+      background: #FFF8E1;
+      border-color: var(--color-mustard, #FFC107);
+      color: #F57C00;
     }
 
     .alert-error {
-      background: var(--color-primary-50, #FFF3E0);
-      border-color: var(--color-error-light, #EF5350);
+      background: var(--color-error-light, #FFEBEE);
+      border-color: var(--color-terracotta, #C62828);
       color: var(--color-error-dark, #C62828);
     }
   `]

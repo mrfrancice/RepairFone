@@ -190,9 +190,9 @@ export class UiStepContentDirective {
     }
 
     .step-item.active .step-indicator {
-      background: var(--color-info, #2196F3);
+      background: var(--color-primary-500, #FF9800);
       color: white;
-      box-shadow: 0 0 0 4px rgba(33, 150, 243, 0.2);
+      box-shadow: 0 0 0 4px rgba(255, 152, 0, 0.20);
     }
 
     .step-item.completed .step-indicator {
@@ -234,7 +234,7 @@ export class UiStepContentDirective {
     }
 
     .step-item.active .step-label {
-      color: var(--color-info, #2196F3);
+      color: var(--color-primary-500, #FF9800);
     }
 
     .step-item.completed .step-label {
@@ -305,13 +305,14 @@ export class UiStepContentDirective {
     }
 
     .btn {
-      padding: 0.75rem 1.5rem;
-      min-height: 44px;
-      border-radius: 8px;
+      padding: 0 1.5rem;
+      min-height: 48px;
+      border-radius: 1rem;
+      font-family: 'Inter', sans-serif;
       font-weight: 600;
       font-size: 0.9375rem;
       cursor: pointer;
-      transition: all 0.2s ease;
+      transition: all 150ms ease;
       border: none;
     }
 
@@ -326,12 +327,14 @@ export class UiStepContentDirective {
     }
 
     .btn-primary {
-      background: var(--color-info, #2196F3);
+      background: var(--color-primary-500, #FF9800);
       color: white;
+      box-shadow: var(--shadow-warm, 0 8px 24px rgba(255, 152, 0, 0.20));
     }
 
     .btn-primary:hover:not(:disabled) {
-      background: var(--color-info-dark, #1565C0);
+      background: var(--color-primary-900, #E65100);
+      transform: translateY(-1px);
     }
 
     .btn-outline {

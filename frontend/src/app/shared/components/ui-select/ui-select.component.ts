@@ -208,7 +208,7 @@ export interface SelectGroup {
     }
 
     .required {
-      color: #dc2626;
+      color: var(--color-terracotta, #C62828);
       margin-left: 0.25rem;
     }
 
@@ -217,10 +217,10 @@ export interface SelectGroup {
       align-items: center;
       justify-content: space-between;
       width: 100%;
-      min-height: 44px;
+      min-height: 48px;
       padding: 0.75rem 1rem;
       background: white;
-      border: 1px solid #d1d5db;
+      border: 1px solid #D1D5DB;
       border-radius: 8px;
       cursor: pointer;
       transition: all 0.2s ease;
@@ -232,23 +232,23 @@ export interface SelectGroup {
 
     .select-trigger:focus {
       outline: none;
-      border-color: #2563eb;
-      box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+      border-color: var(--color-primary-500, #FF9800);
+      box-shadow: 0 0 0 3px rgba(255, 152, 0, 0.12);
     }
 
     .select-trigger.open {
-      border-color: #2563eb;
-      box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+      border-color: var(--color-primary-500, #FF9800);
+      box-shadow: 0 0 0 3px rgba(255, 152, 0, 0.12);
     }
 
     .select-container.disabled .select-trigger {
-      background: #f3f4f6;
+      background: #F5F5F5;
       cursor: not-allowed;
       opacity: 0.7;
     }
 
     .select-container.error .select-trigger {
-      border-color: #dc2626;
+      border-color: var(--color-terracotta, #C62828);
     }
 
     .select-container.error .select-trigger:focus {
@@ -292,7 +292,7 @@ export interface SelectGroup {
       left: 0;
       right: 0;
       background: white;
-      border: 1px solid #e5e7eb;
+      border: 1px solid #EEEEEE;
       border-radius: 8px;
       box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
       z-index: 50;
@@ -305,14 +305,14 @@ export interface SelectGroup {
     .search-container {
       position: relative;
       padding: 0.75rem;
-      border-bottom: 1px solid #e5e7eb;
+      border-bottom: 1px solid #EEEEEE;
     }
 
     .search-input {
       width: 100%;
       padding: 0.5rem 2.5rem 0.5rem 0.75rem;
-      min-height: 44px;
-      border: 1px solid #d1d5db;
+      min-height: 48px;
+      border: 1px solid #D1D5DB;
       border-radius: 6px;
       font-size: 0.875rem;
       outline: none;
@@ -320,7 +320,7 @@ export interface SelectGroup {
     }
 
     .search-input:focus {
-      border-color: #2563eb;
+      border-color: var(--color-primary-500, #FF9800);
     }
 
     .search-input::placeholder {
@@ -340,15 +340,15 @@ export interface SelectGroup {
       display: flex;
       align-items: center;
       justify-content: center;
-      min-width: 44px;
-      min-height: 44px;
+      min-width: 48px;
+      min-height: 48px;
       border-radius: var(--border-radius-sm, 4px);
       transition: background 0.15s ease;
     }
 
     .clear-search:hover {
       color: #374151;
-      background: var(--color-neutral-100, #f3f4f6);
+      background: var(--color-neutral-100, #F5F5F5);
     }
 
     .clear-search:focus-visible {
@@ -379,7 +379,7 @@ export interface SelectGroup {
       color: #6b7280;
       text-transform: uppercase;
       letter-spacing: 0.05em;
-      background: #f9fafb;
+      background: #FAFAFA;
     }
 
     .select-option {
@@ -387,17 +387,17 @@ export interface SelectGroup {
       align-items: center;
       gap: 0.75rem;
       padding: 0.75rem 1rem;
-      min-height: 44px;
+      min-height: 48px;
       cursor: pointer;
       transition: background-color 0.15s;
     }
 
     .select-option:hover:not(.disabled) {
-      background: #f3f4f6;
+      background: #F5F5F5;
     }
 
     .select-option.selected {
-      background: #eff6ff;
+      background: #E3F2FD;
     }
 
     .select-option.disabled {
@@ -437,7 +437,7 @@ export interface SelectGroup {
     }
 
     .check-icon {
-      color: #2563eb;
+      color: var(--color-primary-500, #FF9800);
       flex-shrink: 0;
     }
 
@@ -445,7 +445,7 @@ export interface SelectGroup {
       display: block;
       margin-top: 0.375rem;
       font-size: 0.75rem;
-      color: #dc2626;
+      color: var(--color-terracotta, #C62828);
     }
 
     .hint-message {

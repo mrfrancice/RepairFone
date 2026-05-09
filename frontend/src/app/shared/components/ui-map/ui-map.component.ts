@@ -11,9 +11,11 @@ import {
   ViewChild,
   AfterViewInit,
   signal,
+  inject,
   ChangeDetectionStrategy
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { LoggerService } from '../../../core/services/logger.service';
 
 // Declare Leaflet types
 declare const L: any;
@@ -72,7 +74,7 @@ export interface MapRoute {
       width: 100%;
       border-radius: 12px;
       overflow: hidden;
-      background: #f3f4f6;
+      background: #F5F5F5;
     }
 
     .map-container {
@@ -92,15 +94,15 @@ export interface MapRoute {
       flex-direction: column;
       align-items: center;
       justify-content: center;
-      background: #f9fafb;
+      background: #FAFAFA;
       gap: 1rem;
     }
 
     .spinner {
       width: 40px;
       height: 40px;
-      border: 3px solid #e5e7eb;
-      border-top-color: #2563eb;
+      border: 3px solid var(--color-neutral-200, #EEEEEE);
+      border-top-color: var(--color-primary-500, #FF9800);
       border-radius: 50%;
       animation: spin 1s linear infinite;
     }
@@ -117,10 +119,10 @@ export interface MapRoute {
 
     .map-error button {
       padding: 0.5rem 1rem;
-      background: #2563eb;
+      background: var(--color-primary-500, #FF9800);
       color: white;
       border: none;
-      border-radius: 6px;
+      border-radius: 0.5rem;
       cursor: pointer;
     }
 
@@ -150,7 +152,7 @@ export interface MapRoute {
     }
 
     .control-btn:hover {
-      background: #f3f4f6;
+      background: #F5F5F5;
     }
 
     /* Override Leaflet default styles */
@@ -170,6 +172,7 @@ export interface MapRoute {
 })
 export class UiMapComponent implements OnInit, AfterViewInit, OnDestroy, OnChanges {
   @ViewChild('mapContainer') mapContainer!: ElementRef;
+  private readonly logger = inject(LoggerService);
 
   @Input() height = '250px';
   @Input() zoom = 14;
@@ -330,7 +333,7 @@ export class UiMapComponent implements OnInit, AfterViewInit, OnDestroy, OnChang
           [this.route.end.latitude, this.route.end.longitude]
         ],
         {
-          color: this.route.color || '#2563eb',
+          color: this.route.color || '#FF9800',
           weight: 4,
           opacity: 0.8,
           dashArray: '10, 10'
@@ -341,10 +344,10 @@ export class UiMapComponent implements OnInit, AfterViewInit, OnDestroy, OnChang
 
   private createIcon(type: string): any {
     const iconConfigs: Record<string, { color: string; symbol: string }> = {
-      default: { color: '#2563eb', symbol: '' },
-      user: { color: '#10b981', symbol: '' },
-      repairer: { color: '#f59e0b', symbol: '' },
-      destination: { color: '#dc2626', symbol: '' }
+      default: { color: '#FF9800', symbol: '' },
+      user: { color: '#4CAF50', symbol: '' },
+      repairer: { color: '#FFC107', symbol: '' },
+      destination: { color: '#C62828', symbol: '' }
     };
 
     const config = iconConfigs[type] || iconConfigs['default'];
@@ -387,7 +390,7 @@ export class UiMapComponent implements OnInit, AfterViewInit, OnDestroy, OnChang
           );
         },
         (error) => {
-          console.error('Error getting location:', error);
+          this.logger.error('UiMapComponent', 'Error getting location', error);
         }
       );
     }

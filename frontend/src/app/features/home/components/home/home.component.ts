@@ -8,8 +8,11 @@ import { SearchService } from '../../../search/services/search.service';
 import { UiSearchBarComponent } from '@app/shared';
 import { UiAvatarComponent } from '../../../../shared/components/ui-avatar/ui-avatar.component';
 import { UiSkeletonComponent } from '../../../../shared/components/ui-skeleton/ui-skeleton.component';
-import { BottomNavComponent } from '../../../../shared/components/bottom-nav/bottom-nav.component';
 import { NotificationBellComponent } from '../../../../shared/components/notification-bell/notification-bell.component';
+import { InitialsPipe } from '../../../../shared/pipes/initials.pipe';
+import { StatusLabelsService, RequestStatus } from '../../../../shared/services/status-labels.service';
+import { UiErrorStateComponent } from '../../../../shared/components/ui-error-state/ui-error-state.component';
+import { LoggerService } from '../../../../core/services/logger.service';
 
 interface NearbyRepairer {
   id: string;
@@ -43,8 +46,9 @@ interface QuickService {
     UiSearchBarComponent,
     UiAvatarComponent,
     UiSkeletonComponent,
-    BottomNavComponent,
     NotificationBellComponent,
+    InitialsPipe,
+    UiErrorStateComponent,
   ],
   template: `
     <div class="home-container">
@@ -55,8 +59,8 @@ interface QuickService {
             <div class="logo-section">
               <div class="logo-icon">
                 <svg viewBox="0 0 32 32" fill="none">
-                  <path d="M16 4C9.373 4 4 9.373 4 16s5.373 12 12 12 12-5.373 12-12S22.627 4 16 4z" fill="white"/>
-                  <path d="M20 11l-2 2m0 0l-2-2m2 2v6m-4 2h8" stroke="#FF6B35" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                  <path d="M16 4C9.373 4 4 9.373 4 16s5.373 12 12 12 12-5.373 12-12S22.627 4 16 4z" fill="rgba(255,255,255,0.18)"/>
+                  <path d="M20 11l-2 2m0 0l-2-2m2 2v6m-4 2h8" stroke="white" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
                 </svg>
               </div>
               <div class="header-titles">
@@ -67,8 +71,8 @@ interface QuickService {
           </div>
           <div class="header-right">
             @if (authStore.isAuthenticated()) {
-              <button class="location-chip" (click)="changeLocation(); $event.stopPropagation()">
-                <svg width="14" height="14" viewBox="0 0 16 16" fill="none">
+              <button class="location-chip" (click)="changeLocation(); $event.stopPropagation()" aria-label="Modifier ma localisation">
+                <svg width="14" height="14" viewBox="0 0 16 16" fill="none" aria-hidden="true">
                   <path d="M8 8.667a2 2 0 100-4 2 2 0 000 4z" stroke="currentColor" stroke-width="1.5"/>
                   <path d="M8 14s5-3.5 5-7.333a5 5 0 10-10 0C3 10.5 8 14 8 14z" stroke="currentColor" stroke-width="1.5"/>
                 </svg>
@@ -86,12 +90,12 @@ interface QuickService {
               </span>
               <span class="role-badge">{{ getRoleLabel() }}</span>
               <app-notification-bell />
-              <button class="profile-btn" (click)="goToProfile()">
+              <button class="profile-btn" (click)="goToProfile()" aria-label="Accéder à mon profil">
                 @if (authStore.user()?.avatarUrl) {
-                  <img [src]="authStore.user()?.avatarUrl" alt="Profil" />
+                  <img [src]="authStore.user()?.avatarUrl" alt="" />
                 } @else {
-                  <div class="profile-placeholder">
-                    {{ getInitials() }}
+                  <div class="profile-placeholder" aria-hidden="true">
+                    {{ authStore.user()?.firstName | initials : authStore.user()?.lastName }}
                   </div>
                 }
               </button>
@@ -123,7 +127,7 @@ interface QuickService {
           <div class="action-cards">
             @if (authStore.isRepairer()) {
               <!-- Repairer-specific cards -->
-              <button class="action-card repair-card" (click)="goToRepairerDashboard()">
+              <button class="action-card repair-card" (click)="goToRepairerRequests()">
                 <div class="action-icon-wrapper repair">
                   <svg width="32" height="32" viewBox="0 0 32 32" fill="none">
                     <path d="M12 16h8M12 20h8M12 12h8M8 8h16v16H8V8z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
@@ -131,10 +135,10 @@ interface QuickService {
                 </div>
                 <div class="action-text">
                   <div class="action-title-row">
-                    <h3>Mes demandes</h3>
+                    <h3>Demandes reçues</h3>
                     <span class="time-badge">Pro</span>
                   </div>
-                  <p>Gérez vos demandes de réparation</p>
+                  <p>Consultez et répondez aux demandes clients</p>
                 </div>
                 <div class="action-arrow">
                   <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
@@ -143,7 +147,7 @@ interface QuickService {
                 </div>
               </button>
 
-              <button class="action-card advice-card" (click)="goToRepairerQuotes()">
+              <button class="action-card advice-card" (click)="goToRepairerDashboard()">
                 <div class="action-icon-wrapper advice">
                   <svg width="32" height="32" viewBox="0 0 32 32" fill="none">
                     <path d="M10 14h12M10 18h8M8 8h16v16H8V8z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
@@ -152,10 +156,10 @@ interface QuickService {
                 </div>
                 <div class="action-text">
                   <div class="action-title-row">
-                    <h3>Créer un devis</h3>
-                    <span class="time-badge advice">Nouveau</span>
+                    <h3>Tableau de bord</h3>
+                    <span class="time-badge advice">Pro</span>
                   </div>
-                  <p>Répondez aux demandes de clients</p>
+                  <p>Gérez votre activité de réparateur</p>
                 </div>
                 <div class="action-arrow">
                   <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
@@ -247,11 +251,18 @@ interface QuickService {
               animation="shimmer"
               ariaLabel="Chargement des reparateurs"
             />
+          } @else if (repairersError()) {
+            <ui-error-state
+              [message]="repairersError()!"
+              severity="warning"
+              [showRetry]="true"
+              (onRetry)="loadNearbyRepairers()"
+            />
           } @else if (nearbyRepairers().length === 0) {
             <div class="empty-repairers">
               <div class="empty-icon">
                 <svg width="48" height="48" viewBox="0 0 48 48" fill="none">
-                  <circle cx="24" cy="24" r="20" stroke="#E5E7EB" stroke-width="2"/>
+                  <circle cx="24" cy="24" r="20" stroke="#EEEEEE" stroke-width="2"/>
                   <path d="M24 16v8m0 8h.01" stroke="#6B7280" stroke-width="2" stroke-linecap="round"/>
                 </svg>
               </div>
@@ -287,7 +298,7 @@ interface QuickService {
                       @if (repairer.isVerified) {
                         <span class="verified-badge" title="Vérifié">
                           <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
-                            <path d="M7 0L8.5 2.5L11.5 2L10 5L12 8L9 8L7 11L5 8L2 8L4 5L2.5 2L5.5 2.5L7 0Z" fill="#10B981"/>
+                            <path d="M7 0L8.5 2.5L11.5 2L10 5L12 8L9 8L7 11L5 8L2 8L4 5L2.5 2L5.5 2.5L7 0Z" fill="var(--color-secondary, #4CAF50)"/>
                             <path d="M5 7l1.5 1.5L9 5.5" stroke="white" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/>
                           </svg>
                         </span>
@@ -350,32 +361,15 @@ interface QuickService {
             <div class="requests-list">
               @for (request of activeRequests(); track request.id) {
                 <div class="request-card" (click)="viewRequest(request.id)">
-                  <div class="request-status" [style.background]="getStatusColor(request.status)">
+                  <div class="request-status" [style.background]="statusLabels.getRequestStatusStyle(request.status).background">
                     <span class="status-icon">{{ getStatusIcon(request.status) }}</span>
                   </div>
                   <div class="request-info">
                     <h4>{{ request.deviceName }}</h4>
-                    <p>{{ getStatusLabel(request.status) }}</p>
+                    <p>{{ statusLabels.getRequestStatusLabel(request.status) }}</p>
                   </div>
                   <span class="request-time">{{ formatTime(request.updatedAt) }}</span>
                 </div>
-              }
-            </div>
-          </section>
-        }
-
-        <!-- Problem Categories (only for clients/visitors) -->
-        @if (!authStore.isRepairer()) {
-          <section class="categories-section">
-            <div class="section-header">
-              <h2>Problèmes fréquents</h2>
-            </div>
-            <div class="categories-grid">
-              @for (category of problemCategories(); track category.id) {
-                <button class="category-item" (click)="searchByProblem(category.name)">
-                  <span class="category-icon">{{ category.icon }}</span>
-                  <span class="category-name">{{ category.name }}</span>
-                </button>
               }
             </div>
           </section>
@@ -425,8 +419,6 @@ interface QuickService {
       <!-- Bottom spacing for nav -->
       <div class="bottom-spacer"></div>
     </div>
-
-    <app-bottom-nav />
   `,
   styles: [`
     /* ============================================
@@ -435,7 +427,7 @@ interface QuickService {
     .home-container {
       min-height: 100vh;
       min-height: 100dvh;
-      background: #F9FAFB;
+      background: #FAFAFA;
       padding-bottom: 80px;
     }
 
@@ -448,11 +440,15 @@ interface QuickService {
       left: 0;
       right: 0;
       z-index: 100;
-      background: linear-gradient(135deg, #FF6B35 0%, #E85A24 100%);
-      padding: 1.25rem 1.25rem 1.75rem;
-      padding-top: calc(1.25rem + env(safe-area-inset-top, 0));
-      border-radius: 0 0 24px 24px;
-      box-shadow: 0 4px 20px rgba(255, 107, 53, 0.3);
+      background:
+        radial-gradient(ellipse at 92% 50%, rgba(255, 152, 0, 0.22) 0%, transparent 55%),
+        linear-gradient(135deg, #1A1A1A 0%, #0F0F0F 100%);
+      padding: 1rem 1.25rem;
+      padding-top: calc(1rem + env(safe-area-inset-top, 0));
+      border-bottom: 2px solid var(--color-primary-500, #FF9800);
+      border-bottom-left-radius: 30px;
+      border-bottom-right-radius: 30px;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.35);
     }
 
     .header-top {
@@ -476,11 +472,13 @@ interface QuickService {
     .logo-icon {
       width: 40px;
       height: 40px;
-      background: rgba(255, 255, 255, 0.15);
+      background: linear-gradient(135deg, var(--color-primary-500, #FF9800), var(--color-gold-800, #F9A825));
       border-radius: 12px;
       display: flex;
       align-items: center;
       justify-content: center;
+      color: white;
+      box-shadow: 0 4px 12px rgba(255, 152, 0, 0.35);
     }
 
     .logo-icon svg {
@@ -494,8 +492,10 @@ interface QuickService {
     }
 
     .app-title {
+      font-family: 'Poppins', 'Inter', sans-serif;
       font-size: 1.125rem;
       font-weight: 700;
+      letter-spacing: -0.01em;
       color: white;
       margin: 0;
       line-height: 1.2;
@@ -503,14 +503,14 @@ interface QuickService {
 
     .welcome-msg {
       font-size: 0.75rem;
-      color: rgba(255, 255, 255, 0.9);
+      color: rgba(255, 255, 255, 0.65);
       margin: 0;
     }
 
     .header-right {
       display: flex;
       align-items: center;
-      gap: 0.75rem;
+      gap: 0.5rem;
     }
 
     .status-online {
@@ -518,20 +518,21 @@ interface QuickService {
       align-items: center;
       gap: 0.375rem;
       padding: 0.375rem 0.75rem;
-      background: rgba(16, 185, 129, 0.2);
+      background: rgba(76, 175, 80, 0.18);
+      border: 1px solid rgba(76, 175, 80, 0.35);
       border-radius: 20px;
       font-size: 0.6875rem;
       font-weight: 600;
-      color: #ecfdf5;
-      backdrop-filter: blur(4px);
+      color: #A5D6A7;
     }
 
     .status-online .status-dot {
       width: 8px;
       height: 8px;
-      background: #10b981;
+      background: var(--color-secondary, #4CAF50);
       border-radius: 50%;
       animation: statusPulse 2s infinite;
+      box-shadow: 0 0 8px rgba(76, 175, 80, 0.6);
     }
 
     @keyframes statusPulse {
@@ -541,37 +542,44 @@ interface QuickService {
 
     .platform-badge {
       padding: 0.375rem 0.75rem;
-      background: white;
+      background: linear-gradient(135deg, var(--color-primary-500, #FF9800), var(--color-gold-800, #F9A825));
       border-radius: 20px;
       font-size: 0.6875rem;
       font-weight: 700;
-      color: #FF6B35;
+      color: white;
       text-transform: uppercase;
       letter-spacing: 0.5px;
-      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+      box-shadow: 0 2px 8px rgba(255, 152, 0, 0.35);
     }
 
     .role-badge {
       padding: 0.375rem 0.75rem;
-      background: rgba(255, 255, 255, 0.2);
+      background: linear-gradient(135deg, var(--color-primary-500, #FF9800), var(--color-gold-800, #F9A825));
       border-radius: 20px;
       font-size: 0.6875rem;
-      font-weight: 600;
+      font-weight: 700;
       color: white;
       text-transform: uppercase;
       letter-spacing: 0.5px;
-      backdrop-filter: blur(4px);
+      box-shadow: 0 2px 8px rgba(255, 152, 0, 0.35);
     }
 
     .profile-btn {
       width: 40px;
       height: 40px;
       border-radius: 50%;
-      border: 2px solid rgba(255, 255, 255, 0.3);
-      background: rgba(255, 255, 255, 0.1);
+      border: 2px solid var(--color-primary-500, #FF9800);
+      background: rgba(255, 255, 255, 0.08);
       overflow: hidden;
       cursor: pointer;
       padding: 0;
+      transition: all 150ms ease;
+    }
+
+    .profile-btn:hover {
+      border-color: var(--color-gold-800, #F9A825);
+      transform: scale(1.05);
+      box-shadow: 0 0 0 4px rgba(255, 152, 0, 0.18);
     }
 
     .profile-btn img {
@@ -586,35 +594,37 @@ interface QuickService {
       display: flex;
       align-items: center;
       justify-content: center;
+      background: linear-gradient(135deg, var(--color-primary-500, #FF9800), var(--color-gold-800, #F9A825));
       color: white;
       font-weight: 600;
       font-size: 0.875rem;
     }
 
-    /* Login Button - Same style as ui-header */
+    /* Login Button */
     .login-btn {
       display: flex;
       align-items: center;
       justify-content: center;
       gap: 0.375rem;
-      padding: 0.5rem 0.875rem;
+      padding: 0 0.875rem;
       min-height: 44px;
-      background: rgba(255, 255, 255, 0.15);
+      background: var(--color-primary-500, #FF9800);
       border: none;
-      border-radius: 20px;
+      border-radius: 12px;
       color: white;
+      font-family: 'Inter', sans-serif;
       font-size: 0.8125rem;
-      font-weight: 500;
+      font-weight: 600;
       cursor: pointer;
-      transition: all 0.2s;
+      transition: all 150ms ease;
     }
 
     .login-btn:hover {
-      background: rgba(255, 255, 255, 0.25);
+      background: var(--color-primary-900, #E65100);
     }
 
     .login-btn:focus-visible {
-      outline: 2px solid white;
+      outline: 2px solid var(--color-primary-500, #FF9800);
       outline-offset: 2px;
     }
 
@@ -628,25 +638,25 @@ interface QuickService {
       align-items: center;
       gap: 0.375rem;
       padding: 0.375rem 0.625rem;
-      background: rgba(255, 255, 255, 0.15);
-      border: 1px solid rgba(255, 255, 255, 0.2);
+      background: rgba(255, 255, 255, 0.08);
+      border: 1px solid rgba(255, 255, 255, 0.15);
       border-radius: 20px;
-      color: white;
+      color: rgba(255, 255, 255, 0.85);
       font-size: 0.6875rem;
       font-weight: 500;
       cursor: pointer;
-      transition: all 0.2s;
+      transition: all 150ms ease;
       white-space: nowrap;
       max-width: 120px;
     }
 
     .location-chip:hover {
-      background: rgba(255, 255, 255, 0.25);
+      background: var(--color-neutral-200, #EEEEEE);
     }
 
     .location-chip svg {
       flex-shrink: 0;
-      opacity: 0.9;
+      color: var(--color-primary-500, #FF9800);
     }
 
     .location-chip span {
@@ -659,6 +669,7 @@ interface QuickService {
     ============================================ */
     .home-content {
       padding: 1.25rem;
+      padding-bottom: calc(1.25rem + var(--bottom-nav-height, 80px) + var(--safe-area-bottom, 0px));
       margin-top: 180px;
       position: relative;
       z-index: 1;
@@ -683,7 +694,7 @@ interface QuickService {
       align-items: center;
       gap: 0.25rem;
       font-size: 0.875rem;
-      color: #FF6B35;
+      color: var(--color-primary-500, #FF9800);
       text-decoration: none;
       font-weight: 500;
     }
@@ -737,12 +748,12 @@ interface QuickService {
     }
 
     .action-icon-wrapper.repair {
-      background: linear-gradient(135deg, #FF6B35 0%, #E85A24 100%);
+      background: linear-gradient(135deg, var(--color-primary-500, #FF9800) 0%, var(--color-primary-900, #E65100) 100%);
       color: white;
     }
 
     .action-icon-wrapper.advice {
-      background: linear-gradient(135deg, #10B981 0%, #059669 100%);
+      background: linear-gradient(135deg, var(--color-secondary, #4CAF50) 0%, var(--color-success-dark, #2E7D32) 100%);
       color: white;
     }
 
@@ -766,16 +777,16 @@ interface QuickService {
 
     .time-badge {
       padding: 0.125rem 0.5rem;
-      background: #FEF3C7;
+      background: #FFF8E1;
       color: #92400E;
       font-size: 0.625rem;
       font-weight: 600;
-      border-radius: 10px;
+      border-radius: 12px;
       white-space: nowrap;
     }
 
     .time-badge.advice {
-      background: #D1FAE5;
+      background: #E8F5E9;
       color: #065F46;
     }
 
@@ -830,7 +841,7 @@ interface QuickService {
     .service-icon {
       width: 28px;
       height: 28px;
-      border-radius: 8px;
+      border-radius: 12px;
       display: flex;
       align-items: center;
       justify-content: center;
@@ -888,7 +899,7 @@ interface QuickService {
     }
 
     .availability-dot.online {
-      background: #10B981;
+      background: var(--color-secondary, #4CAF50);
     }
 
     .repairer-info {
@@ -938,7 +949,7 @@ interface QuickService {
     }
 
     .meta-item.rating .star {
-      color: #F59E0B;
+      color: var(--color-mustard, #FFC107);
     }
 
     .meta-item.rating .value {
@@ -972,13 +983,13 @@ interface QuickService {
     }
 
     .badge.fast {
-      background: #FEF3C7;
+      background: #FFF8E1;
       color: #92400E;
     }
 
     .badge.experienced {
-      background: #EFF6FF;
-      color: #1E40AF;
+      background: #E3F2FD;
+      color: var(--color-ocean, #1565C0);
     }
 
     .repairer-action {
@@ -1005,7 +1016,7 @@ interface QuickService {
       width: 56px;
       height: 56px;
       border-radius: 50%;
-      background: linear-gradient(90deg, #E5E7EB 25%, #F3F4F6 50%, #E5E7EB 75%);
+      background: linear-gradient(90deg, #EEEEEE 25%, #F5F5F5 50%, #EEEEEE 75%);
       background-size: 200% 100%;
       animation: shimmer 1.5s infinite;
     }
@@ -1019,7 +1030,7 @@ interface QuickService {
 
     .skeleton-line {
       height: 12px;
-      background: linear-gradient(90deg, #E5E7EB 25%, #F3F4F6 50%, #E5E7EB 75%);
+      background: linear-gradient(90deg, #EEEEEE 25%, #F5F5F5 50%, #EEEEEE 75%);
       background-size: 200% 100%;
       border-radius: 6px;
       animation: shimmer 1.5s infinite;
@@ -1064,10 +1075,10 @@ interface QuickService {
       align-items: center;
       gap: 0.375rem;
       padding: 0.625rem 1.25rem;
-      background: #FF6B35;
+      background: var(--color-primary-500, #FF9800);
       color: white;
       border: none;
-      border-radius: 8px;
+      border-radius: 12px;
       font-size: 0.875rem;
       font-weight: 500;
       cursor: pointer;
@@ -1075,7 +1086,7 @@ interface QuickService {
     }
 
     .empty-action-btn:hover {
-      background: #E85A24;
+      background: var(--color-primary-900, #E65100);
       transform: translateY(-1px);
     }
 
@@ -1106,7 +1117,7 @@ interface QuickService {
     .request-status {
       width: 40px;
       height: 40px;
-      border-radius: 10px;
+      border-radius: 12px;
       display: flex;
       align-items: center;
       justify-content: center;
@@ -1167,7 +1178,7 @@ interface QuickService {
     }
 
     .category-item:hover {
-      background: #FFF5F0;
+      background: #FFF3E0;
     }
 
     .category-icon {
@@ -1193,7 +1204,7 @@ interface QuickService {
       justify-content: space-between;
       align-items: center;
       padding: 1.25rem;
-      background: linear-gradient(135deg, #1E40AF 0%, #3B82F6 100%);
+      background: linear-gradient(135deg, var(--color-ocean, #1565C0) 0%, var(--color-ocean-500, #2196F3) 100%);
       border-radius: 16px;
       overflow: hidden;
     }
@@ -1251,9 +1262,9 @@ interface QuickService {
       gap: 0.25rem;
       padding: 0.5rem 1rem;
       background: white;
-      color: #1E40AF;
+      color: var(--color-ocean, #1565C0);
       border: none;
-      border-radius: 8px;
+      border-radius: 12px;
       font-size: 0.8125rem;
       font-weight: 600;
       cursor: pointer;
@@ -1301,12 +1312,15 @@ export class HomeComponent implements OnInit {
   private readonly requestsService = inject(RequestsService);
   private readonly settingsService = inject(SettingsService);
   private readonly searchService = inject(SearchService);
+  readonly statusLabels = inject(StatusLabelsService);
+  private readonly logger = inject(LoggerService);
 
   readonly locationStatus = signal<'idle' | 'loading' | 'success' | 'error'>('idle');
   readonly userAddress = signal<string>('Abidjan, Cote d\'Ivoire');
   readonly isLoadingRepairers = signal(true);
   readonly nearbyRepairers = signal<NearbyRepairer[]>([]);
   readonly activeRequests = signal<any[]>([]);
+  readonly repairersError = signal<string | null>(null);
 
   // Now loaded from settings service
   readonly quickServices = computed(() => this.settingsService.getQuickFilters());
@@ -1324,7 +1338,7 @@ export class HomeComponent implements OnInit {
   getGreeting(): string {
     const hour = new Date().getHours();
     if (hour < 12) return 'Bonjour';
-    if (hour < 18) return 'Bon apres-midi';
+    if (hour < 18) return 'Bon après-midi';
     return 'Bonsoir';
   }
 
@@ -1334,16 +1348,6 @@ export class HomeComponent implements OnInit {
       return user?.firstName || 'Utilisateur';
     }
     return 'visiteur';
-  }
-
-  getInitials(): string {
-    if (this.authStore.isAuthenticated()) {
-      const user = this.authStore.user();
-      const first = user?.firstName?.[0] || '';
-      const last = user?.lastName?.[0] || '';
-      return (first + last).toUpperCase() || 'U';
-    }
-    return 'U';
   }
 
   getRoleLabel(): string {
@@ -1381,6 +1385,7 @@ export class HomeComponent implements OnInit {
 
   async loadNearbyRepairers(): Promise<void> {
     this.isLoadingRepairers.set(true);
+    this.repairersError.set(null);
     try {
       // Default location for Abidjan if geolocation not available
       const defaultLat = 5.3600;
@@ -1390,27 +1395,33 @@ export class HomeComponent implements OnInit {
         latitude: defaultLat,
         longitude: defaultLng,
         radius: 50, // 50km radius
-        limit: 5,
+        limit: 12,
       });
 
-      const repairers: NearbyRepairer[] = result.data.map(r => ({
-        id: r.id,
-        name: r.firstName && r.lastName ? `${r.firstName} ${r.lastName}` : 'Réparateur',
-        businessName: r.repairerProfile?.businessName,
-        avatarUrl: r.avatarUrl,
-        rating: r.repairerProfile?.rating || 0,
-        reviewCount: r.repairerProfile?.reviewCount || 0,
-        specialty: r.repairerProfile?.specialties?.join(', ') || 'Réparation mobile',
-        isVerified: r.repairerProfile?.isVerified || false,
-        isAvailable: r.repairerProfile?.isAvailable || false,
-        responseTime: r.repairerProfile?.responseTime || 30,
-        distance: r.distance || 0,
-        completedRepairs: r.repairerProfile?.completedRepairs || 0,
-      }));
+      const repairers: NearbyRepairer[] = result.data
+        .map(r => ({
+          id: r.id,
+          name: r.firstName && r.lastName ? `${r.firstName} ${r.lastName}` : 'Réparateur',
+          businessName: r.repairerProfile?.businessName,
+          avatarUrl: r.avatarUrl,
+          rating: r.repairerProfile?.rating || 0,
+          reviewCount: r.repairerProfile?.reviewCount || 0,
+          specialty: r.repairerProfile?.specialties?.join(', ') || 'Réparation mobile',
+          isVerified: r.repairerProfile?.isVerified || false,
+          isAvailable: r.repairerProfile?.isAvailable || false,
+          responseTime: r.repairerProfile?.responseTime || 30,
+          distance: r.distance || 0,
+          completedRepairs: r.repairerProfile?.completedRepairs || 0,
+        }))
+        // Ne pas remonter en accueil les réparateurs mal notés (< 3/5).
+        // Les nouveaux sans note (rating === 0 ou reviewCount === 0) restent visibles.
+        .filter(r => r.reviewCount === 0 || r.rating >= 3)
+        .slice(0, 5);
 
       this.nearbyRepairers.set(repairers);
     } catch (err) {
-      console.error('Error loading nearby repairers:', err);
+      this.logger.error('HomeComponent', 'Error loading nearby repairers', err);
+      this.repairersError.set('Impossible de charger les réparateurs proches');
       this.nearbyRepairers.set([]);
     } finally {
       this.isLoadingRepairers.set(false);
@@ -1432,7 +1443,7 @@ export class HomeComponent implements OnInit {
         }))
       );
     } catch (err) {
-      console.error('Error loading active requests:', err);
+      this.logger.error('HomeComponent', 'Error loading active requests', err);
       this.activeRequests.set([]);
     }
   }
@@ -1455,12 +1466,12 @@ export class HomeComponent implements OnInit {
     this.router.navigate(['/conseils']);
   }
 
-  goToRepairerDashboard(): void {
+  goToRepairerRequests(): void {
     this.router.navigate(['/repairer/requests']);
   }
 
-  goToRepairerQuotes(): void {
-    this.router.navigate(['/repairer/dashboard']);
+  goToRepairerDashboard(): void {
+    this.router.navigate(['/repairer']);
   }
 
   goToProfile(): void {
@@ -1525,15 +1536,6 @@ export class HomeComponent implements OnInit {
     return date.toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' });
   }
 
-  getStatusColor(status: string): string {
-    const colors: Record<string, string> = {
-      pending: '#FEF3C7',
-      accepted: '#D1FAE5',
-      rejected: '#FEE2E2',
-    };
-    return colors[status] || '#F3F4F6';
-  }
-
   getStatusIcon(status: string): string {
     const icons: Record<string, string> = {
       pending: '⏳',
@@ -1541,14 +1543,5 @@ export class HomeComponent implements OnInit {
       rejected: '❌',
     };
     return icons[status] || '❓';
-  }
-
-  getStatusLabel(status: string): string {
-    const labels: Record<string, string> = {
-      pending: 'En analyse',
-      accepted: 'Acceptée',
-      rejected: 'Rejetée',
-    };
-    return labels[status] || status;
   }
 }

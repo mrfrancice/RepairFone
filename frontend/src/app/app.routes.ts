@@ -88,6 +88,10 @@ export const routes: Routes = [
     canActivate: [adminGuard],
   },
   {
+    path: '',
+    loadChildren: () => import('./features/legal/legal.routes').then((m) => m.LEGAL_ROUTES),
+  },
+  {
     path: '**',
     redirectTo: 'onboarding',
   },

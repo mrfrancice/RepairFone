@@ -4,13 +4,16 @@ import { RouterLink } from '@angular/router';
 import { RequestsService, RepairRequest, RequestStatus, RequestStats } from '../../services/requests.service';
 import { UiHeaderComponent } from '../../../../shared/components/ui-header/ui-header.component';
 import { UiSkeletonComponent } from '../../../../shared/components/ui-skeleton/ui-skeleton.component';
+import { UiErrorStateComponent } from '../../../../shared/components/ui-error-state/ui-error-state.component';
+import { FormatDatePipe } from '../../../../shared/pipes/format-date.pipe';
 import { AuthStore } from '../../../../core/stores/auth.store';
+import { LoggerService } from '../../../../core/services/logger.service';
 
 @Component({
   selector: 'app-request-list',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [CommonModule, RouterLink, UiHeaderComponent, UiSkeletonComponent],
+  imports: [CommonModule, RouterLink, UiHeaderComponent, UiSkeletonComponent, UiErrorStateComponent, FormatDatePipe],
   template: `
     <div class="requests-container">
       <!-- Header avec gradient orange -->
@@ -110,6 +113,13 @@ import { AuthStore } from '../../../../core/stores/auth.store';
               ariaLabel="Chargement des demandes"
             />
           </div>
+        } @else if (error()) {
+          <ui-error-state
+            [message]="error()!"
+            severity="error"
+            [showRetry]="true"
+            (onRetry)="loadData()"
+          />
         } @else if (requests().length === 0) {
           <div class="empty-state">
             <div class="empty-icon">
@@ -127,6 +137,23 @@ import { AuthStore } from '../../../../core/stores/auth.store';
                 </svg>
                 Rechercher un réparateur
               </a>
+            } @else if (!activeFilter()) {
+              <a routerLink="/profile" class="btn btn-primary">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+                  <circle cx="12" cy="7" r="4"/>
+                </svg>
+                Compléter mon profil
+              </a>
+            } @else {
+              <button (click)="filterByStatus(null)" class="btn btn-secondary">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
+                  <line x1="3" y1="9" x2="21" y2="9"/>
+                  <line x1="9" y1="21" x2="9" y2="9"/>
+                </svg>
+                Voir toutes les demandes
+              </button>
             }
           </div>
         } @else {
@@ -181,7 +208,7 @@ import { AuthStore } from '../../../../core/stores/auth.store';
                         <line x1="8" y1="2" x2="8" y2="6"/>
                         <line x1="3" y1="10" x2="21" y2="10"/>
                       </svg>
-                      {{ formatDate(request.createdAt) }}
+                      {{ request.createdAt | formatDate }}
                     </div>
                     @if (request.estimatedPrice) {
                       <div class="request-price">
@@ -207,7 +234,7 @@ import { AuthStore } from '../../../../core/stores/auth.store';
     .requests-container {
       min-height: 100vh;
       background: #f8fafc;
-      padding-top: 100px;
+      padding-top: var(--header-height, 100px);
       padding-bottom: 2rem;
     }
 
@@ -273,14 +300,14 @@ import { AuthStore } from '../../../../core/stores/auth.store';
     }
 
     .stat-card.active {
-      background: #fff7ed;
-      border-color: #FF6B35;
+      background: #FFF3E0;
+      border-color: var(--color-primary-500, #FF9800);
     }
 
     .stat-icon {
       width: 40px;
       height: 40px;
-      border-radius: 10px;
+      border-radius: 12px;
       display: flex;
       align-items: center;
       justify-content: center;
@@ -288,32 +315,32 @@ import { AuthStore } from '../../../../core/stores/auth.store';
     }
 
     .stat-icon-all {
-      background: linear-gradient(135deg, #FF6B35, #FF9800);
+      background: linear-gradient(135deg, var(--color-primary-500, #FF9800), #FF9800);
       color: white;
     }
 
     .stat-icon-pending {
-      background: linear-gradient(135deg, #f59e0b, #fbbf24);
+      background: linear-gradient(135deg, var(--color-mustard, #FFC107), var(--color-mustard, #FFC107));
       color: white;
     }
 
     .stat-icon-accepted {
-      background: linear-gradient(135deg, #10b981, #34d399);
+      background: linear-gradient(135deg, var(--color-secondary, #4CAF50), #81C784);
       color: white;
     }
 
     .stat-icon-rejected {
-      background: linear-gradient(135deg, #ef4444, #f87171);
+      background: linear-gradient(135deg, var(--color-error, #F44336), #EF5350);
       color: white;
     }
 
     .stat-icon-completed {
-      background: linear-gradient(135deg, #8b5cf6, #a78bfa);
+      background: linear-gradient(135deg, #FF9800, #F9A825);
       color: white;
     }
 
     .stat-icon-delivered {
-      background: linear-gradient(135deg, #06b6d4, #22d3ee);
+      background: linear-gradient(135deg, #1565C0, #2196F3);
       color: white;
     }
 
@@ -327,7 +354,7 @@ import { AuthStore } from '../../../../core/stores/auth.store';
 
     .stat-label {
       font-size: 0.75rem;
-      color: #64748b;
+      color: #6B7280;
       margin-top: 0.25rem;
     }
 
@@ -346,7 +373,7 @@ import { AuthStore } from '../../../../core/stores/auth.store';
       width: 48px;
       height: 48px;
       border: 4px solid #f1f5f9;
-      border-top-color: #FF6B35;
+      border-top-color: var(--color-primary-500, #FF9800);
       border-radius: 50%;
       animation: spin 1s linear infinite;
       margin: 0 auto 1rem;
@@ -357,7 +384,7 @@ import { AuthStore } from '../../../../core/stores/auth.store';
     }
 
     .loading-state p {
-      color: #64748b;
+      color: #6B7280;
       font-size: 0.9375rem;
     }
 
@@ -374,12 +401,12 @@ import { AuthStore } from '../../../../core/stores/auth.store';
       width: 100px;
       height: 100px;
       border-radius: 50%;
-      background: linear-gradient(135deg, #fff7ed, #ffedd5);
+      background: linear-gradient(135deg, #FFF3E0, #FFE0B2);
       display: flex;
       align-items: center;
       justify-content: center;
       margin: 0 auto 1.5rem;
-      color: #FF6B35;
+      color: var(--color-primary-500, #FF9800);
     }
 
     .empty-state h3 {
@@ -390,7 +417,7 @@ import { AuthStore } from '../../../../core/stores/auth.store';
     }
 
     .empty-state p {
-      color: #64748b;
+      color: #6B7280;
       margin-bottom: 1.5rem;
     }
 
@@ -408,14 +435,26 @@ import { AuthStore } from '../../../../core/stores/auth.store';
     }
 
     .btn-primary {
-      background: linear-gradient(135deg, #FF6B35 0%, #FF9800 100%);
+      background: linear-gradient(135deg, var(--color-primary-500, #FF9800) 0%, #FF9800 100%);
       color: white;
-      box-shadow: 0 4px 15px rgba(255, 107, 53, 0.4);
+      box-shadow: 0 4px 15px rgba(255, 152, 0, 0.4);
     }
 
     .btn-primary:hover {
       transform: translateY(-2px);
-      box-shadow: 0 6px 20px rgba(255, 107, 53, 0.5);
+      box-shadow: 0 6px 20px rgba(255, 152, 0, 0.5);
+    }
+
+    .btn-secondary {
+      background: #f1f5f9;
+      color: #4B5563;
+      border: none;
+      cursor: pointer;
+    }
+
+    .btn-secondary:hover {
+      background: #e2e8f0;
+      transform: translateY(-2px);
     }
 
     /* Request List */
@@ -441,7 +480,7 @@ import { AuthStore } from '../../../../core/stores/auth.store';
     .request-card:hover {
       box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
       transform: translateY(-2px);
-      border-color: #FF6B35;
+      border-color: var(--color-primary-500, #FF9800);
     }
 
     .request-status-badge {
@@ -449,7 +488,7 @@ import { AuthStore } from '../../../../core/stores/auth.store';
       text-orientation: mixed;
       transform: rotate(180deg);
       padding: 0.75rem 0.5rem;
-      border-radius: 8px;
+      border-radius: 12px;
       font-size: 0.6875rem;
       font-weight: 700;
       text-transform: uppercase;
@@ -461,23 +500,23 @@ import { AuthStore } from '../../../../core/stores/auth.store';
     }
 
     .status-pending {
-      background: linear-gradient(135deg, #fef3c7, #fde68a);
+      background: linear-gradient(135deg, #FFF8E1, #FFE082);
       color: #92400e;
     }
 
     .status-accepted {
-      background: linear-gradient(135deg, #d1fae5, #a7f3d0);
+      background: linear-gradient(135deg, #E8F5E9, #C8E6C9);
       color: #065f46;
     }
 
     .status-rejected {
-      background: linear-gradient(135deg, #fee2e2, #fecaca);
+      background: linear-gradient(135deg, #FFEBEE, #FFCDD2);
       color: #991b1b;
     }
 
     .status-in_progress {
-      background: linear-gradient(135deg, #dbeafe, #bfdbfe);
-      color: #1e40af;
+      background: linear-gradient(135deg, #E3F2FD, #BBDEFB);
+      color: var(--color-ocean, #1565C0);
     }
 
     .status-completed {
@@ -492,7 +531,7 @@ import { AuthStore } from '../../../../core/stores/auth.store';
 
     .status-cancelled {
       background: linear-gradient(135deg, #f1f5f9, #e2e8f0);
-      color: #475569;
+      color: #4B5563;
     }
 
     .request-main {
@@ -513,7 +552,7 @@ import { AuthStore } from '../../../../core/stores/auth.store';
       width: 44px;
       height: 44px;
       border-radius: 12px;
-      background: linear-gradient(135deg, #FF6B35, #FF9800);
+      background: linear-gradient(135deg, var(--color-primary-500, #FF9800), #FF9800);
       display: flex;
       align-items: center;
       justify-content: center;
@@ -537,7 +576,7 @@ import { AuthStore } from '../../../../core/stores/auth.store';
 
     .request-service {
       font-size: 0.875rem;
-      color: #64748b;
+      color: #6B7280;
       margin: 0;
       white-space: nowrap;
       overflow: hidden;
@@ -549,21 +588,21 @@ import { AuthStore } from '../../../../core/stores/auth.store';
       align-items: center;
       gap: 0.5rem;
       font-size: 0.8125rem;
-      color: #475569;
+      color: #4B5563;
       padding: 0.5rem 0.75rem;
       background: #f8fafc;
-      border-radius: 8px;
+      border-radius: 12px;
     }
 
     .person-avatar {
       width: 28px;
       height: 28px;
       border-radius: 6px;
-      background: linear-gradient(135deg, #e2e8f0, #cbd5e1);
+      background: linear-gradient(135deg, #e2e8f0, #D1D5DB);
       display: flex;
       align-items: center;
       justify-content: center;
-      color: #64748b;
+      color: #6B7280;
     }
 
     .request-footer {
@@ -579,22 +618,22 @@ import { AuthStore } from '../../../../core/stores/auth.store';
       align-items: center;
       gap: 0.375rem;
       font-size: 0.75rem;
-      color: #94a3b8;
+      color: #9CA3AF;
     }
 
     .request-price {
       font-weight: 700;
-      color: #FF6B35;
+      color: var(--color-primary-500, #FF9800);
       font-size: 0.9375rem;
       padding: 0.25rem 0.625rem;
-      background: #fff7ed;
+      background: #FFF3E0;
       border-radius: 6px;
     }
 
     .request-arrow {
       display: flex;
       align-items: center;
-      color: #cbd5e1;
+      color: #D1D5DB;
       padding-left: 0.75rem;
       margin-left: 0.5rem;
       border-left: 1px solid #f1f5f9;
@@ -602,7 +641,7 @@ import { AuthStore } from '../../../../core/stores/auth.store';
     }
 
     .request-card:hover .request-arrow {
-      color: #FF6B35;
+      color: var(--color-primary-500, #FF9800);
       transform: translateX(4px);
     }
   `],
@@ -610,10 +649,12 @@ import { AuthStore } from '../../../../core/stores/auth.store';
 export class RequestListComponent implements OnInit {
   readonly requestsService = inject(RequestsService);
   private readonly authStore = inject(AuthStore);
+  private readonly logger = inject(LoggerService);
 
   readonly requests = signal<RepairRequest[]>([]);
   readonly stats = signal<RequestStats | null>(null);
   readonly isLoading = signal(true);
+  readonly error = signal<string | null>(null);
   readonly activeFilter = signal<RequestStatus | null>(null);
 
   readonly isRepairer = computed(() => this.authStore.user()?.role === 'repairer');
@@ -624,6 +665,7 @@ export class RequestListComponent implements OnInit {
 
   async loadData(): Promise<void> {
     this.isLoading.set(true);
+    this.error.set(null);
 
     try {
       const [requestsResult, statsResult] = await Promise.all([
@@ -633,8 +675,9 @@ export class RequestListComponent implements OnInit {
 
       this.requests.set(requestsResult.data);
       this.stats.set(statsResult);
-    } catch (err) {
-      console.error('Error loading requests:', err);
+    } catch (err: any) {
+      this.logger.error('RequestListComponent', 'Error loading requests', err);
+      this.error.set(err.message || 'Impossible de charger les demandes');
     } finally {
       this.isLoading.set(false);
     }
@@ -645,22 +688,26 @@ export class RequestListComponent implements OnInit {
     this.loadData();
   }
 
-  formatDate(dateStr: string): string {
-    const date = new Date(dateStr);
-    return date.toLocaleDateString('fr-FR', {
-      day: 'numeric',
-      month: 'short',
-      year: 'numeric',
-    });
-  }
-
   getEmptyTitle(): string {
+    // Si un filtre est actif, adapter le message
+    if (this.activeFilter()) {
+      const filterLabel = this.requestsService.getStatusLabel(this.activeFilter()!);
+      return `Aucune demande "${filterLabel.toLowerCase()}"`;
+    }
     return this.isRepairer() ? 'Aucune demande reçue' : 'Aucune demande';
   }
 
   getEmptyMessage(): string {
+    // Si un filtre est actif
+    if (this.activeFilter()) {
+      return this.isRepairer()
+        ? 'Aucune demande ne correspond à ce statut. Essayez un autre filtre.'
+        : 'Aucune de vos demandes ne correspond à ce statut.';
+    }
+
+    // Messages contextuels selon le rôle
     return this.isRepairer()
-      ? 'Vous n\'avez pas encore reçu de demande de réparation'
-      : 'Vous n\'avez pas encore de demande de réparation';
+      ? 'Vous n\'avez pas encore reçu de demande. Assurez-vous que votre profil est complet et visible pour recevoir des demandes de clients.'
+      : 'Vous n\'avez pas encore fait de demande de réparation. Utilisez la recherche pour trouver un réparateur près de chez vous.';
   }
 }

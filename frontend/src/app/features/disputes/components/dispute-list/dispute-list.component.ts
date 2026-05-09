@@ -7,7 +7,11 @@ import { UiCardComponent } from '../../../../shared/components/ui-card/ui-card.c
 import { UiButtonComponent } from '../../../../shared/components/ui-button/ui-button.component';
 import { UiLoadingComponent } from '../../../../shared/components/ui-loading/ui-loading.component';
 import { UiEmptyStateComponent } from '../../../../shared/components/ui-empty-state/ui-empty-state.component';
+import { UiErrorStateComponent } from '../../../../shared/components/ui-error-state/ui-error-state.component';
 import { UiChipComponent } from '../../../../shared/components/ui-chip/ui-chip.component';
+import { FormatDatePipe } from '../../../../shared/pipes/format-date.pipe';
+import { InfiniteScrollDirective } from '../../../../shared/directives/infinite-scroll.directive';
+import { UiHeaderComponent } from '../../../../shared/components/ui-header/ui-header.component';
 
 @Component({
   selector: 'app-dispute-list',
@@ -20,15 +24,15 @@ import { UiChipComponent } from '../../../../shared/components/ui-chip/ui-chip.c
     UiButtonComponent,
     UiLoadingComponent,
     UiEmptyStateComponent,
+    UiErrorStateComponent,
     UiChipComponent,
+    FormatDatePipe,
+    InfiniteScrollDirective,
+    UiHeaderComponent,
   ],
   template: `
     <div class="dispute-list">
-      <!-- Header -->
-      <header class="header">
-        <h1>Mes litiges</h1>
-        <p class="subtitle">Suivez vos réclamations</p>
-      </header>
+      <ui-header title="Mes litiges" subtitle="Suivez vos réclamations" />
 
       <!-- Stats -->
       @if (store.hasDisputes()) {
@@ -89,13 +93,13 @@ import { UiChipComponent } from '../../../../shared/components/ui-chip/ui-chip.c
       }
 
       <!-- Error -->
-      @if (error()) {
-        <ui-card class="error-card">
-          <p>{{ error() }}</p>
-          <ui-button variant="outline" size="sm" (onClick)="loadDisputes()">
-            Réessayer
-          </ui-button>
-        </ui-card>
+      @if (!isLoading() && error()) {
+        <ui-error-state
+          [message]="error()!"
+          severity="error"
+          [showRetry]="true"
+          (onRetry)="loadDisputes()"
+        />
       }
 
       <!-- Empty state -->
@@ -113,7 +117,12 @@ import { UiChipComponent } from '../../../../shared/components/ui-chip/ui-chip.c
 
       <!-- Dispute list -->
       @if (!isLoading() && store.filteredDisputes().length > 0) {
-        <div class="disputes">
+        <div class="disputes"
+             appInfiniteScroll
+             [useWindow]="true"
+             [threshold]="200"
+             [disabled]="isLoadingMore() || !hasMore()"
+             (scrolled)="loadMore()">
           @for (dispute of store.filteredDisputes(); track dispute.id) {
             <ui-card class="dispute-card" [routerLink]="['/disputes', dispute.id]">
               <div class="dispute-header">
@@ -151,7 +160,7 @@ import { UiChipComponent } from '../../../../shared/components/ui-chip/ui-chip.c
 
               <div class="dispute-footer">
                 <div class="footer-left">
-                  <span class="date">{{ formatDate(dispute.createdAt) }}</span>
+                  <span class="date">{{ dispute.createdAt | formatDate }}</span>
                   @if (dispute.messages.length > 0) {
                     <span class="message-count">
                       💬 {{ dispute.messages.length }} message{{ dispute.messages.length > 1 ? 's' : '' }}
@@ -168,16 +177,11 @@ import { UiChipComponent } from '../../../../shared/components/ui-chip/ui-chip.c
           }
         </div>
 
-        <!-- Load more -->
-        @if (hasMore()) {
-          <div class="load-more">
-            <ui-button
-              variant="outline"
-              [loading]="isLoadingMore()"
-              (onClick)="loadMore()"
-            >
-              Charger plus
-            </ui-button>
+        <!-- Loading indicator for infinite scroll -->
+        @if (isLoadingMore()) {
+          <div class="loading-more">
+            <ui-loading size="sm" />
+            <span>Chargement...</span>
           </div>
         }
       }
@@ -200,24 +204,8 @@ import { UiChipComponent } from '../../../../shared/components/ui-chip/ui-chip.c
   styles: [`
     .dispute-list {
       padding: 1rem;
+      padding-top: calc(var(--header-height, 100px) + 1rem);
       padding-bottom: 5rem;
-    }
-
-    .header {
-      margin-bottom: 1.5rem;
-
-      h1 {
-        font-size: 1.5rem;
-        font-weight: 700;
-        color: #1e293b;
-        margin: 0 0 0.25rem 0;
-      }
-
-      .subtitle {
-        color: #64748b;
-        font-size: 0.875rem;
-        margin: 0;
-      }
     }
 
     .stats-grid {
@@ -230,11 +218,11 @@ import { UiChipComponent } from '../../../../shared/components/ui-chip/ui-chip.c
         padding: 1rem;
 
         &.open {
-          border-left: 4px solid #f59e0b;
+          border-left: 4px solid var(--color-mustard, #FFC107);
         }
 
         &.resolved {
-          border-left: 4px solid #10b981;
+          border-left: 4px solid var(--color-secondary, #4CAF50);
         }
       }
 
@@ -247,12 +235,12 @@ import { UiChipComponent } from '../../../../shared/components/ui-chip/ui-chip.c
       .stat-value {
         font-size: 1.75rem;
         font-weight: 700;
-        color: #1e293b;
+        color: #1F2937;
       }
 
       .stat-label {
         font-size: 0.75rem;
-        color: #64748b;
+        color: #6B7280;
         text-transform: uppercase;
         letter-spacing: 0.05em;
       }
@@ -275,19 +263,20 @@ import { UiChipComponent } from '../../../../shared/components/ui-chip/ui-chip.c
         background: white;
         border-radius: 9999px;
         font-size: 0.875rem;
-        color: #64748b;
+        color: #6B7280;
         white-space: nowrap;
         cursor: pointer;
         transition: all 0.2s;
 
         &:hover {
-          border-color: #cbd5e1;
+          border-color: #D1D5DB;
         }
 
         &.active {
-          background: #3b82f6;
-          border-color: #3b82f6;
+          background: var(--color-primary-500, #FF9800);
+          border-color: var(--color-primary-500, #FF9800);
           color: white;
+          box-shadow: var(--shadow-warm, 0 8px 24px rgba(255, 152, 0, 0.20));
         }
       }
     }
@@ -298,23 +287,23 @@ import { UiChipComponent } from '../../../../shared/components/ui-chip/ui-chip.c
       align-items: center;
       gap: 1rem;
       padding: 3rem;
-      color: #64748b;
+      color: #6B7280;
     }
 
     .error-card {
       padding: 1.5rem;
       text-align: center;
-      background: #fef2f2;
+      background: #FFEBEE;
 
       p {
-        color: #dc2626;
+        color: var(--color-terracotta, #C62828);
         margin: 0 0 1rem 0;
       }
     }
 
     .empty-hint {
       font-size: 0.8125rem;
-      color: #94a3b8;
+      color: #9CA3AF;
       margin-top: 0.5rem;
     }
 
@@ -354,7 +343,7 @@ import { UiChipComponent } from '../../../../shared/components/ui-chip/ui-chip.c
 
       .reason-label {
         font-weight: 600;
-        color: #1e293b;
+        color: #1F2937;
         font-size: 0.9375rem;
       }
     }
@@ -365,7 +354,7 @@ import { UiChipComponent } from '../../../../shared/components/ui-chip/ui-chip.c
         align-items: center;
         gap: 0.375rem;
         font-size: 0.8125rem;
-        color: #64748b;
+        color: #6B7280;
         margin-bottom: 0.5rem;
 
         .icon {
@@ -375,7 +364,7 @@ import { UiChipComponent } from '../../../../shared/components/ui-chip/ui-chip.c
 
       .description {
         font-size: 0.875rem;
-        color: #475569;
+        color: #4B5563;
         line-height: 1.5;
         margin: 0 0 0.75rem 0;
       }
@@ -386,11 +375,11 @@ import { UiChipComponent } from '../../../../shared/components/ui-chip/ui-chip.c
         font-size: 0.8125rem;
 
         .label {
-          color: #64748b;
+          color: #6B7280;
         }
 
         .value {
-          color: #1e293b;
+          color: #1F2937;
           font-weight: 500;
         }
       }
@@ -412,16 +401,16 @@ import { UiChipComponent } from '../../../../shared/components/ui-chip/ui-chip.c
 
       .date {
         font-size: 0.75rem;
-        color: #94a3b8;
+        color: #9CA3AF;
       }
 
       .message-count {
         font-size: 0.75rem;
-        color: #64748b;
+        color: #6B7280;
       }
 
       .arrow {
-        color: #94a3b8;
+        color: #9CA3AF;
       }
     }
 
@@ -429,7 +418,7 @@ import { UiChipComponent } from '../../../../shared/components/ui-chip/ui-chip.c
       position: absolute;
       top: 0.75rem;
       right: 0.75rem;
-      background: #ef4444;
+      background: var(--color-error, #F44336);
       color: white;
       font-size: 0.625rem;
       font-weight: 600;
@@ -438,10 +427,14 @@ import { UiChipComponent } from '../../../../shared/components/ui-chip/ui-chip.c
       text-transform: uppercase;
     }
 
-    .load-more {
+    .loading-more {
       display: flex;
+      align-items: center;
       justify-content: center;
-      margin-top: 1.5rem;
+      gap: 0.5rem;
+      padding: 1.5rem;
+      color: #6B7280;
+      font-size: 0.875rem;
     }
 
     .help-card {
@@ -452,13 +445,13 @@ import { UiChipComponent } from '../../../../shared/components/ui-chip/ui-chip.c
       h3 {
         font-size: 1rem;
         font-weight: 600;
-        color: #1e293b;
+        color: #1F2937;
         margin: 0 0 0.5rem 0;
       }
 
       p {
         font-size: 0.875rem;
-        color: #64748b;
+        color: #6B7280;
         margin: 0 0 1rem 0;
       }
 
@@ -533,15 +526,6 @@ export class DisputeListComponent implements OnInit {
   setFilter(status: DisputeStatus | null): void {
     this.store.setFilterStatus(status);
     this.loadDisputes();
-  }
-
-  formatDate(dateStr: string): string {
-    const date = new Date(dateStr);
-    return date.toLocaleDateString('fr-FR', {
-      day: 'numeric',
-      month: 'short',
-      year: 'numeric',
-    });
   }
 
   isRecent(dispute: Dispute): boolean {

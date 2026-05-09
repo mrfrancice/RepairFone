@@ -68,7 +68,7 @@ export type ChipSize = 'sm' | 'md' | 'lg';
       align-items: center;
       gap: 0.375rem;
       padding: 0.625rem 0.875rem;
-      min-height: 44px;
+      min-height: 48px;
       border-radius: 9999px;
       font-size: 0.8125rem;
       font-weight: 500;
@@ -78,7 +78,7 @@ export type ChipSize = 'sm' | 'md' | 'lg';
 
     .chip.clickable {
       cursor: pointer;
-      min-width: 44px;
+      min-width: 48px;
     }
 
     .chip.clickable:focus {
@@ -98,12 +98,12 @@ export type ChipSize = 'sm' | 'md' | 'lg';
 
     /* Variants - Using CSS custom properties */
     .chip-default {
-      background: var(--color-neutral-100, #f3f4f6);
+      background: var(--color-neutral-100, #F5F5F5);
       color: var(--text-primary, #374151);
     }
 
     .chip-default.clickable:hover:not(.disabled) {
-      background: var(--color-neutral-200, #e5e7eb);
+      background: var(--color-neutral-200, #EEEEEE);
     }
 
     .chip-default.selected {
@@ -126,7 +126,7 @@ export type ChipSize = 'sm' | 'md' | 'lg';
     }
 
     .chip-success {
-      background: var(--color-success-light, #f0fdf4);
+      background: var(--color-success-light, #E8F5E9);
       color: var(--color-success, #4CAF50);
     }
 
@@ -140,12 +140,12 @@ export type ChipSize = 'sm' | 'md' | 'lg';
     }
 
     .chip-warning {
-      background: var(--color-warning-light, #fffbeb);
+      background: var(--color-warning-light, #FFF8E1);
       color: var(--color-warning, #F9A825);
     }
 
     .chip-warning.clickable:hover:not(.disabled) {
-      background: var(--color-warning-100, #fef3c7);
+      background: var(--color-warning-100, #FFF8E1);
     }
 
     .chip-warning.selected {
@@ -154,12 +154,12 @@ export type ChipSize = 'sm' | 'md' | 'lg';
     }
 
     .chip-danger {
-      background: var(--color-error-light, #fef2f2);
+      background: var(--color-error-light, #FFEBEE);
       color: var(--color-error, #C62828);
     }
 
     .chip-danger.clickable:hover:not(.disabled) {
-      background: var(--color-error-100, #fee2e2);
+      background: var(--color-error-100, #FFEBEE);
     }
 
     .chip-danger.selected {
@@ -186,7 +186,7 @@ export type ChipSize = 'sm' | 'md' | 'lg';
       padding: 0.5rem 0.625rem;
       font-size: 0.75rem;
       gap: 0.25rem;
-      min-height: 44px;
+      min-height: 48px;
     }
 
     .size-lg {
@@ -250,8 +250,8 @@ export type ChipSize = 'sm' | 'md' | 'lg';
       opacity: 0.6;
       border-radius: 50%;
       transition: all 0.2s;
-      min-width: 44px;
-      min-height: 44px;
+      min-width: 48px;
+      min-height: 48px;
     }
 
     .chip-remove:hover {

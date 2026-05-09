@@ -1,5 +1,6 @@
 import { Injectable, signal, PLATFORM_ID, inject } from '@angular/core';
 import { isPlatformBrowser } from '@angular/common';
+import { LoggerService } from './logger.service';
 
 export interface BiometricCredential {
   id: string;
@@ -18,6 +19,7 @@ export class BiometricService {
   private readonly STORAGE_KEY = 'rf_biometric_enabled';
   private readonly CREDENTIAL_KEY = 'rf_biometric_credential';
   private readonly platformId = inject(PLATFORM_ID);
+  private readonly logger = inject(LoggerService);
 
   /**
    * Whether biometric authentication is enabled by the user
@@ -123,7 +125,7 @@ export class BiometricService {
 
       return false;
     } catch (error) {
-      console.error('BiometricService: Registration failed', error);
+      this.logger.error('BiometricService', 'Registration failed', error);
       return false;
     }
   }
@@ -171,7 +173,7 @@ export class BiometricService {
 
       return assertion !== null;
     } catch (error) {
-      console.error('BiometricService: Authentication failed', error);
+      this.logger.error('BiometricService', 'Authentication failed', error);
       return false;
     }
   }

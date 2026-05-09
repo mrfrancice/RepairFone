@@ -4,6 +4,7 @@ import { RouterLink } from '@angular/router';
 import { NotificationService, NotificationPreferences, NotificationType } from '../../../../core/services/notification.service';
 import { ToastService } from '../../../../core/services/toast.service';
 import { UiLoadingComponent } from '../../../../shared/components/ui-loading/ui-loading.component';
+import { UiHeaderComponent } from '../../../../shared/components/ui-header/ui-header.component';
 
 interface NotificationCategory {
   title: string;
@@ -14,16 +15,10 @@ interface NotificationCategory {
   selector: 'app-notification-settings',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [CommonModule, RouterLink, UiLoadingComponent],
+  imports: [CommonModule, RouterLink, UiLoadingComponent, UiHeaderComponent],
   template: `
     <div class="notification-settings">
-      <!-- Header -->
-      <header class="header">
-        <button class="back-btn" routerLink="/profile">
-          <span>←</span>
-        </button>
-        <h1>Préférences de notification</h1>
-      </header>
+      <ui-header title="Préférences de notification" [showBack]="true" backRoute="/profile" />
 
       @if (isLoading()) {
         <div class="loading-container">
@@ -137,33 +132,9 @@ interface NotificationCategory {
   styles: [`
     .notification-settings {
       min-height: 100vh;
-      background: #f9fafb;
+      background: #FAFAFA;
+      padding-top: var(--header-height, 100px);
       padding-bottom: 2rem;
-    }
-
-    .header {
-      display: flex;
-      align-items: center;
-      gap: 1rem;
-      padding: 1rem;
-      background: white;
-      border-bottom: 1px solid #e5e7eb;
-
-      .back-btn {
-        background: none;
-        border: none;
-        font-size: 1.25rem;
-        color: #64748b;
-        cursor: pointer;
-        padding: 0.25rem;
-      }
-
-      h1 {
-        font-size: 1.125rem;
-        font-weight: 600;
-        color: #1e293b;
-        margin: 0;
-      }
     }
 
     .loading-container {
@@ -180,7 +151,7 @@ interface NotificationCategory {
       h2 {
         font-size: 0.8125rem;
         font-weight: 600;
-        color: #64748b;
+        color: #6B7280;
         text-transform: uppercase;
         letter-spacing: 0.05em;
         margin: 0 0 1rem;
@@ -215,12 +186,12 @@ interface NotificationCategory {
         .label {
           font-size: 0.9375rem;
           font-weight: 500;
-          color: #1e293b;
+          color: #1F2937;
         }
 
         .description {
           font-size: 0.8125rem;
-          color: #64748b;
+          color: #6B7280;
           margin-top: 0.125rem;
         }
       }
@@ -265,7 +236,7 @@ interface NotificationCategory {
       }
 
       input:checked + .slider {
-        background: #3b82f6;
+        background: var(--color-ocean, #1565C0);
       }
 
       input:checked + .slider::before {
@@ -275,10 +246,10 @@ interface NotificationCategory {
 
     .warning {
       font-size: 0.8125rem;
-      color: #f59e0b;
+      color: var(--color-mustard, #FFC107);
       margin: 0.5rem 0 0;
       padding: 0.5rem;
-      background: #fef3c7;
+      background: #FFF8E1;
       border-radius: 0.375rem;
     }
   `]

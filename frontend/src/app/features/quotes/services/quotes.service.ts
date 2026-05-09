@@ -159,9 +159,9 @@ export class QuotesService {
 
   getStatusColor(status: QuoteStatus): string {
     const colors: Record<QuoteStatus, string> = {
-      pending: '#f59e0b',
-      accepted: '#10b981',
-      rejected: '#ef4444',
+      pending: '#FFC107',
+      accepted: '#4CAF50',
+      rejected: '#F44336',
       expired: '#6b7280',
     };
     return colors[status] || '#6b7280';
