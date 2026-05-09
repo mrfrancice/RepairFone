@@ -11,15 +11,17 @@ import {
   HttpStatus,
   UploadedFile,
   UseInterceptors,
+  ForbiddenException,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
-import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
+import { ApiTags, ApiOperation, ApiBearerAuth, ApiBody } from '@nestjs/swagger';
 import { UsersService } from './users.service';
 import { RepairersService } from './repairers.service';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
 import { User } from './entities/user.entity';
 import { RepairerProfile } from './entities/repairer-profile.entity';
+import { UpdateUserDto, UpdateRepairerProfileDto } from './dto';
 
 @ApiTags('Users')
 @ApiBearerAuth()
@@ -39,20 +41,22 @@ export class UsersController {
 
   @Patch('me')
   @ApiOperation({ summary: 'Update current user profile (PATCH)' })
+  @ApiBody({ type: UpdateUserDto })
   async updateProfilePatch(
     @CurrentUser() user: User,
-    @Body() updateData: Partial<User>,
+    @Body() updateData: UpdateUserDto,
   ): Promise<User> {
-    return this.updateUserProfile(user.id, updateData);
+    return this.usersService.update(user.id, updateData);
   }
 
   @Put('me')
   @ApiOperation({ summary: 'Update current user profile (PUT)' })
+  @ApiBody({ type: UpdateUserDto })
   async updateProfilePut(
     @CurrentUser() user: User,
-    @Body() updateData: Partial<User>,
+    @Body() updateData: UpdateUserDto,
   ): Promise<User> {
-    return this.updateUserProfile(user.id, updateData);
+    return this.usersService.update(user.id, updateData);
   }
 
   @Post('me/avatar')
@@ -72,17 +76,18 @@ export class UsersController {
 
   @Put('me/repairer-profile')
   @ApiOperation({ summary: 'Update repairer profile for current user' })
+  @ApiBody({ type: UpdateRepairerProfileDto })
   async updateRepairerProfile(
     @CurrentUser() user: User,
-    @Body() data: Partial<RepairerProfile>,
+    @Body() data: UpdateRepairerProfileDto,
   ): Promise<RepairerProfile> {
     // Check if user is a repairer
     if (user.role !== 'repairer') {
-      throw new Error('Seuls les réparateurs peuvent modifier leur profil réparateur');
+      throw new ForbiddenException('Seuls les réparateurs peuvent modifier leur profil réparateur');
     }
 
     // Find existing profile
-    let profile = await this.repairersService.findByUserId(user.id);
+    const profile = await this.repairersService.findByUserId(user.id);
 
     if (profile) {
       // Update existing profile
@@ -95,22 +100,12 @@ export class UsersController {
 
   @Patch('me/repairer-profile')
   @ApiOperation({ summary: 'Partially update repairer profile for current user' })
+  @ApiBody({ type: UpdateRepairerProfileDto })
   async patchRepairerProfile(
     @CurrentUser() user: User,
-    @Body() data: Partial<RepairerProfile>,
+    @Body() data: UpdateRepairerProfileDto,
   ): Promise<RepairerProfile> {
     return this.updateRepairerProfile(user, data);
-  }
-
-  private async updateUserProfile(userId: string, updateData: Partial<User>): Promise<User> {
-    // Prevent updating sensitive fields
-    delete updateData.passwordHash;
-    delete updateData.role;
-    delete updateData.status;
-    delete updateData.isPhoneVerified;
-    delete updateData.isEmailVerified;
-
-    return this.usersService.update(userId, updateData);
   }
 
   @Delete('me')

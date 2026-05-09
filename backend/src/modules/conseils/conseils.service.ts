@@ -1,6 +1,8 @@
 import { Injectable, NotFoundException, ForbiddenException, BadRequestException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, FindOptionsWhere } from 'typeorm';
+import { IsOptional, IsEnum, IsBoolean, IsInt, Min, Max } from 'class-validator';
+import { Type, Transform } from 'class-transformer';
 import { Expert, ConseilType, ConseilFormat } from './entities/expert.entity';
 import { ConseilSession, ConseilSessionStatus } from './entities/conseil-session.entity';
 import { ConseilMessage, ConseilMessageSenderType } from './entities/conseil-message.entity';
@@ -15,17 +17,100 @@ export class CreateSessionDto {
 }
 
 export class SessionFilters {
+  @IsOptional()
+  @IsEnum(ConseilSessionStatus)
   status?: ConseilSessionStatus;
+
+  @IsOptional()
+  @Type(() => Number)
+  @IsInt()
+  @Min(1)
   page?: number;
+
+  @IsOptional()
+  @Type(() => Number)
+  @IsInt()
+  @Min(1)
+  @Max(100)
   limit?: number;
 }
 
 export class ExpertFilters {
+  @IsOptional()
+  @IsEnum(ConseilType)
   type?: ConseilType;
+
+  @IsOptional()
+  @IsEnum(ConseilFormat)
   format?: ConseilFormat;
+
+  @IsOptional()
+  @Transform(({ value }) => value === 'true' || value === true)
+  @IsBoolean()
   isAvailable?: boolean;
+
+  @IsOptional()
+  @Type(() => Number)
+  @IsInt()
+  @Min(1)
   page?: number;
+
+  @IsOptional()
+  @Type(() => Number)
+  @IsInt()
+  @Min(1)
+  @Max(100)
   limit?: number;
+}
+
+// DTO plat exposé par l'API : champs utilisateur aplatis,
+// montants/notes castés en number (Postgres DECIMAL sort en string par défaut).
+export interface ExpertDto {
+  id: string;
+  firstName: string;
+  lastName: string;
+  avatarUrl: string | null;
+  bio?: string;
+  specialties: string[];
+  conseilTypes: ConseilType[];
+  conseilFormats: ConseilFormat[];
+  rating: number;
+  reviewCount: number;
+  responseTime: number;
+  pricePerSession: number;
+  currency: string;
+  yearsOfExperience: number;
+  totalSessions: number;
+  isAvailable: boolean;
+  isVerified: boolean;
+}
+
+function toNumber(value: number | string | null | undefined, fallback = 0): number {
+  if (value === null || value === undefined) return fallback;
+  const n = typeof value === 'number' ? value : parseFloat(value);
+  return Number.isFinite(n) ? n : fallback;
+}
+
+function mapExpertToDto(expert: Expert): ExpertDto {
+  return {
+    id: expert.id,
+    firstName: expert.user?.firstName ?? '',
+    lastName: expert.user?.lastName ?? '',
+    avatarUrl: expert.user?.avatarUrl ?? null,
+    bio: expert.bio,
+    specialties: expert.specialties ?? [],
+    conseilTypes: expert.conseilTypes ?? [],
+    conseilFormats: expert.conseilFormats ?? [],
+    rating: toNumber(expert.ratingAvg, 0),
+    reviewCount: expert.ratingCount ?? 0,
+    responseTime: expert.responseTime ?? 0,
+    pricePerSession: toNumber(expert.pricePerSession, 0),
+    currency: expert.currency ?? 'XOF',
+    yearsOfExperience: expert.yearsOfExperience ?? 0,
+    totalSessions: expert.totalSessions ?? 0,
+    isAvailable: expert.isAvailable ?? false,
+    isVerified: expert.isVerified ?? false,
+  };
 }
 
 @Injectable()
@@ -47,7 +132,7 @@ export class ConseilsService {
     return `CON-${timestamp}-${random}`;
   }
 
-  async getExperts(filters: ExpertFilters): Promise<{ data: Expert[]; total: number }> {
+  async getExperts(filters: ExpertFilters): Promise<{ data: ExpertDto[]; total: number }> {
     const page = filters.page || 1;
     const limit = filters.limit || 20;
     const skip = (page - 1) * limit;
@@ -76,10 +161,16 @@ export class ConseilsService {
 
     const [data, total] = await queryBuilder.getManyAndCount();
 
-    return { data, total };
+    return { data: data.map(mapExpertToDto), total };
   }
 
-  async getExpert(id: string): Promise<Expert> {
+  async getExpert(id: string): Promise<ExpertDto> {
+    const expert = await this.findExpertEntity(id);
+    return mapExpertToDto(expert);
+  }
+
+  // Récupère l'entité brute pour les usages internes (createSession, etc.).
+  private async findExpertEntity(id: string): Promise<Expert> {
     const expert = await this.expertRepo.findOne({
       where: { id },
       relations: ['user'],
@@ -93,7 +184,7 @@ export class ConseilsService {
   }
 
   async createSession(clientId: string, dto: CreateSessionDto): Promise<ConseilSession> {
-    const expert = await this.getExpert(dto.expertId);
+    const expert = await this.findExpertEntity(dto.expertId);
 
     if (!expert.isAvailable) {
       throw new BadRequestException('Cet expert n\'est pas disponible');

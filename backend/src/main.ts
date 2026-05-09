@@ -50,14 +50,14 @@ async function bootstrap() {
     }),
   );
 
-  // CORS
+  // CORS - Permissif en dev, strict en production
   const allowedOrigins = configService.get<string[]>('cors.allowedOrigins') || ['http://localhost:4200'];
   app.enableCors({
     origin: (origin, callback) => {
       // Allow requests with no origin (mobile apps, curl, etc.)
       if (!origin) return callback(null, true);
-      // Allow any localhost port for development
-      if (origin.match(/^http:\/\/localhost:\d+$/)) {
+      // Allow any localhost port ONLY in development
+      if (isDev && origin.match(/^http:\/\/localhost:\d+$/)) {
         return callback(null, true);
       }
       // Check against configured allowed origins
@@ -86,21 +86,23 @@ async function bootstrap() {
     }),
   );
 
-  // Swagger API Documentation
-  const swaggerConfig = new DocumentBuilder()
-    .setTitle('FastRepair API')
-    .setDescription('API pour la plateforme de réparation FastRepair - Côte d\'Ivoire')
-    .setVersion('1.0')
-    .addBearerAuth()
-    .addTag('Authentication', 'Endpoints d\'authentification')
-    .addTag('Users', 'Gestion des utilisateurs')
-    .addTag('Repairers', 'Gestion des réparateurs')
-    .addTag('Requests', 'Demandes de réparation')
-    .addTag('Reviews', 'Avis et évaluations')
-    .build();
+  // Swagger API Documentation - Uniquement en développement
+  if (isDev) {
+    const swaggerConfig = new DocumentBuilder()
+      .setTitle('FastRepair API')
+      .setDescription('API pour la plateforme de réparation FastRepair - Côte d\'Ivoire')
+      .setVersion('1.0')
+      .addBearerAuth()
+      .addTag('Authentication', 'Endpoints d\'authentification')
+      .addTag('Users', 'Gestion des utilisateurs')
+      .addTag('Repairers', 'Gestion des réparateurs')
+      .addTag('Requests', 'Demandes de réparation')
+      .addTag('Reviews', 'Avis et évaluations')
+      .build();
 
-  const document = SwaggerModule.createDocument(app, swaggerConfig);
-  SwaggerModule.setup('api/docs', app, document);
+    const document = SwaggerModule.createDocument(app, swaggerConfig);
+    SwaggerModule.setup('api/docs', app, document);
+  }
 
   // Start server
   const port = configService.get<number>('port') || 3000;

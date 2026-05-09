@@ -1,8 +1,10 @@
 import { Controller, Get, Query } from '@nestjs/common';
 import { SettingsService } from './settings.service';
 import { SpecialtyCategory } from './entities';
+import { Public } from '../../common/decorators/public.decorator';
 
 @Controller('settings')
+@Public()
 export class SettingsController {
   constructor(private readonly settingsService: SettingsService) {}
 

@@ -2,6 +2,8 @@ import { Injectable, NotFoundException, ForbiddenException, BadRequestException 
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, FindOptionsWhere } from 'typeorm';
 import { EventEmitter2 } from '@nestjs/event-emitter';
+import { IsOptional, IsEnum, IsInt, Min, Max } from 'class-validator';
+import { Type } from 'class-transformer';
 import { Dispute, DisputeReason, DisputeStatus, DisputeResolution } from './entities/dispute.entity';
 import { DisputeCreatedEvent, DisputeResolvedEvent, EventNames } from '../../common/events';
 import { DisputeMessage, DisputeMessageSenderType } from './entities/dispute-message.entity';
@@ -22,8 +24,21 @@ export class AddMessageDto {
 }
 
 export class DisputeFilters {
+  @IsOptional()
+  @IsEnum(DisputeStatus)
   status?: DisputeStatus;
+
+  @IsOptional()
+  @Type(() => Number)
+  @IsInt()
+  @Min(1)
   page?: number;
+
+  @IsOptional()
+  @Type(() => Number)
+  @IsInt()
+  @Min(1)
+  @Max(100)
   limit?: number;
 }
 

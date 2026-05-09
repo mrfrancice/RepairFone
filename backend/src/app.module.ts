@@ -18,6 +18,7 @@ import { RolesGuard } from './common/guards/roles.guard';
 import { AuditModule } from './common/audit/audit.module';
 import { AuditInterceptor } from './common/interceptors/audit.interceptor';
 import { ListenersModule } from './common/listeners/listeners.module';
+import { CommonModule } from './common/common.module';
 
 import { AuthModule } from './modules/auth/auth.module';
 import { UsersModule } from './modules/users/users.module';
@@ -89,6 +90,9 @@ import { SeederModule } from './database/seeders/seeder.module';
 
     // Event Listeners
     ListenersModule,
+
+    // Common Services (SMS, Email, FileUpload)
+    CommonModule,
 
     // Feature Modules
     AuthModule,

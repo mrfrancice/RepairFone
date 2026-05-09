@@ -15,5 +15,7 @@ export const getDatabaseConfig = (configService: ConfigService): TypeOrmModuleOp
     max: 20,
     idleTimeoutMillis: 30000,
     connectionTimeoutMillis: 5000,
+    // Force UTF-8 to avoid double-encoding on Windows (locale default is WIN1252)
+    client_encoding: 'UTF8',
   },
 });
