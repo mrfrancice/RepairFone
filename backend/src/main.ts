@@ -1,3 +1,7 @@
+// IMPORTANT : sentry-init doit être importé en TOUT PREMIER pour que
+// l'instrumentation Node soit en place avant le reste de l'app.
+import './sentry-init';
+
 import { NestFactory } from '@nestjs/core';
 import { ValidationPipe, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';

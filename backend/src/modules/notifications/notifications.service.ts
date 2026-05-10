@@ -1,9 +1,10 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, NotFoundException, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, FindOptionsWhere } from 'typeorm';
 import { IsOptional, IsBoolean, IsEnum, IsInt, Min, Max } from 'class-validator';
 import { Type, Transform } from 'class-transformer';
 import { Notification, NotificationType, NotificationChannel } from './entities/notification.entity';
+import { PushService } from '../push/push.service';
 
 export class CreateNotificationDto {
   userId: string;
@@ -42,9 +43,12 @@ export class NotificationFilters {
 
 @Injectable()
 export class NotificationsService {
+  private readonly logger = new Logger(NotificationsService.name);
+
   constructor(
     @InjectRepository(Notification)
     private readonly notificationRepo: Repository<Notification>,
+    private readonly pushService: PushService,
   ) {}
 
   async create(dto: CreateNotificationDto): Promise<Notification> {
@@ -59,7 +63,24 @@ export class NotificationsService {
       channel: dto.channel || NotificationChannel.IN_APP,
     });
 
-    return this.notificationRepo.save(notification);
+    const saved = await this.notificationRepo.save(notification);
+
+    // Fire-and-forget push : si l'user a un abonnement Web Push actif,
+    // on lui envoie. Si pas d'abonnement / Web Push non configuré, no-op.
+    // On NE bloque PAS la création de la notif DB sur l'envoi push.
+    this.pushService
+      .sendToUser(dto.userId, {
+        title: dto.title,
+        body: dto.body,
+        url: dto.referenceType && dto.referenceId
+          ? `/${dto.referenceType}s/${dto.referenceId}`
+          : '/notifications',
+        tag: dto.type,
+        data: { notificationId: saved.id, ...dto.data },
+      })
+      .catch((err) => this.logger.error(`Push échec pour user ${dto.userId}: ${err?.message ?? err}`));
+
+    return saved;
   }
 
   async findByUser(userId: string, filters: NotificationFilters): Promise<{ data: Notification[]; total: number; unreadCount: number }> {

@@ -11,6 +11,69 @@
 
 ---
 
+## 🔌 Services externes : recommandations open source / gratuits
+
+État au moment de cette session :
+- ✅ **Monitoring** : Sentry SDK installé (backend + frontend), compatible Sentry SaaS free tier OU **GlitchTip** (clone open source self-hostable). DSN à remplir dans `.env` côté back et `environment.ts` côté front.
+- ✅ **Push notifications** : Web Push API W3C (VAPID) installé. `npm install web-push` + endpoints `/push/*`. Pas de Firebase requis.
+- ⏳ **SMS / OTP** : Mock seul. Voir options ci-dessous.
+- ⏳ **Email** : Mock seul. Voir options ci-dessous.
+- ⏳ **Paiement** : Mock + CinetPay/PayDunya câblés (sandbox prêt, credentials prod requis).
+
+### Sentry / GlitchTip
+- **Sentry SaaS** : free tier 5k erreurs/mois — démarrage immédiat (juste un DSN).
+- **GlitchTip** : open source, self-hostable (Docker), API compatible Sentry SDK — **aucun changement de code** entre Sentry et GlitchTip. Hébergement gratuit possible (Hetzner, OVH VPS) ~5€/mois.
+- Variables d'env : `SENTRY_DSN` (backend) + `environment.sentry.dsn` (frontend).
+
+### Web Push
+- Génération des clés VAPID : `node -e "console.log(JSON.stringify(require('web-push').generateVAPIDKeys()))"`.
+- Variables d'env backend : `VAPID_PUBLIC_KEY`, `VAPID_PRIVATE_KEY`, `VAPID_SUBJECT=mailto:admin@repairfone.ci`.
+- En dev (`ng serve`), le service worker Angular n'est PAS enregistré → push désactivé. Pour tester en local : `ng build --configuration=development` puis servir le dist.
+
+### SMS / OTP (le maillon faible)
+**Constat honnête** : il n'existe pas vraiment d'option SMS open source pour la Côte d'Ivoire — les SMS passent forcément par un opérateur ou un agrégateur payant.
+
+Options par ordre de pragmatisme :
+1. **OTP par email** : 100% gratuit avec un provider email (cf. plus bas). Suffisant pour 80% des cas. Limitation : un user sans email actif est bloqué.
+2. **OTP par WhatsApp** via [WhatsApp Cloud API](https://developers.facebook.com/docs/whatsapp/cloud-api/) — **gratuit jusqu'à 1000 conversations/mois**. Excellente couverture en Côte d'Ivoire (~90% pénétration WhatsApp).
+3. **OTP par Telegram bot** : 100% gratuit, sans limite. Limitation : l'utilisateur doit avoir Telegram (faible adoption en CI).
+4. **Agrégateurs payants** si on veut du SMS : [Africa's Talking](https://africastalking.com/) (~5 FCFA/SMS), [LeTexto](https://letexto.com/) (CI), [Vonage](https://www.vonage.com/). Pas open source mais nécessaires en prod.
+
+**Recommandation** : démarrer avec **WhatsApp Cloud API** + fallback email. Coût zéro jusqu'à 1k utilisateurs/mois.
+
+### Email
+Options gratuites avec free tier généreux :
+| Provider | Free tier | API | GDPR |
+|---|---|---|---|
+| **Resend** | 3 000 emails/mois, 100/jour | Excellente (TypeScript natif) | ✅ |
+| **Brevo** (ex-Sendinblue) | 300 emails/jour | Bonne (SMTP + REST) | ✅ (France) |
+| **MailerSend** | 3 000 emails/mois | Bonne | ✅ |
+| **Mailgun** | 100 emails/jour (3 mois gratuits) | Excellente | ✅ |
+| **AWS SES** | 62k emails/mois (gratuit depuis EC2) | Bonne | ✅ |
+
+**Vraiment open source / self-host** : [Postfix](http://www.postfix.org/) + [Mailcow](https://mailcow.email/) Docker — mais maintenance lourde (DKIM, SPF, reputation IP). Pas recommandé sauf si volume justifie.
+
+**Recommandation** : **Resend** pour le démarrage (API moderne, 3k mails/mois gratuits, intégration NestJS triviale via `@nestjs-modules/mailer` + transport SMTP).
+
+### Paiement (Côte d'Ivoire)
+**Constat** : il n'existe **pas** d'option vraiment "gratuite" — un PSP prend toujours une commission par transaction (~2-3%). Mais l'intégration backend est gratuite, on ne paie qu'à l'usage.
+
+Options actives en Côte d'Ivoire :
+| Provider | Sandbox gratuit | Commission | Mobile Money supportés |
+|---|---|---|---|
+| **CinetPay** | ✅ | ~2.5% | Orange, MTN, Moov, Wave |
+| **PayDunya** | ✅ | ~3% | Orange, MTN, Moov, Wave |
+| **Wave** API directe | Contrat marchand requis | ~1% | Wave seulement |
+| **Orange Money** API directe | Contrat marchand requis | Variable | Orange seulement |
+
+**État dans le code** : `PaymentGatewayService` supporte déjà Mock, CinetPay et PayDunya. Pour passer en prod, il suffit de :
+1. Créer un compte marchand chez PayDunya (gratuit, sandbox immédiat)
+2. Renseigner `PAYMENT_PROVIDER=paydunya` + `PAYDUNYA_MASTER_KEY/PUBLIC_KEY/PRIVATE_KEY/TOKEN` dans `.env`
+
+**Recommandation** : **PayDunya en mode test** pour démarrer (zéro commission tant qu'on est en sandbox), bascule en prod le jour du go-live.
+
+---
+
 ## 🟡 Phase 4 — Fonctionnel manquant
 
 ### P4.1 — TODOs production résiduels

@@ -1,7 +1,9 @@
 import { Injectable, inject, signal } from '@angular/core';
+import { HttpClient } from '@angular/common/http';
 import { ApiService } from './api.service';
 import { LoggerService } from './logger.service';
 import { firstValueFrom } from 'rxjs';
+import { environment } from '../../../environments/environment';
 
 export type NotificationType =
   | 'request_created'
@@ -51,6 +53,7 @@ interface PushSubscriptionPayload {
 @Injectable({ providedIn: 'root' })
 export class NotificationService {
   private readonly api = inject(ApiService);
+  private readonly http = inject(HttpClient);
   private readonly logger = inject(LoggerService);
 
   // State
@@ -225,17 +228,20 @@ export class NotificationService {
     }
   }
 
-  // Subscribe to push notifications
+  // Subscribe to push notifications via /push backend (VAPID, W3C standard)
   private async subscribeToPush(): Promise<void> {
     try {
-      // Register service worker if not already registered
-      if (!this.swRegistration) {
-        this.swRegistration = await navigator.serviceWorker.register('/sw.js');
+      // Le SW Angular (NGSW) est enregistré automatiquement par provideServiceWorker.
+      // En dev (ng serve), il n'est PAS enregistré → push désactivé.
+      const registration = await navigator.serviceWorker.getRegistration();
+      if (!registration) {
+        throw new Error('Service worker non enregistré (mode dev ?)');
       }
+      this.swRegistration = registration;
 
-      // Get VAPID public key from server
+      // Get VAPID public key from server (404 si non configuré côté backend)
       const { publicKey } = await firstValueFrom(
-        this.api.get<{ publicKey: string }>('/notifications/vapid-key')
+        this.api.get<{ publicKey: string }>('/push/vapid-public-key')
       );
 
       // Subscribe to push
@@ -256,7 +262,7 @@ export class NotificationService {
       };
 
       await firstValueFrom(
-        this.api.post<void>('/notifications/subscribe', payload)
+        this.api.post<void>('/push/subscribe', payload)
       );
     } catch (err) {
       this.logger.error('NotificationService', 'Error subscribing to push', err);
@@ -274,10 +280,10 @@ export class NotificationService {
       if (subscription) {
         await subscription.unsubscribe();
 
-        // Notify server
+        // Notify server via DELETE /push/subscribe avec body (HttpClient direct)
         await firstValueFrom(
-          this.api.post<void>('/notifications/unsubscribe', {
-            endpoint: subscription.endpoint,
+          this.http.request<void>('DELETE', `${environment.apiUrl}/push/subscribe`, {
+            body: { endpoint: subscription.endpoint },
           })
         );
       }

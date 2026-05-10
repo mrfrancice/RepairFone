@@ -29,6 +29,7 @@ import { ReviewsModule } from './modules/reviews/reviews.module';
 import { QuotesModule } from './modules/quotes/quotes.module';
 import { ChatModule } from './modules/chat/chat.module';
 import { NotificationsModule } from './modules/notifications/notifications.module';
+import { PushModule } from './modules/push/push.module';
 import { DisputesModule } from './modules/disputes/disputes.module';
 import { PaymentsModule } from './modules/payments/payments.module';
 import { ConseilsModule } from './modules/conseils/conseils.module';
@@ -104,6 +105,7 @@ import { SeederModule } from './database/seeders/seeder.module';
     QuotesModule,
     ChatModule,
     NotificationsModule,
+    PushModule,
     DisputesModule,
     PaymentsModule,
     ConseilsModule,
