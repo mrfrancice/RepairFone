@@ -720,7 +720,7 @@ export class QuoteDetailComponent implements OnInit {
       this.store.updateQuote(q.id, { status: 'accepted' });
 
       // Navigate to payment page
-      this.router.navigate(['/payment/summary'], {
+      this.router.navigate(['/payments/summary'], {
         queryParams: { requestId: q.requestId, quoteId: q.id }
       });
     } catch (err) {

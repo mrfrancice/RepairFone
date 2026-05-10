@@ -402,7 +402,7 @@ export class NotificationService {
 
       case 'payment_received':
       case 'payment_requested':
-        return ['/payment', data?.['paymentId'] || ''];
+        return ['/payments', data?.['paymentId'] || ''];
 
       case 'dispute_opened':
       case 'dispute_resolved':

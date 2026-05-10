@@ -656,7 +656,7 @@ export class QuoteListComponent implements OnInit {
       this.store.updateQuote(quote.id, { status: 'accepted' });
 
       // Redirect to payment page after successful acceptance
-      this.router.navigate(['/payment/summary'], {
+      this.router.navigate(['/payments/summary'], {
         queryParams: { requestId: quote.requestId, quoteId: quote.id }
       });
     } catch (err) {

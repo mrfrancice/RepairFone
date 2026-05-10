@@ -500,7 +500,7 @@ export class PaymentHistoryComponent implements OnInit {
   }
 
   goToDetail(payment: Payment): void {
-    this.router.navigate(['/payment', payment.id]);
+    this.router.navigate(['/payments', payment.id]);
   }
 
   getMethodIcon(method: string): string {

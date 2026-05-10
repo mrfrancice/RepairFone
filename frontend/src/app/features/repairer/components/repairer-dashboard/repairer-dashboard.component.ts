@@ -178,7 +178,7 @@ import { InitialsPipe } from '../../../../shared/pipes/initials.pipe';
               </div>
 
               <!-- Revenus du mois -->
-              <div class="stat-card revenue" routerLink="/payment">
+              <div class="stat-card revenue" routerLink="/payments">
                 <div class="stat-icon-wrap gold">
                   <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                     <line x1="12" y1="1" x2="12" y2="23"/>
@@ -312,7 +312,7 @@ import { InitialsPipe } from '../../../../shared/pipes/initials.pipe';
                 <div class="action-icon blue">📝</div>
                 <span>Devis</span>
               </a>
-              <a class="action-item" routerLink="/payment">
+              <a class="action-item" routerLink="/payments">
                 <div class="action-icon green">💰</div>
                 <span>Paiements</span>
               </a>

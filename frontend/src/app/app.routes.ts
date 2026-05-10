@@ -58,7 +58,7 @@ export const routes: Routes = [
     canActivate: [authGuard, noAdminGuard],
   },
   {
-    path: 'payment',
+    path: 'payments',
     loadChildren: () => import('./features/payment/payment.routes').then((m) => m.PAYMENT_ROUTES),
     canActivate: [authGuard, noAdminGuard],
   },

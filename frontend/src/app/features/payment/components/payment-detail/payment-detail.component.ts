@@ -535,7 +535,7 @@ export class PaymentDetailComponent implements OnInit {
   }
 
   goBack(): void {
-    this.router.navigate(['/payment']);
+    this.router.navigate(['/payments']);
   }
 
   getStatusGradient(): string {
@@ -654,7 +654,7 @@ export class PaymentDetailComponent implements OnInit {
     if (!payment) return;
 
     // Navigate to payment flow with the same request
-    this.router.navigate(['/payment/new'], {
+    this.router.navigate(['/payments/new'], {
       queryParams: {
         requestId: payment.requestId,
         quoteId: payment.quoteId,

@@ -3296,7 +3296,7 @@ export class RequestDetailComponent implements OnInit {
     const request = this.request();
     if (!quote || !request) return;
 
-    this.router.navigate(['/payment/summary'], {
+    this.router.navigate(['/payments/summary'], {
       queryParams: { requestId: request.id, quoteId: quote.id }
     });
   }
