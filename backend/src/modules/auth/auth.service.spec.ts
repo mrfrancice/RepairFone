@@ -239,7 +239,7 @@ describe('AuthService', () => {
           address: '123 Repair Street',
         },
       };
-      const repairerUser = { ...mockUser, role: UserRole.REPAIRER };
+      const repairerUser = { ...mockUser, role: UserRole.REPAIRER } as User;
 
       usersService.findByPhone.mockResolvedValue(null);
       (bcrypt.hash as jest.Mock).mockResolvedValue('hashed-password');
@@ -337,7 +337,7 @@ describe('AuthService', () => {
 
     it('should throw UnauthorizedException if password is invalid', async () => {
       // Arrange
-      usersService.findByPhone.mockResolvedValue({ ...mockUser, failedLoginAttempts: 0 });
+      usersService.findByPhone.mockResolvedValue({ ...mockUser, failedLoginAttempts: 0 } as User);
       (bcrypt.compare as jest.Mock).mockResolvedValue(false);
       usersService.incrementFailedAttempts.mockResolvedValue(undefined);
 
@@ -375,7 +375,7 @@ describe('AuthService', () => {
 
     it('should lock account after 5 failed attempts', async () => {
       // Arrange
-      const userWith4FailedAttempts = { ...mockUser, failedLoginAttempts: 4 };
+      const userWith4FailedAttempts = { ...mockUser, failedLoginAttempts: 4 } as User;
       usersService.findByPhone.mockResolvedValue(userWith4FailedAttempts);
       (bcrypt.compare as jest.Mock).mockResolvedValue(false);
       usersService.lockAccount.mockResolvedValue(undefined);
@@ -387,7 +387,7 @@ describe('AuthService', () => {
 
     it('should reset failed attempts on successful login', async () => {
       // Arrange
-      const userWithFailedAttempts = { ...mockUser, failedLoginAttempts: 2 };
+      const userWithFailedAttempts = { ...mockUser, failedLoginAttempts: 2 } as User;
       usersService.findByPhone.mockResolvedValue(userWithFailedAttempts);
       (bcrypt.compare as jest.Mock).mockResolvedValue(true);
       usersService.resetLoginAttempts.mockResolvedValue(undefined);

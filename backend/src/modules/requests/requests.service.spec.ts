@@ -73,7 +73,7 @@ describe('RequestsService', () => {
     user: mockRepairerUser,
     createdAt: new Date(),
     updatedAt: new Date(),
-  } as RepairerProfile;
+  } as unknown as RepairerProfile;
 
   const mockRepairRequest: RepairRequest = {
     id: 'request-uuid-1',
@@ -275,8 +275,8 @@ describe('RequestsService', () => {
 
       repairerProfileRepository.findOne.mockResolvedValue(mockRepairerProfile);
       dataSource.query.mockResolvedValue([{ seq_value: 2 }]);
-      requestRepository.create.mockReturnValue({ ...mockRepairRequest, ...fullCreateDto });
-      requestRepository.save.mockResolvedValue({ ...mockRepairRequest, ...fullCreateDto });
+      requestRepository.create.mockReturnValue({ ...mockRepairRequest, ...fullCreateDto } as RepairRequest);
+      requestRepository.save.mockResolvedValue({ ...mockRepairRequest, ...fullCreateDto } as RepairRequest);
       statusHistoryRepository.create.mockReturnValue(mockStatusHistory);
       statusHistoryRepository.save.mockResolvedValue(mockStatusHistory);
 
@@ -551,7 +551,7 @@ describe('RequestsService', () => {
       const updateDto: UpdateRequestStatusDto = {
         status: RequestStatus.ACCEPTED,
       };
-      requestRepository.save.mockImplementation((req) => Promise.resolve(req));
+      requestRepository.save.mockImplementation((req) => Promise.resolve(req as RepairRequest));
       statusHistoryRepository.create.mockReturnValue(mockStatusHistory);
       statusHistoryRepository.save.mockResolvedValue(mockStatusHistory);
 
@@ -578,7 +578,7 @@ describe('RequestsService', () => {
         status: RequestStatus.REJECTED,
         rejectionReason: 'Cannot repair this device',
       };
-      requestRepository.save.mockImplementation((req) => Promise.resolve(req));
+      requestRepository.save.mockImplementation((req) => Promise.resolve(req as RepairRequest));
       statusHistoryRepository.create.mockReturnValue(mockStatusHistory);
       statusHistoryRepository.save.mockResolvedValue(mockStatusHistory);
 
@@ -605,7 +605,7 @@ describe('RequestsService', () => {
       const updateDto: UpdateRequestStatusDto = {
         status: RequestStatus.COMPLETED,
       };
-      requestRepository.save.mockImplementation((req) => Promise.resolve(req));
+      requestRepository.save.mockImplementation((req) => Promise.resolve(req as RepairRequest));
       statusHistoryRepository.create.mockReturnValue(mockStatusHistory);
       statusHistoryRepository.save.mockResolvedValue(mockStatusHistory);
 
