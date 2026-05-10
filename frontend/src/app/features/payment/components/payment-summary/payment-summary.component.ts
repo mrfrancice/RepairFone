@@ -1311,7 +1311,7 @@ export class PaymentSummaryComponent implements OnInit {
   }
 
   goToPayments(): void {
-    this.router.navigate(['/payments']);
+    this.router.navigate(['/payment']);
   }
 
   goToTracking(): void {
