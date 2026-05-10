@@ -22,6 +22,8 @@ export enum NotificationType {
   AWAITING_PARTS = 'awaiting_parts',
   PAYMENT_RECEIVED = 'payment_received',
   PAYMENT_SENT = 'payment_sent',
+  PAYMENT_REFUNDED = 'payment_refunded',
+  PAYMENT_BLOCKED = 'payment_blocked',
   MESSAGE_RECEIVED = 'message_received',
   DISPUTE_OPENED = 'dispute_opened',
   DISPUTE_RESOLVED = 'dispute_resolved',

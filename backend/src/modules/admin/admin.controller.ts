@@ -401,6 +401,16 @@ export class AdminController {
     if (!body?.resolution || !Object.values(DisputeResolution).includes(body.resolution)) {
       throw new BadRequestException('Résolution invalide');
     }
+    // Validation : refund_full ET refund_partial exigent un montant strictement positif.
+    if (
+      (body.resolution === DisputeResolution.REFUND_FULL ||
+        body.resolution === DisputeResolution.REFUND_PARTIAL) &&
+      (body.refundAmount == null || Number(body.refundAmount) <= 0)
+    ) {
+      throw new BadRequestException(
+        'Le montant du remboursement est obligatoire et doit être supérieur à 0 pour une résolution avec refund',
+      );
+    }
     const dto: ResolveDisputeDto = {
       resolution: body.resolution,
       notes: body.notes,
@@ -445,5 +455,34 @@ export class AdminController {
     @CurrentUser() user: User,
   ) {
     return this.paymentsService.adminUnblock(id, user.id);
+  }
+
+  // ==========================================
+  // DEBUG (dev only) — seed test data
+  // ==========================================
+
+  /**
+   * Crée un dispute factice à partir d'un paiement existant.
+   * Permet de tester les flows de modération admin sans avoir à
+   * dérouler un parcours client complet.
+   *
+   * SÉCURITÉ : refusé en production via NODE_ENV check.
+   */
+  @Post('_debug/seed-dispute-from-payment/:paymentId')
+  @HttpCode(HttpStatus.CREATED)
+  @ApiOperation({ summary: '[DEV] Génère une dispute factice depuis un paiement' })
+  async seedDisputeFromPayment(
+    @Param('paymentId', ParseUUIDPipe) paymentId: string,
+  ) {
+    if (process.env.NODE_ENV === 'production') {
+      throw new BadRequestException('Endpoint debug désactivé en production');
+    }
+    const payment = await this.paymentsService.findOneForAdmin(paymentId);
+    return this.disputesService.seedDebugDispute({
+      requestId: payment.requestId,
+      clientId: payment.clientId,
+      repairerId: payment.repairerId,
+      paymentId: payment.id,
+    });
   }
 }

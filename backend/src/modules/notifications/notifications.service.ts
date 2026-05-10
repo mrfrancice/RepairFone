@@ -198,6 +198,39 @@ export class NotificationsService {
     });
   }
 
+  async notifyPaymentRefunded(
+    userId: string,
+    paymentId: string,
+    paymentNumber: string,
+    amount: number,
+    reason: string,
+  ): Promise<Notification> {
+    return this.create({
+      userId,
+      type: NotificationType.PAYMENT_REFUNDED,
+      title: 'Paiement remboursé',
+      body: `Le paiement ${paymentNumber} de ${amount.toLocaleString('fr-FR')} FCFA a été remboursé. Motif : ${reason}`,
+      referenceType: 'payment',
+      referenceId: paymentId,
+    });
+  }
+
+  async notifyPaymentBlocked(
+    userId: string,
+    paymentId: string,
+    paymentNumber: string,
+    reason: string,
+  ): Promise<Notification> {
+    return this.create({
+      userId,
+      type: NotificationType.PAYMENT_BLOCKED,
+      title: 'Paiement bloqué',
+      body: `Le paiement ${paymentNumber} est bloqué en attente de vérification. Motif : ${reason}`,
+      referenceType: 'payment',
+      referenceId: paymentId,
+    });
+  }
+
   async notifyDisputeOpened(repairerId: string, disputeId: string): Promise<Notification> {
     return this.create({
       userId: repairerId,

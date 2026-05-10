@@ -2,6 +2,8 @@
 export * from './quote-accepted.event';
 export * from './quote-created.event';
 export * from './payment-completed.event';
+export * from './payment-refunded.event';
+export * from './payment-blocked.event';
 export * from './request-status-changed.event';
 export * from './review-created.event';
 export * from './dispute-created.event';
@@ -12,6 +14,8 @@ export const EventNames = {
   QUOTE_ACCEPTED: 'quote.accepted',
   QUOTE_CREATED: 'quote.created',
   PAYMENT_COMPLETED: 'payment.completed',
+  PAYMENT_REFUNDED: 'payment.refunded',
+  PAYMENT_BLOCKED: 'payment.blocked',
   REQUEST_STATUS_CHANGED: 'request.status.changed',
   REVIEW_CREATED: 'review.created',
   DISPUTE_CREATED: 'dispute.created',

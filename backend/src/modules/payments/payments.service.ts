@@ -8,7 +8,12 @@ import { RepairRequest } from '../requests/entities/repair-request.entity';
 import { RepairerProfile } from '../users/entities/repairer-profile.entity';
 import { UserRole } from '../users/entities/user.entity';
 import { InitiatePaymentDto, PaymentFilters } from './dto';
-import { PaymentCompletedEvent, EventNames } from '../../common/events';
+import {
+  PaymentCompletedEvent,
+  PaymentRefundedEvent,
+  PaymentBlockedEvent,
+  EventNames,
+} from '../../common/events';
 
 // Re-export DTOs for backward compatibility
 export { InitiatePaymentDto, PaymentFilters } from './dto';
@@ -309,6 +314,19 @@ export class PaymentsService {
       refundedAt: new Date().toISOString(),
     };
     await this.paymentRepo.save(payment);
+
+    const event = new PaymentRefundedEvent(
+      payment.id,
+      payment.paymentNumber,
+      payment.requestId,
+      payment.clientId,
+      payment.repairerId,
+      Number(payment.amount),
+      reason,
+      adminId,
+    );
+    this.eventEmitter.emit(EventNames.PAYMENT_REFUNDED, event);
+
     return this.findOneForAdmin(paymentId);
   }
 
@@ -335,6 +353,18 @@ export class PaymentsService {
       blockedByAdminId: adminId,
     };
     await this.paymentRepo.save(payment);
+
+    const event = new PaymentBlockedEvent(
+      payment.id,
+      payment.paymentNumber,
+      payment.requestId,
+      payment.clientId,
+      payment.repairerId,
+      reason,
+      adminId,
+    );
+    this.eventEmitter.emit(EventNames.PAYMENT_BLOCKED, event);
+
     return this.findOneForAdmin(paymentId);
   }
 

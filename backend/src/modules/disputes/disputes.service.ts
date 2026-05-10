@@ -234,6 +234,30 @@ export class DisputesService {
     return { data, total };
   }
 
+  /**
+   * Crée un dispute factice pour tests (admin debug uniquement).
+   * Évite de devoir dérouler un parcours client complet pour tester
+   * les flows de modération.
+   */
+  async seedDebugDispute(input: {
+    requestId: string;
+    clientId: string;
+    repairerId: string;
+    paymentId?: string;
+  }): Promise<Dispute> {
+    const dispute = this.disputeRepo.create({
+      requestId: input.requestId,
+      clientId: input.clientId,
+      repairerId: input.repairerId,
+      paymentId: input.paymentId,
+      reason: DisputeReason.OTHER,
+      status: DisputeStatus.OPEN,
+      description: '[DEBUG] Litige généré pour tester les flows de modération admin.',
+      evidencePhotos: [],
+    });
+    return this.disputeRepo.save(dispute);
+  }
+
   async findOneForAdmin(id: string): Promise<Dispute> {
     const dispute = await this.disputeRepo.findOne({
       where: { id },

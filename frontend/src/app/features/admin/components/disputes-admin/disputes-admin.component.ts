@@ -344,7 +344,7 @@ const SORT_FIELD_MAP: Record<string, SortField> = {
               </button>
               <button
                 class="btn btn-primary"
-                [disabled]="!resolveForm.resolution || processingAction()"
+                [disabled]="!canSubmitResolve() || processingAction()"
                 (click)="submitResolve()"
               >
                 @if (processingAction()) {
@@ -676,6 +676,19 @@ export class DisputesAdminComponent implements OnInit {
     this.resolveForm = { resolution: '', notes: '', refundAmount: null };
     this.resolveError.set(null);
     this.showResolveModal.set(true);
+  }
+
+  /**
+   * Pour refund_full / refund_partial, le montant est obligatoire > 0.
+   * Sinon, juste avoir choisi une resolution suffit.
+   */
+  canSubmitResolve(): boolean {
+    const { resolution, refundAmount } = this.resolveForm;
+    if (!resolution) return false;
+    if (resolution === 'refund_full' || resolution === 'refund_partial') {
+      return refundAmount != null && Number(refundAmount) > 0;
+    }
+    return true;
   }
 
   closeResolveModal(): void {
