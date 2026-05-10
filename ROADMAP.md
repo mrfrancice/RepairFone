@@ -174,18 +174,21 @@
 
 ### P5.5 — Database (2-3 jours)
 
-#### Ticket #P5.5.1 — Index DB
-Ajouter via migration TypeORM :
-- `requests.clientId`, `requests.repairerId`, `requests.status`
-- `payments.clientId`, `payments.repairerId`, `payments.createdAt DESC`
+#### Ticket #P5.5.1 — Index DB ✅ partiellement fait
+Index composites ajoutés via migration `1736800000000-AddPerformanceIndexes.ts` :
+- `idx_users_role_status`, `idx_users_created_at`
+- `idx_repair_requests_(status|client|repairer)_created`
+- `idx_payments_(status|client|repairer)_created`
+
+Reste à ajouter :
 - `quotes.requestId`, `quotes.repairerId`, `quotes.status`
-- `users.phone` (déjà unique mais index implicite)
 - `notifications.userId`, `notifications.isRead`
 
-#### Ticket #P5.5.2 — Migrations TypeORM versionnées
-- Désactiver `synchronize: true` en prod (déjà conditionné mais à valider)
-- Générer migration initiale `npm run typeorm:generate`
-- Setup `npm run migration:run` dans le pipeline de déploiement
+#### Ticket #P5.5.2 — Migrations TypeORM versionnées ✅ partiellement fait
+- ✅ `synchronize` forcé à `false` en production (`database.config.ts`)
+- ✅ `migrationsRun: true` en prod (exécution automatique au boot)
+- ⏳ Reste : basculer dev sur `synchronize: false` une fois la migration initiale stabilisée et les seeders alignés
+- Setup `npm run migration:run` dans le pipeline de déploiement (CI)
 
 #### Ticket #P5.5.3 — Connection pooling
 - Configurer `extra.max` (pool size) sur la datasource selon la charge attendue

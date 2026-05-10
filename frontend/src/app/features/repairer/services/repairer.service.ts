@@ -247,42 +247,43 @@ export class RepairerService {
   }
 
   // Upload KYC document
-  async uploadKycDocument(type: KycDocument['type'], fileUrl: string): Promise<KycDocument> {
-    return firstValueFrom(
-      this.api.post<KycDocument>('/repairer/kyc', { type, fileUrl })
-    );
+  // TODO: backend n'a pas encore /repairers/kyc — voir ROADMAP P4.2 (KYC complet).
+  // En attendant, l'upload identité passe par PATCH /repairers/profile/me avec les URLs.
+  async uploadKycDocument(_type: KycDocument['type'], _fileUrl: string): Promise<KycDocument> {
+    throw new Error('KYC upload endpoint not implemented yet. See ROADMAP P4.2.');
   }
 
   // Get revenue data
-  async getRevenueData(period: 'week' | 'month' | 'year'): Promise<{
+  // TODO: backend n'a pas encore d'endpoint dédié /repairers/revenue avec breakdown
+  // temporel. En attendant on retourne les stats globales de /requests/stats.
+  async getRevenueData(_period: 'week' | 'month' | 'year'): Promise<{
     labels: string[];
     values: number[];
     total: number;
   }> {
-    return firstValueFrom(
-      this.api.get('/repairer/revenue', { period })
-    );
+    // Stub : à remplacer quand l'endpoint existera. Voir ROADMAP P4.2.
+    return { labels: [], values: [], total: 0 };
   }
 
-  // Get payment history (as repairer)
+  // Get payment history (as repairer) — utilise /payments/my qui adapte selon le rôle
   async getPayments(params?: {
     status?: string;
     page?: number;
     limit?: number;
   }): Promise<{ data: any[]; total: number }> {
     return firstValueFrom(
-      this.api.get('/repairer/payments', params)
+      this.api.get('/payments/my', params)
     );
   }
 
-  // Get disputes (as repairer)
+  // Get disputes (as repairer) — utilise /disputes/my qui adapte selon le rôle
   async getDisputes(params?: {
     status?: string;
     page?: number;
     limit?: number;
   }): Promise<{ data: any[]; total: number }> {
     return firstValueFrom(
-      this.api.get('/repairer/disputes', params)
+      this.api.get('/disputes/my', params)
     );
   }
 
