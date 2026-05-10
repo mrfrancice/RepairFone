@@ -34,7 +34,7 @@ export class MonitoringService {
     // Sentry:   this.initialized = true;
     // Sentry: });
 
-    this.logger.log('MonitoringService', 'Sentry DSN configured but SDK not installed yet');
+    this.logger.info('MonitoringService', 'Sentry DSN configured but SDK not installed yet');
   }
 
   captureException(error: unknown, context?: Record<string, unknown>): void {
