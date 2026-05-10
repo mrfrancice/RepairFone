@@ -247,6 +247,45 @@ import { UiHeaderComponent } from '../../../../shared/components/ui-header/ui-he
                   </svg>
                 </span>
               </a>
+
+              <a routerLink="/admin/payments" class="action-card">
+                <div class="action-header">
+                  <div class="action-icon green">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                      <line x1="12" y1="1" x2="12" y2="23"/>
+                      <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>
+                    </svg>
+                  </div>
+                </div>
+                <h3>Auditer les paiements</h3>
+                <p>Volume, statuts et remboursements</p>
+                <span class="action-link">
+                  Acceder
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+                    <path d="M5 12H19M19 12L12 5M19 12L12 19" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                  </svg>
+                </span>
+              </a>
+
+              <a routerLink="/admin/disputes" class="action-card">
+                <div class="action-header">
+                  <div class="action-icon red">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                      <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
+                      <line x1="12" y1="9" x2="12" y2="13"/>
+                      <line x1="12" y1="17" x2="12.01" y2="17"/>
+                    </svg>
+                  </div>
+                </div>
+                <h3>Modérer les litiges</h3>
+                <p>Suivre et résoudre les conflits</p>
+                <span class="action-link">
+                  Acceder
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+                    <path d="M5 12H19M19 12L12 5M19 12L12 19" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                  </svg>
+                </span>
+              </a>
             </div>
           </section>
 
@@ -597,6 +636,14 @@ import { UiHeaderComponent } from '../../../../shared/components/ui-header/ui-he
 
     .action-icon.blue {
       background: linear-gradient(135deg, var(--color-ocean, #1565C0), var(--color-ocean-500, #2196F3));
+    }
+
+    .action-icon.green {
+      background: linear-gradient(135deg, #2E7D32, #66BB6A);
+    }
+
+    .action-icon.red {
+      background: linear-gradient(135deg, #C62828, #EF5350);
     }
 
     .action-badge {

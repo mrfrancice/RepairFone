@@ -107,6 +107,76 @@ export interface UsersListResponse {
   limit: number;
 }
 
+// ==========================================
+// PAYMENTS (admin audit)
+// ==========================================
+
+export interface PaymentForAdmin {
+  id: string;
+  paymentNumber: string;
+  amount: number;
+  platformFee?: number;
+  repairerAmount?: number;
+  paymentType: string;
+  paymentMethod?: string;
+  status: 'pending' | 'processing' | 'completed' | 'failed' | 'refunded' | 'blocked';
+  transactionRef?: string;
+  paidAt?: string;
+  createdAt: string;
+  client?: { id: string; firstName?: string; lastName?: string; phone?: string };
+  repairer?: { id: string; businessName?: string; user?: { firstName?: string; lastName?: string; phone?: string } };
+  request?: { id: string; device?: { brand: string; model: string }; serviceType?: { name: string } };
+}
+
+export interface PaymentsAdminListResponse {
+  data: PaymentForAdmin[];
+  total: number;
+}
+
+export interface PaymentsAdminStats {
+  total: number;
+  byStatus: Record<string, number>;
+  revenue: { gross: number; platformFees: number; refunded: number };
+}
+
+// ==========================================
+// DISPUTES (admin audit)
+// ==========================================
+
+export interface DisputeForAdmin {
+  id: string;
+  reason: string;
+  status: 'open' | 'in_review' | 'resolved' | 'closed' | 'rejected';
+  description: string;
+  resolution?: string;
+  resolutionNotes?: string;
+  refundAmount?: number;
+  resolvedAt?: string;
+  createdAt: string;
+  client?: { id: string; firstName?: string; lastName?: string; phone?: string };
+  repairer?: { id: string; businessName?: string; user?: { firstName?: string; lastName?: string; phone?: string } };
+  request?: { id: string; device?: { brand: string; model: string } };
+  messages?: Array<{
+    id: string;
+    message: string;
+    senderType: 'client' | 'repairer' | 'support';
+    createdAt: string;
+    sender?: { firstName?: string; lastName?: string };
+  }>;
+}
+
+export interface DisputesAdminListResponse {
+  data: DisputeForAdmin[];
+  total: number;
+}
+
+export interface DisputesAdminStats {
+  total: number;
+  byStatus: Record<string, number>;
+  avgResolutionDays: number | null;
+  totalRefundedAmount: number;
+}
+
 export interface VerificationDecision {
   status: 'verified' | 'rejected';
   notes?: string;
@@ -226,6 +296,67 @@ export class AdminService {
   async deleteUser(id: string): Promise<any> {
     return firstValueFrom(
       this.api.patch(`/admin/users/${id}/delete`, {})
+    );
+  }
+
+  // ==========================================
+  // PAYMENTS
+  // ==========================================
+
+  async getPayments(params?: {
+    status?: string;
+    paymentMethod?: string;
+    paymentType?: string;
+    page?: number;
+    limit?: number;
+    search?: string;
+    sort?: 'createdAt' | 'amount' | 'status' | 'paidAt';
+    order?: 'asc' | 'desc';
+  }): Promise<PaymentsAdminListResponse> {
+    return firstValueFrom(
+      this.api.get<PaymentsAdminListResponse>('/admin/payments', params)
+    );
+  }
+
+  async getPaymentDetail(id: string): Promise<PaymentForAdmin> {
+    return firstValueFrom(
+      this.api.get<PaymentForAdmin>(`/admin/payments/${id}`)
+    );
+  }
+
+  async getPaymentsStats(): Promise<PaymentsAdminStats> {
+    return firstValueFrom(
+      this.api.get<PaymentsAdminStats>('/admin/payments/stats')
+    );
+  }
+
+  // ==========================================
+  // DISPUTES
+  // ==========================================
+
+  async getDisputes(params?: {
+    status?: string;
+    reason?: string;
+    page?: number;
+    limit?: number;
+    search?: string;
+    sort?: 'createdAt' | 'status' | 'resolvedAt';
+    order?: 'asc' | 'desc';
+  }): Promise<DisputesAdminListResponse> {
+    return firstValueFrom(
+      this.api.get<DisputesAdminListResponse>('/admin/disputes', params)
+    );
+  }
+
+  async getDisputeDetail(id: string): Promise<DisputeForAdmin> {
+    return firstValueFrom(
+      this.api.get<DisputeForAdmin>(`/admin/disputes/${id}`)
+    );
+  }
+
+  async getDisputesStats(): Promise<DisputesAdminStats> {
+    return firstValueFrom(
+      this.api.get<DisputesAdminStats>('/admin/disputes/stats')
     );
   }
 }

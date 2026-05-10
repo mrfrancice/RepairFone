@@ -177,6 +177,126 @@ export class DisputesService {
     return { data, total };
   }
 
+  // ==========================================
+  // ADMIN
+  // ==========================================
+
+  async findAllForAdmin(params: {
+    status?: DisputeStatus | 'all';
+    reason?: DisputeReason | 'all';
+    search?: string;
+    page?: number;
+    limit?: number;
+    sort?: 'createdAt' | 'status' | 'resolvedAt';
+    order?: 'asc' | 'desc';
+  }): Promise<{ data: Dispute[]; total: number }> {
+    const {
+      status,
+      reason,
+      search,
+      page = 1,
+      limit = 20,
+      sort = 'createdAt',
+      order = 'desc',
+    } = params;
+
+    const qb = this.disputeRepo
+      .createQueryBuilder('dispute')
+      .leftJoinAndSelect('dispute.client', 'client')
+      .leftJoinAndSelect('dispute.repairer', 'repairer')
+      .leftJoinAndSelect('repairer.user', 'repairerUser')
+      .leftJoinAndSelect('dispute.request', 'request')
+      .leftJoinAndSelect('request.device', 'device');
+
+    if (status && status !== 'all') {
+      qb.andWhere('dispute.status = :status', { status });
+    }
+    if (reason && reason !== 'all') {
+      qb.andWhere('dispute.reason = :reason', { reason });
+    }
+    if (search) {
+      qb.andWhere(
+        '(client.firstName ILIKE :search OR client.lastName ILIKE :search OR client.phone ILIKE :search OR dispute.description ILIKE :search)',
+        { search: `%${search}%` },
+      );
+    }
+
+    const sortColumnMap: Record<string, string> = {
+      createdAt: 'dispute.createdAt',
+      status: 'dispute.status',
+      resolvedAt: 'dispute.resolvedAt',
+    };
+    const sortColumn = sortColumnMap[sort] ?? 'dispute.createdAt';
+    qb.orderBy(sortColumn, order.toUpperCase() === 'ASC' ? 'ASC' : 'DESC', 'NULLS LAST');
+    qb.skip((page - 1) * limit).take(limit);
+
+    const [data, total] = await qb.getManyAndCount();
+    return { data, total };
+  }
+
+  async findOneForAdmin(id: string): Promise<Dispute> {
+    const dispute = await this.disputeRepo.findOne({
+      where: { id },
+      relations: [
+        'client',
+        'repairer',
+        'repairer.user',
+        'request',
+        'request.device',
+        'request.serviceType',
+        'messages',
+        'messages.sender',
+      ],
+    });
+    if (!dispute) {
+      throw new NotFoundException('Litige non trouvé');
+    }
+    return dispute;
+  }
+
+  async getAdminStats(): Promise<{
+    total: number;
+    byStatus: Record<string, number>;
+    avgResolutionDays: number | null;
+    totalRefundedAmount: number;
+  }> {
+    const total = await this.disputeRepo.count();
+
+    const statusRows = await this.disputeRepo
+      .createQueryBuilder('d')
+      .select('d.status', 'status')
+      .addSelect('COUNT(*)', 'count')
+      .groupBy('d.status')
+      .getRawMany<{ status: string; count: string }>();
+
+    const byStatus: Record<string, number> = {};
+    for (const row of statusRows) {
+      byStatus[row.status] = Number(row.count);
+    }
+
+    const resolutionRow = await this.disputeRepo
+      .createQueryBuilder('d')
+      .select(
+        'AVG(EXTRACT(EPOCH FROM (d.resolvedAt - d.createdAt)) / 86400)',
+        'avgDays',
+      )
+      .where('d.resolvedAt IS NOT NULL')
+      .getRawOne<{ avgDays: string | null }>();
+
+    const refundRow = await this.disputeRepo
+      .createQueryBuilder('d')
+      .select('COALESCE(SUM(d.refundAmount), 0)', 'total')
+      .where('d.refundAmount IS NOT NULL')
+      .getRawOne<{ total: string }>();
+
+    return {
+      total,
+      byStatus,
+      avgResolutionDays: resolutionRow?.avgDays != null ? Number(resolutionRow.avgDays) : null,
+      totalRefundedAmount: Number(refundRow?.total ?? 0),
+    };
+  }
+
   async addMessage(disputeId: string, userId: string, userRole: UserRole, dto: AddMessageDto): Promise<DisputeMessage> {
     const dispute = await this.findOne(disputeId, userId, userRole);
 

@@ -185,6 +185,133 @@ export class PaymentsService {
     return { data, total };
   }
 
+  // ==========================================
+  // ADMIN
+  // ==========================================
+
+  async findAllForAdmin(params: {
+    status?: PaymentStatus | 'all';
+    paymentMethod?: PaymentMethod | 'all';
+    paymentType?: PaymentType | 'all';
+    search?: string;
+    page?: number;
+    limit?: number;
+    sort?: 'createdAt' | 'amount' | 'status' | 'paidAt';
+    order?: 'asc' | 'desc';
+  }): Promise<{ data: Payment[]; total: number }> {
+    const {
+      status,
+      paymentMethod,
+      paymentType,
+      search,
+      page = 1,
+      limit = 20,
+      sort = 'createdAt',
+      order = 'desc',
+    } = params;
+
+    const qb = this.paymentRepo
+      .createQueryBuilder('payment')
+      .leftJoinAndSelect('payment.client', 'client')
+      .leftJoinAndSelect('payment.repairer', 'repairer')
+      .leftJoinAndSelect('repairer.user', 'repairerUser')
+      .leftJoinAndSelect('payment.request', 'request')
+      .leftJoinAndSelect('request.device', 'device')
+      .leftJoinAndSelect('request.serviceType', 'serviceType');
+
+    if (status && status !== 'all') {
+      qb.andWhere('payment.status = :status', { status });
+    }
+    if (paymentMethod && paymentMethod !== 'all') {
+      qb.andWhere('payment.paymentMethod = :paymentMethod', { paymentMethod });
+    }
+    if (paymentType && paymentType !== 'all') {
+      qb.andWhere('payment.paymentType = :paymentType', { paymentType });
+    }
+    if (search) {
+      qb.andWhere(
+        '(payment.paymentNumber ILIKE :search OR payment.transactionRef ILIKE :search OR client.firstName ILIKE :search OR client.lastName ILIKE :search OR client.phone ILIKE :search)',
+        { search: `%${search}%` },
+      );
+    }
+
+    const sortColumnMap: Record<string, string> = {
+      createdAt: 'payment.createdAt',
+      amount: 'payment.amount',
+      status: 'payment.status',
+      paidAt: 'payment.paidAt',
+    };
+    const sortColumn = sortColumnMap[sort] ?? 'payment.createdAt';
+    qb.orderBy(sortColumn, order.toUpperCase() === 'ASC' ? 'ASC' : 'DESC');
+
+    qb.skip((page - 1) * limit).take(limit);
+
+    const [data, total] = await qb.getManyAndCount();
+    return { data, total };
+  }
+
+  async findOneForAdmin(id: string): Promise<Payment> {
+    const payment = await this.paymentRepo.findOne({
+      where: { id },
+      relations: [
+        'client',
+        'repairer',
+        'repairer.user',
+        'request',
+        'request.device',
+        'request.serviceType',
+      ],
+    });
+    if (!payment) {
+      throw new NotFoundException('Paiement non trouvé');
+    }
+    return payment;
+  }
+
+  async getAdminStats(): Promise<{
+    total: number;
+    byStatus: Record<string, number>;
+    revenue: { gross: number; platformFees: number; refunded: number };
+  }> {
+    const total = await this.paymentRepo.count();
+
+    const statusRows = await this.paymentRepo
+      .createQueryBuilder('p')
+      .select('p.status', 'status')
+      .addSelect('COUNT(*)', 'count')
+      .groupBy('p.status')
+      .getRawMany<{ status: string; count: string }>();
+
+    const byStatus: Record<string, number> = {};
+    for (const row of statusRows) {
+      byStatus[row.status] = Number(row.count);
+    }
+
+    const aggregates = await this.paymentRepo
+      .createQueryBuilder('p')
+      .select('COALESCE(SUM(CASE WHEN p.status = :completed THEN p.amount ELSE 0 END), 0)', 'gross')
+      .addSelect(
+        'COALESCE(SUM(CASE WHEN p.status = :completed THEN p.platformFee ELSE 0 END), 0)',
+        'platformFees',
+      )
+      .addSelect(
+        'COALESCE(SUM(CASE WHEN p.status = :refunded THEN p.amount ELSE 0 END), 0)',
+        'refunded',
+      )
+      .setParameters({ completed: PaymentStatus.COMPLETED, refunded: PaymentStatus.REFUNDED })
+      .getRawOne<{ gross: string; platformFees: string; refunded: string }>();
+
+    return {
+      total,
+      byStatus,
+      revenue: {
+        gross: Number(aggregates?.gross ?? 0),
+        platformFees: Number(aggregates?.platformFees ?? 0),
+        refunded: Number(aggregates?.refunded ?? 0),
+      },
+    };
+  }
+
   async verify(paymentId: string, clientId: string, otp?: string): Promise<Payment> {
     const queryRunner = this.dataSource.createQueryRunner();
     await queryRunner.connect();

@@ -20,6 +20,10 @@ import { Roles } from '../../common/decorators/roles.decorator';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
 import { User, UserRole, UserStatus } from '../users/entities/user.entity';
 import { VerificationStatus } from '../users/entities/repairer-profile.entity';
+import { PaymentsService } from '../payments/payments.service';
+import { PaymentStatus, PaymentMethod, PaymentType } from '../payments/entities/payment.entity';
+import { DisputesService } from '../disputes/disputes.service';
+import { DisputeStatus, DisputeReason } from '../disputes/entities/dispute.entity';
 
 @ApiTags('Admin')
 @Controller('admin')
@@ -27,7 +31,11 @@ import { VerificationStatus } from '../users/entities/repairer-profile.entity';
 @Roles(UserRole.ADMIN)
 @ApiBearerAuth()
 export class AdminController {
-  constructor(private readonly adminService: AdminService) {}
+  constructor(
+    private readonly adminService: AdminService,
+    private readonly paymentsService: PaymentsService,
+    private readonly disputesService: DisputesService,
+  ) {}
 
   // ==========================================
   // DASHBOARD
@@ -249,5 +257,110 @@ export class AdminController {
       success: true,
       message: 'Compte supprimé avec succès',
     };
+  }
+
+  // ==========================================
+  // PAYMENTS (audit / consultation)
+  // ==========================================
+
+  @Get('payments')
+  @ApiOperation({ summary: 'List all payments with filters (admin audit)' })
+  @ApiQuery({ name: 'status', required: false, enum: ['all', ...Object.values(PaymentStatus)] })
+  @ApiQuery({ name: 'paymentMethod', required: false, enum: ['all', ...Object.values(PaymentMethod)] })
+  @ApiQuery({ name: 'paymentType', required: false, enum: ['all', ...Object.values(PaymentType)] })
+  @ApiQuery({ name: 'page', required: false, type: Number })
+  @ApiQuery({ name: 'limit', required: false, type: Number })
+  @ApiQuery({ name: 'search', required: false, type: String })
+  @ApiQuery({ name: 'sort', required: false, enum: ['createdAt', 'amount', 'status', 'paidAt'] })
+  @ApiQuery({ name: 'order', required: false, enum: ['asc', 'desc'] })
+  async getPayments(
+    @Query('status') status?: string,
+    @Query('paymentMethod') paymentMethod?: string,
+    @Query('paymentType') paymentType?: string,
+    @Query('page') page?: string,
+    @Query('limit') limit?: string,
+    @Query('search') search?: string,
+    @Query('sort') sort?: string,
+    @Query('order') order?: string,
+  ) {
+    const normalizedOrder =
+      order?.toLowerCase() === 'asc'
+        ? 'asc'
+        : order?.toLowerCase() === 'desc'
+          ? 'desc'
+          : undefined;
+    return this.paymentsService.findAllForAdmin({
+      status: status as PaymentStatus | 'all' | undefined,
+      paymentMethod: paymentMethod as PaymentMethod | 'all' | undefined,
+      paymentType: paymentType as PaymentType | 'all' | undefined,
+      page: page ? parseInt(page, 10) : 1,
+      limit: limit ? parseInt(limit, 10) : 20,
+      search,
+      sort: sort as 'createdAt' | 'amount' | 'status' | 'paidAt' | undefined,
+      order: normalizedOrder,
+    });
+  }
+
+  @Get('payments/stats')
+  @ApiOperation({ summary: 'Aggregated payment stats (admin dashboard)' })
+  async getPaymentsStats() {
+    return this.paymentsService.getAdminStats();
+  }
+
+  @Get('payments/:id')
+  @ApiOperation({ summary: 'Payment detail (admin)' })
+  async getPaymentDetail(@Param('id', ParseUUIDPipe) id: string) {
+    return this.paymentsService.findOneForAdmin(id);
+  }
+
+  // ==========================================
+  // DISPUTES (audit / consultation)
+  // ==========================================
+
+  @Get('disputes')
+  @ApiOperation({ summary: 'List all disputes with filters (admin audit)' })
+  @ApiQuery({ name: 'status', required: false, enum: ['all', ...Object.values(DisputeStatus)] })
+  @ApiQuery({ name: 'reason', required: false, enum: ['all', ...Object.values(DisputeReason)] })
+  @ApiQuery({ name: 'page', required: false, type: Number })
+  @ApiQuery({ name: 'limit', required: false, type: Number })
+  @ApiQuery({ name: 'search', required: false, type: String })
+  @ApiQuery({ name: 'sort', required: false, enum: ['createdAt', 'status', 'resolvedAt'] })
+  @ApiQuery({ name: 'order', required: false, enum: ['asc', 'desc'] })
+  async getDisputes(
+    @Query('status') status?: string,
+    @Query('reason') reason?: string,
+    @Query('page') page?: string,
+    @Query('limit') limit?: string,
+    @Query('search') search?: string,
+    @Query('sort') sort?: string,
+    @Query('order') order?: string,
+  ) {
+    const normalizedOrder =
+      order?.toLowerCase() === 'asc'
+        ? 'asc'
+        : order?.toLowerCase() === 'desc'
+          ? 'desc'
+          : undefined;
+    return this.disputesService.findAllForAdmin({
+      status: status as DisputeStatus | 'all' | undefined,
+      reason: reason as DisputeReason | 'all' | undefined,
+      page: page ? parseInt(page, 10) : 1,
+      limit: limit ? parseInt(limit, 10) : 20,
+      search,
+      sort: sort as 'createdAt' | 'status' | 'resolvedAt' | undefined,
+      order: normalizedOrder,
+    });
+  }
+
+  @Get('disputes/stats')
+  @ApiOperation({ summary: 'Aggregated dispute stats (admin dashboard)' })
+  async getDisputesStats() {
+    return this.disputesService.getAdminStats();
+  }
+
+  @Get('disputes/:id')
+  @ApiOperation({ summary: 'Dispute detail (admin)' })
+  async getDisputeDetail(@Param('id', ParseUUIDPipe) id: string) {
+    return this.disputesService.findOneForAdmin(id);
   }
 }

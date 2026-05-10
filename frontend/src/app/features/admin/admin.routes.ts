@@ -22,4 +22,18 @@ export const ADMIN_ROUTES: Routes = [
         (m) => m.UsersManagementComponent
       ),
   },
+  {
+    path: 'payments',
+    loadComponent: () =>
+      import('./components/payments-admin/payments-admin.component').then(
+        (m) => m.PaymentsAdminComponent
+      ),
+  },
+  {
+    path: 'disputes',
+    loadComponent: () =>
+      import('./components/disputes-admin/disputes-admin.component').then(
+        (m) => m.DisputesAdminComponent
+      ),
+  },
 ];
