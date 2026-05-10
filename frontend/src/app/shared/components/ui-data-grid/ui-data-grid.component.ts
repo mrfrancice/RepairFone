@@ -6,9 +6,11 @@ import {
   ContentChildren,
   EventEmitter,
   Input,
+  OnChanges,
   OnDestroy,
   Output,
   QueryList,
+  SimpleChanges,
   computed,
   inject,
   signal,
@@ -543,7 +545,7 @@ export interface DataGridPageEvent {
     }
   `],
 })
-export class UiDataGridComponent<T = any> implements AfterContentInit, OnDestroy {
+export class UiDataGridComponent<T = any> implements AfterContentInit, OnChanges, OnDestroy {
   private readonly cdr = inject(ChangeDetectorRef);
   private static instanceCount = 0;
 
@@ -619,9 +621,18 @@ export class UiDataGridComponent<T = any> implements AfterContentInit, OnDestroy
 
   readonly selectId = `ui-data-grid-page-size-${++UiDataGridComponent.instanceCount}`;
 
+  /**
+   * Miroir signal de l'@Input data. Synchronisé via ngOnChanges.
+   * NÉCESSAIRE : `computed()` ne suit que les signaux. Sans ce miroir,
+   * les `paginatedData()` / `sortedData()` ne ré-évaluent pas quand
+   * le parent met à jour `[data]` (cas serverSide après filtre/tri).
+   */
+  private readonly dataSignal = signal<T[]>([]);
+  private readonly totalSignal = signal<number | undefined>(undefined);
+
   // Computed
   readonly totalItems = computed(() =>
-    this.serverSide ? (this.total ?? 0) : this.data.length
+    this.serverSide ? (this.totalSignal() ?? 0) : this.dataSignal().length
   );
 
   readonly totalPages = computed(() =>
@@ -629,11 +640,12 @@ export class UiDataGridComponent<T = any> implements AfterContentInit, OnDestroy
   );
 
   readonly sortedData = computed(() => {
-    if (this.serverSide) return this.data;
+    const data = this.dataSignal();
+    if (this.serverSide) return data;
     const field = this.sortField();
-    if (!field) return this.data;
+    if (!field) return data;
     const dir = this.sortDir() === 'asc' ? 1 : -1;
-    const copy = [...this.data];
+    const copy = [...data];
     copy.sort((a, b) => {
       const av = this.getValue(a, field);
       const bv = this.getValue(b, field);
@@ -651,10 +663,19 @@ export class UiDataGridComponent<T = any> implements AfterContentInit, OnDestroy
   });
 
   readonly paginatedData = computed(() => {
-    if (this.serverSide) return this.data;
+    if (this.serverSide) return this.dataSignal();
     const start = (this.currentPage() - 1) * this._pageSize();
     return this.sortedData().slice(start, start + this._pageSize());
   });
+
+  ngOnChanges(changes: SimpleChanges): void {
+    if (changes['data']) {
+      this.dataSignal.set(this.data ?? []);
+    }
+    if (changes['total']) {
+      this.totalSignal.set(this.total);
+    }
+  }
 
   readonly rangeStart = computed(() => {
     const total = this.totalItems();
