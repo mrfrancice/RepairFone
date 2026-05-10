@@ -174,15 +174,15 @@
 
 ### P5.5 — Database (2-3 jours)
 
-#### Ticket #P5.5.1 — Index DB ✅ partiellement fait
-Index composites ajoutés via migration `1736800000000-AddPerformanceIndexes.ts` :
-- `idx_users_role_status`, `idx_users_created_at`
-- `idx_repair_requests_(status|client|repairer)_created`
-- `idx_payments_(status|client|repairer)_created`
-
-Reste à ajouter :
-- `quotes.requestId`, `quotes.repairerId`, `quotes.status`
-- `notifications.userId`, `notifications.isRead`
+#### Ticket #P5.5.1 — Index DB ✅ fait
+Index composites ajoutés via deux migrations idempotentes :
+- `1736800000000-AddPerformanceIndexes.ts` :
+  - `idx_users_role_status`, `idx_users_created_at`
+  - `idx_repair_requests_(status|client|repairer)_created`
+  - `idx_payments_(status|client|repairer)_created`
+- `1736810000000-AddQuotesNotificationsIndexes.ts` :
+  - `idx_quotes_(repairer_status|status_created|request_created)`
+  - `idx_notifications_(user_read|user_created)`
 
 #### Ticket #P5.5.2 — Migrations TypeORM versionnées ✅ partiellement fait
 - ✅ `synchronize` forcé à `false` en production (`database.config.ts`)
