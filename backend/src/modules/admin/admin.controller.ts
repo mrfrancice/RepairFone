@@ -173,19 +173,31 @@ export class AdminController {
   @ApiQuery({ name: 'page', required: false, type: Number })
   @ApiQuery({ name: 'limit', required: false, type: Number })
   @ApiQuery({ name: 'search', required: false, type: String })
+  @ApiQuery({ name: 'sort', required: false, enum: ['createdAt', 'firstName', 'role', 'status'] })
+  @ApiQuery({ name: 'order', required: false, enum: ['asc', 'desc'] })
   async getUsers(
     @Query('role') role?: string,
     @Query('status') status?: string,
     @Query('page') page?: string,
     @Query('limit') limit?: string,
     @Query('search') search?: string,
+    @Query('sort') sort?: string,
+    @Query('order') order?: string,
   ) {
+    const normalizedOrder =
+      order?.toLowerCase() === 'asc'
+        ? 'asc'
+        : order?.toLowerCase() === 'desc'
+          ? 'desc'
+          : undefined;
     return this.adminService.getUsers({
       role: role as UserRole | 'all',
       status: status as UserStatus | 'all',
       page: page ? parseInt(page, 10) : 1,
       limit: limit ? parseInt(limit, 10) : 20,
       search,
+      sort: sort as 'createdAt' | 'firstName' | 'role' | 'status' | undefined,
+      order: normalizedOrder,
     });
   }
 

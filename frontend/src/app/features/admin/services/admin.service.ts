@@ -197,6 +197,8 @@ export class AdminService {
     page?: number;
     limit?: number;
     search?: string;
+    sort?: 'createdAt' | 'firstName' | 'role' | 'status';
+    order?: 'asc' | 'desc';
   }): Promise<UsersListResponse> {
     return firstValueFrom(
       this.api.get<UsersListResponse>('/admin/users', params)

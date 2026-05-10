@@ -399,7 +399,15 @@ export class AdminService {
    * Get all users with filters
    */
   async getUsers(params: UserListParams): Promise<AdminUserListResponse> {
-    const { role = 'all', status = 'all', page = 1, limit = 20, search } = params;
+    const {
+      role = 'all',
+      status = 'all',
+      page = 1,
+      limit = 20,
+      search,
+      sort = 'createdAt',
+      order = 'desc',
+    } = params;
 
     const queryBuilder = this.userRepository
       .createQueryBuilder('user')
@@ -420,7 +428,16 @@ export class AdminService {
       );
     }
 
-    queryBuilder.orderBy('user.createdAt', 'DESC');
+    // Whitelist des colonnes triables (évite l'injection)
+    const sortColumnMap: Record<string, string> = {
+      createdAt: 'user.createdAt',
+      firstName: 'user.firstName',
+      role: 'user.role',
+      status: 'user.status',
+    };
+    const sortColumn = sortColumnMap[sort] ?? 'user.createdAt';
+    const sortDirection = order.toUpperCase() === 'ASC' ? 'ASC' : 'DESC';
+    queryBuilder.orderBy(sortColumn, sortDirection as 'ASC' | 'DESC');
 
     const total = await queryBuilder.getCount();
     const users = await queryBuilder

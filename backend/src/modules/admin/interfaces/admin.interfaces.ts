@@ -132,12 +132,17 @@ export interface RepairerListParams {
 /**
  * Parameters for listing users
  */
+export type UserListSortField = 'createdAt' | 'firstName' | 'role' | 'status';
+export type ListSortOrder = 'asc' | 'desc';
+
 export interface UserListParams {
   role?: UserRole | 'all';
   status?: UserStatus | 'all';
   page?: number;
   limit?: number;
   search?: string;
+  sort?: UserListSortField;
+  order?: ListSortOrder;
 }
 
 /**

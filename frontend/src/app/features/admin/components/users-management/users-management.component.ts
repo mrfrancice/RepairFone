@@ -8,6 +8,8 @@ import { HeaderSearchComponent } from '../../../../shared/components/header-sear
 import {
   UiDataGridComponent,
   UiDataGridColumnComponent,
+  DataGridPageEvent,
+  DataGridSortEvent,
 } from '../../../../shared/components/ui-data-grid';
 import { InitialsPipe } from '../../../../shared/pipes/initials.pipe';
 import { StatusLabelsService, UserStatus } from '../../../../shared/services/status-labels.service';
@@ -15,6 +17,15 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 
 type RoleFilter = 'all' | 'client' | 'repairer';
 type StatusFilter = 'all' | 'pending' | 'active' | 'suspended' | 'deactivated';
+type UsersSortField = 'createdAt' | 'firstName' | 'role' | 'status';
+
+const SORT_FIELD_MAP: Record<string, UsersSortField> = {
+  user: 'firstName',
+  firstName: 'firstName',
+  role: 'role',
+  status: 'status',
+  createdAt: 'createdAt',
+};
 
 @Component({
   selector: 'app-users-management',
@@ -153,8 +164,13 @@ type StatusFilter = 'all' | 'pending' | 'active' | 'suspended' | 'deactivated';
         } @else {
           <ui-data-grid
             [data]="users()"
-            [pageSize]="10"
+            [serverSide]="true"
+            [total]="total()"
+            [loading]="isLoading()"
+            [pageSize]="pageSize()"
             [pageSizeOptions]="[10, 25, 50, 100]"
+            (pageChange)="onPageChange($event)"
+            (sortChange)="onSortChange($event)"
             emptyMessage="Aucun utilisateur"
           >
             <ui-data-grid-column key="user" header="Utilisateur" field="firstName" [sortable]="true">
@@ -1136,6 +1152,9 @@ export class UsersManagementComponent implements OnInit {
   readonly users = signal<UserForAdmin[]>([]);
   readonly total = signal(0);
   readonly page = signal(1);
+  readonly pageSize = signal(10);
+  readonly sortField = signal<UsersSortField>('createdAt');
+  readonly sortOrder = signal<'asc' | 'desc'>('desc');
   readonly roleFilter = signal<RoleFilter>('all');
   readonly statusFilter = signal<StatusFilter>('all');
 
@@ -1171,8 +1190,10 @@ export class UsersManagementComponent implements OnInit {
         role: this.roleFilter() === 'all' ? undefined : this.roleFilter(),
         status: this.statusFilter() === 'all' ? undefined : this.statusFilter(),
         page: this.page(),
-        limit: 20,
+        limit: this.pageSize(),
         search: this.searchQuery || undefined,
+        sort: this.sortField(),
+        order: this.sortOrder(),
       });
       this.users.set(result.data);
       this.total.set(result.total);
@@ -1181,6 +1202,20 @@ export class UsersManagementComponent implements OnInit {
     } finally {
       this.isLoading.set(false);
     }
+  }
+
+  onPageChange(event: DataGridPageEvent): void {
+    this.page.set(event.page);
+    this.pageSize.set(event.pageSize);
+    this.loadUsers();
+  }
+
+  onSortChange(event: DataGridSortEvent): void {
+    const mapped = SORT_FIELD_MAP[event.field] ?? 'createdAt';
+    this.sortField.set(mapped);
+    this.sortOrder.set(event.direction);
+    this.page.set(1);
+    this.loadUsers();
   }
 
   setRoleFilter(role: RoleFilter): void {
