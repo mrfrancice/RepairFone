@@ -6,6 +6,11 @@ export const environment = {
     maxLimit: 100,
     defaultPageSize: 10,
   },
+  sentry: {
+    dsn: '',
+    environment: 'production',
+    tracesSampleRate: 0.05,
+  },
   firebase: {
     apiKey: 'YOUR_FIREBASE_API_KEY',
     authDomain: 'YOUR_PROJECT_ID.firebaseapp.com',

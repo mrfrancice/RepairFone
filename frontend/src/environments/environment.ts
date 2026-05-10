@@ -7,6 +7,12 @@ export const environment = {
     maxLimit: 100,            // limit max accepté par les endpoints paginés
     defaultPageSize: 10,      // page size par défaut côté UI
   },
+  // Monitoring (Sentry) — activé seulement si dsn défini
+  sentry: {
+    dsn: '',                  // ex: 'https://xxx@xxx.ingest.sentry.io/yyy'
+    environment: 'development',
+    tracesSampleRate: 0.1,
+  },
   firebase: {
     apiKey: 'YOUR_FIREBASE_API_KEY',
     authDomain: 'YOUR_PROJECT_ID.firebaseapp.com',
