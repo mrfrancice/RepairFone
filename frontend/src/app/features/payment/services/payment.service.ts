@@ -1,5 +1,7 @@
 import { Injectable, inject, signal } from '@angular/core';
+import { HttpClient } from '@angular/common/http';
 import { firstValueFrom } from 'rxjs';
+import { environment } from '../../../../environments/environment';
 import { ApiService } from '../../../core/services/api.service';
 import { ChipVariant } from '../../../shared/components/ui-chip/ui-chip.component';
 
@@ -75,6 +77,7 @@ export interface PaymentMethodInfo {
 @Injectable({ providedIn: 'root' })
 export class PaymentService {
   private readonly api = inject(ApiService);
+  private readonly http = inject(HttpClient);
 
   readonly isLoading = signal(false);
   readonly error = signal<string | null>(null);
@@ -204,6 +207,27 @@ export class PaymentService {
     return firstValueFrom(
       this.api.post<Payment>(`/payments/${paymentId}/refund`, { reason })
     );
+  }
+
+  /**
+   * Télécharge le reçu PDF d'un paiement complété.
+   * Récupère le blob via HttpClient (responseType: 'blob') puis déclenche
+   * un download via une URL temporaire.
+   */
+  async downloadReceipt(paymentId: string): Promise<void> {
+    const blob = await firstValueFrom(
+      this.http.get(`${environment.apiUrl}/payments/${paymentId}/receipt`, {
+        responseType: 'blob',
+      })
+    );
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `recu-${paymentId}.pdf`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
   }
 
   getStatusLabel(status: PaymentStatus): string {

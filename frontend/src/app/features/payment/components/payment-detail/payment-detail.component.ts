@@ -662,7 +662,13 @@ export class PaymentDetailComponent implements OnInit {
     });
   }
 
-  downloadReceipt(): void {
-    // TODO: In production, this would generate/download a PDF receipt
+  async downloadReceipt(): Promise<void> {
+    const id = this.payment()?.id;
+    if (!id) return;
+    try {
+      await this.paymentService.downloadReceipt(id);
+    } catch (err: any) {
+      this.error.set(err?.error?.message || 'Impossible de télécharger le reçu');
+    }
   }
 }
