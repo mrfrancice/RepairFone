@@ -1467,11 +1467,17 @@ export class RequestManagementComponent implements OnInit {
   }
 
   getInProgressCount(): number {
-    return this.store.requests().filter(r => r.status === 'in_progress').length;
+    // En cours = acceptée + en réparation + en attente de pièces
+    return this.store.requests().filter(r =>
+      r.status === 'accepted' || r.status === 'in_progress' || r.status === 'awaiting_parts'
+    ).length;
   }
 
   getCompletedCount(): number {
-    return this.store.requests().filter(r => r.status === 'completed').length;
+    // Terminées = réparation finie OU livrée au client
+    return this.store.requests().filter(r =>
+      r.status === 'completed' || r.status === 'delivered'
+    ).length;
   }
 
   getFilterIcon(filter: RequestFilterStatus): string {

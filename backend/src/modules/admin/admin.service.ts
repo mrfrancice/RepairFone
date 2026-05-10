@@ -370,9 +370,17 @@ export class AdminService {
 
     userCounts.forEach((item) => {
       const count = parseInt(item.count, 10);
-      users.total += count;
-      if (item.role === 'client') users.clients = count;
-      if (item.role === 'repairer') users.repairers = count;
+      // Cohérence avec /admin/users (qui exclut les admins via filtre SQL).
+      // total = clients + réparateurs uniquement, l'admin n'est pas un
+      // utilisateur "métier" qu'on liste.
+      if (item.role === 'client') {
+        users.clients = count;
+        users.total += count;
+      }
+      if (item.role === 'repairer') {
+        users.repairers = count;
+        users.total += count;
+      }
     });
 
     statusCounts.forEach((item) => {

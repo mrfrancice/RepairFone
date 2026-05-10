@@ -258,6 +258,13 @@ interface Problem {
           </div>
         }
 
+        <!-- Hint UX : explique pourquoi le bouton est disabled -->
+        @if (!canSearch() && (selectedCategory() && selectedProblem())) {
+          <p class="search-hint">
+            📍 Activez votre localisation ci-dessus pour voir les réparateurs proches.
+          </p>
+        }
+
         <!-- Search Button -->
         <button
           class="btn btn-primary btn-block btn-large"
@@ -781,6 +788,16 @@ interface Problem {
       border: none;
       cursor: pointer;
       transition: all 0.2s;
+    }
+
+    .search-hint {
+      background: #FFF8E1;
+      color: #E65100;
+      padding: 0.75rem 1rem;
+      border-radius: 12px;
+      font-size: 0.875rem;
+      border-left: 4px solid #FFB74D;
+      margin-bottom: 0.75rem;
     }
 
     .btn-primary {

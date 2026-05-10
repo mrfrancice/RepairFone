@@ -8,13 +8,14 @@ import { LocationService, City, Commune, Quarter } from '../../../../core/servic
 import { SettingsService } from '../../../../core/services/settings.service';
 import { UiHeaderComponent } from '../../../../shared/components/ui-header/ui-header.component';
 import { FormatDatePipe } from '../../../../shared/pipes/format-date.pipe';
+import { PhoneFormatPipe } from '../../../../shared/pipes/phone-format.pipe';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 
 @Component({
   selector: 'app-profile-edit',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [CommonModule, FormsModule, ReactiveFormsModule, UiHeaderComponent, FormatDatePipe],
+  imports: [CommonModule, FormsModule, ReactiveFormsModule, UiHeaderComponent, FormatDatePipe, PhoneFormatPipe],
   template: `
     <div class="edit-container">
       <!-- Header avec gradient orange -->
@@ -155,7 +156,7 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
                     <line x1="12" y1="18" x2="12.01" y2="18"/>
                   </svg>
                 </div>
-                <span>+225 {{ user()?.phone }}</span>
+                <span>{{ user()?.phone | phoneFormat }}</span>
                 <span class="readonly-badge">Non modifiable</span>
               </div>
             </div>

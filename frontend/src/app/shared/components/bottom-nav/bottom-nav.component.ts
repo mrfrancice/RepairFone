@@ -48,6 +48,39 @@ import { AuthStore } from '../../../core/stores/auth.store';
           </span>
           <span class="nav-label">Demandes</span>
         </a>
+
+        <!-- Client connecté : Mes devis -->
+        <a routerLink="/quotes"
+           routerLinkActive="active"
+           #quotesLink="routerLinkActive"
+           class="nav-item"
+           aria-label="Mes devis"
+           [attr.aria-current]="quotesLink.isActive ? 'page' : null">
+          <span class="nav-icon-wrapper" aria-hidden="true">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M9 11H1l8-8 8 8h-8v8z" transform="rotate(45 12 12)"/>
+              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+              <line x1="8" y1="13" x2="16" y2="13"/>
+              <line x1="8" y1="17" x2="16" y2="17"/>
+            </svg>
+          </span>
+          <span class="nav-label">Devis</span>
+        </a>
+
+        <!-- Client connecté : Messagerie -->
+        <a routerLink="/chat"
+           routerLinkActive="active"
+           #chatLink="routerLinkActive"
+           class="nav-item"
+           aria-label="Messages"
+           [attr.aria-current]="chatLink.isActive ? 'page' : null">
+          <span class="nav-icon-wrapper" aria-hidden="true">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+            </svg>
+          </span>
+          <span class="nav-label">Messages</span>
+        </a>
       }
 
       @if (authStore.isRepairer()) {
@@ -67,6 +100,39 @@ import { AuthStore } from '../../../core/stores/auth.store';
             </svg>
           </span>
           <span class="nav-label">Demandes</span>
+        </a>
+
+        <!-- Repairer: Mes devis envoyés -->
+        <a routerLink="/quotes"
+           routerLinkActive="active"
+           #repairerQuotesLink="routerLinkActive"
+           class="nav-item"
+           aria-label="Mes devis"
+           [attr.aria-current]="repairerQuotesLink.isActive ? 'page' : null">
+          <span class="nav-icon-wrapper" aria-hidden="true">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+              <polyline points="14 2 14 8 20 8"/>
+              <line x1="8" y1="13" x2="16" y2="13"/>
+              <line x1="8" y1="17" x2="16" y2="17"/>
+            </svg>
+          </span>
+          <span class="nav-label">Devis</span>
+        </a>
+
+        <!-- Repairer: Messagerie -->
+        <a routerLink="/chat"
+           routerLinkActive="active"
+           #repairerChatLink="routerLinkActive"
+           class="nav-item"
+           aria-label="Messages"
+           [attr.aria-current]="repairerChatLink.isActive ? 'page' : null">
+          <span class="nav-icon-wrapper" aria-hidden="true">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+            </svg>
+          </span>
+          <span class="nav-label">Messages</span>
         </a>
       }
 

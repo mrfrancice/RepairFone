@@ -113,8 +113,8 @@ import { UiHeaderComponent } from '../../../../shared/components/ui-header/ui-he
                 </svg>
               </div>
               <div class="alert-content">
-                <strong>{{ stats()?.pending }} reparateur(s) en attente</strong>
-                <span>Cliquez pour verifier les demandes</span>
+                <strong>{{ stats()?.pending }} réparateur(s) en attente</strong>
+                <span>Cliquez pour vérifier les demandes</span>
               </div>
               <svg class="alert-arrow" width="20" height="20" viewBox="0 0 24 24" fill="none">
                 <path d="M9 18L15 12L9 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
@@ -202,10 +202,10 @@ import { UiHeaderComponent } from '../../../../shared/components/ui-header/ui-he
                     <span class="action-badge">{{ stats()?.pending }}</span>
                   }
                 </div>
-                <h3>Verifier les reparateurs</h3>
+                <h3>Vérifier les réparateurs</h3>
                 <p>Valider ou rejeter les demandes d'inscription</p>
                 <span class="action-link">
-                  Acceder
+                  Accéder
                   <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
                     <path d="M5 12H19M19 12L12 5M19 12L12 19" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
                   </svg>
@@ -220,10 +220,10 @@ import { UiHeaderComponent } from '../../../../shared/components/ui-header/ui-he
                     </svg>
                   </div>
                 </div>
-                <h3>Gerer les reparateurs</h3>
-                <p>Voir et gerer tous les profils</p>
+                <h3>Gérer les réparateurs</h3>
+                <p>Voir et gérer tous les profils</p>
                 <span class="action-link">
-                  Acceder
+                  Accéder
                   <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
                     <path d="M5 12H19M19 12L12 5M19 12L12 19" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
                   </svg>
@@ -238,10 +238,10 @@ import { UiHeaderComponent } from '../../../../shared/components/ui-header/ui-he
                     </svg>
                   </div>
                 </div>
-                <h3>Gerer les utilisateurs</h3>
+                <h3>Gérer les utilisateurs</h3>
                 <p>Activer ou suspendre des comptes</p>
                 <span class="action-link">
-                  Acceder
+                  Accéder
                   <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
                     <path d="M5 12H19M19 12L12 5M19 12L12 19" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
                   </svg>
@@ -260,7 +260,7 @@ import { UiHeaderComponent } from '../../../../shared/components/ui-header/ui-he
                 <h3>Auditer les paiements</h3>
                 <p>Volume, statuts et remboursements</p>
                 <span class="action-link">
-                  Acceder
+                  Accéder
                   <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
                     <path d="M5 12H19M19 12L12 5M19 12L12 19" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
                   </svg>
@@ -280,7 +280,7 @@ import { UiHeaderComponent } from '../../../../shared/components/ui-header/ui-he
                 <h3>Modérer les litiges</h3>
                 <p>Suivre et résoudre les conflits</p>
                 <span class="action-link">
-                  Acceder
+                  Accéder
                   <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
                     <path d="M5 12H19M19 12L12 5M19 12L12 19" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
                   </svg>
@@ -297,7 +297,7 @@ import { UiHeaderComponent } from '../../../../shared/components/ui-header/ui-he
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
                   <path d="M17 21V19C17 17.9391 16.5786 16.9217 15.8284 16.1716C15.0783 15.4214 14.0609 15 13 15H5C3.93913 15 2.92172 15.4214 2.17157 16.1716C1.42143 16.9217 1 17.9391 1 19V21M9 11C11.2091 11 13 9.20914 13 7C13 4.79086 11.2091 3 9 3C6.79086 3 5 4.79086 5 7C5 9.20914 6.79086 11 9 11Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
                 </svg>
-                Repartition utilisateurs
+                Répartition utilisateurs
               </h3>
               <div class="stat-bars">
                 <div class="stat-bar-item">
@@ -336,7 +336,7 @@ import { UiHeaderComponent } from '../../../../shared/components/ui-header/ui-he
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
                   <path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
                 </svg>
-                Statuts reparateurs
+                Statuts réparateurs
               </h3>
               <div class="status-list">
                 <a routerLink="/admin/repairers" [queryParams]="{status: 'pending'}" class="status-item">
@@ -346,17 +346,17 @@ import { UiHeaderComponent } from '../../../../shared/components/ui-header/ui-he
                 </a>
                 <a routerLink="/admin/repairers" [queryParams]="{status: 'under_review'}" class="status-item">
                   <span class="status-dot review"></span>
-                  <span class="status-label">En revision</span>
+                  <span class="status-label">En révision</span>
                   <span class="status-count">{{ stats()?.underReview || 0 }}</span>
                 </a>
                 <a routerLink="/admin/repairers" [queryParams]="{status: 'verified'}" class="status-item">
                   <span class="status-dot verified"></span>
-                  <span class="status-label">Verifies</span>
+                  <span class="status-label">Vérifiés</span>
                   <span class="status-count">{{ stats()?.verified || 0 }}</span>
                 </a>
                 <a routerLink="/admin/repairers" [queryParams]="{status: 'rejected'}" class="status-item">
                   <span class="status-dot rejected"></span>
-                  <span class="status-label">Rejetes</span>
+                  <span class="status-label">Rejetés</span>
                   <span class="status-count">{{ stats()?.rejected || 0 }}</span>
                 </a>
                 <a routerLink="/admin/repairers" [queryParams]="{status: 'suspended'}" class="status-item">
