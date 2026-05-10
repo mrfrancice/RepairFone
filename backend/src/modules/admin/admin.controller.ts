@@ -10,6 +10,7 @@ import {
   ParseUUIDPipe,
   HttpCode,
   HttpStatus,
+  BadRequestException,
 } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiBearerAuth, ApiQuery } from '@nestjs/swagger';
 import { AdminService } from './admin.service';
@@ -23,7 +24,8 @@ import { VerificationStatus } from '../users/entities/repairer-profile.entity';
 import { PaymentsService } from '../payments/payments.service';
 import { PaymentStatus, PaymentMethod, PaymentType } from '../payments/entities/payment.entity';
 import { DisputesService } from '../disputes/disputes.service';
-import { DisputeStatus, DisputeReason } from '../disputes/entities/dispute.entity';
+import type { ResolveDisputeDto } from '../disputes/disputes.service';
+import { DisputeStatus, DisputeReason, DisputeResolution } from '../disputes/entities/dispute.entity';
 
 @ApiTags('Admin')
 @Controller('admin')
@@ -362,5 +364,86 @@ export class AdminController {
   @ApiOperation({ summary: 'Dispute detail (admin)' })
   async getDisputeDetail(@Param('id', ParseUUIDPipe) id: string) {
     return this.disputesService.findOneForAdmin(id);
+  }
+
+  // ==========================================
+  // ADMIN MODERATION ACTIONS
+  // ==========================================
+
+  @Post('disputes/:id/note')
+  @HttpCode(HttpStatus.CREATED)
+  @ApiOperation({ summary: 'Ajouter une note interne admin (apparaît dans le fil)' })
+  async addDisputeNote(
+    @Param('id', ParseUUIDPipe) id: string,
+    @CurrentUser() user: User,
+    @Body() body: { message: string },
+  ) {
+    if (!body?.message || !body.message.trim()) {
+      throw new BadRequestException('Message obligatoire');
+    }
+    return this.disputesService.addMessage(id, user.id, UserRole.ADMIN, {
+      message: body.message.trim(),
+    });
+  }
+
+  @Patch('disputes/:id/resolve')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Résoudre un litige (statut + résolution + notes + refund optionnel)' })
+  async resolveDispute(
+    @Param('id', ParseUUIDPipe) id: string,
+    @CurrentUser() user: User,
+    @Body() body: {
+      resolution: DisputeResolution;
+      notes?: string;
+      refundAmount?: number;
+    },
+  ) {
+    if (!body?.resolution || !Object.values(DisputeResolution).includes(body.resolution)) {
+      throw new BadRequestException('Résolution invalide');
+    }
+    const dto: ResolveDisputeDto = {
+      resolution: body.resolution,
+      notes: body.notes,
+      refundAmount: body.refundAmount,
+    };
+    return this.disputesService.resolve(id, user.id, dto);
+  }
+
+  @Post('payments/:id/refund')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Refund manuel (admin) — marque REFUNDED, n\'appelle pas le gateway' })
+  async refundPayment(
+    @Param('id', ParseUUIDPipe) id: string,
+    @CurrentUser() user: User,
+    @Body() body: { reason: string },
+  ) {
+    if (!body?.reason || !body.reason.trim()) {
+      throw new BadRequestException('Raison du remboursement obligatoire');
+    }
+    return this.paymentsService.adminRefund(id, user.id, body.reason.trim());
+  }
+
+  @Patch('payments/:id/block')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Bloquer un paiement (suspect, en attente de vérification)' })
+  async blockPayment(
+    @Param('id', ParseUUIDPipe) id: string,
+    @CurrentUser() user: User,
+    @Body() body: { reason: string },
+  ) {
+    if (!body?.reason || !body.reason.trim()) {
+      throw new BadRequestException('Raison du blocage obligatoire');
+    }
+    return this.paymentsService.adminBlock(id, user.id, body.reason.trim());
+  }
+
+  @Patch('payments/:id/unblock')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Débloquer un paiement précédemment bloqué' })
+  async unblockPayment(
+    @Param('id', ParseUUIDPipe) id: string,
+    @CurrentUser() user: User,
+  ) {
+    return this.paymentsService.adminUnblock(id, user.id);
   }
 }

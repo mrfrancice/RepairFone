@@ -256,8 +256,104 @@ const SORT_FIELD_MAP: Record<string, SortField> = {
                   }
                 </dl>
               </section>
+
+              <!-- ==================== ACTIONS ADMIN ==================== -->
+              @if (d.status !== 'resolved' && d.status !== 'closed') {
+                <section class="admin-actions">
+                  <h3>Actions admin</h3>
+
+                  <!-- Note interne -->
+                  <div class="note-form">
+                    <label>Ajouter une note (publiée dans le fil)</label>
+                    <textarea
+                      [(ngModel)]="newNote"
+                      placeholder="Note interne ou réponse au client / réparateur..."
+                      rows="2"
+                      [disabled]="processingAction()"
+                    ></textarea>
+                    <button
+                      class="btn btn-outline"
+                      [disabled]="!newNote.trim() || processingAction()"
+                      (click)="submitNote(d.id)"
+                    >
+                      Publier la note
+                    </button>
+                  </div>
+
+                  <button class="btn btn-primary btn-block" (click)="openResolveModal()">
+                    Résoudre le litige
+                  </button>
+                </section>
+              }
             </div>
           </aside>
+        </div>
+      }
+
+      <!-- ==================== MODAL RÉSOLUTION ==================== -->
+      @if (showResolveModal()) {
+        <div class="modal-overlay" (click)="closeResolveModal()">
+          <div class="modal" (click)="$event.stopPropagation()">
+            <header class="modal-header">
+              <h3>Résoudre le litige</h3>
+              <button class="close-btn" (click)="closeResolveModal()" aria-label="Fermer">×</button>
+            </header>
+            <div class="modal-body">
+              <div class="form-group">
+                <label>Décision</label>
+                <select [(ngModel)]="resolveForm.resolution" [disabled]="processingAction()">
+                  <option value="">— Sélectionnez —</option>
+                  <option value="refund_full">Remboursement intégral</option>
+                  <option value="refund_partial">Remboursement partiel</option>
+                  <option value="redo_repair">Reprise de la réparation</option>
+                  <option value="no_action">Sans suite</option>
+                  <option value="other">Autre</option>
+                </select>
+              </div>
+
+              @if (resolveForm.resolution === 'refund_partial' || resolveForm.resolution === 'refund_full') {
+                <div class="form-group">
+                  <label>Montant remboursé (FCFA)</label>
+                  <input
+                    type="number"
+                    [(ngModel)]="resolveForm.refundAmount"
+                    placeholder="ex: 5000"
+                    [disabled]="processingAction()"
+                    min="0"
+                  />
+                </div>
+              }
+
+              <div class="form-group">
+                <label>Notes de résolution</label>
+                <textarea
+                  [(ngModel)]="resolveForm.notes"
+                  rows="4"
+                  placeholder="Justifie la décision..."
+                  [disabled]="processingAction()"
+                ></textarea>
+              </div>
+
+              @if (resolveError()) {
+                <p class="error-msg">{{ resolveError() }}</p>
+              }
+            </div>
+            <footer class="modal-footer">
+              <button class="btn btn-outline" (click)="closeResolveModal()" [disabled]="processingAction()">
+                Annuler
+              </button>
+              <button
+                class="btn btn-primary"
+                [disabled]="!resolveForm.resolution || processingAction()"
+                (click)="submitResolve()"
+              >
+                @if (processingAction()) {
+                  <span class="spinner-small"></span>
+                }
+                Confirmer la résolution
+              </button>
+            </footer>
+          </div>
         </div>
       }
     </div>
@@ -375,6 +471,59 @@ const SORT_FIELD_MAP: Record<string, SortField> = {
     .message.client { background: #E8F5E9; }
     .msg-meta { display: flex; justify-content: space-between; margin-bottom: 0.375rem; font-size: 0.75rem; color: #6b7280; }
     .message p { font-size: 0.8125rem; margin: 0; }
+
+    /* Admin actions in drawer */
+    .admin-actions { padding-top: 1rem; border-top: 1px solid #EEEEEE; }
+    .note-form { display: flex; flex-direction: column; gap: 0.5rem; margin-bottom: 1rem; }
+    .note-form label { font-size: 0.75rem; color: #6b7280; font-weight: 600; }
+    .note-form textarea {
+      width: 100%; padding: 0.625rem; border: 2px solid #EEEEEE; border-radius: 8px;
+      font-family: inherit; font-size: 0.875rem; resize: vertical;
+    }
+    .btn { padding: 0.625rem 1rem; border-radius: 10px; font-weight: 600; border: none; cursor: pointer; font-size: 0.875rem; }
+    .btn-outline { background: white; border: 2px solid #EEEEEE; color: #374151; }
+    .btn-outline:hover:not(:disabled) { border-color: var(--color-primary-500, #FF9800); color: var(--color-primary-500, #FF9800); }
+    .btn-block { width: 100%; padding: 0.75rem; }
+    .btn:disabled { opacity: 0.6; cursor: not-allowed; }
+
+    /* Modal */
+    .modal-overlay {
+      position: fixed; inset: 0; background: rgba(0,0,0,0.6); backdrop-filter: blur(4px);
+      display: flex; align-items: center; justify-content: center; padding: 1rem;
+      z-index: 1200;
+    }
+    .modal {
+      background: white; border-radius: 20px; width: 100%; max-width: 480px;
+      overflow: hidden; box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+    }
+    .modal-header {
+      padding: 1.25rem 1.5rem;
+      background: linear-gradient(135deg, #1f2937, #374151); color: white;
+      display: flex; justify-content: space-between; align-items: center;
+    }
+    .modal-header h3 { font-size: 1.125rem; }
+    .modal-body { padding: 1.5rem; }
+    .form-group { margin-bottom: 1rem; }
+    .form-group label { display: block; font-size: 0.875rem; font-weight: 600; color: #374151; margin-bottom: 0.5rem; }
+    .form-group input, .form-group select, .form-group textarea {
+      width: 100%; padding: 0.75rem; border: 2px solid #EEEEEE;
+      border-radius: 10px; font-family: inherit; font-size: 0.9375rem;
+    }
+    .form-group input:focus, .form-group select:focus, .form-group textarea:focus {
+      outline: none; border-color: var(--color-primary-500, #FF9800);
+    }
+    .modal-footer {
+      display: flex; justify-content: flex-end; gap: 0.75rem;
+      padding: 1rem 1.5rem; background: #FAFAFA; border-top: 1px solid #EEEEEE;
+    }
+    .error-msg { color: #C62828; font-size: 0.875rem; padding: 0.5rem 0.75rem; background: #FFEBEE; border-radius: 6px; }
+    .spinner-small {
+      width: 14px; height: 14px; border: 2px solid rgba(255,255,255,0.3);
+      border-top-color: white; border-radius: 50%;
+      display: inline-block; margin-right: 0.5rem;
+      animation: spin 1s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
   `],
 })
 export class DisputesAdminComponent implements OnInit {
@@ -394,8 +543,17 @@ export class DisputesAdminComponent implements OnInit {
   readonly sortOrder = signal<'asc' | 'desc'>('desc');
   readonly statusFilter = signal<StatusFilter>('all');
   readonly selectedDispute = signal<DisputeForAdmin | null>(null);
+  readonly showResolveModal = signal(false);
+  readonly processingAction = signal(false);
+  readonly resolveError = signal<string | null>(null);
 
   searchQuery = '';
+  newNote = '';
+  resolveForm: {
+    resolution: '' | 'refund_full' | 'refund_partial' | 'redo_repair' | 'no_action' | 'other';
+    notes: string;
+    refundAmount: number | null;
+  } = { resolution: '', notes: '', refundAmount: null };
 
   readonly statusOptions = [
     { value: 'all' as StatusFilter, label: 'Tous' },
@@ -494,6 +652,57 @@ export class DisputesAdminComponent implements OnInit {
 
   closeDetail(): void {
     this.selectedDispute.set(null);
+    this.newNote = '';
+    this.closeResolveModal();
+  }
+
+  async submitNote(disputeId: string): Promise<void> {
+    if (!this.newNote.trim() || this.processingAction()) return;
+    this.processingAction.set(true);
+    try {
+      await this.adminService.addDisputeNote(disputeId, this.newNote.trim());
+      // Recharger le détail pour voir la note dans le fil
+      const refreshed = await this.adminService.getDisputeDetail(disputeId);
+      this.selectedDispute.set(refreshed);
+      this.newNote = '';
+    } catch (err: any) {
+      this.error.set(err?.error?.message || err?.message || 'Erreur publication note');
+    } finally {
+      this.processingAction.set(false);
+    }
+  }
+
+  openResolveModal(): void {
+    this.resolveForm = { resolution: '', notes: '', refundAmount: null };
+    this.resolveError.set(null);
+    this.showResolveModal.set(true);
+  }
+
+  closeResolveModal(): void {
+    this.showResolveModal.set(false);
+  }
+
+  async submitResolve(): Promise<void> {
+    const dispute = this.selectedDispute();
+    if (!dispute || !this.resolveForm.resolution || this.processingAction()) return;
+    this.processingAction.set(true);
+    this.resolveError.set(null);
+    try {
+      const updated = await this.adminService.resolveDispute(dispute.id, {
+        resolution: this.resolveForm.resolution,
+        notes: this.resolveForm.notes || undefined,
+        refundAmount: this.resolveForm.refundAmount ?? undefined,
+      });
+      this.selectedDispute.set(updated);
+      this.closeResolveModal();
+      // Refresh list + stats
+      this.loadDisputes();
+      this.loadStats();
+    } catch (err: any) {
+      this.resolveError.set(err?.error?.message || err?.message || 'Erreur lors de la résolution');
+    } finally {
+      this.processingAction.set(false);
+    }
   }
 
   fullName(p: { firstName?: string; lastName?: string } | null | undefined): string {

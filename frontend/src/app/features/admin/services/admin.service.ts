@@ -359,4 +359,45 @@ export class AdminService {
       this.api.get<DisputesAdminStats>('/admin/disputes/stats')
     );
   }
+
+  // ==========================================
+  // MODERATION ACTIONS
+  // ==========================================
+
+  async addDisputeNote(disputeId: string, message: string): Promise<any> {
+    return firstValueFrom(
+      this.api.post(`/admin/disputes/${disputeId}/note`, { message })
+    );
+  }
+
+  async resolveDispute(
+    disputeId: string,
+    payload: {
+      resolution: 'refund_full' | 'refund_partial' | 'redo_repair' | 'no_action' | 'other';
+      notes?: string;
+      refundAmount?: number;
+    },
+  ): Promise<DisputeForAdmin> {
+    return firstValueFrom(
+      this.api.patch<DisputeForAdmin>(`/admin/disputes/${disputeId}/resolve`, payload)
+    );
+  }
+
+  async refundPayment(paymentId: string, reason: string): Promise<PaymentForAdmin> {
+    return firstValueFrom(
+      this.api.post<PaymentForAdmin>(`/admin/payments/${paymentId}/refund`, { reason })
+    );
+  }
+
+  async blockPayment(paymentId: string, reason: string): Promise<PaymentForAdmin> {
+    return firstValueFrom(
+      this.api.patch<PaymentForAdmin>(`/admin/payments/${paymentId}/block`, { reason })
+    );
+  }
+
+  async unblockPayment(paymentId: string): Promise<PaymentForAdmin> {
+    return firstValueFrom(
+      this.api.patch<PaymentForAdmin>(`/admin/payments/${paymentId}/unblock`, {})
+    );
+  }
 }

@@ -268,6 +268,95 @@ export class PaymentsService {
     return payment;
   }
 
+  /**
+   * Refund manuel par un admin.
+   *
+   * Stratégie : on n'appelle PAS le gateway de paiement automatiquement.
+   * L'admin remboursera offline (transfert Orange Money, virement…) et
+   * utilise cet endpoint pour tracer l'acte dans la DB. C'est le mode
+   * le plus sûr pour MVP — un appel gateway raté n'est pas réversible
+   * et un appel gateway réussi à l'insu de l'admin peut créer un double
+   * débit.
+   *
+   * Pour passer à un refund automatique : injecter PaymentGatewayService
+   * et appeler `refundPayment(payment.transactionRef, amount)` avant de
+   * marquer REFUNDED. Voir ROADMAP P4.x.
+   */
+  async adminRefund(
+    paymentId: string,
+    adminId: string,
+    reason: string,
+  ): Promise<Payment> {
+    const payment = await this.paymentRepo.findOne({ where: { id: paymentId } });
+    if (!payment) {
+      throw new NotFoundException('Paiement non trouvé');
+    }
+    if (
+      payment.status !== PaymentStatus.COMPLETED &&
+      payment.status !== PaymentStatus.BLOCKED
+    ) {
+      throw new BadRequestException(
+        'Le remboursement est autorisé uniquement sur un paiement COMPLETED ou BLOCKED',
+      );
+    }
+    payment.status = PaymentStatus.REFUNDED;
+    payment.refundedAt = new Date();
+    payment.refundReason = reason;
+    // Trace de l'admin qui a déclenché le refund (metadata libre).
+    payment.metadata = {
+      ...(payment.metadata ?? {}),
+      refundedByAdminId: adminId,
+      refundedAt: new Date().toISOString(),
+    };
+    await this.paymentRepo.save(payment);
+    return this.findOneForAdmin(paymentId);
+  }
+
+  async adminBlock(
+    paymentId: string,
+    adminId: string,
+    reason: string,
+  ): Promise<Payment> {
+    const payment = await this.paymentRepo.findOne({ where: { id: paymentId } });
+    if (!payment) {
+      throw new NotFoundException('Paiement non trouvé');
+    }
+    if (payment.status === PaymentStatus.BLOCKED) {
+      throw new BadRequestException('Le paiement est déjà bloqué');
+    }
+    if (payment.status === PaymentStatus.REFUNDED) {
+      throw new BadRequestException('Impossible de bloquer un paiement remboursé');
+    }
+    payment.status = PaymentStatus.BLOCKED;
+    payment.blockedAt = new Date();
+    payment.blockReason = reason;
+    payment.metadata = {
+      ...(payment.metadata ?? {}),
+      blockedByAdminId: adminId,
+    };
+    await this.paymentRepo.save(payment);
+    return this.findOneForAdmin(paymentId);
+  }
+
+  async adminUnblock(paymentId: string, adminId: string): Promise<Payment> {
+    const payment = await this.paymentRepo.findOne({ where: { id: paymentId } });
+    if (!payment) {
+      throw new NotFoundException('Paiement non trouvé');
+    }
+    if (payment.status !== PaymentStatus.BLOCKED) {
+      throw new BadRequestException('Seuls les paiements bloqués peuvent être débloqués');
+    }
+    // Restaure COMPLETED si paidAt existe, sinon PROCESSING.
+    payment.status = payment.paidAt ? PaymentStatus.COMPLETED : PaymentStatus.PROCESSING;
+    payment.metadata = {
+      ...(payment.metadata ?? {}),
+      unblockedByAdminId: adminId,
+      unblockedAt: new Date().toISOString(),
+    };
+    await this.paymentRepo.save(payment);
+    return this.findOneForAdmin(paymentId);
+  }
+
   async getAdminStats(): Promise<{
     total: number;
     byStatus: Record<string, number>;
