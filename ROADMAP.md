@@ -111,58 +111,37 @@ Options actives en Côte d'Ivoire :
 
 ---
 
-## 🐛 Bugs reportés de l'audit E2E (2026-05-10)
+## 🐛 Bugs reportés de l'audit E2E (2026-05-10) — ✅ traités
 
-Voir `docs/audit/05_AUDIT_E2E_BROWSER_2026-05-10.md` pour le rapport complet. 9 bugs corrigés en session (commits `89b3e10`, `b2cb0c3`). 3 bugs reportés :
+Voir `docs/audit/05_AUDIT_E2E_BROWSER_2026-05-10.md` pour le rapport complet.
+**13 bugs identifiés au total** : 9 corrigés en session initiale + 3 invalides + 3 reportés.
+Les 3 reportés ci-dessous ont été livrés dans le commit [`fe3df94`](https://github.com/mrfrancice/RepairFone/commit/fe3df94).
 
-### Ticket #AUDIT-11 — Seed enrichi (coordonnées + filtrage qualité)
+### ✅ Ticket #AUDIT-11 — Seed enrichi (coordonnées + ranking 0-avis)
 **Symptôme** : Sur `/home`, "Tech Repair Pro" et "Tatou Ange" affichés tous deux à `0 m`. Vision++ et Tatou Ange listés dans "Réparateurs proches" malgré 0 avis.
 
-**Cause** : Coordonnées seedées en `(0, 0)` pour plusieurs réparateurs → distance calculée à 0 m. Pas de filtre qualité côté backend.
+**Cause identifiée** : Le default `home` côté front utilisait `latitude=5.3600 / longitude=-4.0083` — soit *exactement* les coordonnées seedées de Tech Repair Pro. Distance Haversine = 0, donc affichage "0 m".
 
-**Fix** :
-- `backend/src/database/seeders/seeder.service.ts` : doter chaque réparateur de coordonnées Abidjan réalistes (Cocody 5.347/-3.994, Plateau 5.327/-4.022, Yopougon 5.346/-4.124, Marcory 5.297/-3.985, Adjamé 5.367/-4.027).
-- `backend/src/modules/users/repairers.service.ts` : optionnellement filtrer ou ranking — descendre `reviewCount === 0` en fin de liste plutôt que les exclure (sinon un nouveau réparateur ne serait jamais découvrable).
+**Fix livré** :
+- `frontend/src/app/features/home/components/home/home.component.ts:1158-1160` : default location changée pour **Plateau Centre Abidjan** (`5.3197 / -4.0269`), point neutre qui ne matche aucun seed.
+- `backend/src/modules/users/repairers.service.ts:181` : ranking enrichi `has_reviews DESC, ratingAvg DESC, totalRepairs DESC` — les comptes 0 avis descendent sans être exclus.
 
-**Effort** : 30 min.
+### ✅ Ticket #AUDIT-13 — Distance Haversine sur `/repairer/requests`
+**Symptôme** : Toutes les demandes côté réparateur affichaient `? km`.
 
-### Ticket #AUDIT-13 — Distance Haversine sur `/requests/my`
-**Symptôme** : Toutes les demandes côté réparateur affichent `? km`.
+**Cause identifiée** : `RequestsService.findByRepairer` ne calculait pas la distance entre la boutique du réparateur (`repairerProfile.latitude/longitude`) et le lieu de réparation choisi par le client (`request.clientLatitude/clientLongitude`).
 
-**Cause** : Le calcul de distance n'est pas câblé sur le endpoint `/requests/my`. La distance dépend des coordonnées du client (lieu de réparation) ET du réparateur (boutique ou point de service).
+**Fix livré** :
+- `backend/src/modules/requests/requests.service.ts` : nouvelle helper `haversineKm()` (formule sphérique R=6371 km, arrondi 1 décimale), appelée depuis `transformRequestForRepairer()`.
+- Calcul en JS post-fetch (pas SQL) car pagination capée à 20 → coût négligeable. La voie SQL `addSelect` est documentée inline si la perf devient un sujet.
+- Le champ `distance` était déjà attendu par le template frontend (`{{ request.distance?.toFixed(1) || '?' }} km`) — il s'éclaire automatiquement.
 
-**Fix** :
-1. Ajouter la formule Haversine SQL dans le QueryBuilder de `RequestsService.findByUser` (mode réparateur uniquement) :
-   ```sql
-   6371 * acos(
-     cos(radians(:repairerLat)) * cos(radians(request.latitude))
-     * cos(radians(request.longitude) - radians(:repairerLng))
-     + sin(radians(:repairerLat)) * sin(radians(request.latitude))
-   ) AS distance_km
-   ```
-2. Renvoyer la valeur dans la response (champ `distance` calculé).
-3. Pré-requis : les `repair_requests` doivent avoir `latitude`/`longitude` non-null (à seeder + valider à la création).
+### ✅ Ticket #AUDIT-16 — Feedback UX redirection `/requests/new`
+**Symptôme** : Si l'utilisateur tape `/requests/new` directement sans `?repairerId=`, il était redirigé silencieusement vers `/search` sans aucun message.
 
-**Effort** : 2-3 h (back + tests + adaptation front).
-
-### Ticket #AUDIT-16 — Feedback UX redirection `/requests/new`
-**Symptôme** : Si l'utilisateur tape `/requests/new` sans `?repairerId=`, il est redirigé silencieusement vers `/search` sans aucun message.
-
-**Cause** : `NewRequestComponent.loadData()` détecte l'absence de `repairerId` et fait `router.navigate(['/search'])` sans toast/snackbar.
-
-**Fix** :
-```ts
-// frontend/src/app/features/requests/components/new-request/new-request.component.ts:~1267
-if (!repairerId) {
-  this.toastService.info(
-    'Sélectionnez d\'abord un réparateur dans la liste pour créer votre demande.',
-  );
-  this.router.navigate(['/search']);
-  return;
-}
-```
-
-**Effort** : 5 min (un toast service existe déjà — confirmer via `grep ToastService` côté shared).
+**Fix livré** :
+- `frontend/src/app/features/requests/components/new-request/new-request.component.ts` : `ToastService` injecté, appel `toast.info()` avant le redirect avec message "Choisissez d'abord un réparateur dans la liste pour créer votre demande."
+- Bonus : un second toast `error` est aussi déclenché si le fetch des données réparateur échoue (le redirect existait déjà dans le `catch`, sans message).
 
 ---
 
