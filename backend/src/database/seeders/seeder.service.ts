@@ -56,9 +56,13 @@ export class SeederService implements OnModuleInit {
 
     const passwordHash = await bcrypt.hash('Password123!', 10);
 
+    // ⚠️ Format phone : 10 chiffres normalisés sans préfixe ni espaces.
+    // Le frontend nettoie les espaces (`phone.replace(/\s/g, '')`) avant envoi à /auth/login,
+    // et le backend cherche par phone exact. Donc DB doit stocker le format envoyé par le frontend.
+
     // Create admin user
     const admin = this.userRepository.create({
-      phone: '+225 07 00 00 00',
+      phone: '0700000000',
       email: 'admin@repairfone.ci',
       passwordHash,
       firstName: 'Admin',
@@ -72,7 +76,7 @@ export class SeederService implements OnModuleInit {
 
     // Create test client
     const client = this.userRepository.create({
-      phone: '+225 07 11 11 11',
+      phone: '0711111111',
       email: 'client@test.ci',
       passwordHash,
       firstName: 'Awa',
@@ -87,7 +91,7 @@ export class SeederService implements OnModuleInit {
     const repairersData = [
       {
         user: {
-          phone: '+225 07 22 22 22',
+          phone: '0722222222',
           email: 'jean.kouame@repair.ci',
           firstName: 'Kouamé',
           lastName: 'Jean',
@@ -110,7 +114,7 @@ export class SeederService implements OnModuleInit {
       },
       {
         user: {
-          phone: '+225 07 33 33 33',
+          phone: '0733333333',
           email: 'sylvain.yao@repair.ci',
           firstName: 'Yao',
           lastName: 'Sylvain',
@@ -133,7 +137,7 @@ export class SeederService implements OnModuleInit {
       },
       {
         user: {
-          phone: '+225 07 44 44 44',
+          phone: '0744444444',
           email: 'ange.koffi@repair.ci',
           firstName: 'Koffi',
           lastName: 'Ange',
@@ -156,7 +160,7 @@ export class SeederService implements OnModuleInit {
       },
       {
         user: {
-          phone: '+225 07 55 55 55',
+          phone: '0755555555',
           email: 'marie.adjoua@repair.ci',
           firstName: 'Adjoua',
           lastName: 'Marie',
@@ -386,7 +390,7 @@ export class SeederService implements OnModuleInit {
     const expertsData = [
       {
         user: {
-          phone: '+225 07 66 66 66',
+          phone: '0766666666',
           email: 'amadou.diallo@expert.ci',
           firstName: 'Amadou',
           lastName: 'Diallo',
@@ -407,7 +411,7 @@ export class SeederService implements OnModuleInit {
       },
       {
         user: {
-          phone: '+225 07 77 77 77',
+          phone: '0777777777',
           email: 'fatou.ndiaye@expert.ci',
           firstName: 'Fatou',
           lastName: 'Ndiaye',
@@ -428,7 +432,7 @@ export class SeederService implements OnModuleInit {
       },
       {
         user: {
-          phone: '+225 07 88 88 88',
+          phone: '0788888888',
           email: 'moussa.sow@expert.ci',
           firstName: 'Moussa',
           lastName: 'Sow',
@@ -449,7 +453,7 @@ export class SeederService implements OnModuleInit {
       },
       {
         user: {
-          phone: '+225 07 99 99 99',
+          phone: '0799999999',
           email: 'aissatou.ba@expert.ci',
           firstName: 'Aissatou',
           lastName: 'Ba',

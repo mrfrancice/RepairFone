@@ -165,7 +165,7 @@ export class RepairerService {
   // Get current repairer profile
   async getMyProfile(): Promise<RepairerProfile> {
     return firstValueFrom(
-      this.api.get<RepairerProfile>('/repairer/profile/me')
+      this.api.get<RepairerProfile>('/repairers/profile/me')
     );
   }
 
@@ -176,7 +176,7 @@ export class RepairerService {
 
     try {
       const result = await firstValueFrom(
-        this.api.patch<RepairerProfile>('/repairer/profile/me', dto)
+        this.api.patch<RepairerProfile>('/repairers/profile/me', dto)
       );
       return result;
     } catch (err: any) {
@@ -187,10 +187,10 @@ export class RepairerService {
     }
   }
 
-  // Get dashboard stats
+  // Get dashboard stats (uses generic /requests/stats which adapts to user role)
   async getStats(): Promise<RepairerStats> {
     return firstValueFrom(
-      this.api.get<RepairerStats>('/repairer/stats')
+      this.api.get<RepairerStats>('/requests/stats')
     );
   }
 
@@ -289,7 +289,7 @@ export class RepairerService {
   // Update availability status
   async updateAvailability(isAvailable: boolean): Promise<RepairerProfile> {
     return firstValueFrom(
-      this.api.patch<RepairerProfile>('/repairer/profile/me', { isAvailable })
+      this.api.patch<RepairerProfile>('/repairers/profile/me/availability', { isAvailable })
     );
   }
 
