@@ -1,6 +1,7 @@
-import { Component, inject, OnInit, signal, ChangeDetectionStrategy } from '@angular/core';
+import { Component, inject, OnInit, signal, computed, ChangeDetectionStrategy } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { RouterLink } from '@angular/router';
+import { Router } from '@angular/router';
+import { environment } from '../../../../../environments/environment';
 import { PaymentService, Payment, PaymentStatus } from '../../services/payment.service';
 import { PaymentStore } from '../../stores/payment.store';
 import { AuthStore } from '../../../../core/stores/auth.store';
@@ -10,9 +11,13 @@ import { UiEmptyStateComponent } from '../../../../shared/components/ui-empty-st
 import { UiErrorStateComponent } from '../../../../shared/components/ui-error-state/ui-error-state.component';
 import { UiChipComponent } from '../../../../shared/components/ui-chip/ui-chip.component';
 import { UiPriceDisplayComponent } from '../../../../shared/components/ui-price-display/ui-price-display.component';
+import {
+  UiDataGridComponent,
+  UiDataGridColumnComponent,
+} from '../../../../shared/components/ui-data-grid';
 import { FormatDatePipe } from '../../../../shared/pipes/format-date.pipe';
-import { InfiniteScrollDirective } from '../../../../shared/directives/infinite-scroll.directive';
 import { UiHeaderComponent } from '../../../../shared/components/ui-header/ui-header.component';
+import { HeaderSearchComponent } from '../../../../shared/components/header-search/header-search.component';
 
 @Component({
   selector: 'app-payment-history',
@@ -20,23 +25,30 @@ import { UiHeaderComponent } from '../../../../shared/components/ui-header/ui-he
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
     CommonModule,
-    RouterLink,
     UiCardComponent,
     UiLoadingComponent,
     UiEmptyStateComponent,
     UiErrorStateComponent,
     UiChipComponent,
     UiPriceDisplayComponent,
+    UiDataGridComponent,
+    UiDataGridColumnComponent,
     FormatDatePipe,
-    InfiniteScrollDirective,
     UiHeaderComponent,
+    HeaderSearchComponent,
   ],
   template: `
     <div class="payment-history">
       <ui-header
         [title]="authStore.isRepairer() ? 'Paiements reçus' : 'Mes paiements'"
         [subtitle]="authStore.isRepairer() ? 'Historique des paiements de vos clients' : 'Historique de vos transactions'"
-      />
+      >
+        <app-header-search
+          placeholder="Rechercher (type, méthode, réf, nom...)"
+          (search)="onSearch($event)"
+          (cleared)="onSearch('')"
+        />
+      </ui-header>
 
       <!-- Stats -->
       @if (store.hasPayments()) {
@@ -107,7 +119,7 @@ import { UiHeaderComponent } from '../../../../shared/components/ui-header/ui-he
       }
 
       <!-- Empty state -->
-      @if (!isLoading() && !error() && store.filteredPayments().length === 0) {
+      @if (!isLoading() && !error() && searchedPayments().length === 0) {
         <ui-empty-state
           icon="💳"
           title="Aucun paiement"
@@ -115,88 +127,76 @@ import { UiHeaderComponent } from '../../../../shared/components/ui-header/ui-he
         />
       }
 
-      <!-- Payment list -->
-      @if (!isLoading() && store.filteredPayments().length > 0) {
-        <div class="payment-list"
-             appInfiniteScroll
-             [useWindow]="true"
-             [threshold]="200"
-             [disabled]="isLoadingMore() || !hasMore()"
-             (scrolled)="loadMore()">
-          @for (payment of store.filteredPayments(); track payment.id) {
-            <ui-card class="payment-card" [routerLink]="['/payment', payment.id]">
-              <div class="payment-header">
-                <div class="payment-info">
-                  <span class="payment-type">
-                    {{ paymentService.getPaymentTypeLabel(payment.paymentType) }}
-                  </span>
-                  @if (payment.request?.device) {
-                    <span class="device-info">
-                      {{ payment.request?.device?.brand }} {{ payment.request?.device?.model }}
-                    </span>
-                  }
-                </div>
-                <ui-chip
-                  [label]="paymentService.getStatusLabel(payment.status)"
-                  [color]="paymentService.getStatusColor(payment.status)"
-                  size="sm"
-                />
-              </div>
-
-              <div class="payment-body">
-                <div class="amount-row">
-                  <ui-price-display [amount]="authStore.isRepairer() ? payment.repairerAmount : payment.amount" size="lg" />
-                  @if (payment.paymentMethod) {
-                    <span class="method-badge" [style.background]="getMethodColor(payment.paymentMethod)">
-                      {{ getMethodIcon(payment.paymentMethod) }}
-                    </span>
-                  }
-                </div>
-
-                @if (authStore.isRepairer() && payment.client) {
-                  <div class="repairer-info">
-                    <span class="label">Client:</span>
-                    <span class="value">
-                      {{ payment.client.firstName + ' ' + payment.client.lastName }}
-                    </span>
-                  </div>
-                }
-
-                @if (!authStore.isRepairer() && payment.repairer) {
-                  <div class="repairer-info">
-                    <span class="label">Réparateur:</span>
-                    <span class="value">
-                      {{ payment.repairer.repairerProfile?.businessName ||
-                         (payment.repairer.firstName + ' ' + payment.repairer.lastName) }}
-                    </span>
-                  </div>
-                }
-
-                @if (payment.transactionRef) {
-                  <div class="ref-info">
-                    <span class="label">Réf:</span>
-                    <span class="value">{{ payment.transactionRef }}</span>
-                  </div>
+      <!-- Payments table -->
+      @if (!isLoading() && searchedPayments().length > 0) {
+        <ui-data-grid
+          [data]="searchedPayments()"
+          [pageSize]="10"
+          [pageSizeOptions]="[10, 25, 50, 100]"
+          [rowClickable]="true"
+          emptyMessage="Aucun paiement"
+          (rowClick)="goToDetail($event)"
+        >
+          <ui-data-grid-column key="type" header="Type" field="paymentType">
+            <ng-template let-row>
+              <div class="cell-type">
+                <strong>{{ paymentService.getPaymentTypeLabel(row.paymentType) }}</strong>
+                @if (row.request?.device) {
+                  <span class="muted">{{ row.request.device.brand }} {{ row.request.device.model }}</span>
                 }
               </div>
+            </ng-template>
+          </ui-data-grid-column>
 
-              <div class="payment-footer">
-                <span class="date">
-                  {{ (payment.paidAt || payment.createdAt) | formatDate }}
+          <ui-data-grid-column key="counterpart" header="{{ authStore.isRepairer() ? 'Client' : 'Réparateur' }}">
+            <ng-template let-row>
+              @if (authStore.isRepairer() && row.client) {
+                {{ row.client.firstName }} {{ row.client.lastName }}
+              } @else if (!authStore.isRepairer() && row.repairer) {
+                {{ row.repairer.repairerProfile?.businessName || (row.repairer.firstName + ' ' + row.repairer.lastName) }}
+              } @else {
+                <span class="muted">—</span>
+              }
+            </ng-template>
+          </ui-data-grid-column>
+
+          <ui-data-grid-column key="amount" header="Montant" align="right" field="amount" [sortable]="true">
+            <ng-template let-row>
+              <ui-price-display
+                [amount]="authStore.isRepairer() ? row.repairerAmount : row.amount"
+                size="md"
+              />
+            </ng-template>
+          </ui-data-grid-column>
+
+          <ui-data-grid-column key="method" header="Méthode" align="center" width="100px">
+            <ng-template let-row>
+              @if (row.paymentMethod) {
+                <span class="method-badge-cell" [style.background]="getMethodColor(row.paymentMethod)" [title]="row.paymentMethod">
+                  {{ getMethodIcon(row.paymentMethod) }}
                 </span>
-                <span class="arrow">→</span>
-              </div>
-            </ui-card>
-          }
-        </div>
+              } @else {
+                <span class="muted">—</span>
+              }
+            </ng-template>
+          </ui-data-grid-column>
 
-        <!-- Loading indicator for infinite scroll -->
-        @if (isLoadingMore()) {
-          <div class="loading-more">
-            <ui-loading size="sm" />
-            <span>Chargement...</span>
-          </div>
-        }
+          <ui-data-grid-column key="status" header="Statut" field="status" [sortable]="true">
+            <ng-template let-row>
+              <ui-chip
+                [label]="paymentService.getStatusLabel(row.status)"
+                [color]="paymentService.getStatusColor(row.status)"
+                size="sm"
+              />
+            </ng-template>
+          </ui-data-grid-column>
+
+          <ui-data-grid-column key="date" header="Date" field="paidAt" [sortable]="true" width="120px">
+            <ng-template let-row>
+              <span class="date">{{ (row.paidAt || row.createdAt) | formatDate }}</span>
+            </ng-template>
+          </ui-data-grid-column>
+        </ui-data-grid>
       }
     </div>
   `,
@@ -396,20 +396,80 @@ import { UiHeaderComponent } from '../../../../shared/components/ui-header/ui-he
       color: #6B7280;
       font-size: 0.875rem;
     }
+
+    /* Cellules <ui-data-grid> */
+    .cell-type {
+      display: flex;
+      flex-direction: column;
+      min-width: 0;
+    }
+
+    .cell-type strong {
+      font-size: 0.875rem;
+      font-weight: 600;
+      color: #1f2937;
+    }
+
+    .cell-type .muted {
+      font-size: 0.75rem;
+      color: #9ca3af;
+    }
+
+    .muted { color: #9ca3af; }
+
+    .date {
+      color: #6b7280;
+      font-size: 0.8125rem;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .method-badge-cell {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 32px;
+      height: 32px;
+      border-radius: 8px;
+      font-size: 1.125rem;
+    }
   `]
 })
 export class PaymentHistoryComponent implements OnInit {
   readonly paymentService = inject(PaymentService);
   readonly store = inject(PaymentStore);
   readonly authStore = inject(AuthStore);
+  private readonly router = inject(Router);
 
   readonly isLoading = signal(false);
-  readonly isLoadingMore = signal(false);
   readonly error = signal<string | null>(null);
-  readonly hasMore = signal(false);
+  readonly searchQuery = signal('');
 
-  private page = 1;
-  private readonly limit = 10;
+  /** Filtre local sur la liste déjà filtrée par statut (recherche libre). */
+  readonly searchedPayments = computed(() => {
+    const list = this.store.filteredPayments();
+    const q = this.searchQuery().trim().toLowerCase();
+    if (!q) return list;
+    return list.filter((p) => {
+      const pieces: string[] = [
+        this.paymentService.getPaymentTypeLabel(p.paymentType),
+        p.paymentMethod ?? '',
+        p.transactionRef ?? '',
+        p.client ? `${p.client.firstName} ${p.client.lastName}` : '',
+        p.repairer
+          ? p.repairer.repairerProfile?.businessName ??
+            `${p.repairer.firstName} ${p.repairer.lastName}`
+          : '',
+        p.request?.device?.brand ?? '',
+        p.request?.device?.model ?? '',
+        String(p.amount ?? ''),
+      ];
+      return pieces.some((s) => s.toLowerCase().includes(q));
+    });
+  });
+
+  onSearch(query: string): void {
+    this.searchQuery.set(query);
+  }
 
   ngOnInit(): void {
     this.loadPayments();
@@ -418,17 +478,15 @@ export class PaymentHistoryComponent implements OnInit {
   async loadPayments(): Promise<void> {
     this.isLoading.set(true);
     this.error.set(null);
-    this.page = 1;
 
     try {
+      // Charge le volume max accepté par l'API ; la pagination du DataGrid prend le relais en mémoire.
       const result = await this.paymentService.getMyPayments({
         status: this.store.filterStatus() ?? undefined,
-        page: this.page,
-        limit: this.limit,
+        page: 1,
+        limit: environment.api.maxLimit,
       });
-
       this.store.setPayments(result.data, result.total);
-      this.hasMore.set(result.data.length < result.total);
     } catch (err: any) {
       this.error.set(err.message || 'Erreur lors du chargement des paiements');
     } finally {
@@ -436,32 +494,13 @@ export class PaymentHistoryComponent implements OnInit {
     }
   }
 
-  async loadMore(): Promise<void> {
-    this.isLoadingMore.set(true);
-    this.page++;
-
-    try {
-      const result = await this.paymentService.getMyPayments({
-        status: this.store.filterStatus() ?? undefined,
-        page: this.page,
-        limit: this.limit,
-      });
-
-      this.store.appendPayments(result.data);
-      this.hasMore.set(
-        this.store.payments().length < result.total
-      );
-    } catch (err: any) {
-      this.page--;
-      this.error.set(err.message || 'Erreur lors du chargement');
-    } finally {
-      this.isLoadingMore.set(false);
-    }
-  }
-
   setFilter(status: PaymentStatus | null): void {
     this.store.setFilterStatus(status);
     this.loadPayments();
+  }
+
+  goToDetail(payment: Payment): void {
+    this.router.navigate(['/payment', payment.id]);
   }
 
   getMethodIcon(method: string): string {

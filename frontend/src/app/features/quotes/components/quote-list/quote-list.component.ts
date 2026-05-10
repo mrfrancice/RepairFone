@@ -1,4 +1,4 @@
-import { Component, inject, signal, OnInit, ChangeDetectionStrategy } from '@angular/core';
+import { Component, inject, signal, computed, OnInit, ChangeDetectionStrategy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router, RouterLink } from '@angular/router';
 import { QuotesService, Quote, QuoteStatus } from '../../services/quotes.service';
@@ -8,22 +8,45 @@ import { UiTabsComponent } from '../../../../shared/components/ui-tabs/ui-tabs.c
 import { UiBadgeComponent } from '../../../../shared/components/ui-badge/ui-badge.component';
 import { UiSkeletonComponent } from '../../../../shared/components/ui-skeleton/ui-skeleton.component';
 import { UiErrorStateComponent } from '../../../../shared/components/ui-error-state/ui-error-state.component';
+import {
+  UiDataGridComponent,
+  UiDataGridColumnComponent,
+} from '../../../../shared/components/ui-data-grid';
 import { FormatDatePipe } from '../../../../shared/pipes/format-date.pipe';
 import { TabItem } from '../../../../shared/models';
 import { LoggerService } from '../../../../core/services/logger.service';
 import { UiHeaderComponent } from '../../../../shared/components/ui-header/ui-header.component';
+import { HeaderSearchComponent } from '../../../../shared/components/header-search/header-search.component';
 
 @Component({
   selector: 'app-quote-list',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [CommonModule, RouterLink, UiButtonComponent, UiTabsComponent, UiBadgeComponent, UiSkeletonComponent, UiErrorStateComponent, FormatDatePipe, UiHeaderComponent],
+  imports: [
+    CommonModule,
+    RouterLink,
+    UiButtonComponent,
+    UiTabsComponent,
+    UiBadgeComponent,
+    UiSkeletonComponent,
+    UiErrorStateComponent,
+    UiDataGridComponent,
+    UiDataGridColumnComponent,
+    FormatDatePipe,
+    UiHeaderComponent,
+    HeaderSearchComponent,
+  ],
   template: `
     <div class="quotes-container">
       <ui-header title="Mes devis" [showBack]="true" backRoute="/requests">
         @if (store.pendingCount() > 0) {
           <span header-actions class="pending-badge">{{ store.pendingCount() }}</span>
         }
+        <app-header-search
+          placeholder="Rechercher (réparateur, appareil, service...)"
+          (search)="onSearch($event)"
+          (cleared)="onSearch('')"
+        />
       </ui-header>
 
       <!-- Filters -->
@@ -59,7 +82,7 @@ import { UiHeaderComponent } from '../../../../shared/components/ui-header/ui-he
           [showRetry]="true"
           (onRetry)="loadQuotes()"
         />
-      } @else if (store.filteredQuotes().length === 0) {
+      } @else if (searchedQuotes().length === 0) {
         <div class="empty-state">
           <span class="empty-icon">📋</span>
           <h3>Aucun devis</h3>
@@ -75,87 +98,98 @@ import { UiHeaderComponent } from '../../../../shared/components/ui-header/ui-he
           </ui-button>
         </div>
       } @else {
-        <div class="quotes-list">
-          @for (quote of store.filteredQuotes(); track quote.id) {
-            <div class="quote-card" (click)="viewQuote(quote.id)">
-              <!-- Status Badge -->
-              <ui-badge [variant]="getStatusVariant(quote.status)" size="sm">
-                {{ quotesService.getStatusLabel(quote.status) }}
-              </ui-badge>
-
-              <!-- Quote Header -->
-              <div class="quote-header">
-                <div class="repairer-info">
-                  <div class="repairer-avatar">
-                    @if (quote.repairer?.avatarUrl) {
-                      <img [src]="quote.repairer?.avatarUrl" alt="Avatar" />
-                    } @else {
-                      <span class="avatar-placeholder">{{ getRepairerInitials(quote) }}</span>
-                    }
-                  </div>
-                  <div class="repairer-details">
-                    <span class="repairer-name">{{ getRepairerName(quote) }}</span>
-                    @if (quote.repairer?.repairerProfile?.rating) {
-                      <span class="repairer-rating">⭐ {{ quote.repairer?.repairerProfile?.rating?.toFixed(1) }}</span>
-                    }
-                  </div>
-                </div>
-                <div class="quote-amount">
-                  <span class="amount">{{ quote.totalAmount | number:'1.0-0' }}</span>
-                  <span class="currency">FCFA</span>
-                </div>
-              </div>
-
-              <!-- Quote Details -->
-              <div class="quote-details">
-                @if (quote.request?.device) {
-                  <div class="detail-row">
-                    <span class="detail-icon">📱</span>
-                    <span>{{ quote.request?.device?.brand }} {{ quote.request?.device?.model }}</span>
-                  </div>
-                }
-                @if (quote.request?.serviceType) {
-                  <div class="detail-row">
-                    <span class="detail-icon">🔧</span>
-                    <span>{{ quote.request?.serviceType?.name }}</span>
-                  </div>
-                }
-                <div class="detail-row">
-                  <span class="detail-icon">⏱️</span>
-                  <span>Durée estimée: {{ quote.estimatedDuration }}</span>
-                </div>
-              </div>
-
-              <!-- Quote Footer -->
-              <div class="quote-footer">
-                <span class="quote-date">
-                  Reçu le {{ quote.createdAt | formatDate }}
-                </span>
-                @if (quote.status === 'pending') {
-                  @if (quotesService.isExpired(quote)) {
-                    <span class="expiry-badge expired">Expiré</span>
+        <ui-data-grid
+          [data]="searchedQuotes()"
+          [pageSize]="10"
+          [pageSizeOptions]="[10, 25, 50, 100]"
+          [rowClickable]="true"
+          emptyMessage="Aucun devis"
+          (rowClick)="viewQuote($event.id)"
+        >
+          <ui-data-grid-column key="repairer" header="Réparateur">
+            <ng-template let-row>
+              <div class="cell-repairer">
+                <div class="cell-avatar">
+                  @if (row.repairer?.avatarUrl) {
+                    <img [src]="row.repairer?.avatarUrl" alt="" />
                   } @else {
-                    <span class="expiry-badge" [class.warning]="quotesService.getDaysUntilExpiry(quote) <= 2">
-                      Expire {{ getExpiryText(quote) }}
-                    </span>
+                    <span>{{ getRepairerInitials(row) }}</span>
                   }
+                </div>
+                <div class="cell-repairer-text">
+                  <strong>{{ getRepairerName(row) }}</strong>
+                  @if (row.repairer?.repairerProfile?.rating) {
+                    <span class="muted">⭐ {{ row.repairer?.repairerProfile?.rating?.toFixed(1) }}</span>
+                  }
+                </div>
+              </div>
+            </ng-template>
+          </ui-data-grid-column>
+
+          <ui-data-grid-column key="device" header="Appareil / Service">
+            <ng-template let-row>
+              <div class="cell-device">
+                @if (row.request?.device) {
+                  <strong>{{ row.request.device.brand }} {{ row.request.device.model }}</strong>
+                }
+                @if (row.request?.serviceType) {
+                  <span class="muted">🔧 {{ row.request.serviceType.name }}</span>
                 }
               </div>
+            </ng-template>
+          </ui-data-grid-column>
 
-              <!-- Actions for pending quotes -->
-              @if (quote.status === 'pending' && !quotesService.isExpired(quote)) {
-                <div class="quote-actions" (click)="$event.stopPropagation()">
-                  <ui-button variant="outline" size="sm" (click)="rejectQuote(quote)">
-                    Refuser
-                  </ui-button>
-                  <ui-button variant="primary" size="sm" (click)="acceptQuote(quote)">
-                    Accepter
-                  </ui-button>
-                </div>
+          <ui-data-grid-column key="amount" header="Montant" align="right" field="totalAmount" [sortable]="true" width="140px">
+            <ng-template let-row>
+              <span class="amount-cell">
+                {{ row.totalAmount | number:'1.0-0' }}
+                <span class="currency">FCFA</span>
+              </span>
+            </ng-template>
+          </ui-data-grid-column>
+
+          <ui-data-grid-column key="duration" header="Durée" align="center" width="120px">
+            <ng-template let-row>
+              <span class="muted">⏱️ {{ row.estimatedDuration }}</span>
+            </ng-template>
+          </ui-data-grid-column>
+
+          <ui-data-grid-column key="status" header="Statut" field="status" [sortable]="true">
+            <ng-template let-row>
+              <ui-badge [variant]="getStatusVariant(row.status)" size="sm">
+                {{ quotesService.getStatusLabel(row.status) }}
+              </ui-badge>
+              @if (row.status === 'pending') {
+                @if (quotesService.isExpired(row)) {
+                  <span class="expiry-badge expired">Expiré</span>
+                } @else {
+                  <span class="expiry-badge" [class.warning]="quotesService.getDaysUntilExpiry(row) <= 2">
+                    {{ getExpiryText(row) }}
+                  </span>
+                }
               }
-            </div>
-          }
-        </div>
+            </ng-template>
+          </ui-data-grid-column>
+
+          <ui-data-grid-column key="createdAt" header="Reçu le" field="createdAt" [sortable]="true" width="120px">
+            <ng-template let-row>
+              <span class="date">{{ row.createdAt | formatDate }}</span>
+            </ng-template>
+          </ui-data-grid-column>
+
+          <ui-data-grid-column key="actions" header="Actions" align="right" width="180px">
+            <ng-template let-row>
+              @if (row.status === 'pending' && !quotesService.isExpired(row)) {
+                <div class="action-buttons-inline" (click)="$event.stopPropagation()">
+                  <ui-button variant="outline" size="sm" (click)="rejectQuote(row)">Refuser</ui-button>
+                  <ui-button variant="primary" size="sm" (click)="acceptQuote(row)">Accepter</ui-button>
+                </div>
+              } @else {
+                <span class="muted">—</span>
+              }
+            </ng-template>
+          </ui-data-grid-column>
+        </ui-data-grid>
       }
     </div>
   `,
@@ -418,6 +452,99 @@ import { UiHeaderComponent } from '../../../../shared/components/ui-header/ui-he
       padding-top: 1rem;
       border-top: 1px solid #EEEEEE;
     }
+
+    /* Cellules <ui-data-grid> */
+    .cell-repairer {
+      display: flex;
+      align-items: center;
+      gap: 0.625rem;
+      min-width: 0;
+    }
+
+    .cell-avatar {
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      flex-shrink: 0;
+      background: linear-gradient(135deg, var(--color-primary-500, #FF9800), var(--color-gold-800, #F9A825));
+      color: white;
+      font-weight: 700;
+      font-size: 0.8125rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+    }
+
+    .cell-avatar img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    .cell-repairer-text,
+    .cell-device {
+      display: flex;
+      flex-direction: column;
+      min-width: 0;
+    }
+
+    .cell-repairer-text strong,
+    .cell-device strong {
+      font-size: 0.875rem;
+      font-weight: 600;
+      color: #1f2937;
+    }
+
+    .cell-repairer-text .muted,
+    .cell-device .muted {
+      font-size: 0.75rem;
+      color: #9ca3af;
+    }
+
+    .muted { color: #9ca3af; }
+
+    .amount-cell {
+      font-weight: 700;
+      color: var(--color-primary-500, #FF9800);
+      font-size: 0.9375rem;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .amount-cell .currency {
+      font-size: 0.75rem;
+      color: #9ca3af;
+      font-weight: 500;
+      margin-left: 0.25rem;
+    }
+
+    .expiry-badge {
+      display: inline-block;
+      margin-left: 0.5rem;
+      font-size: 0.6875rem;
+      font-weight: 600;
+      color: #6b7280;
+    }
+
+    .expiry-badge.warning {
+      color: var(--color-warning-dark, #F57C00);
+    }
+
+    .expiry-badge.expired {
+      color: var(--color-error, #F44336);
+    }
+
+    .date {
+      color: #6b7280;
+      font-size: 0.8125rem;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .action-buttons-inline {
+      display: inline-flex;
+      gap: 0.375rem;
+      justify-content: flex-end;
+    }
   `]
 })
 export class QuoteListComponent implements OnInit {
@@ -428,6 +555,30 @@ export class QuoteListComponent implements OnInit {
 
   readonly isLoading = signal(true);
   readonly error = signal<string | null>(null);
+  readonly searchQuery = signal('');
+
+  /** Filtre local sur la liste déjà filtrée par statut. */
+  readonly searchedQuotes = computed(() => {
+    const list = this.store.filteredQuotes();
+    const q = this.searchQuery().trim().toLowerCase();
+    if (!q) return list;
+    return list.filter((quote) => {
+      const r = quote.repairer;
+      const pieces: string[] = [
+        r?.repairerProfile?.businessName ?? '',
+        r ? `${r.firstName} ${r.lastName}` : '',
+        quote.request?.device?.brand ?? '',
+        quote.request?.device?.model ?? '',
+        quote.request?.serviceType?.name ?? '',
+        String(quote.totalAmount ?? ''),
+      ];
+      return pieces.some((s) => s.toLowerCase().includes(q));
+    });
+  });
+
+  onSearch(query: string): void {
+    this.searchQuery.set(query);
+  }
 
   readonly filterTabs: TabItem[] = [
     { id: 'all', label: 'Tous' },

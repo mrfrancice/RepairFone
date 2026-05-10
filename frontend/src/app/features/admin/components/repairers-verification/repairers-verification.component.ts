@@ -1,11 +1,17 @@
-import { Component, inject, signal, OnInit, DestroyRef, ChangeDetectionStrategy } from '@angular/core';
+import { Component, inject, signal, effect, OnInit, OnDestroy, DestroyRef, ChangeDetectionStrategy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, Router } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { AdminService, RepairerForVerification, VerificationStats } from '../../services/admin.service';
 import { AuthStore } from '../../../../core/stores/auth.store';
-import { NotificationBellComponent } from '../../../../shared/components/notification-bell/notification-bell.component';
 import { HeaderSearchComponent } from '../../../../shared/components/header-search/header-search.component';
+import { UiHeaderComponent } from '../../../../shared/components/ui-header/ui-header.component';
+import {
+  UiDataGridComponent,
+  UiDataGridColumnComponent,
+  DataGridPageEvent,
+  DataGridSortEvent,
+} from '../../../../shared/components/ui-data-grid';
 import { InitialsPipe } from '../../../../shared/pipes/initials.pipe';
 import { StatusLabelsService, VerificationStatus } from '../../../../shared/services/status-labels.service';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
@@ -16,49 +22,33 @@ type StatusFilter = 'all' | 'pending' | 'under_review' | 'verified' | 'rejected'
   selector: 'app-repairers-verification',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [CommonModule, FormsModule, NotificationBellComponent, HeaderSearchComponent, InitialsPipe],
+  imports: [
+    CommonModule,
+    FormsModule,
+    HeaderSearchComponent,
+    UiHeaderComponent,
+    UiDataGridComponent,
+    UiDataGridColumnComponent,
+    InitialsPipe,
+  ],
   template: `
     <div class="admin-page">
-      <!-- Header like home -->
-      <header class="admin-header">
-        <div class="header-top">
-          <div class="header-left">
-            <button class="back-btn" (click)="goBack()">
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <path d="M19 12H5M12 19l-7-7 7-7"/>
-              </svg>
-            </button>
-            <div class="header-titles">
-              <h1 class="app-title">Réparateurs</h1>
-              <p class="welcome-msg">{{ total() }} réparateur(s) au total</p>
-            </div>
-          </div>
-          <div class="header-right">
-            <span class="status-online">
-              <span class="status-dot"></span>
-              En ligne
-            </span>
-            <span class="role-badge">{{ getRoleLabel() }}</span>
-            <app-notification-bell />
-            <button class="profile-btn" (click)="goToProfile()">
-              @if (authStore.user()?.avatarUrl) {
-                <img [src]="authStore.user()?.avatarUrl" alt="Profil" />
-              } @else {
-                <div class="profile-placeholder">
-                  {{ authStore.user()?.firstName | initials : authStore.user()?.lastName }}
-                </div>
-              }
-            </button>
-          </div>
-        </div>
-
-        <!-- Search Bar in Header -->
+      <!-- Header unifié (charte sombre via ui-header) -->
+      <ui-header
+        title="Réparateurs"
+        [subtitle]="total() + ' réparateur(s) au total'"
+        [showBack]="true"
+        backRoute="/admin"
+        [showStatus]="true"
+        [showRoleBadge]="true"
+        [showProfile]="true"
+      >
         <app-header-search
           placeholder="Rechercher un réparateur..."
           (search)="onSearchChange($event)"
           (cleared)="clearSearch()"
         />
-      </header>
+      </ui-header>
 
       <div class="page-content">
         <!-- Status Tabs -->
@@ -147,356 +137,390 @@ type StatusFilter = 'all' | 'pending' | 'under_review' | 'verified' | 'rejected'
             <p>Aucun reparateur ne correspond a ce filtre</p>
           </div>
         } @else {
-          <!-- Repairers List -->
-          <div class="repairers-list">
-            @for (repairer of repairers(); track repairer.id) {
-              <div class="repairer-card" [class.expanded]="expandedId() === repairer.id">
-                <div class="card-header" (click)="toggleExpand(repairer.id)">
-                  <div class="repairer-info">
-                    <div class="avatar" [class]="repairer.verificationStatus">
-                      @if (repairer.user?.avatarUrl) {
-                        <img [src]="repairer.user?.avatarUrl" [alt]="repairer.businessName" />
-                      } @else {
-                        <span>{{ repairer.user?.firstName | initials : repairer.user?.lastName }}</span>
-                      }
-                    </div>
-                    <div class="info-content">
-                      <h3>{{ repairer.businessName }}</h3>
-                      <p class="user-name">{{ repairer.user?.firstName }} {{ repairer.user?.lastName }}</p>
-                      <p class="user-phone">{{ repairer.user?.phone }}</p>
-                    </div>
+          <!-- Tableau réutilisable <ui-data-grid> -->
+          <ui-data-grid
+            [data]="repairers()"
+            [pageSize]="10"
+            [pageSizeOptions]="[10, 25, 50, 100]"
+            [rowClickable]="true"
+            emptyMessage="Aucun réparateur ne correspond à ce filtre"
+            (rowClick)="openDrawer($event)"
+          >
+            <ui-data-grid-column key="business" header="Réparateur" field="businessName" [sortable]="true">
+              <ng-template let-row>
+                <div class="cell-name">
+                  <div class="cell-avatar" [class]="row.verificationStatus">
+                    @if (row.user?.avatarUrl) {
+                      <img [src]="row.user?.avatarUrl" [alt]="row.businessName" />
+                    } @else {
+                      <span>{{ row.user?.firstName | initials : row.user?.lastName }}</span>
+                    }
                   </div>
-                  <div class="card-actions">
-                    <span class="status-badge" [class]="repairer.verificationStatus">
-                      <span class="badge-dot"></span>
-                      {{ statusLabels.getVerificationStatusLabel(repairer.verificationStatus) }}
-                    </span>
-                    <div class="expand-btn" [class.expanded]="expandedId() === repairer.id">
-                      <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
-                        <path d="M6 9L12 15L18 9" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
-                      </svg>
-                    </div>
+                  <div class="cell-name-text">
+                    <strong>{{ row.businessName || 'Sans nom commercial' }}</strong>
+                    <span class="muted">{{ row.user?.firstName }} {{ row.user?.lastName }}</span>
                   </div>
                 </div>
+              </ng-template>
+            </ui-data-grid-column>
 
-                @if (expandedId() === repairer.id) {
-                  <div class="card-details">
-                    <!-- Business Info -->
-                    <div class="detail-section">
-                      <div class="section-header">
-                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
-                          <path d="M19 21V5C19 3.89543 18.1046 3 17 3H7C5.89543 3 5 3.89543 5 5V21M19 21H5M19 21H21M5 21H3M9 7H10M9 11H10M14 7H15M14 11H15M9 21V16C9 15.4477 9.44772 15 10 15H14C14.5523 15 15 15.4477 15 16V21" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                        </svg>
-                        <h4>Informations commerciales</h4>
-                      </div>
-                      <div class="detail-grid">
-                        <div class="detail-item">
-                          <span class="detail-label">Type d'activite</span>
-                          <span class="detail-value">{{ repairer.businessType || 'Non specifie' }}</span>
-                        </div>
-                        <div class="detail-item">
-                          <span class="detail-label">Telephone</span>
-                          <span class="detail-value">{{ repairer.businessPhone || repairer.user?.phone }}</span>
-                        </div>
-                        <div class="detail-item">
-                          <span class="detail-label">Email</span>
-                          <span class="detail-value">{{ repairer.businessEmail || 'Non specifie' }}</span>
-                        </div>
-                        <div class="detail-item">
-                          <span class="detail-label">Experience</span>
-                          <span class="detail-value highlight">{{ repairer.yearsOfExperience || 0 }} ans</span>
-                        </div>
-                      </div>
-                    </div>
+            <ui-data-grid-column key="phone" header="Contact" field="user.phone">
+              <ng-template let-row>
+                <span class="phone">{{ row.user?.phone }}</span>
+              </ng-template>
+            </ui-data-grid-column>
 
-                    <!-- Location -->
-                    <div class="detail-section">
-                      <div class="section-header">
-                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
-                          <path d="M21 10C21 17 12 23 12 23C12 23 3 17 3 10C3 5.02944 7.02944 1 12 1C16.9706 1 21 5.02944 21 10Z" stroke="currentColor" stroke-width="2"/>
-                          <circle cx="12" cy="10" r="3" stroke="currentColor" stroke-width="2"/>
-                        </svg>
-                        <h4>Localisation</h4>
-                      </div>
-                      <div class="detail-grid">
-                        <div class="detail-item full">
-                          <span class="detail-label">Adresse complete</span>
-                          <span class="detail-value">{{ repairer.address || 'Non renseignee' }}</span>
-                        </div>
-                        <div class="detail-item">
-                          <span class="detail-label">Ville</span>
-                          <span class="detail-value">{{ repairer.city || 'Non renseignee' }}</span>
-                        </div>
-                        <div class="detail-item">
-                          <span class="detail-label">Commune</span>
-                          <span class="detail-value">{{ repairer.commune || 'Non renseignee' }}</span>
-                        </div>
-                        <div class="detail-item">
-                          <span class="detail-label">Quartier</span>
-                          <span class="detail-value">{{ repairer.quarter || 'Non renseigne' }}</span>
-                        </div>
-                        <div class="detail-item">
-                          <span class="detail-label">Coordonnees GPS</span>
-                          <span class="detail-value">
-                            @if (repairer.latitude && repairer.longitude) {
-                              <span class="gps-coords">{{ repairer.latitude.toFixed(6) }}, {{ repairer.longitude.toFixed(6) }}</span>
-                            } @else {
-                              <span class="not-provided">Non renseignees</span>
-                            }
-                          </span>
-                        </div>
-                      </div>
-                    </div>
+            <ui-data-grid-column key="status" header="Statut" field="verificationStatus" [sortable]="true">
+              <ng-template let-row>
+                <span class="status-badge" [class]="row.verificationStatus">
+                  <span class="badge-dot"></span>
+                  {{ statusLabels.getVerificationStatusLabel(row.verificationStatus) }}
+                </span>
+              </ng-template>
+            </ui-data-grid-column>
 
-                    <!-- Identity Documents -->
-                    <div class="detail-section">
-                      <div class="section-header">
-                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
-                          <rect x="3" y="4" width="18" height="16" rx="2" stroke="currentColor" stroke-width="2"/>
-                          <circle cx="9" cy="10" r="2" stroke="currentColor" stroke-width="2"/>
-                          <path d="M15 8H17M15 12H17M7 16H17" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
-                        </svg>
-                        <h4>Documents d'identite</h4>
-                      </div>
-                      <div class="detail-grid">
-                        <div class="detail-item">
-                          <span class="detail-label">Numero CNI</span>
-                          <span class="detail-value">{{ repairer.nationalIdNumber || 'Non fourni' }}</span>
-                        </div>
-                        <div class="detail-item">
-                          <span class="detail-label">Date de naissance</span>
-                          <span class="detail-value">{{ repairer.dateOfBirth || 'Non fournie' }}</span>
-                        </div>
-                      </div>
-                      @if (repairer.nationalIdFrontUrl || repairer.nationalIdBackUrl) {
-                        <div class="documents-preview">
-                          @if (repairer.nationalIdFrontUrl) {
-                            <a [href]="repairer.nationalIdFrontUrl" target="_blank" class="doc-link">
-                              <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
-                                <path d="M15 2H6C5.46957 2 4.96086 2.21071 4.58579 2.58579C4.21071 2.96086 4 3.46957 4 4V20C4 20.5304 4.21071 21.0391 4.58579 21.4142C4.96086 21.7893 5.46957 22 6 22H18C18.5304 22 19.0391 21.7893 19.4142 21.4142C19.7893 21.0391 20 20.5304 20 20V7L15 2Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                              </svg>
-                              CNI (recto)
-                            </a>
-                          }
-                          @if (repairer.nationalIdBackUrl) {
-                            <a [href]="repairer.nationalIdBackUrl" target="_blank" class="doc-link">
-                              <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
-                                <path d="M15 2H6C5.46957 2 4.96086 2.21071 4.58579 2.58579C4.21071 2.96086 4 3.46957 4 4V20C4 20.5304 4.21071 21.0391 4.58579 21.4142C4.96086 21.7893 5.46957 22 6 22H18C18.5304 22 19.0391 21.7893 19.4142 21.4142C19.7893 21.0391 20 20.5304 20 20V7L15 2Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                              </svg>
-                              CNI (verso)
-                            </a>
-                          }
-                        </div>
-                      }
-                    </div>
+            <ui-data-grid-column key="createdAt" header="Inscription" field="createdAt" [sortable]="true">
+              <ng-template let-row>
+                <span class="date">{{ row.createdAt | date:'dd/MM/yy' }}</span>
+              </ng-template>
+            </ui-data-grid-column>
 
-                    <!-- Business Documents -->
-                    @if (repairer.rccmNumber || repairer.taxId) {
-                      <div class="detail-section">
-                        <div class="section-header">
-                          <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
-                            <path d="M9 12H15M9 16H15M17 21H7C5.89543 21 5 20.1046 5 19V5C5 3.89543 5.89543 3 7 3H12.5858C12.851 3 13.1054 3.10536 13.2929 3.29289L18.7071 8.70711C18.8946 8.89464 19 9.149 19 9.41421V19C19 20.1046 18.1046 21 17 21Z" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
-                          </svg>
-                          <h4>Documents commerciaux</h4>
-                        </div>
-                        <div class="detail-grid">
-                          @if (repairer.rccmNumber) {
-                            <div class="detail-item">
-                              <span class="detail-label">Numero RCCM</span>
-                              <span class="detail-value">{{ repairer.rccmNumber }}</span>
-                            </div>
-                          }
-                          @if (repairer.taxId) {
-                            <div class="detail-item">
-                              <span class="detail-label">Numero Contribuable</span>
-                              <span class="detail-value">{{ repairer.taxId }}</span>
-                            </div>
-                          }
-                        </div>
-                        @if (repairer.rccmDocumentUrl) {
-                          <div class="documents-preview">
-                            <a [href]="repairer.rccmDocumentUrl" target="_blank" class="doc-link">
-                              <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
-                                <path d="M15 2H6C5.46957 2 4.96086 2.21071 4.58579 2.58579C4.21071 2.96086 4 3.46957 4 4V20C4 20.5304 4.21071 21.0391 4.58579 21.4142C4.96086 21.7893 5.46957 22 6 22H18C18.5304 22 19.0391 21.7893 19.4142 21.4142C19.7893 21.0391 20 20.5304 20 20V7L15 2Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                              </svg>
-                              Document RCCM
-                            </a>
-                          </div>
-                        }
-                      </div>
+            <ui-data-grid-column key="actions" header="Actions" align="right" width="180px">
+              <ng-template let-row>
+                <div class="action-buttons-inline" (click)="$event.stopPropagation()">
+                  @switch (row.verificationStatus) {
+                    @case ('pending') {
+                      <button class="icon-btn success" (click)="openVerifyModal(row, 'verified')" title="Valider" aria-label="Valider">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M20 6L9 17L4 12" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                      </button>
+                      <button class="icon-btn danger" (click)="openVerifyModal(row, 'rejected')" title="Rejeter" aria-label="Rejeter">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M18 6L6 18M6 6L18 18" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/></svg>
+                      </button>
+                      <button class="icon-btn review" (click)="setUnderReview(row.id)" title="Mettre en revision" aria-label="Mettre en revision">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M1 12S5 4 12 4S23 12 23 12S19 20 12 20S1 12 1 12Z" stroke="currentColor" stroke-width="2"/><circle cx="12" cy="12" r="3" stroke="currentColor" stroke-width="2"/></svg>
+                      </button>
                     }
-
-                    <!-- Specialties -->
-                    @if (repairer.specialties && repairer.specialties.length) {
-                      <div class="detail-section">
-                        <div class="section-header">
-                          <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
-                            <path d="M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                          </svg>
-                          <h4>Specialites</h4>
-                        </div>
-                        <div class="specialties-list">
-                          @for (specialty of repairer.specialties; track specialty) {
-                            <span class="specialty-chip">{{ specialty }}</span>
-                          }
-                        </div>
-                      </div>
+                    @case ('under_review') {
+                      <button class="icon-btn success" (click)="openVerifyModal(row, 'verified')" title="Valider" aria-label="Valider">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M20 6L9 17L4 12" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                      </button>
+                      <button class="icon-btn danger" (click)="openVerifyModal(row, 'rejected')" title="Rejeter" aria-label="Rejeter">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M18 6L6 18M6 6L18 18" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/></svg>
+                      </button>
                     }
-
-                    <!-- Shop Photo -->
-                    @if (repairer.shopPhotoUrl) {
-                      <div class="detail-section">
-                        <div class="section-header">
-                          <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
-                            <rect x="3" y="3" width="18" height="18" rx="2" stroke="currentColor" stroke-width="2"/>
-                            <circle cx="8.5" cy="8.5" r="1.5" fill="currentColor"/>
-                            <path d="M21 15L16 10L5 21" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                          </svg>
-                          <h4>Photo de la boutique</h4>
-                        </div>
-                        <div class="shop-photo-container">
-                          <img [src]="repairer.shopPhotoUrl" alt="Boutique" class="shop-photo" />
-                        </div>
-                      </div>
+                    @case ('verified') {
+                      <button class="icon-btn warning" (click)="openSuspendModal(row)" title="Suspendre" aria-label="Suspendre">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="2"/><path d="M4.93 4.93L19.07 19.07" stroke="currentColor" stroke-width="2"/></svg>
+                      </button>
                     }
-
-                    <!-- Verification Notes -->
-                    @if (repairer.verificationNotes) {
-                      <div class="detail-section">
-                        <div class="section-header">
-                          <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
-                            <path d="M14 2H6C5.46957 2 4.96086 2.21071 4.58579 2.58579C4.21071 2.96086 4 3.46957 4 4V20C4 20.5304 4.21071 21.0391 4.58579 21.4142C4.96086 21.7893 5.46957 22 6 22H18C18.5304 22 19.0391 21.7893 19.4142 21.4142C19.7893 21.0391 20 20.5304 20 20V8L14 2Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                            <path d="M14 2V8H20M16 13H8M16 17H8M10 9H8" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                          </svg>
-                          <h4>Notes de verification</h4>
-                        </div>
-                        <div class="notes-box">
-                          <p>{{ repairer.verificationNotes }}</p>
-                        </div>
-                      </div>
+                    @case ('rejected') {
+                      <button class="icon-btn success" (click)="openVerifyModal(row, 'verified')" title="Revalider" aria-label="Revalider">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M1 4V10H7M23 20V14H17" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M20.49 9A9 9 0 0 0 5.64 5.64L1 10M23 14L18.36 18.36A9 9 0 0 1 3.51 15" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                      </button>
                     }
-
-                    <!-- Meta Info -->
-                    <div class="meta-section">
-                      <div class="meta-item">
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
-                          <rect x="3" y="4" width="18" height="18" rx="2" stroke="currentColor" stroke-width="2"/>
-                          <path d="M16 2V6M8 2V6M3 10H21" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
-                        </svg>
-                        <span>Inscrit le {{ repairer.createdAt | date:'dd/MM/yyyy a HH:mm' }}</span>
-                      </div>
-                      @if (repairer.verifiedAt) {
-                        <div class="meta-item success">
-                          <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
-                            <path d="M9 12L11 14L15 10M21 12C21 16.9706 16.9706 21 12 21C7.02944 21 3 16.9706 3 12C3 7.02944 7.02944 3 12 3C16.9706 3 21 7.02944 21 12Z" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
-                          </svg>
-                          <span>Verifie le {{ repairer.verifiedAt | date:'dd/MM/yyyy a HH:mm' }}</span>
-                        </div>
-                      }
-                    </div>
-
-                    <!-- Action Buttons -->
-                    <div class="action-buttons">
-                      @switch (repairer.verificationStatus) {
-                        @case ('pending') {
-                          <button class="btn btn-review" (click)="setUnderReview(repairer.id); $event.stopPropagation()">
-                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
-                              <path d="M1 12S5 4 12 4S23 12 23 12S19 20 12 20S1 12 1 12Z" stroke="currentColor" stroke-width="2"/>
-                              <circle cx="12" cy="12" r="3" stroke="currentColor" stroke-width="2"/>
-                            </svg>
-                            Mettre en revision
-                          </button>
-                          <button class="btn btn-success" (click)="openVerifyModal(repairer, 'verified'); $event.stopPropagation()">
-                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
-                              <path d="M20 6L9 17L4 12" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                            </svg>
-                            Valider
-                          </button>
-                          <button class="btn btn-danger" (click)="openVerifyModal(repairer, 'rejected'); $event.stopPropagation()">
-                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
-                              <path d="M18 6L6 18M6 6L18 18" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
-                            </svg>
-                            Rejeter
-                          </button>
-                        }
-                        @case ('under_review') {
-                          <button class="btn btn-success" (click)="openVerifyModal(repairer, 'verified'); $event.stopPropagation()">
-                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
-                              <path d="M20 6L9 17L4 12" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                            </svg>
-                            Valider
-                          </button>
-                          <button class="btn btn-danger" (click)="openVerifyModal(repairer, 'rejected'); $event.stopPropagation()">
-                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
-                              <path d="M18 6L6 18M6 6L18 18" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
-                            </svg>
-                            Rejeter
-                          </button>
-                        }
-                        @case ('verified') {
-                          <button class="btn btn-warning" (click)="openSuspendModal(repairer); $event.stopPropagation()">
-                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
-                              <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="2"/>
-                              <path d="M4.93 4.93L19.07 19.07" stroke="currentColor" stroke-width="2"/>
-                            </svg>
-                            Suspendre
-                          </button>
-                        }
-                        @case ('rejected') {
-                          <button class="btn btn-success" (click)="openVerifyModal(repairer, 'verified'); $event.stopPropagation()">
-                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
-                              <path d="M20 6L9 17L4 12" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                            </svg>
-                            Revalider
-                          </button>
-                        }
-                        @case ('suspended') {
-                          <button class="btn btn-success" (click)="reactivate(repairer.id); $event.stopPropagation()">
-                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
-                              <path d="M1 4V10H7M23 20V14H17" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                              <path d="M20.49 9A9 9 0 0 0 5.64 5.64L1 10M23 14L18.36 18.36A9 9 0 0 1 3.51 15" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                            </svg>
-                            Reactiver
-                          </button>
-                        }
-                      }
-                    </div>
-                  </div>
-                }
-              </div>
-            }
-          </div>
-
-          <!-- Pagination -->
-          @if (total() > repairers().length || page() > 1) {
-            <div class="pagination">
-              <button
-                class="pagination-btn"
-                [disabled]="page() <= 1"
-                (click)="previousPage()"
-              >
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
-                  <path d="M15 18L9 12L15 6" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
-                </svg>
-                Precedent
-              </button>
-              <div class="page-indicator">
-                <span class="current-page">{{ page() }}</span>
-              </div>
-              <button
-                class="pagination-btn"
-                [disabled]="repairers().length < 20"
-                (click)="nextPage()"
-              >
-                Suivant
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
-                  <path d="M9 6L15 12L9 18" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
-                </svg>
-              </button>
-            </div>
-          }
+                    @case ('suspended') {
+                      <button class="icon-btn success" (click)="reactivate(row.id)" title="Reactiver" aria-label="Reactiver">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M1 4V10H7M23 20V14H17" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M20.49 9A9 9 0 0 0 5.64 5.64L1 10M23 14L18.36 18.36A9 9 0 0 1 3.51 15" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                      </button>
+                    }
+                  }
+                  <button class="icon-btn neutral" (click)="openDrawer(row)" title="Voir les détails" aria-label="Voir les détails">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M1 12S5 4 12 4S23 12 23 12S19 20 12 20S1 12 1 12Z" stroke="currentColor" stroke-width="2"/><circle cx="12" cy="12" r="3" stroke="currentColor" stroke-width="2"/></svg>
+                  </button>
+                </div>
+              </ng-template>
+            </ui-data-grid-column>
+          </ui-data-grid>
         }
       </div>
+
+      <!-- Drawer latéral : détails complets du réparateur -->
+      @if (drawerRepairer(); as r) {
+        <div class="drawer-overlay" (click)="closeDrawer()" aria-hidden="true"></div>
+        <aside class="drawer" role="dialog" aria-labelledby="drawer-title">
+          <header class="drawer-header">
+            <div class="drawer-identity">
+              <div class="drawer-avatar" [class]="r.verificationStatus">
+                @if (r.user?.avatarUrl) {
+                  <img [src]="r.user?.avatarUrl" [alt]="r.businessName" />
+                } @else {
+                  <span>{{ r.user?.firstName | initials : r.user?.lastName }}</span>
+                }
+              </div>
+              <div>
+                <h3 id="drawer-title">{{ r.businessName || 'Sans nom commercial' }}</h3>
+                <p>{{ r.user?.firstName }} {{ r.user?.lastName }}</p>
+                <span class="status-badge" [class]="r.verificationStatus">
+                  <span class="badge-dot"></span>
+                  {{ statusLabels.getVerificationStatusLabel(r.verificationStatus) }}
+                </span>
+              </div>
+            </div>
+            <button class="drawer-close" (click)="closeDrawer()" aria-label="Fermer">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+                <path d="M18 6L6 18M6 6L18 18" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+              </svg>
+            </button>
+          </header>
+
+          <div class="drawer-body">
+            <!-- Business Info -->
+            <section class="detail-section">
+              <div class="section-header">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+                  <path d="M19 21V5C19 3.89543 18.1046 3 17 3H7C5.89543 3 5 3.89543 5 5V21M19 21H5M19 21H21M5 21H3M9 7H10M9 11H10M14 7H15M14 11H15M9 21V16C9 15.4477 9.44772 15 10 15H14C14.5523 15 15 15.4477 15 16V21" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+                <h4>Informations commerciales</h4>
+              </div>
+              <div class="detail-grid">
+                <div class="detail-item">
+                  <span class="detail-label">Type d'activité</span>
+                  <span class="detail-value">{{ r.businessType || 'Non spécifié' }}</span>
+                </div>
+                <div class="detail-item">
+                  <span class="detail-label">Téléphone</span>
+                  <span class="detail-value">{{ r.businessPhone || r.user?.phone }}</span>
+                </div>
+                <div class="detail-item">
+                  <span class="detail-label">Email</span>
+                  <span class="detail-value">{{ r.businessEmail || 'Non spécifié' }}</span>
+                </div>
+                <div class="detail-item">
+                  <span class="detail-label">Expérience</span>
+                  <span class="detail-value highlight">{{ r.yearsOfExperience || 0 }} ans</span>
+                </div>
+              </div>
+            </section>
+
+            <!-- Location -->
+            <section class="detail-section">
+              <div class="section-header">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+                  <path d="M21 10C21 17 12 23 12 23C12 23 3 17 3 10C3 5.02944 7.02944 1 12 1C16.9706 1 21 5.02944 21 10Z" stroke="currentColor" stroke-width="2"/>
+                  <circle cx="12" cy="10" r="3" stroke="currentColor" stroke-width="2"/>
+                </svg>
+                <h4>Localisation</h4>
+              </div>
+              <div class="detail-grid">
+                <div class="detail-item full">
+                  <span class="detail-label">Adresse complète</span>
+                  <span class="detail-value">{{ r.address || 'Non renseignée' }}</span>
+                </div>
+                <div class="detail-item">
+                  <span class="detail-label">Ville</span>
+                  <span class="detail-value">{{ r.city || 'Non renseignée' }}</span>
+                </div>
+                <div class="detail-item">
+                  <span class="detail-label">Commune</span>
+                  <span class="detail-value">{{ r.commune || 'Non renseignée' }}</span>
+                </div>
+                <div class="detail-item">
+                  <span class="detail-label">Quartier</span>
+                  <span class="detail-value">{{ r.quarter || 'Non renseigné' }}</span>
+                </div>
+                <div class="detail-item">
+                  <span class="detail-label">Coordonnées GPS</span>
+                  <span class="detail-value">
+                    @if (r.latitude && r.longitude) {
+                      <span class="gps-coords">{{ r.latitude.toFixed(6) }}, {{ r.longitude.toFixed(6) }}</span>
+                    } @else {
+                      <span class="not-provided">Non renseignées</span>
+                    }
+                  </span>
+                </div>
+              </div>
+            </section>
+
+            <!-- Identity Documents -->
+            <section class="detail-section">
+              <div class="section-header">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+                  <rect x="3" y="4" width="18" height="16" rx="2" stroke="currentColor" stroke-width="2"/>
+                  <circle cx="9" cy="10" r="2" stroke="currentColor" stroke-width="2"/>
+                  <path d="M15 8H17M15 12H17M7 16H17" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                </svg>
+                <h4>Documents d'identité</h4>
+              </div>
+              <div class="detail-grid">
+                <div class="detail-item">
+                  <span class="detail-label">Numéro CNI</span>
+                  <span class="detail-value">{{ r.nationalIdNumber || 'Non fourni' }}</span>
+                </div>
+                <div class="detail-item">
+                  <span class="detail-label">Date de naissance</span>
+                  <span class="detail-value">{{ r.dateOfBirth || 'Non fournie' }}</span>
+                </div>
+              </div>
+              @if (r.nationalIdFrontUrl || r.nationalIdBackUrl) {
+                <div class="documents-preview">
+                  @if (r.nationalIdFrontUrl) {
+                    <a [href]="r.nationalIdFrontUrl" target="_blank" class="doc-link">
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M15 2H6C5.46957 2 4.96086 2.21071 4.58579 2.58579C4.21071 2.96086 4 3.46957 4 4V20C4 20.5304 4.21071 21.0391 4.58579 21.4142C4.96086 21.7893 5.46957 22 6 22H18C18.5304 22 19.0391 21.7893 19.4142 21.4142C19.7893 21.0391 20 20.5304 20 20V7L15 2Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                      CNI (recto)
+                    </a>
+                  }
+                  @if (r.nationalIdBackUrl) {
+                    <a [href]="r.nationalIdBackUrl" target="_blank" class="doc-link">
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M15 2H6C5.46957 2 4.96086 2.21071 4.58579 2.58579C4.21071 2.96086 4 3.46957 4 4V20C4 20.5304 4.21071 21.0391 4.58579 21.4142C4.96086 21.7893 5.46957 22 6 22H18C18.5304 22 19.0391 21.7893 19.4142 21.4142C19.7893 21.0391 20 20.5304 20 20V7L15 2Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                      CNI (verso)
+                    </a>
+                  }
+                </div>
+              }
+            </section>
+
+            <!-- Business Documents -->
+            @if (r.rccmNumber || r.taxId) {
+              <section class="detail-section">
+                <div class="section-header">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+                    <path d="M9 12H15M9 16H15M17 21H7C5.89543 21 5 20.1046 5 19V5C5 3.89543 5.89543 3 7 3H12.5858C12.851 3 13.1054 3.10536 13.2929 3.29289L18.7071 8.70711C18.8946 8.89464 19 9.149 19 9.41421V19C19 20.1046 18.1046 21 17 21Z" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                  </svg>
+                  <h4>Documents commerciaux</h4>
+                </div>
+                <div class="detail-grid">
+                  @if (r.rccmNumber) {
+                    <div class="detail-item">
+                      <span class="detail-label">Numéro RCCM</span>
+                      <span class="detail-value">{{ r.rccmNumber }}</span>
+                    </div>
+                  }
+                  @if (r.taxId) {
+                    <div class="detail-item">
+                      <span class="detail-label">Numéro Contribuable</span>
+                      <span class="detail-value">{{ r.taxId }}</span>
+                    </div>
+                  }
+                </div>
+                @if (r.rccmDocumentUrl) {
+                  <div class="documents-preview">
+                    <a [href]="r.rccmDocumentUrl" target="_blank" class="doc-link">
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M15 2H6C5.46957 2 4.96086 2.21071 4.58579 2.58579C4.21071 2.96086 4 3.46957 4 4V20C4 20.5304 4.21071 21.0391 4.58579 21.4142C4.96086 21.7893 5.46957 22 6 22H18C18.5304 22 19.0391 21.7893 19.4142 21.4142C19.7893 21.0391 20 20.5304 20 20V7L15 2Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                      Document RCCM
+                    </a>
+                  </div>
+                }
+              </section>
+            }
+
+            <!-- Specialties -->
+            @if (r.specialties && r.specialties.length) {
+              <section class="detail-section">
+                <div class="section-header">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+                    <path d="M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                  </svg>
+                  <h4>Spécialités</h4>
+                </div>
+                <div class="specialties-list">
+                  @for (specialty of r.specialties; track specialty) {
+                    <span class="specialty-chip">{{ specialty }}</span>
+                  }
+                </div>
+              </section>
+            }
+
+            <!-- Shop Photo -->
+            @if (r.shopPhotoUrl) {
+              <section class="detail-section">
+                <div class="section-header">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+                    <rect x="3" y="3" width="18" height="18" rx="2" stroke="currentColor" stroke-width="2"/>
+                    <circle cx="8.5" cy="8.5" r="1.5" fill="currentColor"/>
+                    <path d="M21 15L16 10L5 21" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                  </svg>
+                  <h4>Photo de la boutique</h4>
+                </div>
+                <div class="shop-photo-container">
+                  <img [src]="r.shopPhotoUrl" alt="Boutique" class="shop-photo" />
+                </div>
+              </section>
+            }
+
+            <!-- Verification Notes -->
+            @if (r.verificationNotes) {
+              <section class="detail-section">
+                <div class="section-header">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+                    <path d="M14 2H6C5.46957 2 4.96086 2.21071 4.58579 2.58579C4.21071 2.96086 4 3.46957 4 4V20C4 20.5304 4.21071 21.0391 4.58579 21.4142C4.96086 21.7893 5.46957 22 6 22H18C18.5304 22 19.0391 21.7893 19.4142 21.4142C19.7893 21.0391 20 20.5304 20 20V8L14 2Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    <path d="M14 2V8H20M16 13H8M16 17H8M10 9H8" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                  </svg>
+                  <h4>Notes de vérification</h4>
+                </div>
+                <div class="notes-box">
+                  <p>{{ r.verificationNotes }}</p>
+                </div>
+              </section>
+            }
+
+            <!-- Meta Info -->
+            <div class="meta-section">
+              <div class="meta-item">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
+                  <rect x="3" y="4" width="18" height="18" rx="2" stroke="currentColor" stroke-width="2"/>
+                  <path d="M16 2V6M8 2V6M3 10H21" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                </svg>
+                <span>Inscrit le {{ r.createdAt | date:'dd/MM/yyyy à HH:mm' }}</span>
+              </div>
+              @if (r.verifiedAt) {
+                <div class="meta-item success">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
+                    <path d="M9 12L11 14L15 10M21 12C21 16.9706 16.9706 21 12 21C7.02944 21 3 16.9706 3 12C3 7.02944 7.02944 3 12 3C16.9706 3 21 7.02944 21 12Z" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                  </svg>
+                  <span>Vérifié le {{ r.verifiedAt | date:'dd/MM/yyyy à HH:mm' }}</span>
+                </div>
+              }
+            </div>
+          </div>
+
+          <footer class="drawer-footer">
+            @switch (r.verificationStatus) {
+              @case ('pending') {
+                <button class="btn btn-review" (click)="setUnderReview(r.id)">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M1 12S5 4 12 4S23 12 23 12S19 20 12 20S1 12 1 12Z" stroke="currentColor" stroke-width="2"/><circle cx="12" cy="12" r="3" stroke="currentColor" stroke-width="2"/></svg>
+                  Mettre en revision
+                </button>
+                <button class="btn btn-success" (click)="openVerifyModal(r, 'verified')">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M20 6L9 17L4 12" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                  Valider
+                </button>
+                <button class="btn btn-danger" (click)="openVerifyModal(r, 'rejected')">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M18 6L6 18M6 6L18 18" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+                  Rejeter
+                </button>
+              }
+              @case ('under_review') {
+                <button class="btn btn-success" (click)="openVerifyModal(r, 'verified')">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M20 6L9 17L4 12" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                  Valider
+                </button>
+                <button class="btn btn-danger" (click)="openVerifyModal(r, 'rejected')">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M18 6L6 18M6 6L18 18" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+                  Rejeter
+                </button>
+              }
+              @case ('verified') {
+                <button class="btn btn-warning" (click)="openSuspendModal(r)">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="2"/><path d="M4.93 4.93L19.07 19.07" stroke="currentColor" stroke-width="2"/></svg>
+                  Suspendre
+                </button>
+              }
+              @case ('rejected') {
+                <button class="btn btn-success" (click)="openVerifyModal(r, 'verified')">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M20 6L9 17L4 12" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                  Revalider
+                </button>
+              }
+              @case ('suspended') {
+                <button class="btn btn-success" (click)="reactivate(r.id)">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M1 4V10H7M23 20V14H17" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M20.49 9A9 9 0 0 0 5.64 5.64L1 10M23 14L18.36 18.36A9 9 0 0 1 3.51 15" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                  Reactiver
+                </button>
+              }
+            }
+          </footer>
+        </aside>
+      }
 
       <!-- Verify Modal -->
       @if (showVerifyModal()) {
@@ -623,162 +647,10 @@ type StatusFilter = 'all' | 'pending' | 'under_review' | 'verified' | 'rejected'
       background: #FAFAFA;
     }
 
-    /* Header */
-    .admin-header {
-      position: fixed;
-      top: 0;
-      left: 0;
-      right: 0;
-      z-index: 100;
-      background:
-        radial-gradient(ellipse at 92% 50%, rgba(255, 152, 0, 0.22) 0%, transparent 55%),
-        linear-gradient(135deg, #1A1A1A 0%, #0F0F0F 100%);
-      border-bottom-left-radius: 30px;
-      border-bottom-right-radius: 30px;
-      padding: 1rem 1.25rem;
-      padding-top: calc(1rem + env(safe-area-inset-top, 0));
-      border-bottom: 2px solid var(--color-primary-500, #FF9800);
-      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.35);
-    }
-
-    .header-top {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-    }
-
-    .header-left {
-      display: flex;
-      align-items: center;
-      gap: 0.75rem;
-    }
-
-    .back-btn {
-      width: 44px;
-      height: 44px;
-      border-radius: 12px;
-      background: rgba(255, 255, 255, 0.08);
-      border: 1px solid rgba(255, 255, 255, 0.1);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      color: white;
-      cursor: pointer;
-      transition: all 150ms ease;
-    }
-
-    .back-btn:hover {
-      background: rgba(255, 152, 0, 0.18);
-      border-color: var(--color-primary-500, #FF9800);
-      color: var(--color-primary-500, #FF9800);
-    }
-
-    .header-titles {
-      display: flex;
-      flex-direction: column;
-    }
-
-    .app-title {
-      font-family: 'Poppins', 'Inter', sans-serif;
-      font-size: 1.125rem;
-      font-weight: 700;
-      letter-spacing: -0.01em;
-      color: white;
-      margin: 0;
-      line-height: 1.2;
-    }
-
-    .welcome-msg {
-      font-size: 0.75rem;
-      color: rgba(255, 255, 255, 0.65);
-      margin: 0;
-    }
-
-    .header-right {
-      display: flex;
-      align-items: center;
-      gap: 0.5rem;
-    }
-
-    .status-online {
-      display: flex;
-      align-items: center;
-      gap: 0.375rem;
-      padding: 0.375rem 0.75rem;
-      background: rgba(76, 175, 80, 0.18);
-      border: 1px solid rgba(76, 175, 80, 0.35);
-      border-radius: 20px;
-      font-size: 0.6875rem;
-      font-weight: 600;
-      color: #A5D6A7;
-    }
-
-    .status-online .status-dot {
-      width: 8px;
-      height: 8px;
-      background: var(--color-secondary, #4CAF50);
-      border-radius: 50%;
-      animation: statusPulse 2s infinite;
-      box-shadow: 0 0 8px rgba(76, 175, 80, 0.6);
-    }
-
-    @keyframes statusPulse {
-      0%, 100% { opacity: 1; }
-      50% { opacity: 0.5; }
-    }
-
-    .role-badge {
-      padding: 0.375rem 0.75rem;
-      background: linear-gradient(135deg, var(--color-primary-500, #FF9800), var(--color-gold-800, #F9A825));
-      border-radius: 20px;
-      font-size: 0.6875rem;
-      font-weight: 700;
-      color: white;
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
-      box-shadow: 0 2px 8px rgba(255, 152, 0, 0.35);
-    }
-
-    .profile-btn {
-      width: 40px;
-      height: 40px;
-      border-radius: 50%;
-      border: 2px solid var(--color-primary-500, #FF9800);
-      background: rgba(255, 255, 255, 0.08);
-      overflow: hidden;
-      cursor: pointer;
-      padding: 0;
-      transition: all 150ms ease;
-    }
-
-    .profile-btn:hover {
-      border-color: var(--color-gold-800, #F9A825);
-      transform: scale(1.05);
-      box-shadow: 0 0 0 4px rgba(255, 152, 0, 0.18);
-    }
-
-    .profile-btn img {
-      width: 100%;
-      height: 100%;
-      object-fit: cover;
-    }
-
-    .profile-placeholder {
-      width: 100%;
-      height: 100%;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      color: white;
-      font-weight: 600;
-      font-size: 0.875rem;
-      background: linear-gradient(135deg, var(--color-primary-500, #FF9800), var(--color-gold-800, #F9A825));
-    }
-
     /* Container */
     .page-content {
       padding: 1rem;
-      padding-top: 160px;
+      padding-top: 180px;
       padding-bottom: 100px;
     }
 
@@ -1574,9 +1446,295 @@ type StatusFilter = 'all' | 'pending' | 'under_review' | 'verified' | 'rejected'
       border-radius: 50%;
       animation: spin 1s linear infinite;
     }
+
+    /* ============================================================
+       Cellules custom du <ui-data-grid>
+       ============================================================ */
+    .cell-name {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      min-width: 0;
+    }
+
+    .cell-avatar {
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      flex-shrink: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: linear-gradient(135deg, var(--color-primary-500, #FF9800), var(--color-gold-800, #F9A825));
+      color: white;
+      font-weight: 700;
+      font-size: 0.8125rem;
+      overflow: hidden;
+    }
+
+    .cell-avatar img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    .cell-avatar.verified  { background: linear-gradient(135deg, var(--color-secondary, #4CAF50), var(--color-success-dark, #2E7D32)); }
+    .cell-avatar.pending   { background: linear-gradient(135deg, var(--color-mustard, #FFC107), var(--color-primary-700, #F57C00)); }
+    .cell-avatar.under_review { background: linear-gradient(135deg, var(--color-ocean, #1565C0), var(--color-ocean-500, #2196F3)); }
+    .cell-avatar.rejected  { background: linear-gradient(135deg, var(--color-error, #F44336), #EF5350); }
+    .cell-avatar.suspended { background: linear-gradient(135deg, #6b7280, #9ca3af); }
+
+    .cell-name-text {
+      display: flex;
+      flex-direction: column;
+      min-width: 0;
+    }
+
+    .cell-name-text strong {
+      font-size: 0.875rem;
+      font-weight: 600;
+      color: #1f2937;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .cell-name-text .muted {
+      font-size: 0.75rem;
+      color: #9ca3af;
+    }
+
+    .phone {
+      font-variant-numeric: tabular-nums;
+      color: #4b5563;
+    }
+
+    .date {
+      color: #6b7280;
+      font-size: 0.8125rem;
+    }
+
+    /* Action buttons inline (icon-only) */
+    .action-buttons-inline {
+      display: inline-flex;
+      gap: 0.25rem;
+      justify-content: flex-end;
+    }
+
+    .icon-btn {
+      width: 32px;
+      height: 32px;
+      border: none;
+      border-radius: 8px;
+      background: transparent;
+      color: #6b7280;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.15s ease;
+    }
+
+    .icon-btn:hover {
+      background: #F5F5F5;
+    }
+
+    .icon-btn:focus-visible {
+      outline: 2px solid var(--color-primary-500, #FF9800);
+      outline-offset: 1px;
+    }
+
+    .icon-btn.success { color: var(--color-secondary, #4CAF50); }
+    .icon-btn.success:hover { background: #E8F5E9; }
+
+    .icon-btn.danger { color: var(--color-error, #F44336); }
+    .icon-btn.danger:hover { background: #FFEBEE; }
+
+    .icon-btn.warning { color: var(--color-warning-dark, #F57C00); }
+    .icon-btn.warning:hover { background: #FFF3E0; }
+
+    .icon-btn.review { color: var(--color-ocean, #1565C0); }
+    .icon-btn.review:hover { background: #E3F2FD; }
+
+    .icon-btn.neutral { color: #6b7280; }
+    .icon-btn.neutral:hover { background: #F5F5F5; color: var(--color-primary-500, #FF9800); }
+
+    /* ============================================================
+       Drawer latéral (détails du réparateur)
+       ============================================================ */
+    .drawer-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.4);
+      z-index: 1100;
+      animation: drawer-fade-in 0.2s ease;
+    }
+
+    @keyframes drawer-fade-in {
+      from { opacity: 0; }
+      to   { opacity: 1; }
+    }
+
+    .drawer {
+      position: fixed;
+      top: 0;
+      right: 0;
+      bottom: 0;
+      width: min(560px, 100vw);
+      background: white;
+      box-shadow: -8px 0 32px rgba(0, 0, 0, 0.18);
+      z-index: 1101;
+      display: flex;
+      flex-direction: column;
+      animation: drawer-slide-in 0.25s ease;
+    }
+
+    @keyframes drawer-slide-in {
+      from { transform: translateX(100%); }
+      to   { transform: translateX(0); }
+    }
+
+    .drawer-header {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 1rem;
+      padding: 1.25rem;
+      border-bottom: 1px solid #F5F5F5;
+      background: linear-gradient(135deg, #FFFAF3 0%, #FFF3E0 100%);
+    }
+
+    .drawer-identity {
+      display: flex;
+      align-items: center;
+      gap: 0.875rem;
+      flex: 1;
+      min-width: 0;
+    }
+
+    .drawer-avatar {
+      width: 56px;
+      height: 56px;
+      border-radius: 50%;
+      flex-shrink: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: linear-gradient(135deg, var(--color-primary-500, #FF9800), var(--color-gold-800, #F9A825));
+      color: white;
+      font-weight: 700;
+      font-size: 1.125rem;
+      overflow: hidden;
+      box-shadow: 0 4px 12px rgba(255, 152, 0, 0.25);
+    }
+
+    .drawer-avatar img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    .drawer-avatar.verified  { background: linear-gradient(135deg, var(--color-secondary, #4CAF50), var(--color-success-dark, #2E7D32)); box-shadow: 0 4px 12px rgba(76, 175, 80, 0.25); }
+    .drawer-avatar.pending   { background: linear-gradient(135deg, var(--color-mustard, #FFC107), var(--color-primary-700, #F57C00)); }
+    .drawer-avatar.under_review { background: linear-gradient(135deg, var(--color-ocean, #1565C0), var(--color-ocean-500, #2196F3)); box-shadow: 0 4px 12px rgba(21, 101, 192, 0.25); }
+    .drawer-avatar.rejected  { background: linear-gradient(135deg, var(--color-error, #F44336), #EF5350); box-shadow: 0 4px 12px rgba(244, 67, 54, 0.25); }
+    .drawer-avatar.suspended { background: linear-gradient(135deg, #6b7280, #9ca3af); box-shadow: 0 4px 12px rgba(107, 114, 128, 0.25); }
+
+    .drawer-identity h3 {
+      font-size: 1.125rem;
+      font-weight: 700;
+      color: #1f2937;
+      margin: 0 0 0.125rem;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .drawer-identity p {
+      font-size: 0.875rem;
+      color: #6b7280;
+      margin: 0 0 0.5rem;
+    }
+
+    .drawer-close {
+      width: 36px;
+      height: 36px;
+      border: none;
+      border-radius: 50%;
+      background: rgba(0, 0, 0, 0.05);
+      color: #6b7280;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      transition: all 0.15s ease;
+    }
+
+    .drawer-close:hover {
+      background: rgba(0, 0, 0, 0.1);
+      color: #1f2937;
+    }
+
+    .drawer-body {
+      flex: 1 1 auto;
+      min-height: 0;
+      overflow-y: auto;
+      overscroll-behavior: contain;
+      scroll-padding-bottom: 1rem;
+      padding: 1.25rem 1.25rem 1.5rem;
+      display: flex;
+      flex-direction: column;
+      gap: 1.25rem;
+    }
+
+    /* Scrollbar visible sur Webkit (Chrome, Edge, Safari) */
+    .drawer-body::-webkit-scrollbar {
+      width: 10px;
+    }
+
+    .drawer-body::-webkit-scrollbar-track {
+      background: #FAFAFA;
+    }
+
+    .drawer-body::-webkit-scrollbar-thumb {
+      background: #D1D5DB;
+      border-radius: 6px;
+      border: 2px solid #FAFAFA;
+    }
+
+    .drawer-body::-webkit-scrollbar-thumb:hover {
+      background: var(--color-primary-500, #FF9800);
+    }
+
+    /* Firefox */
+    .drawer-body {
+      scrollbar-width: thin;
+      scrollbar-color: #D1D5DB #FAFAFA;
+    }
+
+    .drawer-footer {
+      display: flex;
+      gap: 0.5rem;
+      padding: 1rem 1.25rem;
+      border-top: 1px solid #F5F5F5;
+      background: white;
+      flex-wrap: wrap;
+    }
+
+    .drawer-footer .btn {
+      flex: 1;
+      min-width: 0;
+    }
+
+    @media (max-width: 640px) {
+      .drawer {
+        width: 100vw;
+      }
+    }
   `],
 })
-export class RepairersVerificationComponent implements OnInit {
+export class RepairersVerificationComponent implements OnInit, OnDestroy {
   private readonly adminService = inject(AdminService);
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
@@ -1592,7 +1750,9 @@ export class RepairersVerificationComponent implements OnInit {
   readonly total = signal(0);
   readonly page = signal(1);
   readonly statusFilter = signal<StatusFilter>('all');
-  readonly expandedId = signal<string | null>(null);
+
+  // Drawer (remplace l'expand inline)
+  readonly drawerRepairer = signal<RepairerForVerification | null>(null);
 
   // Modal states
   readonly showVerifyModal = signal(false);
@@ -1604,6 +1764,14 @@ export class RepairersVerificationComponent implements OnInit {
   verificationNotes = '';
   suspendReason = '';
 
+  constructor() {
+    // Lock le scroll de la page derrière quand le drawer est ouvert.
+    effect(() => {
+      const open = this.drawerRepairer() !== null;
+      document.body.classList.toggle('drawer-scroll-locked', open);
+    });
+  }
+
   ngOnInit(): void {
     this.route.queryParams
       .pipe(takeUntilDestroyed(this.destroyRef))
@@ -1613,6 +1781,10 @@ export class RepairersVerificationComponent implements OnInit {
         }
         this.loadRepairers();
       });
+  }
+
+  ngOnDestroy(): void {
+    document.body.classList.remove('drawer-scroll-locked');
   }
 
   async loadRepairers(): Promise<void> {
@@ -1639,12 +1811,21 @@ export class RepairersVerificationComponent implements OnInit {
   setStatusFilter(status: StatusFilter): void {
     this.statusFilter.set(status);
     this.page.set(1);
-    this.expandedId.set(null);
+    this.drawerRepairer.set(null);
     this.router.navigate([], {
       queryParams: { status: status === 'all' ? null : status },
       queryParamsHandling: 'merge',
     });
     this.loadRepairers();
+  }
+
+  // Drawer
+  openDrawer(repairer: RepairerForVerification): void {
+    this.drawerRepairer.set(repairer);
+  }
+
+  closeDrawer(): void {
+    this.drawerRepairer.set(null);
   }
 
   onSearchChange(query: string): void {
@@ -1657,10 +1838,6 @@ export class RepairersVerificationComponent implements OnInit {
     this.searchQuery = '';
     this.page.set(1);
     this.loadRepairers();
-  }
-
-  toggleExpand(id: string): void {
-    this.expandedId.set(this.expandedId() === id ? null : id);
   }
 
   getTotalCount(): number {
@@ -1686,6 +1863,7 @@ export class RepairersVerificationComponent implements OnInit {
     this.isProcessing.set(true);
     try {
       await this.adminService.setRepairerUnderReview(id);
+      this.closeDrawer();
       await this.loadRepairers();
     } catch (err: any) {
       alert(err.message || 'Erreur');
@@ -1724,6 +1902,7 @@ export class RepairersVerificationComponent implements OnInit {
         notes: this.verificationNotes || undefined,
       });
       this.closeModals();
+      this.closeDrawer();
       await this.loadRepairers();
     } catch (err: any) {
       alert(err.message || 'Erreur');
@@ -1740,6 +1919,7 @@ export class RepairersVerificationComponent implements OnInit {
     try {
       await this.adminService.suspendRepairer(repairer.id, this.suspendReason);
       this.closeModals();
+      this.closeDrawer();
       await this.loadRepairers();
     } catch (err: any) {
       alert(err.message || 'Erreur');
@@ -1752,6 +1932,7 @@ export class RepairersVerificationComponent implements OnInit {
     this.isProcessing.set(true);
     try {
       await this.adminService.reactivateRepairer(id);
+      this.closeDrawer();
       await this.loadRepairers();
     } catch (err: any) {
       alert(err.message || 'Erreur');
@@ -1760,22 +1941,4 @@ export class RepairersVerificationComponent implements OnInit {
     }
   }
 
-  // Header methods
-  getRoleLabel(): string {
-    const role = this.authStore.user()?.role;
-    const labels: Record<string, string> = {
-      repairer: 'Réparateur',
-      client: 'Client',
-      admin: 'Admin',
-    };
-    return labels[role || ''] || 'Utilisateur';
-  }
-
-  goToProfile(): void {
-    this.router.navigate(['/profile']);
-  }
-
-  goBack(): void {
-    this.router.navigate(['/admin']);
-  }
 }

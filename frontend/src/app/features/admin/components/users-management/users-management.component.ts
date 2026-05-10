@@ -4,6 +4,11 @@ import { RouterLink, ActivatedRoute, Router } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { AdminService, UserForAdmin } from '../../services/admin.service';
 import { UiHeaderComponent } from '../../../../shared/components/ui-header/ui-header.component';
+import { HeaderSearchComponent } from '../../../../shared/components/header-search/header-search.component';
+import {
+  UiDataGridComponent,
+  UiDataGridColumnComponent,
+} from '../../../../shared/components/ui-data-grid';
 import { InitialsPipe } from '../../../../shared/pipes/initials.pipe';
 import { StatusLabelsService, UserStatus } from '../../../../shared/services/status-labels.service';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
@@ -15,40 +20,34 @@ type StatusFilter = 'all' | 'pending' | 'active' | 'suspended' | 'deactivated';
   selector: 'app-users-management',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [CommonModule, RouterLink, FormsModule, UiHeaderComponent, InitialsPipe],
+  imports: [
+    CommonModule,
+    RouterLink,
+    FormsModule,
+    UiHeaderComponent,
+    HeaderSearchComponent,
+    UiDataGridComponent,
+    UiDataGridColumnComponent,
+    InitialsPipe,
+  ],
   template: `
     <div class="admin-page">
-      <!-- Header Banner -->
+      <!-- Header Banner avec search projetée -->
       <ui-header
         title="Gestion des utilisateurs"
         [subtitle]="total() + ' utilisateur(s) au total'"
         [showBack]="true"
         [showProfile]="true"
         backRoute="/admin"
-      />
+      >
+        <app-header-search
+          placeholder="Rechercher un utilisateur..."
+          (search)="onHeaderSearch($event)"
+          (cleared)="clearSearch()"
+        />
+      </ui-header>
 
       <div class="admin-container">
-        <!-- Search Bar -->
-        <div class="search-section">
-          <div class="search-bar">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
-              <path d="M21 21L15 15M17 10C17 13.866 13.866 17 10 17C6.13401 17 3 13.866 3 10C3 6.13401 6.13401 3 10 3C13.866 3 17 6.13401 17 10Z" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
-            </svg>
-            <input
-              type="text"
-              placeholder="Rechercher un utilisateur..."
-              [(ngModel)]="searchQuery"
-              (input)="onSearch()"
-            />
-            @if (searchQuery) {
-              <button class="clear-search" (click)="clearSearch()">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
-                  <path d="M18 6L6 18M6 6L18 18" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
-                </svg>
-              </button>
-            }
-          </div>
-        </div>
 
         <!-- Filters -->
         <div class="filters-section">
@@ -152,195 +151,113 @@ type StatusFilter = 'all' | 'pending' | 'active' | 'suspended' | 'deactivated';
             <p>Aucun utilisateur ne correspond aux filtres selectionnes</p>
           </div>
         } @else {
-          <!-- Users List -->
-          <div class="users-list">
-            @for (user of users(); track user.id) {
-              <div class="user-card">
-                <div class="user-main">
-                  <div class="avatar" [class]="user.role">
-                    @if (user.avatarUrl) {
-                      <img [src]="user.avatarUrl" [alt]="getUserName(user)" />
+          <ui-data-grid
+            [data]="users()"
+            [pageSize]="10"
+            [pageSizeOptions]="[10, 25, 50, 100]"
+            emptyMessage="Aucun utilisateur"
+          >
+            <ui-data-grid-column key="user" header="Utilisateur" field="firstName" [sortable]="true">
+              <ng-template let-row>
+                <div class="cell-user">
+                  <div class="avatar" [class]="row.role">
+                    @if (row.avatarUrl) {
+                      <img [src]="row.avatarUrl" [alt]="getUserName(row)" />
                     } @else {
-                      <span>{{ user.firstName | initials : user.lastName }}</span>
+                      <span>{{ row.firstName | initials : row.lastName }}</span>
                     }
-                    <span class="status-indicator" [class]="user.status"></span>
+                    <span class="status-indicator" [class]="row.status"></span>
                   </div>
-                  <div class="user-info">
-                    <h3>{{ getUserName(user) }}</h3>
-                    <p class="user-contact">
-                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
-                        <path d="M22 16.92V19.92C22.0011 20.1985 21.9441 20.4742 21.8325 20.7294C21.7209 20.9845 21.5573 21.2136 21.3521 21.4019C21.1468 21.5901 20.9046 21.7335 20.6408 21.8227C20.3769 21.9119 20.0974 21.9451 19.82 21.92C16.7428 21.5856 13.787 20.5341 11.19 18.85C8.77382 17.3147 6.72533 15.2662 5.19 12.85C3.49998 10.2412 2.44824 7.27099 2.12 4.18C2.09501 3.90347 2.12787 3.62476 2.2165 3.36162C2.30513 3.09849 2.44756 2.85669 2.63476 2.65162C2.82196 2.44655 3.0498 2.28271 3.30379 2.17052C3.55777 2.05833 3.83233 2.00026 4.11 2H7.11C7.59531 1.99522 8.06579 2.16708 8.43376 2.48353C8.80173 2.79999 9.04207 3.23945 9.11 3.72C9.23662 4.68007 9.47144 5.62273 9.81 6.53C9.94454 6.88792 9.97366 7.27691 9.89391 7.65088C9.81415 8.02485 9.62886 8.36811 9.36 8.64L8.09 9.91C9.51355 12.4135 11.5865 14.4864 14.09 15.91L15.36 14.64C15.6319 14.3711 15.9751 14.1858 16.3491 14.1061C16.7231 14.0263 17.1121 14.0555 17.47 14.19C18.3773 14.5286 19.3199 14.7634 20.28 14.89C20.7658 14.9585 21.2094 15.2032 21.5265 15.5775C21.8437 15.9518 22.0122 16.4296 22 16.92Z" stroke="currentColor" stroke-width="2"/>
-                      </svg>
-                      {{ user.phone }}
-                    </p>
-                    @if (user.email) {
-                      <p class="user-email">
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
-                          <path d="M4 4H20C21.1 4 22 4.9 22 6V18C22 19.1 21.1 20 20 20H4C2.9 20 2 19.1 2 18V6C2 4.9 2.9 4 4 4Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                          <path d="M22 6L12 13L2 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                        </svg>
-                        {{ user.email }}
-                      </p>
+                  <div class="cell-user-text">
+                    <strong>{{ getUserName(row) }}</strong>
+                    @if (row.repairerProfile?.businessName) {
+                      <span class="muted-business">{{ row.repairerProfile?.businessName }}</span>
                     }
-                    <div class="user-badges">
-                      <span class="role-badge" [class]="user.role">
-                        @if (user.role === 'client') {
-                          <svg width="12" height="12" viewBox="0 0 24 24" fill="none">
-                            <path d="M20 21V19C20 16.7909 18.2091 15 16 15H8C5.79086 15 4 16.7909 4 19V21M16 7C16 9.20914 14.2091 11 12 11C9.79086 11 8 9.20914 8 7C8 4.79086 9.79086 3 12 3C14.2091 3 16 4.79086 16 7Z" stroke="currentColor" stroke-width="2"/>
-                          </svg>
-                        } @else {
-                          <svg width="12" height="12" viewBox="0 0 24 24" fill="none">
-                            <path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z" stroke="currentColor" stroke-width="2"/>
-                          </svg>
-                        }
-                        {{ getRoleLabel(user.role) }}
-                      </span>
-                      <span class="status-badge" [class]="user.status">
-                        {{ statusLabels.getUserStatusLabel(user.status) }}
-                      </span>
-                      @if (user.repairerProfile) {
-                        <span class="business-badge">
-                          <svg width="12" height="12" viewBox="0 0 24 24" fill="none">
-                            <path d="M19 21V5C19 3.89543 18.1046 3 17 3H7C5.89543 3 5 3.89543 5 5V21M19 21H5M19 21H21M5 21H3" stroke="currentColor" stroke-width="2"/>
-                          </svg>
-                          {{ user.repairerProfile.businessName }}
-                        </span>
-                      }
-                    </div>
                   </div>
                 </div>
+              </ng-template>
+            </ui-data-grid-column>
 
-                <div class="user-details">
-                  <div class="detail-item">
-                    <div class="detail-icon">
-                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
-                        <rect x="3" y="4" width="18" height="18" rx="2" stroke="currentColor" stroke-width="2"/>
-                        <path d="M16 2V6M8 2V6M3 10H21" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
-                      </svg>
-                    </div>
-                    <div class="detail-content">
-                      <span class="detail-label">Inscription</span>
-                      <span class="detail-value">{{ user.createdAt | date:'dd/MM/yyyy' }}</span>
-                    </div>
-                  </div>
-                  @if (user.lastLoginAt) {
-                    <div class="detail-item">
-                      <div class="detail-icon">
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
-                          <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="2"/>
-                          <path d="M12 6V12L16 14" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
-                        </svg>
-                      </div>
-                      <div class="detail-content">
-                        <span class="detail-label">Derniere connexion</span>
-                        <span class="detail-value">{{ user.lastLoginAt | date:'dd/MM/yyyy HH:mm' }}</span>
-                      </div>
-                    </div>
+            <ui-data-grid-column key="contact" header="Contact" field="phone">
+              <ng-template let-row>
+                <div class="cell-contact">
+                  <span class="phone">{{ row.phone }}</span>
+                  @if (row.email) {
+                    <span class="email">{{ row.email }}</span>
                   }
-                  <div class="detail-item">
-                    <div class="detail-icon">
-                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
-                        <path d="M9 12L11 14L15 10M21 12C21 16.9706 16.9706 21 12 21C7.02944 21 3 16.9706 3 12C3 7.02944 7.02944 3 12 3C16.9706 3 21 7.02944 21 12Z" stroke="currentColor" stroke-width="2"/>
-                      </svg>
-                    </div>
-                    <div class="detail-content">
-                      <span class="detail-label">Verification</span>
-                      <div class="verification-badges">
-                        @if (user.isPhoneVerified) {
-                          <span class="verified-badge">
-                            <svg width="10" height="10" viewBox="0 0 24 24" fill="none">
-                              <path d="M20 6L9 17L4 12" stroke="currentColor" stroke-width="3" stroke-linecap="round"/>
-                            </svg>
-                            Tel
-                          </span>
-                        }
-                        @if (user.isEmailVerified) {
-                          <span class="verified-badge">
-                            <svg width="10" height="10" viewBox="0 0 24 24" fill="none">
-                              <path d="M20 6L9 17L4 12" stroke="currentColor" stroke-width="3" stroke-linecap="round"/>
-                            </svg>
-                            Email
-                          </span>
-                        }
-                        @if (!user.isPhoneVerified && !user.isEmailVerified) {
-                          <span class="not-verified">Non verifie</span>
-                        }
-                      </div>
-                    </div>
-                  </div>
                 </div>
+              </ng-template>
+            </ui-data-grid-column>
 
-                <div class="user-actions">
-                  @if (user.status === 'suspended' || user.status === 'deactivated') {
+            <ui-data-grid-column key="role" header="Rôle" field="role" [sortable]="true">
+              <ng-template let-row>
+                <span class="role-badge" [class]="row.role">{{ getRoleLabel(row.role) }}</span>
+              </ng-template>
+            </ui-data-grid-column>
+
+            <ui-data-grid-column key="status" header="Statut" field="status" [sortable]="true">
+              <ng-template let-row>
+                <span class="status-badge" [class]="row.status">
+                  <span class="badge-dot"></span>
+                  {{ statusLabels.getUserStatusLabel(row.status) }}
+                </span>
+              </ng-template>
+            </ui-data-grid-column>
+
+            <ui-data-grid-column key="createdAt" header="Inscription" field="createdAt" [sortable]="true">
+              <ng-template let-row>
+                <span class="date">{{ row.createdAt | date:'dd/MM/yy' }}</span>
+              </ng-template>
+            </ui-data-grid-column>
+
+            <ui-data-grid-column key="actions" header="Actions" align="right" width="180px">
+              <ng-template let-row>
+                <div class="action-buttons-inline">
+                  @if (row.status === 'suspended' || row.status === 'deactivated') {
                     <button
-                      class="btn btn-success"
-                      (click)="activateUser(user.id)"
+                      class="icon-btn success"
+                      (click)="activateUser(row.id); $event.stopPropagation()"
                       [disabled]="isProcessing()"
+                      title="Activer"
+                      aria-label="Activer"
                     >
-                      <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
-                        <path d="M20 6L9 17L4 12" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+                        <path d="M20 6L9 17L4 12" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
                       </svg>
-                      Activer
                     </button>
                   } @else {
                     <button
-                      class="btn btn-warning"
-                      (click)="openSuspendModal(user)"
+                      class="icon-btn warning"
+                      (click)="openSuspendModal(row); $event.stopPropagation()"
                       [disabled]="isProcessing()"
+                      title="Suspendre"
+                      aria-label="Suspendre"
                     >
-                      <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
                         <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="2"/>
                         <path d="M4.93 4.93L19.07 19.07" stroke="currentColor" stroke-width="2"/>
                       </svg>
-                      Suspendre
                     </button>
                   }
-                  @if (user.role === 'repairer' && user.repairerProfile) {
+                  @if (row.role === 'repairer' && row.repairerProfile) {
                     <a
                       [routerLink]="['/admin/repairers']"
-                      [queryParams]="{search: user.phone}"
-                      class="btn btn-outline"
+                      [queryParams]="{search: row.phone}"
+                      class="icon-btn neutral"
+                      title="Voir profil réparateur"
+                      aria-label="Voir profil réparateur"
+                      (click)="$event.stopPropagation()"
                     >
-                      <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
                         <path d="M1 12S5 4 12 4S23 12 23 12S19 20 12 20S1 12 1 12Z" stroke="currentColor" stroke-width="2"/>
                         <circle cx="12" cy="12" r="3" stroke="currentColor" stroke-width="2"/>
                       </svg>
-                      Voir profil
                     </a>
                   }
                 </div>
-              </div>
-            }
-          </div>
-
-          <!-- Pagination -->
-          @if (total() > users().length || page() > 1) {
-            <div class="pagination">
-              <button
-                class="pagination-btn"
-                [disabled]="page() <= 1"
-                (click)="previousPage()"
-              >
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
-                  <path d="M15 18L9 12L15 6" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
-                </svg>
-                Precedent
-              </button>
-              <div class="page-indicator">
-                <span class="current-page">{{ page() }}</span>
-              </div>
-              <button
-                class="pagination-btn"
-                [disabled]="users().length < 20"
-                (click)="nextPage()"
-              >
-                Suivant
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
-                  <path d="M9 6L15 12L9 18" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
-                </svg>
-              </button>
-            </div>
-          }
+              </ng-template>
+            </ui-data-grid-column>
+          </ui-data-grid>
         }
       </div>
 
@@ -406,70 +323,11 @@ type StatusFilter = 'all' | 'pending' | 'active' | 'suspended' | 'deactivated';
       background: #FAFAFA;
     }
 
-    /* Container */
+    /* Container — pleine largeur (cohérent avec /admin/repairers) */
     .admin-container {
       padding: 1rem;
-      padding-top: var(--header-height, 100px);
-      max-width: 1200px;
-      margin: 0 auto;
-    }
-
-    /* Search Section */
-    .search-section {
-      margin-bottom: 1rem;
-    }
-
-    .search-bar {
-      display: flex;
-      align-items: center;
-      gap: 0.75rem;
-      background: white;
-      border: 2px solid #EEEEEE;
-      border-radius: 16px;
-      padding: 0.875rem 1rem;
-      transition: all 0.2s;
-      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
-    }
-
-    .search-bar:focus-within {
-      border-color: var(--color-primary-500, #FF9800);
-      box-shadow: 0 0 0 4px rgba(255, 152, 0, 0.1);
-    }
-
-    .search-bar svg {
-      color: #9ca3af;
-      flex-shrink: 0;
-    }
-
-    .search-bar input {
-      flex: 1;
-      border: none;
-      outline: none;
-      font-size: 1rem;
-      color: #1f2937;
-    }
-
-    .search-bar input::placeholder {
-      color: #9ca3af;
-    }
-
-    .clear-search {
-      width: 28px;
-      height: 28px;
-      border-radius: 12px;
-      border: none;
-      background: #F5F5F5;
-      color: #6b7280;
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      transition: all 0.2s;
-    }
-
-    .clear-search:hover {
-      background: #EEEEEE;
-      color: #374151;
+      padding-top: 180px;
+      padding-bottom: 100px;
     }
 
     /* Filters */
@@ -1137,6 +995,132 @@ type StatusFilter = 'all' | 'pending' | 'active' | 'suspended' | 'deactivated';
       border-radius: 50%;
       animation: spin 1s linear infinite;
     }
+
+    /* ============================================
+       Cellules custom <ui-data-grid>
+       ============================================ */
+    .cell-user {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      min-width: 0;
+    }
+
+    .cell-user .avatar {
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      font-size: 0.8125rem;
+      font-weight: 700;
+    }
+
+    .cell-user .status-indicator {
+      width: 10px;
+      height: 10px;
+      border-width: 2px;
+    }
+
+    .cell-user-text {
+      display: flex;
+      flex-direction: column;
+      min-width: 0;
+    }
+
+    .cell-user-text strong {
+      font-size: 0.875rem;
+      font-weight: 600;
+      color: #1f2937;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .cell-user-text .muted-business {
+      font-size: 0.75rem;
+      color: #9ca3af;
+    }
+
+    .cell-contact {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .cell-contact .phone {
+      font-variant-numeric: tabular-nums;
+      color: #1f2937;
+      font-size: 0.875rem;
+    }
+
+    .cell-contact .email {
+      font-size: 0.75rem;
+      color: #9ca3af;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      max-width: 220px;
+    }
+
+    .date {
+      color: #6b7280;
+      font-size: 0.8125rem;
+      font-variant-numeric: tabular-nums;
+    }
+
+    /* Status-badge dot inside DataGrid */
+    .cell-user + td .status-badge .badge-dot,
+    .status-badge .badge-dot {
+      display: inline-block;
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: currentColor;
+      margin-right: 0.25rem;
+    }
+
+    /* Boutons d'action inline */
+    .action-buttons-inline {
+      display: inline-flex;
+      gap: 0.25rem;
+      justify-content: flex-end;
+    }
+
+    .icon-btn {
+      width: 32px;
+      height: 32px;
+      border: none;
+      border-radius: 8px;
+      background: transparent;
+      color: #6b7280;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.15s ease;
+      text-decoration: none;
+    }
+
+    .icon-btn:hover:not(:disabled) {
+      background: #F5F5F5;
+    }
+
+    .icon-btn:focus-visible {
+      outline: 2px solid var(--color-primary-500, #FF9800);
+      outline-offset: 1px;
+    }
+
+    .icon-btn:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    .icon-btn.success { color: var(--color-secondary, #4CAF50); }
+    .icon-btn.success:hover:not(:disabled) { background: #E8F5E9; }
+
+    .icon-btn.warning { color: var(--color-warning-dark, #F57C00); }
+    .icon-btn.warning:hover:not(:disabled) { background: #FFF3E0; }
+
+    .icon-btn.neutral { color: #6b7280; }
+    .icon-btn.neutral:hover:not(:disabled) { background: #F5F5F5; color: var(--color-primary-500, #FF9800); }
   `],
 })
 export class UsersManagementComponent implements OnInit {
@@ -1229,6 +1213,12 @@ export class UsersManagementComponent implements OnInit {
       this.page.set(1);
       this.loadUsers();
     }, 300);
+  }
+
+  onHeaderSearch(query: string): void {
+    this.searchQuery = query;
+    this.page.set(1);
+    this.loadUsers();
   }
 
   clearSearch(): void {

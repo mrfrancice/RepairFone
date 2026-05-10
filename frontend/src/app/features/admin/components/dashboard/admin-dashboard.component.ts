@@ -3,60 +3,36 @@ import { CommonModule } from '@angular/common';
 import { Router, RouterLink } from '@angular/router';
 import { AdminService, DashboardSummary, VerificationStats } from '../../services/admin.service';
 import { AuthStore } from '../../../../core/stores/auth.store';
-import { NotificationBellComponent } from '../../../../shared/components/notification-bell/notification-bell.component';
 import { HeaderSearchComponent } from '../../../../shared/components/header-search/header-search.component';
 import { UiSkeletonComponent } from '../../../../shared/components/ui-skeleton/ui-skeleton.component';
-import { InitialsPipe } from '../../../../shared/pipes/initials.pipe';
+import { UiHeaderComponent } from '../../../../shared/components/ui-header/ui-header.component';
 
 @Component({
   selector: 'app-admin-dashboard',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [CommonModule, RouterLink, NotificationBellComponent, HeaderSearchComponent, UiSkeletonComponent, InitialsPipe],
+  imports: [CommonModule, RouterLink, HeaderSearchComponent, UiSkeletonComponent, UiHeaderComponent],
   template: `
     <div class="admin-page">
-      <!-- Header like home -->
-      <header class="admin-header">
-        <div class="header-top">
-          <div class="header-left">
-            <div class="logo-section">
-              <div class="logo-icon">
-                <svg viewBox="0 0 32 32" fill="none">
-                  <path d="M16 4C9.373 4 4 9.373 4 16s5.373 12 12 12 12-5.373 12-12S22.627 4 16 4z" fill="rgba(255,255,255,0.18)"/>
-                  <path d="M20 11l-2 2m0 0l-2-2m2 2v6m-4 2h8" stroke="white" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-                </svg>
-              </div>
-              <div class="header-titles">
-                <h1 class="app-title">RepairFone</h1>
-                <p class="welcome-msg">{{ getGreeting() }}, {{ getUserName() }}</p>
-              </div>
-            </div>
-          </div>
-          <div class="header-right">
-            <span class="status-online">
-              <span class="status-dot"></span>
-              En ligne
-            </span>
-            <span class="role-badge">{{ getRoleLabel() }}</span>
-            <app-notification-bell />
-            <button class="profile-btn" (click)="goToProfile()">
-              @if (authStore.user()?.avatarUrl) {
-                <img [src]="authStore.user()?.avatarUrl" alt="Profil" />
-              } @else {
-                <div class="profile-placeholder">
-                  {{ authStore.user()?.firstName | initials : authStore.user()?.lastName }}
-                </div>
-              }
-            </button>
-          </div>
-        </div>
+      <!-- Header unifié (charte sombre via ui-header) -->
+      <ui-header
+        title="RepairFone"
+        [subtitle]="getGreeting() + ', ' + getUserName()"
+        [showIcon]="true"
+        [showStatus]="true"
+        [showRoleBadge]="true"
+        [showProfile]="true"
+      >
+        <svg header-icon viewBox="0 0 32 32" fill="none" width="28" height="28" aria-hidden="true">
+          <path d="M16 4C9.373 4 4 9.373 4 16s5.373 12 12 12 12-5.373 12-12S22.627 4 16 4z" fill="rgba(255,255,255,0.18)"/>
+          <path d="M20 11l-2 2m0 0l-2-2m2 2v6m-4 2h8" stroke="white" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
 
-        <!-- Search Bar -->
         <app-header-search
           placeholder="Rechercher un utilisateur, réparateur..."
           (search)="onSearchChange($event)"
         />
-      </header>
+      </ui-header>
 
       <div class="page-content">
         @if (isLoading()) {
@@ -360,160 +336,6 @@ import { InitialsPipe } from '../../../../shared/pipes/initials.pipe';
     .admin-page {
       min-height: 100vh;
       background: #FAFAFA;
-    }
-
-    /* Header sombre charte uniforme */
-    .admin-header {
-      position: fixed;
-      top: 0;
-      left: 0;
-      right: 0;
-      z-index: 100;
-      background:
-        radial-gradient(ellipse at 92% 50%, rgba(255, 152, 0, 0.22) 0%, transparent 55%),
-        linear-gradient(135deg, #1A1A1A 0%, #0F0F0F 100%);
-      border-bottom-left-radius: 30px;
-      border-bottom-right-radius: 30px;
-      padding: 1rem 1.25rem;
-      padding-top: calc(1rem + env(safe-area-inset-top, 0));
-      border-bottom: 2px solid var(--color-primary-500, #FF9800);
-      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.35);
-    }
-
-    .header-top {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 1.25rem;
-    }
-
-    .header-left {
-      display: flex;
-      align-items: center;
-    }
-
-    .logo-section {
-      display: flex;
-      align-items: center;
-      gap: 0.75rem;
-    }
-
-    .logo-icon {
-      width: 40px;
-      height: 40px;
-      background: linear-gradient(135deg, var(--color-primary-500, #FF9800), var(--color-gold-800, #F9A825));
-      border-radius: 12px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      box-shadow: 0 4px 12px rgba(255, 152, 0, 0.35);
-    }
-
-    .logo-icon svg {
-      width: 28px;
-      height: 28px;
-    }
-
-    .header-titles {
-      display: flex;
-      flex-direction: column;
-    }
-
-    .app-title {
-      font-family: 'Poppins', 'Inter', sans-serif;
-      font-size: 1.125rem;
-      font-weight: 700;
-      letter-spacing: -0.01em;
-      color: white;
-      margin: 0;
-      line-height: 1.2;
-    }
-
-    .welcome-msg {
-      font-size: 0.75rem;
-      color: rgba(255, 255, 255, 0.65);
-      margin: 0;
-    }
-
-    .header-right {
-      display: flex;
-      align-items: center;
-      gap: 0.5rem;
-    }
-
-    .status-online {
-      display: flex;
-      align-items: center;
-      gap: 0.375rem;
-      padding: 0.375rem 0.75rem;
-      background: rgba(76, 175, 80, 0.18);
-      border: 1px solid rgba(76, 175, 80, 0.35);
-      border-radius: 20px;
-      font-size: 0.6875rem;
-      font-weight: 600;
-      color: #A5D6A7;
-    }
-
-    .status-online .status-dot {
-      width: 8px;
-      height: 8px;
-      background: var(--color-secondary, #4CAF50);
-      border-radius: 50%;
-      animation: statusPulse 2s infinite;
-      box-shadow: 0 0 8px rgba(76, 175, 80, 0.6);
-    }
-
-    @keyframes statusPulse {
-      0%, 100% { opacity: 1; }
-      50% { opacity: 0.5; }
-    }
-
-    .role-badge {
-      padding: 0.375rem 0.75rem;
-      background: linear-gradient(135deg, var(--color-primary-500, #FF9800), var(--color-gold-800, #F9A825));
-      border-radius: 20px;
-      font-size: 0.6875rem;
-      font-weight: 700;
-      color: white;
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
-      box-shadow: 0 2px 8px rgba(255, 152, 0, 0.35);
-    }
-
-    .profile-btn {
-      width: 40px;
-      height: 40px;
-      border-radius: 50%;
-      border: 2px solid var(--color-primary-500, #FF9800);
-      background: rgba(255, 255, 255, 0.08);
-      overflow: hidden;
-      cursor: pointer;
-      padding: 0;
-      transition: all 150ms ease;
-    }
-
-    .profile-btn:hover {
-      border-color: var(--color-gold-800, #F9A825);
-      transform: scale(1.05);
-      box-shadow: 0 0 0 4px rgba(255, 152, 0, 0.18);
-    }
-
-    .profile-btn img {
-      width: 100%;
-      height: 100%;
-      object-fit: cover;
-    }
-
-    .profile-placeholder {
-      width: 100%;
-      height: 100%;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      color: white;
-      font-weight: 600;
-      font-size: 0.875rem;
-      background: linear-gradient(135deg, var(--color-primary-500, #FF9800), var(--color-gold-800, #F9A825));
     }
 
     /* Container */
@@ -1042,20 +864,6 @@ export class AdminDashboardComponent implements OnInit {
   getUserName(): string {
     const user = this.authStore.user();
     return user?.firstName || 'Admin';
-  }
-
-  getRoleLabel(): string {
-    const role = this.authStore.user()?.role;
-    const labels: Record<string, string> = {
-      repairer: 'Réparateur',
-      client: 'Client',
-      admin: 'Admin',
-    };
-    return labels[role || ''] || 'Utilisateur';
-  }
-
-  goToProfile(): void {
-    this.router.navigate(['/profile']);
   }
 
   async loadData(): Promise<void> {

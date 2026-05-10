@@ -5,13 +5,14 @@ import { ActivatedRoute, Router } from '@angular/router';
 import { ConseilsService, Expert } from '../../services/conseils.service';
 import { ConseilsStore } from '../../stores/conseils.store';
 import { AuthStore } from '../../../../core/stores/auth.store';
+import { UiHeaderComponent } from '../../../../shared/components/ui-header/ui-header.component';
 import { InitialsPipe } from '../../../../shared/pipes/initials.pipe';
 import { LoggerService } from '../../../../core/services/logger.service';
 
 @Component({
   selector: 'app-expert-detail',
   standalone: true,
-  imports: [CommonModule, FormsModule, InitialsPipe],
+  imports: [CommonModule, FormsModule, UiHeaderComponent, InitialsPipe],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <div class="detail-container">
@@ -21,14 +22,8 @@ import { LoggerService } from '../../../../core/services/logger.service';
           <p>Chargement...</p>
         </div>
       } @else if (expert()) {
-        <!-- Header -->
-        <header class="detail-header">
-          <button class="back-btn" (click)="goBack()" type="button" aria-label="Retour">
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-              <path d="M15 18L9 12L15 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-            </svg>
-          </button>
-
+        <!-- Header unifié (charte sombre via ui-header, mode inline pour intégrer le hero) -->
+        <ui-header [showBack]="true" [inline]="true" (onBack)="goBack()">
           <div class="expert-hero">
             <div class="expert-avatar">
               @if (expert()?.avatarUrl) {
@@ -68,7 +63,7 @@ import { LoggerService } from '../../../../core/services/logger.service';
               </div>
             </div>
           </div>
-        </header>
+        </ui-header>
 
         <!-- Content -->
         <div class="detail-content">
@@ -193,42 +188,10 @@ import { LoggerService } from '../../../../core/services/logger.service';
       to { transform: rotate(360deg); }
     }
 
-    .detail-header {
-      background:
-        radial-gradient(ellipse at 92% 50%, rgba(255, 152, 0, 0.22) 0%, transparent 55%),
-        linear-gradient(135deg, #1A1A1A 0%, #0F0F0F 100%);
-      color: white;
-      padding: 1rem 1.25rem;
-      padding-top: calc(1rem + env(safe-area-inset-top, 0));
-      border-bottom: 2px solid var(--color-primary-500, #FF9800);
-      border-bottom-left-radius: 30px;
-      border-bottom-right-radius: 30px;
-      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.35);
-    }
-
-    .back-btn {
-      background: rgba(255, 255, 255, 0.08);
-      border: 1px solid rgba(255, 255, 255, 0.1);
-      color: white;
-      width: 44px;
-      height: 44px;
-      border-radius: 12px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      cursor: pointer;
-      margin-bottom: 1rem;
-      transition: all 150ms ease;
-    }
-
-    .back-btn:hover {
-      background: rgba(255, 152, 0, 0.18);
-      border-color: var(--color-primary-500, #FF9800);
-      color: var(--color-primary-500, #FF9800);
-    }
-
+    /* Hero projeté dans ui-header (slot par défaut) */
     .expert-hero {
       text-align: center;
+      color: white;
     }
 
     .expert-avatar {

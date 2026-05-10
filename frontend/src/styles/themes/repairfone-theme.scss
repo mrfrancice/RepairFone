@@ -263,9 +263,11 @@ $repairfone-light-theme: mat.define-theme((
   // LAYOUT VARIABLES
   // ============================================================================
 
-  // Header heights
-  --header-height: 100px;
-  --header-height-with-subtitle: 120px;
+  // Header heights — alignées sur la "taille design" du home-header
+  // Inclut une marge de 24px (1.5rem) pour aérer le contenu sous le header arrondi.
+  // (header 142px + marge 24px = 166px de padding-top du contenu)
+  --header-height: 166px;
+  --header-height-with-subtitle: 166px;
 
   // Navigation
   --bottom-nav-height: 80px;

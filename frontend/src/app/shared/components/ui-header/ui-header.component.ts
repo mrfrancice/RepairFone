@@ -10,7 +10,7 @@ import { NotificationBellComponent } from '../notification-bell/notification-bel
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [CommonModule, RouterLink, NotificationBellComponent],
   template: `
-    <header class="header">
+    <header class="header" [class.has-content]="hasProjectedContent" [class.inline]="inline">
       <div class="header-top">
         <div class="header-left">
           @if (showBack) {
@@ -33,15 +33,32 @@ import { NotificationBellComponent } from '../notification-bell/notification-bel
               <ng-content select="[header-icon]"></ng-content>
             </div>
           }
-          <div class="header-titles">
-            <h1 class="app-title">{{ title }}</h1>
-            @if (subtitle) {
-              <p class="welcome-msg">{{ subtitle }}</p>
-            }
-          </div>
+          <ng-content select="[header-center]"></ng-content>
+          @if (title || subtitle) {
+            <div class="header-titles">
+              @if (title) {
+                <h1 class="app-title">{{ title }}</h1>
+              }
+              @if (subtitle) {
+                <p class="welcome-msg">{{ subtitle }}</p>
+              }
+            </div>
+          }
         </div>
         <div class="header-right">
+          <ng-content select="[header-extras]"></ng-content>
           <ng-content select="[header-actions]"></ng-content>
+
+          @if (showStatus) {
+            <span class="status-online">
+              <span class="status-dot"></span>
+              En ligne
+            </span>
+          }
+
+          @if (showRoleBadge && authStore.isAuthenticated()) {
+            <span class="role-badge">{{ getRoleLabel() }}</span>
+          }
 
           @if (showProfile) {
             @if (authStore.isAuthenticated()) {
@@ -72,7 +89,9 @@ import { NotificationBellComponent } from '../notification-bell/notification-bel
     </header>
   `,
   styles: [`
-    /* Header sombre charte "fond premium" : noir profond + lueur orange + border orange */
+    /* Header sombre charte "fond premium" : noir profond + lueur orange + border orange.
+       Taille de design alignée sur home-header (même hauteur min partout) — peut grandir
+       via contenu projeté (search-bar, hero, etc.). */
     .header {
       position: fixed;
       top: 0;
@@ -88,6 +107,18 @@ import { NotificationBellComponent } from '../notification-bell/notification-bel
       border-bottom-left-radius: 30px;
       border-bottom-right-radius: 30px;
       box-shadow: 0 4px 20px rgba(0, 0, 0, 0.35);
+      /* Hauteur design du home-header : header-top (~44px) + margin (20px) + search-bar (~44px) + paddings (32px) + border (2px) */
+      min-height: calc(142px + env(safe-area-inset-top, 0px));
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      gap: 1.25rem;
+    }
+
+    /* Mode inline : pour les pages full-height en flex (chat). Ne sort pas du flow. */
+    .header.inline {
+      position: static;
+      flex-shrink: 0;
     }
 
     .header-top {
@@ -100,12 +131,15 @@ import { NotificationBellComponent } from '../notification-bell/notification-bel
       display: flex;
       align-items: center;
       gap: 0.75rem;
+      min-width: 0;
+      flex: 1;
     }
 
     .header-right {
       display: flex;
       align-items: center;
       gap: 0.5rem;
+      flex-shrink: 0;
     }
 
     .back-btn {
@@ -149,6 +183,7 @@ import { NotificationBellComponent } from '../notification-bell/notification-bel
     .header-titles {
       display: flex;
       flex-direction: column;
+      min-width: 0;
     }
 
     .app-title {
@@ -159,12 +194,59 @@ import { NotificationBellComponent } from '../notification-bell/notification-bel
       color: white;
       margin: 0;
       line-height: 1.2;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
     }
 
     .welcome-msg {
       font-size: 0.75rem;
       color: rgba(255, 255, 255, 0.65);
       margin: 0;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    /* Statut "En ligne" — pulsation verte */
+    .status-online {
+      display: flex;
+      align-items: center;
+      gap: 0.375rem;
+      padding: 0.375rem 0.75rem;
+      background: rgba(76, 175, 80, 0.18);
+      border: 1px solid rgba(76, 175, 80, 0.35);
+      border-radius: 20px;
+      font-size: 0.6875rem;
+      font-weight: 600;
+      color: #A5D6A7;
+    }
+
+    .status-online .status-dot {
+      width: 8px;
+      height: 8px;
+      background: var(--color-secondary, #4CAF50);
+      border-radius: 50%;
+      animation: statusPulse 2s infinite;
+      box-shadow: 0 0 8px rgba(76, 175, 80, 0.6);
+    }
+
+    @keyframes statusPulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.5; }
+    }
+
+    /* Badge rôle utilisateur (Réparateur/Client/Admin/Visiteur) */
+    .role-badge {
+      padding: 0.375rem 0.75rem;
+      background: linear-gradient(135deg, var(--color-primary-500, #FF9800), var(--color-gold-800, #F9A825));
+      border-radius: 20px;
+      font-size: 0.6875rem;
+      font-weight: 700;
+      color: white;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      box-shadow: 0 2px 8px rgba(255, 152, 0, 0.35);
     }
 
     /* Profile Button */
@@ -251,6 +333,10 @@ export class UiHeaderComponent {
   @Input() backRoute?: string;
   @Input() showIcon = false;
   @Input() showProfile = false;
+  @Input() showStatus = false;
+  @Input() showRoleBadge = false;
+  @Input() hasProjectedContent = false;
+  @Input() inline = false;
 
   @Output() onBack = new EventEmitter<void>();
 
@@ -261,6 +347,16 @@ export class UiHeaderComponent {
     const last = user.lastName?.[0] || '';
     return (first + last).toUpperCase() || 'U';
   });
+
+  getRoleLabel(): string {
+    const role = this.authStore.user()?.role;
+    const labels: Record<string, string> = {
+      repairer: 'Réparateur',
+      client: 'Client',
+      admin: 'Admin',
+    };
+    return labels[role || ''] || 'Visiteur';
+  }
 
   goBack(): void {
     if (this.onBack.observed) {

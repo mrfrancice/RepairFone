@@ -8,8 +8,7 @@ import { SearchService } from '../../../search/services/search.service';
 import { UiSearchBarComponent } from '@app/shared';
 import { UiAvatarComponent } from '../../../../shared/components/ui-avatar/ui-avatar.component';
 import { UiSkeletonComponent } from '../../../../shared/components/ui-skeleton/ui-skeleton.component';
-import { NotificationBellComponent } from '../../../../shared/components/notification-bell/notification-bell.component';
-import { InitialsPipe } from '../../../../shared/pipes/initials.pipe';
+import { UiHeaderComponent } from '../../../../shared/components/ui-header/ui-header.component';
 import { StatusLabelsService, RequestStatus } from '../../../../shared/services/status-labels.service';
 import { UiErrorStateComponent } from '../../../../shared/components/ui-error-state/ui-error-state.component';
 import { LoggerService } from '../../../../core/services/logger.service';
@@ -46,79 +45,47 @@ interface QuickService {
     UiSearchBarComponent,
     UiAvatarComponent,
     UiSkeletonComponent,
-    NotificationBellComponent,
-    InitialsPipe,
+    UiHeaderComponent,
     UiErrorStateComponent,
   ],
   template: `
     <div class="home-container">
-      <!-- Header with gradient -->
-      <header class="home-header">
-        <div class="header-top">
-          <div class="header-left">
-            <div class="logo-section">
-              <div class="logo-icon">
-                <svg viewBox="0 0 32 32" fill="none">
-                  <path d="M16 4C9.373 4 4 9.373 4 16s5.373 12 12 12 12-5.373 12-12S22.627 4 16 4z" fill="rgba(255,255,255,0.18)"/>
-                  <path d="M20 11l-2 2m0 0l-2-2m2 2v6m-4 2h8" stroke="white" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-                </svg>
-              </div>
-              <div class="header-titles">
-                <h1 class="app-title">RepairFone</h1>
-                <p class="welcome-msg">{{ getGreeting() }}, {{ getUserName() }}</p>
-              </div>
-            </div>
-          </div>
-          <div class="header-right">
-            @if (authStore.isAuthenticated()) {
-              <button class="location-chip" (click)="changeLocation(); $event.stopPropagation()" aria-label="Modifier ma localisation">
-                <svg width="14" height="14" viewBox="0 0 16 16" fill="none" aria-hidden="true">
-                  <path d="M8 8.667a2 2 0 100-4 2 2 0 000 4z" stroke="currentColor" stroke-width="1.5"/>
-                  <path d="M8 14s5-3.5 5-7.333a5 5 0 10-10 0C3 10.5 8 14 8 14z" stroke="currentColor" stroke-width="1.5"/>
-                </svg>
-                @if (locationStatus() === 'loading') {
-                  <span>...</span>
-                } @else if (locationStatus() === 'success') {
-                  <span>{{ getShortAddress() }}</span>
-                } @else {
-                  <span>Localiser</span>
-                }
-              </button>
-              <span class="status-online">
-                <span class="status-dot"></span>
-                En ligne
-              </span>
-              <span class="role-badge">{{ getRoleLabel() }}</span>
-              <app-notification-bell />
-              <button class="profile-btn" (click)="goToProfile()" aria-label="Accéder à mon profil">
-                @if (authStore.user()?.avatarUrl) {
-                  <img [src]="authStore.user()?.avatarUrl" alt="" />
-                } @else {
-                  <div class="profile-placeholder" aria-hidden="true">
-                    {{ authStore.user()?.firstName | initials : authStore.user()?.lastName }}
-                  </div>
-                }
-              </button>
-            } @else {
-              <button class="login-btn" (click)="goToProfile()">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                  <path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/>
-                  <polyline points="10 17 15 12 10 7"/>
-                  <line x1="15" y1="12" x2="3" y2="12"/>
-                </svg>
-                Connexion
-              </button>
-            }
-          </div>
-        </div>
+      <!-- Header unifié (charte sombre + slots) -->
+      <ui-header
+        title="RepairFone"
+        [subtitle]="getGreeting() + ', ' + getUserName()"
+        [showIcon]="true"
+        [showStatus]="authStore.isAuthenticated()"
+        [showRoleBadge]="authStore.isAuthenticated()"
+        [showProfile]="true"
+      >
+        <svg header-icon viewBox="0 0 32 32" fill="none" width="28" height="28" aria-hidden="true">
+          <path d="M16 4C9.373 4 4 9.373 4 16s5.373 12 12 12 12-5.373 12-12S22.627 4 16 4z" fill="rgba(255,255,255,0.18)"/>
+          <path d="M20 11l-2 2m0 0l-2-2m2 2v6m-4 2h8" stroke="white" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
 
-        <!-- Search Bar -->
+        @if (authStore.isAuthenticated()) {
+          <button header-extras class="location-chip" (click)="changeLocation(); $event.stopPropagation()" aria-label="Modifier ma localisation">
+            <svg width="14" height="14" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+              <path d="M8 8.667a2 2 0 100-4 2 2 0 000 4z" stroke="currentColor" stroke-width="1.5"/>
+              <path d="M8 14s5-3.5 5-7.333a5 5 0 10-10 0C3 10.5 8 14 8 14z" stroke="currentColor" stroke-width="1.5"/>
+            </svg>
+            @if (locationStatus() === 'loading') {
+              <span>...</span>
+            } @else if (locationStatus() === 'success') {
+              <span>{{ getShortAddress() }}</span>
+            } @else {
+              <span>Localiser</span>
+            }
+          </button>
+        }
+
         <ui-search-bar
           placeholder="Rechercher un service, un problème..."
           variant="transparent"
           (search)="onSearch($event)"
         />
-      </header>
+      </ui-header>
 
       <!-- Main Content -->
       <main class="home-content">
@@ -432,207 +399,8 @@ interface QuickService {
     }
 
     /* ============================================
-       HEADER
+       LOCATION CHIP (projetée dans ui-header [header-extras])
     ============================================ */
-    .home-header {
-      position: fixed;
-      top: 0;
-      left: 0;
-      right: 0;
-      z-index: 100;
-      background:
-        radial-gradient(ellipse at 92% 50%, rgba(255, 152, 0, 0.22) 0%, transparent 55%),
-        linear-gradient(135deg, #1A1A1A 0%, #0F0F0F 100%);
-      padding: 1rem 1.25rem;
-      padding-top: calc(1rem + env(safe-area-inset-top, 0));
-      border-bottom: 2px solid var(--color-primary-500, #FF9800);
-      border-bottom-left-radius: 30px;
-      border-bottom-right-radius: 30px;
-      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.35);
-    }
-
-    .header-top {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 1.25rem;
-    }
-
-    .header-left {
-      display: flex;
-      align-items: center;
-    }
-
-    .logo-section {
-      display: flex;
-      align-items: center;
-      gap: 0.75rem;
-    }
-
-    .logo-icon {
-      width: 40px;
-      height: 40px;
-      background: linear-gradient(135deg, var(--color-primary-500, #FF9800), var(--color-gold-800, #F9A825));
-      border-radius: 12px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      color: white;
-      box-shadow: 0 4px 12px rgba(255, 152, 0, 0.35);
-    }
-
-    .logo-icon svg {
-      width: 28px;
-      height: 28px;
-    }
-
-    .header-titles {
-      display: flex;
-      flex-direction: column;
-    }
-
-    .app-title {
-      font-family: 'Poppins', 'Inter', sans-serif;
-      font-size: 1.125rem;
-      font-weight: 700;
-      letter-spacing: -0.01em;
-      color: white;
-      margin: 0;
-      line-height: 1.2;
-    }
-
-    .welcome-msg {
-      font-size: 0.75rem;
-      color: rgba(255, 255, 255, 0.65);
-      margin: 0;
-    }
-
-    .header-right {
-      display: flex;
-      align-items: center;
-      gap: 0.5rem;
-    }
-
-    .status-online {
-      display: flex;
-      align-items: center;
-      gap: 0.375rem;
-      padding: 0.375rem 0.75rem;
-      background: rgba(76, 175, 80, 0.18);
-      border: 1px solid rgba(76, 175, 80, 0.35);
-      border-radius: 20px;
-      font-size: 0.6875rem;
-      font-weight: 600;
-      color: #A5D6A7;
-    }
-
-    .status-online .status-dot {
-      width: 8px;
-      height: 8px;
-      background: var(--color-secondary, #4CAF50);
-      border-radius: 50%;
-      animation: statusPulse 2s infinite;
-      box-shadow: 0 0 8px rgba(76, 175, 80, 0.6);
-    }
-
-    @keyframes statusPulse {
-      0%, 100% { opacity: 1; }
-      50% { opacity: 0.5; }
-    }
-
-    .platform-badge {
-      padding: 0.375rem 0.75rem;
-      background: linear-gradient(135deg, var(--color-primary-500, #FF9800), var(--color-gold-800, #F9A825));
-      border-radius: 20px;
-      font-size: 0.6875rem;
-      font-weight: 700;
-      color: white;
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
-      box-shadow: 0 2px 8px rgba(255, 152, 0, 0.35);
-    }
-
-    .role-badge {
-      padding: 0.375rem 0.75rem;
-      background: linear-gradient(135deg, var(--color-primary-500, #FF9800), var(--color-gold-800, #F9A825));
-      border-radius: 20px;
-      font-size: 0.6875rem;
-      font-weight: 700;
-      color: white;
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
-      box-shadow: 0 2px 8px rgba(255, 152, 0, 0.35);
-    }
-
-    .profile-btn {
-      width: 40px;
-      height: 40px;
-      border-radius: 50%;
-      border: 2px solid var(--color-primary-500, #FF9800);
-      background: rgba(255, 255, 255, 0.08);
-      overflow: hidden;
-      cursor: pointer;
-      padding: 0;
-      transition: all 150ms ease;
-    }
-
-    .profile-btn:hover {
-      border-color: var(--color-gold-800, #F9A825);
-      transform: scale(1.05);
-      box-shadow: 0 0 0 4px rgba(255, 152, 0, 0.18);
-    }
-
-    .profile-btn img {
-      width: 100%;
-      height: 100%;
-      object-fit: cover;
-    }
-
-    .profile-placeholder {
-      width: 100%;
-      height: 100%;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      background: linear-gradient(135deg, var(--color-primary-500, #FF9800), var(--color-gold-800, #F9A825));
-      color: white;
-      font-weight: 600;
-      font-size: 0.875rem;
-    }
-
-    /* Login Button */
-    .login-btn {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 0.375rem;
-      padding: 0 0.875rem;
-      min-height: 44px;
-      background: var(--color-primary-500, #FF9800);
-      border: none;
-      border-radius: 12px;
-      color: white;
-      font-family: 'Inter', sans-serif;
-      font-size: 0.8125rem;
-      font-weight: 600;
-      cursor: pointer;
-      transition: all 150ms ease;
-    }
-
-    .login-btn:hover {
-      background: var(--color-primary-900, #E65100);
-    }
-
-    .login-btn:focus-visible {
-      outline: 2px solid var(--color-primary-500, #FF9800);
-      outline-offset: 2px;
-    }
-
-    .login-btn svg {
-      flex-shrink: 0;
-    }
-
-    /* Location Chip */
     .location-chip {
       display: flex;
       align-items: center;

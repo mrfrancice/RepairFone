@@ -6,6 +6,7 @@ import { ChatService, ChatMessage, Conversation } from '../../services/chat.serv
 import { ChatStore } from '../../stores/chat.store';
 import { AuthStore } from '../../../../core/stores/auth.store';
 import { UiLoadingComponent } from '../../../../shared/components/ui-loading/ui-loading.component';
+import { UiHeaderComponent } from '../../../../shared/components/ui-header/ui-header.component';
 import { FormatDatePipe } from '../../../../shared/pipes/format-date.pipe';
 import { InitialsPipe } from '../../../../shared/pipes/initials.pipe';
 import { LoggerService } from '../../../../core/services/logger.service';
@@ -19,19 +20,16 @@ import { LoggerService } from '../../../../core/services/logger.service';
     FormsModule,
     RouterLink,
     UiLoadingComponent,
+    UiHeaderComponent,
     FormatDatePipe,
     InitialsPipe,
   ],
   template: `
     <div class="chat-room">
-      <!-- Header -->
-      <header class="header">
-        <button class="back-btn" routerLink="/chat">
-          <span class="icon">←</span>
-        </button>
-
+      <!-- Header unifié (charte sombre via ui-header, mode inline pour layout flex) -->
+      <ui-header [showBack]="true" backRoute="/chat" [inline]="true">
         @if (store.currentConversation()) {
-          <div class="conversation-info">
+          <div header-center class="conversation-info">
             <div class="avatar">
               @if (store.currentConversation()?.clientId === authStore.user()?.id) {
                 {{ store.currentConversation()?.repairer?.firstName | initials : store.currentConversation()?.repairer?.lastName }}
@@ -53,18 +51,18 @@ import { LoggerService } from '../../../../core/services/logger.service';
           </div>
         }
 
-        <div class="header-actions">
-          @if (store.currentConversation()?.request) {
-            <button
-              class="action-btn"
-              [routerLink]="['/requests', store.currentConversation()?.request?.id]"
-              title="Voir la demande"
-            >
-              📋
-            </button>
-          }
-        </div>
-      </header>
+        @if (store.currentConversation()?.request) {
+          <button
+            header-actions
+            class="chat-action-btn"
+            [routerLink]="['/requests', store.currentConversation()?.request?.id]"
+            title="Voir la demande"
+            aria-label="Voir la demande"
+          >
+            📋
+          </button>
+        }
+      </ui-header>
 
       <!-- Messages -->
       <div class="messages-container" #messagesContainer>
@@ -220,85 +218,70 @@ import { LoggerService } from '../../../../core/services/logger.service';
       background: #FAFAFA;
     }
 
-    .header {
+    /* Bloc avatar+nom projeté dans ui-header [header-center] */
+    .conversation-info {
       display: flex;
       align-items: center;
       gap: 0.75rem;
-      padding: 0.75rem 1rem;
-      background:
-        radial-gradient(ellipse at 92% 50%, rgba(255, 152, 0, 0.22) 0%, transparent 55%),
-        linear-gradient(135deg, #1A1A1A 0%, #0F0F0F 100%);
-      border-bottom-left-radius: 30px;
-      border-bottom-right-radius: 30px;
-      border-bottom: 2px solid var(--color-primary-500, #FF9800);
-      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.35);
-      min-height: 3.5rem;
+      flex: 1;
+      min-width: 0;
 
-      .back-btn {
-        background: rgba(255, 255, 255, 0.08);
-        border: 1px solid rgba(255, 255, 255, 0.1);
-        font-size: 1.25rem;
+      .avatar {
+        width: 2.5rem;
+        height: 2.5rem;
+        border-radius: 50%;
+        background: linear-gradient(135deg, var(--color-primary-500, #FF9800), var(--color-gold-800, #F9A825));
         color: white;
-        cursor: pointer;
-        padding: 0.25rem 0.5rem;
-        border-radius: 8px;
-      }
-
-      .conversation-info {
         display: flex;
         align-items: center;
-        gap: 0.75rem;
-        flex: 1;
+        justify-content: center;
+        font-weight: 600;
+        font-size: 0.875rem;
+        flex-shrink: 0;
+        box-shadow: 0 2px 8px rgba(255, 152, 0, 0.35);
+      }
 
-        .avatar {
-          width: 2.5rem;
-          height: 2.5rem;
-          border-radius: 50%;
-          background: linear-gradient(135deg, var(--color-primary-500, #FF9800), var(--color-gold-800, #F9A825));
-          color: white;
-          display: flex;
-          align-items: center;
-          justify-content: center;
+      .info {
+        display: flex;
+        flex-direction: column;
+        min-width: 0;
+
+        .name {
           font-weight: 600;
-          font-size: 0.875rem;
-          flex-shrink: 0;
-          box-shadow: 0 2px 8px rgba(255, 152, 0, 0.35);
-        }
-
-        .info {
-          display: flex;
-          flex-direction: column;
-
-          .name {
-            font-weight: 600;
-            color: white;
-            font-size: 0.9375rem;
-          }
-
-          .device {
-            font-size: 0.75rem;
-            color: rgba(255, 255, 255, 0.65);
-          }
-
-          .typing {
-            font-size: 0.75rem;
-            color: var(--color-primary-500, #FF9800);
-            font-style: italic;
-          }
-        }
-      }
-
-      .header-actions {
-        .action-btn {
-          background: rgba(255, 255, 255, 0.08);
-          border: 1px solid rgba(255, 255, 255, 0.1);
           color: white;
-          font-size: 1.25rem;
-          cursor: pointer;
-          padding: 0.5rem;
-          border-radius: 8px;
+          font-size: 0.9375rem;
+          overflow: hidden;
+          text-overflow: ellipsis;
+          white-space: nowrap;
+        }
+
+        .device {
+          font-size: 0.75rem;
+          color: rgba(255, 255, 255, 0.65);
+        }
+
+        .typing {
+          font-size: 0.75rem;
+          color: var(--color-primary-500, #FF9800);
+          font-style: italic;
         }
       }
+    }
+
+    /* Bouton action projeté dans ui-header [header-actions] */
+    .chat-action-btn {
+      background: rgba(255, 255, 255, 0.08);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      color: white;
+      font-size: 1.25rem;
+      cursor: pointer;
+      padding: 0.5rem;
+      border-radius: 8px;
+      min-width: 44px;
+      min-height: 44px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
     }
 
     .messages-container {

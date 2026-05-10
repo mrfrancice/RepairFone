@@ -5,25 +5,20 @@ import { ActivatedRoute, Router } from '@angular/router';
 import { ConseilsService, ConseilSession, ConseilMessage } from '../../services/conseils.service';
 import { ConseilsStore } from '../../stores/conseils.store';
 import { StatusLabelsService, SessionStatus } from '../../../../shared/services/status-labels.service';
+import { UiHeaderComponent } from '../../../../shared/components/ui-header/ui-header.component';
 import { LoggerService } from '../../../../core/services/logger.service';
 
 @Component({
   selector: 'app-conseil-chat',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, UiHeaderComponent],
   template: `
     <div class="chat-container">
-      <!-- Header -->
-      <header class="chat-header">
-        <button class="back-btn" (click)="goBack()">
-          <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
-            <path d="M15 18L9 12L15 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-          </svg>
-        </button>
-
+      <!-- Header unifié (charte sombre via ui-header, mode inline pour layout flex) -->
+      <ui-header [showBack]="true" backRoute="/conseils/sessions" [inline]="true">
         @if (session()) {
-          <div class="expert-info">
+          <div header-center class="expert-info">
             <div class="expert-avatar">
               @if (session()?.expert?.avatarUrl) {
                 <img [src]="session()?.expert?.avatarUrl" [alt]="session()?.expert?.firstName" />
@@ -32,7 +27,7 @@ import { LoggerService } from '../../../../core/services/logger.service';
                   {{ getExpertInitials() }}
                 </div>
               }
-              <span class="status-dot" [class.online]="session()?.expert?.isAvailable"></span>
+              <span class="presence-dot" [class.online]="session()?.expert?.isAvailable"></span>
             </div>
             <div class="expert-details">
               <span class="expert-name">{{ session()?.expert?.firstName }} {{ session()?.expert?.lastName }}</span>
@@ -41,14 +36,14 @@ import { LoggerService } from '../../../../core/services/logger.service';
           </div>
         }
 
-        <button class="menu-btn">
+        <button header-actions class="menu-btn" aria-label="Options de la session">
           <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
             <circle cx="12" cy="6" r="1.5" fill="currentColor"/>
             <circle cx="12" cy="12" r="1.5" fill="currentColor"/>
             <circle cx="12" cy="18" r="1.5" fill="currentColor"/>
           </svg>
         </button>
-      </header>
+      </ui-header>
 
       <!-- Messages -->
       <div class="chat-messages" #messagesContainer>
@@ -134,27 +129,13 @@ import { LoggerService } from '../../../../core/services/logger.service';
       background: #FAFAFA;
     }
 
-    .chat-header {
-      display: flex;
-      align-items: center;
-      gap: 0.75rem;
-      padding: 0.75rem 1rem;
-      padding-top: calc(0.75rem + env(safe-area-inset-top, 0));
-      background:
-        radial-gradient(ellipse at 92% 50%, rgba(255, 152, 0, 0.22) 0%, transparent 55%),
-        linear-gradient(135deg, #1A1A1A 0%, #0F0F0F 100%);
-      border-bottom-left-radius: 30px;
-      border-bottom-right-radius: 30px;
-      border-bottom: 2px solid var(--color-primary-500, #FF9800);
-      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.35);
-    }
-
-    .back-btn, .menu-btn {
+    /* Bouton menu projeté dans ui-header [header-actions] */
+    .menu-btn {
       background: rgba(255, 255, 255, 0.08);
       border: 1px solid rgba(255, 255, 255, 0.1);
       color: white;
-      width: 40px;
-      height: 40px;
+      min-width: 44px;
+      min-height: 44px;
       display: flex;
       align-items: center;
       justify-content: center;
@@ -163,21 +144,24 @@ import { LoggerService } from '../../../../core/services/logger.service';
       transition: all 150ms ease;
     }
 
-    .back-btn:hover, .menu-btn:hover {
+    .menu-btn:hover {
       background: rgba(255, 152, 0, 0.18);
       border-color: var(--color-primary-500, #FF9800);
       color: var(--color-primary-500, #FF9800);
     }
 
+    /* Bloc expert projeté dans ui-header [header-center] */
     .expert-info {
       flex: 1;
       display: flex;
       align-items: center;
       gap: 0.75rem;
+      min-width: 0;
     }
 
     .expert-avatar {
       position: relative;
+      flex-shrink: 0;
     }
 
     .expert-avatar img,
@@ -197,29 +181,33 @@ import { LoggerService } from '../../../../core/services/logger.service';
       font-weight: 600;
     }
 
-    .status-dot {
+    .presence-dot {
       position: absolute;
       bottom: 0;
       right: 0;
       width: 12px;
       height: 12px;
       border-radius: 50%;
-      border: 2px solid white;
+      border: 2px solid #1A1A1A;
       background: #9ca3af;
     }
 
-    .status-dot.online {
+    .presence-dot.online {
       background: var(--color-secondary, #4CAF50);
     }
 
     .expert-details {
       display: flex;
       flex-direction: column;
+      min-width: 0;
     }
 
     .expert-name {
       font-weight: 600;
       color: white;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
     }
 
     .session-status {
@@ -542,7 +530,4 @@ export class ConseilChatComponent implements OnInit, AfterViewChecked {
     });
   }
 
-  goBack(): void {
-    this.router.navigate(['/conseils/sessions']);
-  }
 }

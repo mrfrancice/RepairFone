@@ -32,52 +32,54 @@ import { InitialsPipe } from '../../../../shared/pipes/initials.pipe';
             }
             <div class="avatar-badge" [class]="user()?.role">
               @if (user()?.role === 'admin') {
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none">
                   <circle cx="12" cy="12" r="3" stroke="currentColor" stroke-width="2"/>
                   <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09a1.65 1.65 0 0 0-1-1.51 1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09a1.65 1.65 0 0 0 1.51-1 1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z" stroke="currentColor" stroke-width="2"/>
                 </svg>
               } @else if (user()?.role === 'repairer') {
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none">
                   <path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z" stroke="currentColor" stroke-width="2"/>
                 </svg>
               } @else {
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none">
                   <path d="M20 21V19C20 16.7909 18.2091 15 16 15H8C5.79086 15 4 16.7909 4 19V21M16 7C16 9.20914 14.2091 11 12 11C9.79086 11 8 9.20914 8 7C8 4.79086 9.79086 3 12 3C14.2091 3 16 4.79086 16 7Z" stroke="currentColor" stroke-width="2"/>
                 </svg>
               }
             </div>
           </div>
 
-          <h1 class="profile-name">
-            {{ user()?.firstName }} {{ user()?.lastName }}
-          </h1>
+          <div class="profile-info">
+            <h1 class="profile-name">
+              {{ user()?.firstName }} {{ user()?.lastName }}
+            </h1>
 
-          <p class="profile-phone">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
-              <path d="M22 16.92V19.92C22.0011 20.1985 21.9441 20.4742 21.8325 20.7294C21.7209 20.9845 21.5573 21.2136 21.3521 21.4019C21.1468 21.5901 20.9046 21.7335 20.6408 21.8227C20.3769 21.9119 20.0974 21.9451 19.82 21.92C16.7428 21.5856 13.787 20.5341 11.19 18.85C8.77382 17.3147 6.72533 15.2662 5.19 12.85C3.49998 10.2412 2.44824 7.27099 2.12 4.18C2.09501 3.90347 2.12787 3.62476 2.2165 3.36162C2.30513 3.09849 2.44756 2.85669 2.63476 2.65162C2.82196 2.44655 3.0498 2.28271 3.30379 2.17052C3.55777 2.05833 3.83233 2.00026 4.11 2H7.11C7.59531 1.99522 8.06579 2.16708 8.43376 2.48353C8.80173 2.79999 9.04207 3.23945 9.11 3.72C9.23662 4.68007 9.47144 5.62273 9.81 6.53C9.94454 6.88792 9.97366 7.27691 9.89391 7.65088C9.81415 8.02485 9.62886 8.36811 9.36 8.64L8.09 9.91C9.51355 12.4135 11.5865 14.4864 14.09 15.91L15.36 14.64C15.6319 14.3711 15.9751 14.1858 16.3491 14.1061C16.7231 14.0263 17.1121 14.0555 17.47 14.19C18.3773 14.5286 19.3199 14.7634 20.28 14.89C20.7658 14.9585 21.2094 15.2032 21.5265 15.5775C21.8437 15.9518 22.0122 16.4296 22 16.92Z" stroke="currentColor" stroke-width="2"/>
-            </svg>
-            +225 {{ user()?.phone }}
-          </p>
-
-          <div class="profile-role" [class]="'role-' + user()?.role">
-            <span class="role-icon">
-              @if (user()?.role === 'admin') {
-                <svg width="12" height="12" viewBox="0 0 24 24" fill="none">
-                  <circle cx="12" cy="12" r="3" stroke="currentColor" stroke-width="2"/>
-                  <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09a1.65 1.65 0 0 0-1-1.51 1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09a1.65 1.65 0 0 0 1.51-1 1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z" stroke="currentColor" stroke-width="2"/>
-                </svg>
-              } @else if (user()?.role === 'repairer') {
-                <svg width="12" height="12" viewBox="0 0 24 24" fill="none">
-                  <path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z" stroke="currentColor" stroke-width="2"/>
-                </svg>
-              } @else {
-                <svg width="12" height="12" viewBox="0 0 24 24" fill="none">
-                  <path d="M20 21V19C20 16.7909 18.2091 15 16 15H8C5.79086 15 4 16.7909 4 19V21M16 7C16 9.20914 14.2091 11 12 11C9.79086 11 8 9.20914 8 7C8 4.79086 9.79086 3 12 3C14.2091 3 16 4.79086 16 7Z" stroke="currentColor" stroke-width="2"/>
-                </svg>
-              }
-            </span>
-            {{ getRoleLabel() }}
+            <p class="profile-phone">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
+                <path d="M22 16.92V19.92C22.0011 20.1985 21.9441 20.4742 21.8325 20.7294C21.7209 20.9845 21.5573 21.2136 21.3521 21.4019C21.1468 21.5901 20.9046 21.7335 20.6408 21.8227C20.3769 21.9119 20.0974 21.9451 19.82 21.92C16.7428 21.5856 13.787 20.5341 11.19 18.85C8.77382 17.3147 6.72533 15.2662 5.19 12.85C3.49998 10.2412 2.44824 7.27099 2.12 4.18C2.09501 3.90347 2.12787 3.62476 2.2165 3.36162C2.30513 3.09849 2.44756 2.85669 2.63476 2.65162C2.82196 2.44655 3.0498 2.28271 3.30379 2.17052C3.55777 2.05833 3.83233 2.00026 4.11 2H7.11C7.59531 1.99522 8.06579 2.16708 8.43376 2.48353C8.80173 2.79999 9.04207 3.23945 9.11 3.72C9.23662 4.68007 9.47144 5.62273 9.81 6.53C9.94454 6.88792 9.97366 7.27691 9.89391 7.65088C9.81415 8.02485 9.62886 8.36811 9.36 8.64L8.09 9.91C9.51355 12.4135 11.5865 14.4864 14.09 15.91L15.36 14.64C15.6319 14.3711 15.9751 14.1858 16.3491 14.1061C16.7231 14.0263 17.1121 14.0555 17.47 14.19C18.3773 14.5286 19.3199 14.7634 20.28 14.89C20.7658 14.9585 21.2094 15.2032 21.5265 15.5775C21.8437 15.9518 22.0122 16.4296 22 16.92Z" stroke="currentColor" stroke-width="2"/>
+              </svg>
+              +225 {{ user()?.phone }}
+            </p>
           </div>
+        </div>
+
+        <div class="profile-role-corner" [class]="'role-' + user()?.role">
+          <span class="role-icon">
+            @if (user()?.role === 'admin') {
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none">
+                <circle cx="12" cy="12" r="3" stroke="currentColor" stroke-width="2"/>
+                <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09a1.65 1.65 0 0 0-1-1.51 1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09a1.65 1.65 0 0 0 1.51-1 1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z" stroke="currentColor" stroke-width="2"/>
+              </svg>
+            } @else if (user()?.role === 'repairer') {
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none">
+                <path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z" stroke="currentColor" stroke-width="2"/>
+              </svg>
+            } @else {
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none">
+                <path d="M20 21V19C20 16.7909 18.2091 15 16 15H8C5.79086 15 4 16.7909 4 19V21M16 7C16 9.20914 14.2091 11 12 11C9.79086 11 8 9.20914 8 7C8 4.79086 9.79086 3 12 3C14.2091 3 16 4.79086 16 7Z" stroke="currentColor" stroke-width="2"/>
+              </svg>
+            }
+          </span>
+          {{ getRoleLabel() }}
         </div>
       </ui-header>
 
@@ -105,7 +107,7 @@ import { InitialsPipe } from '../../../../shared/pipes/initials.pipe';
                 </div>
                 <div class="stat-info">
                   <span class="stat-value">{{ stats()?.accepted }}</span>
-                  <span class="stat-label">Acceptees</span>
+                  <span class="stat-label">Acceptées</span>
                 </div>
               </div>
               <div class="stat-card">
@@ -464,17 +466,19 @@ import { InitialsPipe } from '../../../../shared/pipes/initials.pipe';
       background: #FAFAFA;
     }
 
-    /* Profile Header Content */
+    /* Profile Header Content — disposition horizontale compacte */
     .profile-header-content {
-      text-align: center;
-      padding-top: 0.5rem;
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      text-align: left;
     }
 
     .profile-avatar {
       position: relative;
-      width: 110px;
-      height: 110px;
-      margin: 0 auto 1rem;
+      width: 80px;
+      height: 80px;
+      flex-shrink: 0;
     }
 
     .profile-avatar img,
@@ -483,7 +487,7 @@ import { InitialsPipe } from '../../../../shared/pipes/initials.pipe';
       height: 100%;
       border-radius: 50%;
       object-fit: cover;
-      border: 4px solid white;
+      border: 3px solid white;
       box-shadow: var(--shadow-warm, 0 8px 24px rgba(255, 152, 0, 0.20));
     }
 
@@ -493,17 +497,17 @@ import { InitialsPipe } from '../../../../shared/pipes/initials.pipe';
       align-items: center;
       justify-content: center;
       font-family: 'Poppins', 'Inter', sans-serif;
-      font-size: 2.5rem;
+      font-size: 1.75rem;
       font-weight: 700;
       color: white;
     }
 
     .avatar-badge {
       position: absolute;
-      bottom: 4px;
-      right: 4px;
-      width: 32px;
-      height: 32px;
+      bottom: 0;
+      right: 0;
+      width: 24px;
+      height: 24px;
       border-radius: 50%;
       background: white;
       display: flex;
@@ -525,66 +529,76 @@ import { InitialsPipe } from '../../../../shared/pipes/initials.pipe';
       background: linear-gradient(135deg, #FFF3E0, #e9d5ff);
     }
 
+    .profile-info {
+      flex: 1;
+      min-width: 0;
+      display: flex;
+      flex-direction: column;
+      gap: 0.375rem;
+    }
+
     .profile-name {
       font-family: 'Poppins', 'Inter', sans-serif;
-      font-size: 1.25rem;
+      font-size: 1.125rem;
       font-weight: 700;
       letter-spacing: -0.01em;
       color: white;
-      margin-bottom: 0.25rem;
+      margin: 0;
       line-height: 1.2;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
     }
 
     .profile-phone {
-      display: flex;
+      display: inline-flex;
       align-items: center;
-      justify-content: center;
       gap: 0.375rem;
       color: rgba(255, 255, 255, 0.75);
       font-size: 0.8125rem;
-      margin-bottom: 0.75rem;
+      margin: 0;
     }
 
     .profile-phone svg {
       color: var(--color-primary-500, #FF9800);
+      flex-shrink: 0;
     }
 
-    .profile-role {
+    /* Badge rôle ancré dans le coin haut-droit du header */
+    .profile-role-corner {
+      position: absolute;
+      top: calc(1rem + env(safe-area-inset-top, 0px));
+      right: 1.25rem;
       display: inline-flex;
       align-items: center;
       gap: 0.375rem;
       background: linear-gradient(135deg, var(--color-primary-500, #FF9800), var(--color-gold-800, #F9A825));
-      padding: 0.375rem 0.875rem;
+      padding: 0.375rem 0.75rem;
       border-radius: 9999px;
       font-family: 'Inter', sans-serif;
-      font-size: 0.75rem;
-      font-weight: 600;
+      font-size: 0.6875rem;
+      font-weight: 700;
       color: white;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
       box-shadow: 0 2px 8px rgba(255, 152, 0, 0.35);
+      z-index: 1;
     }
 
-    .role-icon {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-    }
-
-    .profile-role.role-admin {
+    .profile-role-corner.role-admin {
       background: linear-gradient(135deg, var(--color-terracotta, #C62828), #8E1B1B);
-      color: white;
       box-shadow: 0 2px 8px rgba(198, 40, 40, 0.35);
     }
 
-    .profile-role.role-repairer {
+    .profile-role-corner.role-repairer {
       background: linear-gradient(135deg, var(--color-secondary, #4CAF50), var(--color-success-dark, #2E7D32));
-      color: white;
       box-shadow: 0 2px 8px rgba(76, 175, 80, 0.35);
     }
 
     /* Content */
     .profile-content {
       padding: 1rem;
-      padding-top: 320px;
+      padding-top: var(--header-height, 166px);
       position: relative;
       z-index: 1;
     }
