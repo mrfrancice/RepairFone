@@ -17,6 +17,7 @@ import { User, UserRole } from '../users/entities/user.entity';
 import { OtpCode } from './entities/otp.entity';
 import { RefreshToken } from './entities/refresh-token.entity';
 import { SmsService } from '../../common/services/sms.service';
+import { EmailService } from '../../common/services/email.service';
 import { FirebaseService } from '../../common/services/firebase.service';
 import { RegisterDto, LoginDto, RepairerProfileDto } from './dto';
 import { AUTH, BUSINESS, SUCCESS_MESSAGES, HTTP_MESSAGES } from '../../common/constants';
@@ -43,6 +44,7 @@ export class AuthService {
     private readonly jwtService: JwtService,
     private readonly configService: ConfigService,
     private readonly smsService: SmsService,
+    private readonly emailService: EmailService,
     private readonly firebaseService: FirebaseService,
     @InjectRepository(OtpCode)
     private readonly otpRepository: Repository<OtpCode>,
@@ -212,11 +214,29 @@ export class AuthService {
     });
     await this.otpRepository.save(otp);
 
-    // Send OTP via SMS
+    // Send OTP via SMS (canal principal)
     const isDev = this.configService.get<string>('nodeEnv') === 'development';
     const smsResult = await this.smsService.sendOtp(phone, code);
 
-    if (!smsResult.success && !isDev) {
+    // Fallback / canal secondaire : si l'user a un email enregistré, on
+    // envoie aussi l'OTP par email. Permet de fonctionner sans SMS configuré
+    // (mode mock / pas de provider SMS en CI gratuit). Fire-and-forget,
+    // on ne bloque pas la réponse sur le mail.
+    const user = await this.usersService.findByPhone(phone).catch(() => null);
+    if (user?.email) {
+      this.emailService
+        .sendOtpEmail(user.email, code)
+        .catch((err) => this.logger.error(`OTP email fallback échoué pour ${user.email}: ${err?.message ?? err}`));
+    }
+
+    // En prod, on tolère un SMS qui échoue SI l'email a pu être envoyé
+    // (sinon l'user serait bloqué — ex: provider SMS down). On ne sait pas
+    // encore le résultat du mail (fire-and-forget), donc on accepte si :
+    //   - SMS OK, OU
+    //   - on est en dev, OU
+    //   - l'user a un email (le mail compense le SMS HS).
+    const hasEmailFallback = !!user?.email;
+    if (!smsResult.success && !isDev && !hasEmailFallback) {
       throw new BadRequestException(HTTP_MESSAGES.BAD_REQUEST.INVALID_OTP);
     }
 

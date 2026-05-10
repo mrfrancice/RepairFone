@@ -97,6 +97,56 @@ class SmtpEmailProvider implements EmailProvider {
   }
 }
 
+// Resend provider — free tier 3 000 emails/mois, 100/jour
+// API : https://resend.com/docs/api-reference/emails/send-email
+class ResendEmailProvider implements EmailProvider {
+  private readonly logger = new Logger('ResendEmailProvider');
+  private readonly baseUrl = 'https://api.resend.com/emails';
+
+  constructor(
+    private readonly apiKey: string,
+    private readonly fromEmail: string,
+  ) {}
+
+  async sendEmail(options: EmailOptions): Promise<EmailResult> {
+    try {
+      const response = await fetch(this.baseUrl, {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${this.apiKey}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          from: options.from || this.fromEmail,
+          to: [options.to],
+          subject: options.subject,
+          html: options.html,
+          text: options.text,
+          reply_to: options.replyTo,
+        }),
+      });
+
+      const data = (await response.json().catch(() => ({}))) as {
+        id?: string;
+        message?: string;
+        name?: string;
+      };
+
+      if (!response.ok) {
+        const err = data?.message || data?.name || `HTTP ${response.status}`;
+        this.logger.error(`Resend API error: ${err}`);
+        return { success: false, error: err };
+      }
+
+      return { success: true, messageId: data?.id || `resend-${Date.now()}` };
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      this.logger.error(`Resend network error: ${errorMessage}`);
+      return { success: false, error: errorMessage };
+    }
+  }
+}
+
 // SendGrid provider
 class SendGridEmailProvider implements EmailProvider {
   private readonly logger = new Logger('SendGridEmailProvider');
@@ -190,6 +240,17 @@ export class EmailService {
         } else {
           this.provider = new SendGridEmailProvider(apiKey, this.fromEmail);
           this.logger.log('Email provider: SendGrid initialized');
+        }
+        break;
+
+      case 'resend':
+        const resendKey = this.configService.get<string>('RESEND_API_KEY');
+        if (!resendKey) {
+          this.logger.warn('Resend API key missing, falling back to mock');
+          this.provider = new MockEmailProvider();
+        } else {
+          this.provider = new ResendEmailProvider(resendKey, this.fromEmail);
+          this.logger.log('Email provider: Resend initialized');
         }
         break;
 

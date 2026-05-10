@@ -55,6 +55,25 @@ Options gratuites avec free tier généreux :
 
 **Recommandation** : **Resend** pour le démarrage (API moderne, 3k mails/mois gratuits, intégration NestJS triviale via `@nestjs-modules/mailer` + transport SMTP).
 
+### Activation pas-à-pas — Resend (email)
+1. Créer un compte gratuit sur [resend.com](https://resend.com) (3 000 mails/mois).
+2. Générer une clé API (`Dashboard → API Keys → Create API Key`).
+3. Tant qu'on n'a pas vérifié de domaine, utiliser `onboarding@resend.dev` comme `EMAIL_FROM` (limité à l'email du compte, suffisant pour les tests).
+4. Pour la prod : vérifier `repairfone.ci` dans le dashboard Resend (ajouter SPF/DKIM via DNS) → permet d'envoyer depuis n'importe quelle adresse `@repairfone.ci`.
+5. Dans `backend/.env` :
+   ```
+   EMAIL_PROVIDER=resend
+   RESEND_API_KEY=re_xxxxx
+   EMAIL_FROM=onboarding@resend.dev   # ou noreply@repairfone.ci après vérification domaine
+   ```
+6. Redémarrer le backend → log `Email provider: Resend initialized`.
+
+### Activation pas-à-pas — OTP par email (fallback gratuit du SMS)
+Câblé automatiquement : `AuthService.generateOtp()` envoie l'OTP par SMS + email si l'utilisateur a un email enregistré.
+- Pas de config supplémentaire → ça marche dès que `EMAIL_PROVIDER` n'est pas `mock`.
+- En mode `SMS_PROVIDER=mock`, l'email devient le canal effectif (le SMS log juste en console).
+- Limite : un utilisateur sans email enregistré ne peut pas recevoir l'OTP → l'inscription doit demander l'email même s'il n'est pas "vérifié" au sens strict.
+
 ### Paiement (Côte d'Ivoire)
 **Constat** : il n'existe **pas** d'option vraiment "gratuite" — un PSP prend toujours une commission par transaction (~2-3%). Mais l'intégration backend est gratuite, on ne paie qu'à l'usage.
 
@@ -71,6 +90,24 @@ Options actives en Côte d'Ivoire :
 2. Renseigner `PAYMENT_PROVIDER=paydunya` + `PAYDUNYA_MASTER_KEY/PUBLIC_KEY/PRIVATE_KEY/TOKEN` dans `.env`
 
 **Recommandation** : **PayDunya en mode test** pour démarrer (zéro commission tant qu'on est en sandbox), bascule en prod le jour du go-live.
+
+### Activation pas-à-pas — PayDunya (sandbox → prod)
+1. **Compte sandbox** (gratuit, instantané) : créer un compte sur [paydunya.com](https://paydunya.com) → aller dans `Intégration → Clés API` → onglet **TEST**.
+2. Récupérer les 4 valeurs : `Master Key`, `Public Key`, `Private Key`, `Token`.
+3. Dans `backend/.env` :
+   ```
+   PAYMENT_PROVIDER=paydunya
+   PAYDUNYA_MODE=test
+   PAYDUNYA_MASTER_KEY=...
+   PAYDUNYA_PUBLIC_KEY=...
+   PAYDUNYA_PRIVATE_KEY=...
+   PAYDUNYA_TOKEN=...
+   PAYMENT_RETURN_URL=https://app.repairfone.ci/payments/callback
+   PAYMENT_NOTIFY_URL=https://api.repairfone.ci/api/v1/payments/webhook
+   ```
+4. Redémarrer le backend → log `Payment gateway: PayDunya initialized (test mode)`.
+5. Tester un paiement réel en sandbox : utiliser n'importe quel numéro mobile money valide → PayDunya simule la confirmation.
+6. **Passage en prod** : créer un compte marchand validé (RCCM, RIB, etc.), changer `PAYDUNYA_MODE=live` + clés live, vérifier les webhooks (HTTPS obligatoire).
 
 ---
 

@@ -10,6 +10,7 @@ import { OtpCode } from './entities/otp.entity';
 import { RefreshToken } from './entities/refresh-token.entity';
 import { UsersModule } from '../users/users.module';
 import { SmsService } from '../../common/services/sms.service';
+import { EmailService } from '../../common/services/email.service';
 import { FirebaseService } from '../../common/services/firebase.service';
 
 @Module({
@@ -29,7 +30,7 @@ import { FirebaseService } from '../../common/services/firebase.service';
     TypeOrmModule.forFeature([OtpCode, RefreshToken]),
   ],
   controllers: [AuthController],
-  providers: [AuthService, JwtStrategy, SmsService, FirebaseService],
+  providers: [AuthService, JwtStrategy, SmsService, EmailService, FirebaseService],
   exports: [AuthService, FirebaseService],
 })
 export class AuthModule {}
