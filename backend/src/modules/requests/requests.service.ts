@@ -245,15 +245,60 @@ export class RequestsService {
       .take(limit)
       .getManyAndCount();
 
-    // Transform data to match frontend expected format
-    const data = requests.map((request) => this.transformRequestForRepairer(request));
+    // Calcul de distance (Haversine JS post-fetch) — pagination 20 max
+    // donc surcoût négligeable vs SQL natif. Si la perf devient un sujet
+    // sur de plus gros volumes, déplacer en addSelect("...AS distance_km").
+    const repairerLat = repairerProfile.latitude != null ? Number(repairerProfile.latitude) : null;
+    const repairerLng = repairerProfile.longitude != null ? Number(repairerProfile.longitude) : null;
+
+    const data = requests.map((request) =>
+      this.transformRequestForRepairer(request, repairerLat, repairerLng),
+    );
 
     return { data, total };
   }
 
-  private transformRequestForRepairer(request: RepairRequest): RepairerRequestResponse {
+  /**
+   * Formule Haversine — distance en km entre deux points GPS.
+   * Retourne undefined si l'une des coords manque.
+   */
+  private haversineKm(
+    lat1: number | null,
+    lng1: number | null,
+    lat2: number | null | string,
+    lng2: number | null | string,
+  ): number | undefined {
+    if (lat1 == null || lng1 == null || lat2 == null || lng2 == null) return undefined;
+    const lat2n = typeof lat2 === 'string' ? Number(lat2) : lat2;
+    const lng2n = typeof lng2 === 'string' ? Number(lng2) : lng2;
+    if (Number.isNaN(lat2n) || Number.isNaN(lng2n)) return undefined;
+
+    const R = 6371; // rayon Terre en km
+    const toRad = (deg: number) => (deg * Math.PI) / 180;
+    const dLat = toRad(lat2n - lat1);
+    const dLng = toRad(lng2n - lng1);
+    const a =
+      Math.sin(dLat / 2) ** 2 +
+      Math.cos(toRad(lat1)) * Math.cos(toRad(lat2n)) * Math.sin(dLng / 2) ** 2;
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+    return Math.round(R * c * 10) / 10; // arrondi 1 décimale
+  }
+
+  private transformRequestForRepairer(
+    request: RepairRequest,
+    repairerLat: number | null = null,
+    repairerLng: number | null = null,
+  ): RepairerRequestResponse {
+    const distanceKm = this.haversineKm(
+      repairerLat,
+      repairerLng,
+      request.clientLatitude ?? null,
+      request.clientLongitude ?? null,
+    );
+
     return {
       ...request,
+      distance: distanceKm,
       client: request.client
         ? {
             id: request.client.id,

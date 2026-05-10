@@ -117,6 +117,8 @@ export type ClientRequestResponse = Omit<RepairRequest, 'client' | 'repairer'> &
  */
 export type RepairerRequestResponse = Omit<RepairRequest, 'client' | 'repairer'> & {
   client: ClientSummary | null;
+  /** Distance en km entre la boutique du réparateur et le lieu d'intervention (Haversine). Undefined si une coord manque. */
+  distance?: number;
 };
 
 /**

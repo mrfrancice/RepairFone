@@ -178,7 +178,14 @@ export class RepairersService {
       );
     }
 
-    queryBuilder.orderBy('repairer.ratingAvg', 'DESC');
+    // Ranking : prioriser les réparateurs avec avis (ratingCount > 0),
+    // puis trier par note décroissante. Évite que des comptes neufs
+    // sans aucun avis polluent le haut du classement à égalité.
+    queryBuilder
+      .addSelect('CASE WHEN repairer.ratingCount > 0 THEN 1 ELSE 0 END', 'has_reviews')
+      .orderBy('has_reviews', 'DESC')
+      .addOrderBy('repairer.ratingAvg', 'DESC')
+      .addOrderBy('repairer.totalRepairs', 'DESC');
 
     const total = await queryBuilder.getCount();
     const profiles = await queryBuilder

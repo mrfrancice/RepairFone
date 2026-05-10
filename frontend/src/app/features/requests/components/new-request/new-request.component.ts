@@ -13,6 +13,7 @@ import { UiStepperComponent, StepConfig } from '../../../../shared/components/ui
 import { UiHeaderComponent } from '../../../../shared/components/ui-header/ui-header.component';
 import { FormatDatePipe } from '../../../../shared/pipes/format-date.pipe';
 import { LoggerService } from '../../../../core/services/logger.service';
+import { ToastService } from '../../../../core/services/toast.service';
 
 interface DraftData {
   step: number;
@@ -1096,6 +1097,7 @@ export class NewRequestComponent implements OnInit {
   private readonly route = inject(ActivatedRoute);
   private readonly destroyRef = inject(DestroyRef);
   private readonly logger = inject(LoggerService);
+  private readonly toast = inject(ToastService);
 
   // Draft auto-save
   private readonly DRAFT_KEY = 'repair_request_draft';
@@ -1265,6 +1267,9 @@ export class NewRequestComponent implements OnInit {
     const deviceId = params['deviceId'];
 
     if (!repairerId) {
+      this.toast.info(
+        'Choisissez d\'abord un réparateur dans la liste pour créer votre demande.',
+      );
       this.router.navigate(['/search']);
       return;
     }
@@ -1307,6 +1312,9 @@ export class NewRequestComponent implements OnInit {
       this.deliveryMode = mode === 'home' ? 'at_home' : 'in_shop';
     } catch (err) {
       this.logger.error('NewRequestComponent', 'Error loading data', err);
+      this.toast.error(
+        'Impossible de charger les informations du réparateur. Réessayez depuis la liste.',
+      );
       this.router.navigate(['/search']);
     } finally {
       this.isLoading.set(false);

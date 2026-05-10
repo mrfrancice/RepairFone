@@ -1155,9 +1155,10 @@ export class HomeComponent implements OnInit {
     this.isLoadingRepairers.set(true);
     this.repairersError.set(null);
     try {
-      // Default location for Abidjan if geolocation not available
-      const defaultLat = 5.3600;
-      const defaultLng = -4.0083;
+      // Default location : Plateau Centre, Abidjan (point neutre, ne
+      // matche pas la coord d'un seed → évite les "0 m" trompeurs).
+      const defaultLat = 5.3197;
+      const defaultLng = -4.0269;
 
       const result = await this.searchService.searchRepairers({
         latitude: defaultLat,
