@@ -13,6 +13,7 @@ import { getDatabaseConfig } from './config/database.config';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 
+import { HealthController } from './common/health/health.controller';
 import { JwtAuthGuard } from './common/guards/jwt-auth.guard';
 import { RolesGuard } from './common/guards/roles.guard';
 import { AuditModule } from './common/audit/audit.module';
@@ -113,7 +114,7 @@ import { SeederModule } from './database/seeders/seeder.module';
     // Database Seeder
     SeederModule,
   ],
-  controllers: [AppController],
+  controllers: [AppController, HealthController],
   providers: [
     AppService,
     // Global Guards

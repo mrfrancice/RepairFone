@@ -1,0 +1,37 @@
+name: Deploy
+
+# Stub à compléter avec votre cible (Render, Railway, Fly.io, AWS, GCP, OVH, etc.).
+# Décommentez et adaptez selon votre stack d'hébergement.
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  deploy-staging:
+    name: Deploy to staging
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/RepairFoneDev'
+    environment: staging
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build and push Docker images
+        run: |
+          echo "TODO: Configurer la registry (Docker Hub / GHCR / ECR / GCR)"
+          echo "      docker buildx build --push backend/"
+          echo "      docker buildx build --push frontend/"
+
+      - name: Deploy
+        run: |
+          echo "TODO: Déclencher le déploiement (kubectl, render-cli, fly-cli, etc.)"
+
+  deploy-production:
+    name: Deploy to production
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main'
+    environment: production
+    steps:
+      - uses: actions/checkout@v4
+      - run: echo "TODO: Production deployment"

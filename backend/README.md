@@ -1,98 +1,98 @@
-<p align="center">
-  <a href="http://nestjs.com/" target="blank"><img src="https://nestjs.com/img/logo-small.svg" width="120" alt="Nest Logo" /></a>
-</p>
+# RepairFone — API Backend
 
-[circleci-image]: https://img.shields.io/circleci/build/github/nestjs/nest/master?token=abc123def456
-[circleci-url]: https://circleci.com/gh/nestjs/nest
+API REST NestJS pour la plateforme RepairFone.
 
-  <p align="center">A progressive <a href="http://nodejs.org" target="_blank">Node.js</a> framework for building efficient and scalable server-side applications.</p>
-    <p align="center">
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/v/@nestjs/core.svg" alt="NPM Version" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/l/@nestjs/core.svg" alt="Package License" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/dm/@nestjs/common.svg" alt="NPM Downloads" /></a>
-<a href="https://circleci.com/gh/nestjs/nest" target="_blank"><img src="https://img.shields.io/circleci/build/github/nestjs/nest/master" alt="CircleCI" /></a>
-<a href="https://discord.gg/G7Qnnhy" target="_blank"><img src="https://img.shields.io/badge/discord-online-brightgreen.svg" alt="Discord"/></a>
-<a href="https://opencollective.com/nest#backer" target="_blank"><img src="https://opencollective.com/nest/backers/badge.svg" alt="Backers on Open Collective" /></a>
-<a href="https://opencollective.com/nest#sponsor" target="_blank"><img src="https://opencollective.com/nest/sponsors/badge.svg" alt="Sponsors on Open Collective" /></a>
-  <a href="https://paypal.me/kamilmysliwiec" target="_blank"><img src="https://img.shields.io/badge/Donate-PayPal-ff3f59.svg" alt="Donate us"/></a>
-    <a href="https://opencollective.com/nest#sponsor"  target="_blank"><img src="https://img.shields.io/badge/Support%20us-Open%20Collective-41B883.svg" alt="Support us"></a>
-  <a href="https://twitter.com/nestframework" target="_blank"><img src="https://img.shields.io/twitter/follow/nestframework.svg?style=social&label=Follow" alt="Follow us on Twitter"></a>
-</p>
-  <!--[![Backers on Open Collective](https://opencollective.com/nest/backers/badge.svg)](https://opencollective.com/nest#backer)
-  [![Sponsors on Open Collective](https://opencollective.com/nest/sponsors/badge.svg)](https://opencollective.com/nest#sponsor)-->
+## 🛠 Stack
 
-## Description
+- **NestJS 11** + TypeScript
+- **PostgreSQL 16** + TypeORM
+- **JWT** access + refresh tokens
+- **Helmet** + **CORS** + rate limiting (Throttler)
+- **Swagger** documentation auto-générée
 
-[Nest](https://github.com/nestjs/nest) framework TypeScript starter repository.
-
-## Project setup
+## 📦 Installation
 
 ```bash
-$ npm install
+npm install
+cp .env.example .env  # Renseigner toutes les variables
 ```
 
-## Compile and run the project
+### Variables d'environnement (`.env`)
+
+| Variable | Description | Défaut |
+|---|---|---|
+| `NODE_ENV` | `development` ou `production` | `development` |
+| `PORT` | Port de l'API | `3000` |
+| `API_PREFIX` | Préfixe global des routes | `api/v1` |
+| `DB_HOST` | Hôte PostgreSQL | `localhost` |
+| `DB_PORT` | Port PostgreSQL | `5432` |
+| `DB_USERNAME` | Utilisateur DB | `postgres` |
+| `DB_PASSWORD` | Mot de passe DB | — (requis) |
+| `DB_DATABASE` | Nom de la DB | `fastRepair_bd` |
+| `JWT_SECRET` | Secret signature access token | — (requis, ≥ 32 chars) |
+| `JWT_EXPIRATION` | Durée de vie access token | `15m` |
+| `JWT_REFRESH_SECRET` | Secret signature refresh token | — (requis, ≥ 32 chars) |
+| `JWT_REFRESH_EXPIRATION` | Durée de vie refresh token | `7d` |
+| `OTP_EXPIRATION_MINUTES` | Durée de vie OTP | `5` |
+| `OTP_MAX_ATTEMPTS` | Nb max tentatives OTP | `3` |
+| `SMS_PROVIDER` | `mock` / `twilio` / `orange` | `mock` |
+| `ALLOWED_ORIGINS` | Origines CORS (séparées virgule) | `http://localhost:4200` |
+
+## 🚀 Lancement
 
 ```bash
-# development
-$ npm run start
-
-# watch mode
-$ npm run start:dev
-
-# production mode
-$ npm run start:prod
+npm run start:dev      # mode dev avec hot reload
+npm run start:debug    # avec debugger
+npm run build          # compile dans dist/
+npm run start:prod     # exécute dist/main.js
 ```
 
-## Run tests
+Au premier démarrage, les seeders créent automatiquement les comptes de test, devices et services. Voir [README racine](../README.md#comptes-de-test).
+
+## 🧪 Tests
 
 ```bash
-# unit tests
-$ npm run test
-
-# e2e tests
-$ npm run test:e2e
-
-# test coverage
-$ npm run test:cov
+npm test               # tests unitaires
+npm run test:watch     # mode watch
+npm run test:cov       # couverture
+npm run test:e2e       # tests end-to-end
 ```
 
-## Deployment
+État actuel : 4 specs (auth, requests, payments, quotes) — couverture à étoffer (cf. ROADMAP P2.1).
 
-When you're ready to deploy your NestJS application to production, there are some key steps you can take to ensure it runs as efficiently as possible. Check out the [deployment documentation](https://docs.nestjs.com/deployment) for more information.
+## 🌐 Documentation API
 
-If you are looking for a cloud-based platform to deploy your NestJS application, check out [Mau](https://mau.nestjs.com), our official platform for deploying NestJS applications on AWS. Mau makes deployment straightforward and fast, requiring just a few simple steps:
+Swagger UI disponible en mode dev sur **`http://localhost:3000/api/docs`**.
+
+## 🩺 Health checks
+
+- `GET /api/v1/health` — liveness probe
+- `GET /api/v1/health/db` — readiness probe (ping DB)
+
+## 📁 Architecture
+
+```
+src/
+├── common/           # Guards, interceptors, decorators, audit, health
+├── config/           # Configuration TypeORM, env validation
+├── database/         # Seeders auto-exécutés au boot
+├── modules/          # 14 modules métier (auth, users, requests, quotes, ...)
+└── main.ts           # Bootstrap
+```
+
+## 🔒 Sécurité
+
+- **Authentication** : JWT Bearer dans header `Authorization`
+- **Authorization** : décorateur `@Roles(UserRole.X)` + `RolesGuard`
+- **Rate limiting** : 100 req/60s par défaut (override par endpoint via `@Throttle`)
+- **Validation** : `ValidationPipe` global avec whitelist + forbidNonWhitelisted
+- **CORS** : strict en prod (`ALLOWED_ORIGINS`), permissif en dev
+
+## 🐳 Docker
 
 ```bash
-$ npm install -g @nestjs/mau
-$ mau deploy
+docker build -t repairfone-api .
+docker run -p 3000:3000 --env-file .env repairfone-api
 ```
 
-With Mau, you can deploy your application in just a few clicks, allowing you to focus on building features rather than managing infrastructure.
-
-## Resources
-
-Check out a few resources that may come in handy when working with NestJS:
-
-- Visit the [NestJS Documentation](https://docs.nestjs.com) to learn more about the framework.
-- For questions and support, please visit our [Discord channel](https://discord.gg/G7Qnnhy).
-- To dive deeper and get more hands-on experience, check out our official video [courses](https://courses.nestjs.com/).
-- Deploy your application to AWS with the help of [NestJS Mau](https://mau.nestjs.com) in just a few clicks.
-- Visualize your application graph and interact with the NestJS application in real-time using [NestJS Devtools](https://devtools.nestjs.com).
-- Need help with your project (part-time to full-time)? Check out our official [enterprise support](https://enterprise.nestjs.com).
-- To stay in the loop and get updates, follow us on [X](https://x.com/nestframework) and [LinkedIn](https://linkedin.com/company/nestjs).
-- Looking for a job, or have a job to offer? Check out our official [Jobs board](https://jobs.nestjs.com).
-
-## Support
-
-Nest is an MIT-licensed open source project. It can grow thanks to the sponsors and support by the amazing backers. If you'd like to join them, please [read more here](https://docs.nestjs.com/support).
-
-## Stay in touch
-
-- Author - [Kamil Myśliwiec](https://twitter.com/kammysliwiec)
-- Website - [https://nestjs.com](https://nestjs.com/)
-- Twitter - [@nestframework](https://twitter.com/nestframework)
-
-## License
-
-Nest is [MIT licensed](https://github.com/nestjs/nest/blob/master/LICENSE).
+Ou via le `docker-compose.yml` à la racine du projet.

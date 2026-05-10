@@ -2,6 +2,10 @@ export const environment = {
   production: true,
   apiUrl: '/api/v1',
   wsUrl: '',
+  api: {
+    maxLimit: 100,
+    defaultPageSize: 10,
+  },
   firebase: {
     apiKey: 'YOUR_FIREBASE_API_KEY',
     authDomain: 'YOUR_PROJECT_ID.firebaseapp.com',

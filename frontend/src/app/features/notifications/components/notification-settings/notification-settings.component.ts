@@ -1,6 +1,5 @@
 import { Component, inject, OnInit, signal, ChangeDetectionStrategy } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { RouterLink } from '@angular/router';
 import { NotificationService, NotificationPreferences, NotificationType } from '../../../../core/services/notification.service';
 import { ToastService } from '../../../../core/services/toast.service';
 import { UiLoadingComponent } from '../../../../shared/components/ui-loading/ui-loading.component';
@@ -15,7 +14,7 @@ interface NotificationCategory {
   selector: 'app-notification-settings',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [CommonModule, RouterLink, UiLoadingComponent, UiHeaderComponent],
+  imports: [CommonModule, UiLoadingComponent, UiHeaderComponent],
   template: `
     <div class="notification-settings">
       <ui-header title="Préférences de notification" [showBack]="true" backRoute="/profile" />
