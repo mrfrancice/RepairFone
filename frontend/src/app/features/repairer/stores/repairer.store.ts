@@ -69,9 +69,29 @@ export class RepairerStore {
   );
 
   readonly inProgressCount = computed(() =>
-    this._requests().filter(r => r.status === 'in_progress' || r.status === 'accepted').length
+    this._requests().filter(r =>
+      r.status === 'in_progress' ||
+      r.status === 'accepted' ||
+      r.status === 'awaiting_parts'
+    ).length
   );
 
+  /**
+   * Filtrage des demandes selon le chip actif.
+   *
+   * Les buckets doivent rester cohérents avec les compteurs côté composant
+   * (getInProgressCount / getCompletedCount) : sinon une stat affiche "3"
+   * mais cliquer dessus ne retourne aucune demande.
+   *
+   * - `accepted` regroupe les états où le devis est en cours d'échange
+   *   (accepted / quote_sent / quote_accepted) — le réparateur les voit
+   *   comme une seule "phase de devis".
+   * - `in_progress` inclut `awaiting_parts` : du point de vue du client
+   *   et du repairer la réparation est toujours en cours.
+   * - `completed` regroupe `completed` et `delivered` : on a terminé, que
+   *   l'appareil ait été rendu ou non. Un filter séparé `delivered` reste
+   *   disponible pour la vue ciblée.
+   */
   readonly filteredRequests = computed(() => {
     const filter = this._requestFilter();
     const requests = this._requests();
@@ -80,11 +100,24 @@ export class RepairerStore {
       case 'new':
         return requests.filter(r => r.status === 'pending');
       case 'accepted':
-        return requests.filter(r => r.status === 'accepted' || r.status === 'quote_sent');
+        return requests.filter(r =>
+          r.status === 'accepted' ||
+          r.status === 'quote_sent' ||
+          r.status === 'quote_accepted'
+        );
       case 'in_progress':
-        return requests.filter(r => r.status === 'in_progress');
+        return requests.filter(r =>
+          r.status === 'in_progress' ||
+          r.status === 'awaiting_parts'
+        );
       case 'completed':
-        return requests.filter(r => r.status === 'completed');
+        return requests.filter(r =>
+          r.status === 'completed' || r.status === 'delivered'
+        );
+      case 'delivered':
+        return requests.filter(r => r.status === 'delivered');
+      case 'rejected':
+        return requests.filter(r => r.status === 'rejected');
       default:
         return requests;
     }

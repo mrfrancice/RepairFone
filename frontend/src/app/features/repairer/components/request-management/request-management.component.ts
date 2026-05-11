@@ -9,6 +9,7 @@ import { HeaderSearchComponent } from '../../../../shared/components/header-sear
 import { UiHeaderComponent } from '../../../../shared/components/ui-header/ui-header.component';
 import { FormatDatePipe } from '../../../../shared/pipes/format-date.pipe';
 import { InitialsPipe } from '../../../../shared/pipes/initials.pipe';
+import { PhoneFormatPipe } from '../../../../shared/pipes/phone-format.pipe';
 import { LoggerService } from '../../../../core/services/logger.service';
 
 @Component({
@@ -21,6 +22,7 @@ import { LoggerService } from '../../../../core/services/logger.service';
     UiHeaderComponent,
     FormatDatePipe,
     InitialsPipe,
+    PhoneFormatPipe,
   ],
   template: `
     <div class="request-management">
@@ -172,10 +174,12 @@ import { LoggerService } from '../../../../core/services/logger.service';
 
                 <!-- Meta Info -->
                 <div class="meta-row">
-                  <div class="meta-item">
-                    <span class="meta-icon">📍</span>
-                    <span>{{ request.distance?.toFixed(1) || '?' }} km</span>
-                  </div>
+                  @if (request.distance != null) {
+                    <div class="meta-item">
+                      <span class="meta-icon">📍</span>
+                      <span>{{ request.distance.toFixed(1) }} km</span>
+                    </div>
+                  }
                   <div class="meta-item">
                     <span class="meta-icon">{{ request.serviceMode === 'home' ? '🏠' : '🏪' }}</span>
                     <span>{{ request.serviceMode === 'home' ? 'Domicile' : 'Boutique' }}</span>
@@ -279,7 +283,13 @@ import { LoggerService } from '../../../../core/services/logger.service';
               <!-- Problem -->
               <div class="detail-section">
                 <h4>📝 Description du problème</h4>
-                <p class="detail-problem">{{ selectedRequest()?.problemDescription || 'Aucune description' }}</p>
+                @if (selectedRequest()?.problemDescription) {
+                  <p class="detail-problem">{{ selectedRequest()?.problemDescription }}</p>
+                } @else {
+                  <p class="detail-problem detail-problem-empty">
+                    Le client n'a pas précisé de description.
+                  </p>
+                }
               </div>
 
               <!-- Photos -->
@@ -309,7 +319,11 @@ import { LoggerService } from '../../../../core/services/logger.service';
                     <span class="info-icon">📍</span>
                     <div class="info-content">
                       <span class="info-label">Distance</span>
-                      <span class="info-value">{{ selectedRequest()?.distance?.toFixed(1) || '?' }} km</span>
+                      <span class="info-value">
+                        {{ selectedRequest()?.distance != null
+                            ? selectedRequest()!.distance!.toFixed(1) + ' km'
+                            : 'Non disponible' }}
+                      </span>
                     </div>
                   </div>
                   <div class="info-item">
@@ -345,7 +359,7 @@ import { LoggerService } from '../../../../core/services/logger.service';
                       </span>
                       @if (selectedRequest()!.status !== 'pending' && selectedRequest()!.client!.phone) {
                         <a href="tel:{{ selectedRequest()!.client!.phone }}" class="client-phone">
-                          📞 {{ selectedRequest()!.client!.phone }}
+                          📞 {{ selectedRequest()!.client!.phone | phoneFormat }}
                         </a>
                       }
                     </div>
@@ -355,33 +369,45 @@ import { LoggerService } from '../../../../core/services/logger.service';
             </div>
 
             <!-- Modal Actions -->
-            <div class="modal-actions">
-              @switch (selectedRequest()!.status) {
-                @case ('pending') {
-                  <button class="btn btn-outline-modal" (click)="rejectRequest(selectedRequest()!)">
-                    ✕ Refuser
-                  </button>
-                  <button class="btn btn-primary-modal" (click)="acceptRequest(selectedRequest()!)">
-                    ✓ Accepter la demande
-                  </button>
+            @if (hasActionsForStatus(selectedRequest()!.status)) {
+              <div class="modal-actions">
+                @switch (selectedRequest()!.status) {
+                  @case ('pending') {
+                    <button class="btn btn-outline-modal" (click)="rejectRequest(selectedRequest()!)">
+                      ✕ Refuser
+                    </button>
+                    <button class="btn btn-primary-modal" (click)="acceptRequest(selectedRequest()!)">
+                      ✓ Accepter la demande
+                    </button>
+                  }
+                  @case ('accepted') {
+                    <button class="btn btn-primary-modal full" (click)="createQuote(selectedRequest()!)">
+                      📝 Créer un devis
+                    </button>
+                  }
+                  @case ('quote_accepted') {
+                    <button class="btn btn-primary-modal full" (click)="startRepair(selectedRequest()!)">
+                      🔧 Commencer la réparation
+                    </button>
+                  }
+                  @case ('in_progress') {
+                    <button class="btn btn-success-modal full" (click)="completeRepair(selectedRequest()!)">
+                      ✅ Marquer comme terminé
+                    </button>
+                  }
+                  @case ('completed') {
+                    <button class="btn btn-primary-modal full" (click)="openChat(selectedRequest()!)">
+                      💬 Discuter avec le client
+                    </button>
+                  }
+                  @case ('delivered') {
+                    <button class="btn btn-primary-modal full" (click)="openChat(selectedRequest()!)">
+                      💬 Discuter avec le client
+                    </button>
+                  }
                 }
-                @case ('accepted') {
-                  <button class="btn btn-primary-modal full" (click)="createQuote(selectedRequest()!)">
-                    📝 Créer un devis
-                  </button>
-                }
-                @case ('quote_accepted') {
-                  <button class="btn btn-primary-modal full" (click)="startRepair(selectedRequest()!)">
-                    🔧 Commencer la réparation
-                  </button>
-                }
-                @case ('in_progress') {
-                  <button class="btn btn-success-modal full" (click)="completeRepair(selectedRequest()!)">
-                    ✅ Marquer comme terminé
-                  </button>
-                }
-              }
-            </div>
+              </div>
+            }
           </div>
         </div>
       }
@@ -933,16 +959,37 @@ import { LoggerService } from '../../../../core/services/logger.service';
       background: rgba(15, 23, 42, 0.6);
       backdrop-filter: blur(4px);
       display: flex;
-      align-items: flex-end;
+      align-items: center;
+      justify-content: center;
+      padding: 2rem 1rem;
       z-index: 1000;
     }
 
     .modal-content {
       background: white;
-      border-radius: 1.5rem 1.5rem 0 0;
-      width: 100%;
-      max-height: 90vh;
-      overflow-y: auto;
+      border-radius: 1.5rem;
+      width: 70%;
+      max-height: 85vh;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      box-shadow: 0 25px 60px rgba(0, 0, 0, 0.25);
+    }
+
+    /* Sur mobile, on bascule en bottom-sheet plein écran pour préserver
+       la lisibilité (70% serait trop étroit). */
+    @media (max-width: 768px) {
+      .modal-overlay {
+        align-items: flex-end;
+        justify-content: stretch;
+        padding: 0;
+      }
+      .modal-content {
+        width: 100%;
+        max-width: 100%;
+        max-height: 90vh;
+        border-radius: 1.5rem 1.5rem 0 0;
+      }
     }
 
     .modal-header {
@@ -951,10 +998,8 @@ import { LoggerService } from '../../../../core/services/logger.service';
       align-items: center;
       padding: 1.25rem;
       border-bottom: 1px solid #f1f5f9;
-      position: sticky;
-      top: 0;
       background: white;
-      z-index: 10;
+      flex-shrink: 0;
     }
 
     .modal-header h2 {
@@ -985,6 +1030,9 @@ import { LoggerService } from '../../../../core/services/logger.service';
 
     .modal-body {
       padding: 1.25rem;
+      flex: 1 1 auto;
+      overflow-y: auto;
+      min-height: 0;
     }
 
     .detail-device-card {
@@ -1047,6 +1095,11 @@ import { LoggerService } from '../../../../core/services/logger.service';
       background: #f8fafc;
       border-radius: 0.75rem;
       border: 1px solid #e2e8f0;
+    }
+
+    .detail-problem-empty {
+      color: #94a3b8;
+      font-style: italic;
     }
 
     .detail-photos {
@@ -1156,8 +1209,7 @@ import { LoggerService } from '../../../../core/services/logger.service';
       padding: 1.25rem;
       border-top: 1px solid #f1f5f9;
       background: white;
-      position: sticky;
-      bottom: 0;
+      flex-shrink: 0;
     }
 
     .btn-outline-modal {
@@ -1305,14 +1357,42 @@ export class RequestManagementComponent implements OnInit {
     this.detectLocation();
   }
 
+  /**
+   * Mappe le filter UI vers la liste de statuts DB envoyée au backend.
+   * Le backend `findByRepairer` accepte une chaîne CSV (`completed,delivered`)
+   * et fait un `WHERE status IN (...)`. Ce mapping garantit la cohérence
+   * entre les compteurs (qui regroupent plusieurs statuts) et les résultats.
+   */
+  private mapFilterToBackendStatus(filter: RequestFilterStatus): string | undefined {
+    switch (filter) {
+      case 'all':
+        return undefined;
+      case 'new':
+        return 'pending';
+      case 'accepted':
+        return 'accepted,quote_sent,quote_accepted';
+      case 'in_progress':
+        return 'in_progress,awaiting_parts';
+      case 'completed':
+        // "Terminées" en UI regroupe finies + livrées (cf. getCompletedCount)
+        return 'completed,delivered';
+      case 'delivered':
+        return 'delivered';
+      case 'rejected':
+        return 'rejected';
+      default:
+        return filter;
+    }
+  }
+
   async loadRequests(): Promise<void> {
     this.isLoading.set(true);
     this.page = 1;
 
     try {
-      const status = this.store.requestFilter();
+      const status = this.mapFilterToBackendStatus(this.store.requestFilter());
       const result = await this.repairerService.getRequests({
-        status: status === 'all' ? undefined : status,
+        status,
         page: this.page,
         limit: this.limit,
       });
@@ -1336,9 +1416,9 @@ export class RequestManagementComponent implements OnInit {
     this.page++;
 
     try {
-      const status = this.store.requestFilter();
+      const status = this.mapFilterToBackendStatus(this.store.requestFilter());
       const result = await this.repairerService.getRequests({
-        status: status === 'all' ? undefined : status,
+        status,
         page: this.page,
         limit: this.limit,
       });
@@ -1424,6 +1504,33 @@ export class RequestManagementComponent implements OnInit {
     } catch (err) {
       this.logger.error('RequestManagementComponent', 'Error completing repair', err);
     }
+  }
+
+  /**
+   * Indique si une demande a au moins une action disponible en bas du modal.
+   * Quand `false`, on cache complètement la barre d'actions pour ne pas
+   * afficher un bandeau vide (cas des statuts `rejected` notamment).
+   */
+  hasActionsForStatus(status: RepairerRequest['status']): boolean {
+    return (
+      status === 'pending' ||
+      status === 'accepted' ||
+      status === 'quote_accepted' ||
+      status === 'in_progress' ||
+      status === 'completed' ||
+      status === 'delivered'
+    );
+  }
+
+  /**
+   * Ouvre la conversation associée à la demande. Si elle n'existe pas
+   * encore, on tombe sur la liste — le backend exige un échange minimal
+   * avant de créer une conversation, ce qui est cohérent côté UX.
+   */
+  openChat(request: RepairerRequest, event?: Event): void {
+    event?.stopPropagation();
+    this.closeDetail();
+    this.router.navigate(['/chat'], { queryParams: { requestId: request.id } });
   }
 
   getEmptyMessage(): string {

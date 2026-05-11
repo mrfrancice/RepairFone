@@ -195,19 +195,16 @@ export class RepairerService {
   }
 
   // Get requests for repairer
+  // `status` peut être un seul statut DB (`pending`) ou une liste CSV
+  // (`completed,delivered`) pour les filtres UI qui regroupent plusieurs
+  // statuts. Cf. mapFilterToBackendStatus côté composant.
   async getRequests(params?: {
-    status?: RequestFilterStatus;
+    status?: string;
     page?: number;
     limit?: number;
   }): Promise<{ data: RepairerRequest[]; total: number }> {
-    // Map 'new' to 'pending' for backend compatibility
-    const mappedParams = params ? {
-      ...params,
-      status: params.status === 'new' ? 'pending' : params.status
-    } : params;
-
     return firstValueFrom(
-      this.api.get<{ data: RepairerRequest[]; total: number }>('/requests/my', mappedParams)
+      this.api.get<{ data: RepairerRequest[]; total: number }>('/requests/my', params)
     );
   }
 
