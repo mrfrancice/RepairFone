@@ -23,6 +23,9 @@ Thumbs.db
 
 # Logs
 logs/
+
+# User-uploaded files (dev local storage)
+backend/uploads/
 *.log
 npm-debug.log*
 

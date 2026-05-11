@@ -61,11 +61,12 @@ export class ProfileService {
     return profile;
   }
 
-  async uploadAvatar(file: File): Promise<{ url: string }> {
+  async uploadAvatar(file: File): Promise<{ avatarUrl: string }> {
     const formData = new FormData();
-    formData.append('file', file);
+    // Le backend attend le champ multipart "avatar" (FileInterceptor('avatar')).
+    formData.append('avatar', file);
     return firstValueFrom(
-      this.api.post<{ url: string }>('/users/me/avatar', formData)
+      this.api.post<{ avatarUrl: string }>('/users/me/avatar', formData)
     );
   }
 }

@@ -19,9 +19,11 @@ import { UsersService } from './users.service';
 import { RepairersService } from './repairers.service';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
+import { FileUploadService } from '../../common/services/file-upload.service';
 import { User } from './entities/user.entity';
 import { RepairerProfile } from './entities/repairer-profile.entity';
 import { UpdateUserDto, UpdateRepairerProfileDto } from './dto';
+import { BadRequestException } from '@nestjs/common';
 
 @ApiTags('Users')
 @ApiBearerAuth()
@@ -31,6 +33,7 @@ export class UsersController {
   constructor(
     private readonly usersService: UsersService,
     private readonly repairersService: RepairersService,
+    private readonly fileUploadService: FileUploadService,
   ) {}
 
   @Get('me')
@@ -61,17 +64,34 @@ export class UsersController {
 
   @Post('me/avatar')
   @UseInterceptors(FileInterceptor('avatar'))
-  @ApiOperation({ summary: 'Upload user avatar' })
+  @ApiOperation({ summary: 'Upload user avatar (multipart field: avatar)' })
   async uploadAvatar(
     @CurrentUser() user: User,
-    @UploadedFile() file: { originalname: string; buffer: Buffer; mimetype: string } | undefined,
+    @UploadedFile()
+    file:
+      | { originalname: string; buffer: Buffer; mimetype: string; size: number }
+      | undefined,
   ): Promise<{ avatarUrl: string }> {
-    // For now, just return a placeholder - in production, upload to cloud storage
-    const avatarUrl = file ? `/uploads/avatars/${user.id}.jpg` : null;
-    if (avatarUrl) {
-      await this.usersService.update(user.id, { avatarUrl });
+    if (!file) {
+      throw new BadRequestException('Fichier manquant (champ multipart "avatar")');
     }
-    return { avatarUrl: avatarUrl || '' };
+
+    const result = await this.fileUploadService.uploadAvatar(
+      {
+        originalName: file.originalname,
+        mimeType: file.mimetype,
+        size: file.size,
+        buffer: file.buffer,
+      },
+      user.id,
+    );
+
+    if (!result.success || !result.url) {
+      throw new BadRequestException(result.error || 'Échec de l\'upload');
+    }
+
+    await this.usersService.update(user.id, { avatarUrl: result.url });
+    return { avatarUrl: result.url };
   }
 
   @Put('me/repairer-profile')

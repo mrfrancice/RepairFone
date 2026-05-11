@@ -1510,16 +1510,45 @@ export class ProfileEditComponent implements OnInit {
     this.avatarInput?.nativeElement?.click();
   }
 
-  onAvatarSelect(event: Event): void {
+  async onAvatarSelect(event: Event): Promise<void> {
     const input = event.target as HTMLInputElement;
     const file = input.files?.[0];
     if (!file) return;
 
+    // Garde-fou côté client (le backend impose 2MB et image/* aussi)
+    if (!file.type.startsWith('image/')) {
+      this.error.set('Le fichier doit être une image (JPG, PNG, WebP).');
+      return;
+    }
+    if (file.size > 2 * 1024 * 1024) {
+      this.error.set('L\'image doit faire moins de 2 Mo.');
+      return;
+    }
+
+    // Preview instantané pendant que l'upload est en cours
     const reader = new FileReader();
-    reader.onload = (e) => {
-      this.avatarPreview.set(e.target?.result as string);
-    };
+    reader.onload = (e) => this.avatarPreview.set(e.target?.result as string);
     reader.readAsDataURL(file);
+
+    // Upload réel vers /users/me/avatar
+    this.isSaving.set(true);
+    this.error.set(null);
+    try {
+      const { avatarUrl } = await this.profileService.uploadAvatar(file);
+      // getProfile() refresh le user dans AuthStore (propage l'avatar partout)
+      await this.profileService.getProfile();
+      this.success.set('Photo de profil mise à jour.');
+      // Remplace le preview base64 par l'URL serveur définitive
+      this.avatarPreview.set(avatarUrl);
+    } catch (err: any) {
+      this.error.set(err?.error?.message || err?.message || 'Échec de l\'envoi de la photo');
+      // Annule le preview en cas d'erreur
+      this.avatarPreview.set(null);
+    } finally {
+      this.isSaving.set(false);
+      // Permet de re-sélectionner le même fichier
+      input.value = '';
+    }
   }
 
   // Shop photos methods

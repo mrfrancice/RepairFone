@@ -3,7 +3,9 @@
 import './sentry-init';
 
 import { NestFactory } from '@nestjs/core';
+import { NestExpressApplication } from '@nestjs/platform-express';
 import { ValidationPipe, Logger } from '@nestjs/common';
+import { join } from 'path';
 import { ConfigService } from '@nestjs/config';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import helmet from 'helmet';
@@ -11,11 +13,17 @@ import { AppModule } from './app.module';
 import { json, urlencoded } from 'express';
 
 async function bootstrap() {
-  const app = await NestFactory.create(AppModule);
+  const app = await NestFactory.create<NestExpressApplication>(AppModule);
 
   // Body size limits - 10MB max (use multipart for larger files)
   app.use(json({ limit: '10mb' }));
   app.use(urlencoded({ limit: '10mb', extended: true }));
+
+  // Serve uploaded files (avatars, repair photos, chat attachments)
+  // En prod, STORAGE_PROVIDER doit pointer vers S3/Cloudinary plutôt
+  // que de servir depuis le disque local.
+  const uploadDir = process.env.UPLOAD_DIR || join(process.cwd(), 'uploads');
+  app.useStaticAssets(uploadDir, { prefix: '/uploads/' });
   const configService = app.get(ConfigService);
 
   // SEC-003: Security Headers - Helmet with CSP configuration
