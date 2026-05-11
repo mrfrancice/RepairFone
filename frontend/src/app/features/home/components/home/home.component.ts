@@ -395,7 +395,7 @@ interface QuickService {
       min-height: 100vh;
       min-height: 100dvh;
       background: #FAFAFA;
-      padding-bottom: 80px;
+      padding-bottom: var(--bottom-nav-height, 80px);
     }
 
     /* ============================================
