@@ -219,9 +219,13 @@ Les 3 reportés ci-dessous ont été livrés dans le commit [`fe3df94`](https://
 
 ### P4.3 — Mocks vs réel
 
-#### Ticket #P4.3.1 — Encadrer `simulate-success` payments
-**Effort** : 30 min
-**Action** : ajouter un guard `@Roles(UserRole.ADMIN)` ou `if (process.env.NODE_ENV !== 'production')` sur `POST /payments/:id/simulate-success` pour éviter l'usage en prod.
+#### ✅ Ticket #P4.3.1 — Encadrer `simulate-success` payments
+**État** : déjà couvert.
+- `backend/src/modules/payments/payments.controller.ts:127` : `NODE_ENV === 'production'` → `ForbiddenException`.
+- Autorisation owner/admin via `paymentsService.findOne(id, user.id, user.role)` avant exécution.
+- Endpoint debug similaire `_debug/seed-dispute-from-payment/:paymentId` (admin.controller.ts:477) protégé de la même façon.
+
+Pas de `@Roles(ADMIN)` ajouté : casserait le dev local (un client doit pouvoir simuler ses propres paiements). La double protection (env + ownership) est suffisante.
 
 #### Ticket #P4.3.2 — Intégrer un vrai gateway de paiement
 **Effort** : 3-5 jours

@@ -13,4 +13,18 @@ export const LEGAL_ROUTES: Routes = [
       import('./components/privacy/privacy.component').then((m) => m.PrivacyComponent),
     title: 'Politique de confidentialité - RepairFone',
   },
+  {
+    path: 'legal-notice',
+    loadComponent: () =>
+      import('./components/legal-notice/legal-notice.component').then((m) => m.LegalNoticeComponent),
+    title: 'Mentions légales - RepairFone',
+  },
+  {
+    path: 'repairer-terms',
+    loadComponent: () =>
+      import('./components/repairer-terms/repairer-terms.component').then(
+        (m) => m.RepairerTermsComponent,
+      ),
+    title: 'Charte des réparateurs - RepairFone',
+  },
 ];

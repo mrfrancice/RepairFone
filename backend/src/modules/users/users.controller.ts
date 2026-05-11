@@ -130,8 +130,14 @@ export class UsersController {
 
   @Delete('me')
   @HttpCode(HttpStatus.NO_CONTENT)
-  @ApiOperation({ summary: 'Delete current user account' })
+  @ApiOperation({ summary: 'Delete current user account (RGPD Art. 17)' })
   async deleteAccount(@CurrentUser() user: User): Promise<void> {
     await this.usersService.softDelete(user.id);
+  }
+
+  @Get('me/export')
+  @ApiOperation({ summary: 'Export user data (RGPD Art. 20 — portabilité)' })
+  async exportData(@CurrentUser() user: User): Promise<Record<string, unknown>> {
+    return this.usersService.exportUserData(user.id);
   }
 }

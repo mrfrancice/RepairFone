@@ -1,7 +1,9 @@
 import { Injectable, inject } from '@angular/core';
+import { HttpClient } from '@angular/common/http';
 import { firstValueFrom } from 'rxjs';
 import { ApiService } from '../../../core/services/api.service';
 import { AuthStore, User } from '../../../core/stores/auth.store';
+import { environment } from '../../../../environments/environment';
 
 export interface UpdateProfileDto {
   firstName?: string;
@@ -34,6 +36,7 @@ export interface UpdateRepairerProfileDto {
 @Injectable({ providedIn: 'root' })
 export class ProfileService {
   private readonly api = inject(ApiService);
+  private readonly http = inject(HttpClient);
   private readonly authStore = inject(AuthStore);
 
   async getProfile(): Promise<User> {
@@ -67,6 +70,26 @@ export class ProfileService {
     formData.append('avatar', file);
     return firstValueFrom(
       this.api.post<{ avatarUrl: string }>('/users/me/avatar', formData)
+    );
+  }
+
+  /**
+   * RGPD Art. 17 — Suppression du compte.
+   * Anonymise les données identifiantes côté backend et révoque toutes les
+   * sessions. Le frontend doit ensuite faire un logout local + redirect.
+   */
+  async deleteAccount(): Promise<void> {
+    await firstValueFrom(this.api.delete<void>('/users/me'));
+  }
+
+  /**
+   * RGPD Art. 20 — Droit à la portabilité.
+   * Retourne un JSON avec toutes les données personnelles de l'utilisateur.
+   * Utilise HttpClient direct car ApiService ne gère pas responseType=blob.
+   */
+  async exportMyData(): Promise<Blob> {
+    return firstValueFrom(
+      this.http.get(`${environment.apiUrl}/users/me/export`, { responseType: 'blob' }),
     );
   }
 }

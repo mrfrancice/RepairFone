@@ -8,9 +8,11 @@ import { SearchStore } from '../../stores/search.store';
 import { AuthStore } from '../../../../core/stores/auth.store';
 import { ReviewsService, StepRatingStats, RatingCategory } from '../../../reviews/services/reviews.service';
 import { RequestsService, CreateRequestDto } from '../../../requests/services/requests.service';
+import { ChatService } from '../../../chat/services/chat.service';
 import { UiHeaderComponent } from '../../../../shared/components/ui-header/ui-header.component';
 import { FormatDatePipe } from '../../../../shared/pipes/format-date.pipe';
 import { LoggerService } from '../../../../core/services/logger.service';
+import { ToastService } from '../../../../core/services/toast.service';
 
 interface QualityScore {
   label: string;
@@ -2264,11 +2266,13 @@ export class RepairerDetailComponent implements OnInit {
   private readonly searchStore = inject(SearchStore);
   readonly authStore = inject(AuthStore); // Public for template access
   private readonly requestsService = inject(RequestsService);
+  private readonly chatService = inject(ChatService);
   readonly reviewsService = inject(ReviewsService);
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
   private readonly location = inject(Location);
   private readonly logger = inject(LoggerService);
+  private readonly toast = inject(ToastService);
 
   readonly Math = Math; // Expose Math for template
 
@@ -2450,8 +2454,50 @@ export class RepairerDetailComponent implements OnInit {
     }
   }
 
-  contactRepairer(): void {
-    // TODO: In production, would open a chat or make a masked call
+  /**
+   * Bouton "Contacter" — Stratégie A (chat only, pas d'appel masqué).
+   *
+   * Flow :
+   *   1. Si non authentifié → /auth/login (avec returnUrl)
+   *   2. Si authentifié, on liste les conversations du user et on cherche
+   *      celle qui implique ce réparateur.
+   *      - Trouvée → /chat/:convId
+   *      - Pas trouvée → toast info + /requests/new?repairerId=...
+   *        (une demande doit exister pour qu'une conversation soit créée
+   *        côté backend — c'est le modèle métier actuel).
+   */
+  async contactRepairer(): Promise<void> {
+    if (!this.authStore.isAuthenticated()) {
+      this.router.navigate(['/auth/login'], {
+        queryParams: { returnUrl: this.router.url },
+      });
+      return;
+    }
+
+    const repairerId = this.repairer()?.id;
+    if (!repairerId) {
+      return;
+    }
+
+    try {
+      const conversations = await this.chatService.getConversations();
+      const existing = conversations.find((c) => c.repairer?.id === repairerId);
+
+      if (existing) {
+        this.router.navigate(['/chat', existing.id]);
+        return;
+      }
+
+      this.toast.info(
+        'Créez d\'abord une demande pour pouvoir discuter avec ce réparateur.',
+      );
+      this.router.navigate(['/requests/new'], {
+        queryParams: { repairerId },
+      });
+    } catch (err) {
+      this.logger.error('RepairerDetail', 'contactRepairer failed', err);
+      this.toast.error('Impossible de joindre le réparateur pour le moment.');
+    }
   }
 
   requestRepair(): void {

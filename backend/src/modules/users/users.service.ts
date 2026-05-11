@@ -6,6 +6,12 @@ import * as bcrypt from 'bcrypt';
 import { User, UserStatus } from './entities/user.entity';
 import { RepairerProfile } from './entities/repairer-profile.entity';
 import { RepairRequest, RequestStatus } from '../requests/entities/repair-request.entity';
+import { RefreshToken } from '../auth/entities/refresh-token.entity';
+import { Quote } from '../quotes/entities/quote.entity';
+import { Payment } from '../payments/entities/payment.entity';
+import { Message } from '../chat/entities/message.entity';
+import { Review } from '../reviews/entities/review.entity';
+import { Notification } from '../notifications/entities/notification.entity';
 
 export interface BlockedRepairerResult {
   repairerId: string;
@@ -35,6 +41,8 @@ export class UsersService {
     private readonly repairerProfileRepository: Repository<RepairerProfile>,
     @InjectRepository(RepairRequest)
     private readonly repairRequestRepository: Repository<RepairRequest>,
+    @InjectRepository(RefreshToken)
+    private readonly refreshTokenRepository: Repository<RefreshToken>,
     private readonly dataSource: DataSource,
     private readonly eventEmitter: EventEmitter2,
   ) {}
@@ -119,8 +127,159 @@ export class UsersService {
     });
   }
 
+  /**
+   * Export RGPD (Art. 20 — droit à la portabilité).
+   *
+   * Retourne en JSON l'ensemble des données personnelles attachées à l'user :
+   * profil, demandes, devis, paiements, messages, conversations, avis,
+   * notifications. Les FK/IDs sont conservés pour permettre à l'utilisateur
+   * de reconstituer ses échanges. Aucune donnée d'autres utilisateurs n'est
+   * incluse au-delà de leur ID public.
+   */
+  async exportUserData(userId: string): Promise<Record<string, unknown>> {
+    const user = await this.userRepository.findOne({
+      where: { id: userId },
+      relations: ['repairerProfile'],
+    });
+    if (!user) {
+      throw new NotFoundException('Utilisateur non trouvé');
+    }
+
+    const ds = this.dataSource;
+    const repairerProfileId = user.repairerProfile?.id ?? null;
+
+    const requestsAsClient = await ds.getRepository(RepairRequest).find({
+      where: { clientId: userId },
+    });
+    const requestsAsRepairer = repairerProfileId
+      ? await ds.getRepository(RepairRequest).find({
+          where: { repairerId: repairerProfileId },
+        })
+      : [];
+
+    const quotesAsRepairer = repairerProfileId
+      ? await ds.getRepository(Quote).find({
+          where: { repairerId: repairerProfileId },
+        })
+      : [];
+
+    const paymentsAsClient = await ds.getRepository(Payment).find({
+      where: { clientId: userId },
+    });
+    const paymentsAsRepairer = repairerProfileId
+      ? await ds.getRepository(Payment).find({
+          where: { repairerId: repairerProfileId },
+        })
+      : [];
+
+    const messages = await ds.getRepository(Message).find({
+      where: { senderId: userId },
+    });
+
+    const reviewsAuthored = await ds.getRepository(Review).find({
+      where: { clientId: userId },
+    });
+    const reviewsReceived = repairerProfileId
+      ? await ds.getRepository(Review).find({
+          where: { repairerId: repairerProfileId },
+        })
+      : [];
+
+    const notifications = await ds.getRepository(Notification).find({
+      where: { userId },
+    });
+
+    const { passwordHash: _omit, ...userPublic } = user as User & { passwordHash: string };
+
+    return {
+      meta: {
+        exportedAt: new Date().toISOString(),
+        format: 'json',
+        gdprArticle: 'Art. 20 (portabilité)',
+        notes:
+          "Cet export contient l'intégralité de vos données personnelles. Les identifiants d'autres utilisateurs ne sont pas anonymisés ici car ils vous sont déjà visibles dans l'application.",
+      },
+      profile: userPublic,
+      repairerProfile: user.repairerProfile ?? null,
+      requests: {
+        asClient: requestsAsClient,
+        asRepairer: requestsAsRepairer,
+      },
+      quotes: {
+        asRepairer: quotesAsRepairer,
+      },
+      payments: {
+        asClient: paymentsAsClient,
+        asRepairer: paymentsAsRepairer,
+      },
+      messages,
+      reviews: {
+        authored: reviewsAuthored,
+        received: reviewsReceived,
+      },
+      notifications,
+    };
+  }
+
+  /**
+   * Suppression de compte (RGPD Art. 17 — droit à l'effacement).
+   *
+   * Stratégie : anonymisation + soft-delete plutôt que hard-delete, car les
+   * paiements / demandes / avis référencent le user et doivent être conservés
+   * pour les obligations comptables et légales (preuve d'antériorité, litiges,
+   * fiscalité). On efface les données identifiantes et on coupe l'accès.
+   *
+   * - PII (email, phone, noms, avatar, firebaseUid) → anonymisées
+   * - Mot de passe → désactivé (login impossible)
+   * - Statut → DEACTIVATED
+   * - Refresh tokens → tous révoqués (logout forcé partout)
+   * - deletedAt → set (exclu des find par défaut)
+   */
   async softDelete(id: string): Promise<void> {
-    await this.userRepository.softDelete(id);
+    const queryRunner = this.dataSource.createQueryRunner();
+    await queryRunner.connect();
+    await queryRunner.startTransaction();
+
+    try {
+      const user = await queryRunner.manager.findOne(User, { where: { id } });
+      if (!user) {
+        throw new NotFoundException('Utilisateur non trouvé');
+      }
+
+      const shortId = id.replace(/-/g, '').slice(0, 12);
+
+      await queryRunner.manager.update(
+        User,
+        { id },
+        {
+          email: `deleted-${shortId}@anonymized.local`,
+          phone: `+0deleted${shortId}`,
+          firstName: undefined as unknown as string,
+          lastName: undefined as unknown as string,
+          avatarUrl: undefined as unknown as string,
+          firebaseUid: undefined as unknown as string,
+          passwordHash: 'deleted',
+          isPhoneVerified: false,
+          isEmailVerified: false,
+          status: UserStatus.DEACTIVATED,
+        },
+      );
+
+      await queryRunner.manager.update(
+        RefreshToken,
+        { userId: id, isRevoked: false },
+        { isRevoked: true },
+      );
+
+      await queryRunner.manager.softDelete(User, id);
+
+      await queryRunner.commitTransaction();
+    } catch (err) {
+      await queryRunner.rollbackTransaction();
+      throw err;
+    } finally {
+      await queryRunner.release();
+    }
   }
 
   /**
