@@ -151,22 +151,38 @@ export class AuthService {
     }
   }
 
-  // Password reset methods
-  async requestPasswordReset(phone: string): Promise<void> {
-    await firstValueFrom(
-      this.api.post('/auth/forgot-password', { phone })
-    );
-  }
-
-  async verifyResetOtp(phone: string, code: string): Promise<{ token: string }> {
+  // Password reset (email-link based)
+  /**
+   * Demande un email de réinitialisation. Accepte téléphone OU email.
+   * En dev, le backend renvoie `devToken` pour faciliter les tests.
+   */
+  async requestPasswordReset(identifier: string): Promise<{ message: string; devToken?: string }> {
     return firstValueFrom(
-      this.api.post<{ token: string }>('/auth/verify-reset-otp', { phone, code })
+      this.api.post<{ message: string; devToken?: string }>('/auth/forgot-password', {
+        identifier,
+      }),
     );
   }
 
-  async resetPassword(token: string, newPassword: string): Promise<void> {
-    await firstValueFrom(
-      this.api.post('/auth/reset-password', { token, newPassword })
+  /**
+   * Applique le nouveau mot de passe avec le token reçu par email.
+   */
+  async resetPassword(token: string, newPassword: string): Promise<{ message: string }> {
+    return firstValueFrom(
+      this.api.post<{ message: string }>('/auth/reset-password', { token, newPassword }),
+    );
+  }
+
+  // Email verification
+  async sendVerificationEmail(): Promise<{ message: string; devToken?: string }> {
+    return firstValueFrom(
+      this.api.post<{ message: string; devToken?: string }>('/auth/send-verification-email', {}),
+    );
+  }
+
+  async verifyEmail(token: string): Promise<{ message: string; email: string }> {
+    return firstValueFrom(
+      this.api.post<{ message: string; email: string }>('/auth/verify-email', { token }),
     );
   }
 

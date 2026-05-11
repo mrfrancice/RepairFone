@@ -3,10 +3,12 @@ import {
   Post,
   Get,
   Body,
+  Req,
   HttpCode,
   HttpStatus,
   UseGuards,
 } from '@nestjs/common';
+import type { Request } from 'express';
 import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
 import { Throttle } from '@nestjs/throttler';
 import { AuthService } from './auth.service';
@@ -100,5 +102,55 @@ export class AuthController {
   @ApiOperation({ summary: 'Logout and revoke tokens' })
   async logout(@CurrentUser() user: User) {
     await this.authService.logout(user.id);
+  }
+
+  // ==========================================
+  // PASSWORD RESET
+  // ==========================================
+
+  @Post('forgot-password')
+  @Public()
+  @HttpCode(HttpStatus.OK)
+  // 3 demandes max par minute par IP — limite l'énumération + spam mail.
+  @Throttle({ default: { limit: 3, ttl: 60000 } })
+  @ApiOperation({
+    summary: 'Demander un email de réinitialisation de mot de passe',
+    description:
+      'Retourne toujours un message générique pour éviter l\'énumération de comptes.',
+  })
+  async forgotPassword(@Body() body: { identifier: string }, @Req() req: Request) {
+    const ip = req.ip || req.socket.remoteAddress;
+    return this.authService.requestPasswordReset(body.identifier, ip);
+  }
+
+  @Post('reset-password')
+  @Public()
+  @HttpCode(HttpStatus.OK)
+  @Throttle({ default: { limit: 5, ttl: 60000 } })
+  @ApiOperation({ summary: 'Réinitialiser le mot de passe avec un token reçu par email' })
+  async resetPassword(@Body() body: { token: string; newPassword: string }) {
+    return this.authService.resetPassword(body.token, body.newPassword);
+  }
+
+  // ==========================================
+  // EMAIL VERIFICATION
+  // ==========================================
+
+  @Post('send-verification-email')
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
+  @HttpCode(HttpStatus.OK)
+  @Throttle({ default: { limit: 3, ttl: 60000 } })
+  @ApiOperation({ summary: "Envoyer (ou renvoyer) l'email de vérification" })
+  async sendVerificationEmail(@CurrentUser() user: User) {
+    return this.authService.sendEmailVerification(user.id);
+  }
+
+  @Post('verify-email')
+  @Public()
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: "Valider un token de vérification d'email reçu par lien" })
+  async verifyEmail(@Body() body: { token: string }) {
+    return this.authService.verifyEmail(body.token);
   }
 }

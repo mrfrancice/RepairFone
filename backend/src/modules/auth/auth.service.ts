@@ -2,6 +2,7 @@ import {
   Injectable,
   UnauthorizedException,
   BadRequestException,
+  NotFoundException,
   ConflictException,
   Logger,
 } from '@nestjs/common';
@@ -16,6 +17,8 @@ import { RepairersService } from '../users/repairers.service';
 import { User, UserRole } from '../users/entities/user.entity';
 import { OtpCode } from './entities/otp.entity';
 import { RefreshToken } from './entities/refresh-token.entity';
+import { PasswordResetToken } from './entities/password-reset-token.entity';
+import { EmailVerificationToken } from './entities/email-verification-token.entity';
 import { SmsService } from '../../common/services/sms.service';
 import { EmailService } from '../../common/services/email.service';
 import { FirebaseService } from '../../common/services/firebase.service';
@@ -50,6 +53,10 @@ export class AuthService {
     private readonly otpRepository: Repository<OtpCode>,
     @InjectRepository(RefreshToken)
     private readonly refreshTokenRepository: Repository<RefreshToken>,
+    @InjectRepository(PasswordResetToken)
+    private readonly passwordResetRepository: Repository<PasswordResetToken>,
+    @InjectRepository(EmailVerificationToken)
+    private readonly emailVerificationRepository: Repository<EmailVerificationToken>,
   ) {}
 
   async register(dto: RegisterDto): Promise<{ user: User; message: string; devCode?: string }> {
@@ -439,5 +446,213 @@ export class AuthService {
    */
   isFirebaseEnabled(): boolean {
     return this.firebaseService.isInitialized();
+  }
+
+  // ==========================================
+  // PASSWORD RESET
+  // ==========================================
+
+  /**
+   * Demande de réinitialisation de mot de passe.
+   *
+   * SÉCURITÉ : on retourne TOUJOURS un succès générique, même si
+   * l'email/téléphone est inconnu — évite l'énumération de comptes.
+   * Le mail n'est envoyé que si l'utilisateur existe.
+   *
+   * Le token est 32 bytes hex (256 bits d'entropie), stocké hashé en DB.
+   * Expiration : 1h. Limité à 1 demande active par user (les anciennes
+   * sont supprimées avant insertion).
+   */
+  async requestPasswordReset(
+    identifier: string,
+    requestIp?: string,
+  ): Promise<{ message: string; devToken?: string }> {
+    const isDev = this.configService.get<string>('nodeEnv') === 'development';
+    const success = {
+      message:
+        'Si un compte existe avec ces informations, un email de réinitialisation a été envoyé.',
+    };
+
+    // Cherche l'user par téléphone OU email
+    const normalizedPhone = identifier.replace(/\s/g, '');
+    const user =
+      (await this.usersService.findByPhone(normalizedPhone).catch(() => null)) ||
+      (await this.usersService.findByEmail(identifier).catch(() => null));
+
+    if (!user) {
+      this.logger.log(`Password reset requested for unknown identifier: ${identifier.slice(0, 4)}***`);
+      // Réponse identique pour ne pas leaker l'existence du compte.
+      return success;
+    }
+
+    // Génération du token brut (32 bytes hex = 64 chars) + hash SHA-256.
+    const rawToken = crypto.randomBytes(32).toString('hex');
+    const tokenHash = crypto.createHash('sha256').update(rawToken).digest('hex');
+
+    // Invalide les anciens tokens du même user (1 demande active à la fois).
+    await this.passwordResetRepository.delete({ userId: user.id });
+
+    await this.passwordResetRepository.save(
+      this.passwordResetRepository.create({
+        userId: user.id,
+        tokenHash,
+        expiresAt: new Date(Date.now() + 60 * 60 * 1000), // 1h
+        requestIp,
+      }),
+    );
+
+    // Envoi du mail si l'user a un email (sinon on n'a pas de canal).
+    if (user.email) {
+      const frontUrl =
+        this.configService.get<string>('FRONTEND_URL') || 'http://localhost:4200';
+      const resetLink = `${frontUrl}/auth/reset-password?token=${rawToken}`;
+      this.emailService
+        .sendPasswordResetEmail(user.email, resetLink)
+        .catch((err) =>
+          this.logger.error(`Reset email failed for ${user.email}: ${err?.message ?? err}`),
+        );
+    } else {
+      this.logger.warn(`User ${user.id} has no email — reset link cannot be delivered`);
+    }
+
+    this.logger.log(`Password reset token created for user ${user.id}`);
+    return {
+      ...success,
+      ...(isDev && { devToken: rawToken }),
+    };
+  }
+
+  /**
+   * Réinitialise le mot de passe à partir d'un token valide.
+   *
+   * SÉCURITÉ :
+   * - Token comparé en hash SHA-256 (jamais en clair en DB).
+   * - Vérifie expiration + non-réutilisé (usedAt null).
+   * - Marque le token comme utilisé après succès.
+   * - Révoque tous les refresh tokens de l'user → toutes les sessions
+   *   actives sont déconnectées (force le re-login partout).
+   */
+  async resetPassword(rawToken: string, newPassword: string): Promise<{ message: string }> {
+    if (!rawToken || rawToken.length < 32) {
+      throw new BadRequestException('Token invalide');
+    }
+    const minLength = 8;
+    if (!newPassword || newPassword.length < minLength) {
+      throw new BadRequestException(
+        `Le mot de passe doit contenir au moins ${minLength} caractères`,
+      );
+    }
+
+    const tokenHash = crypto.createHash('sha256').update(rawToken).digest('hex');
+    const record = await this.passwordResetRepository.findOne({ where: { tokenHash } });
+
+    if (!record) {
+      throw new BadRequestException('Token invalide ou expiré');
+    }
+    if (record.usedAt) {
+      throw new BadRequestException('Ce lien a déjà été utilisé');
+    }
+    if (record.expiresAt.getTime() < Date.now()) {
+      throw new BadRequestException('Ce lien a expiré');
+    }
+
+    // Mise à jour du mot de passe (UsersService.updatePassword hashe en interne)
+    await this.usersService.updatePassword(record.userId, newPassword);
+
+    // Marquer le token utilisé (audit trail)
+    record.usedAt = new Date();
+    await this.passwordResetRepository.save(record);
+
+    // Révoque toutes les sessions actives — sécurité standard après reset.
+    await this.refreshTokenRepository.update(
+      { userId: record.userId, isRevoked: false },
+      { isRevoked: true },
+    );
+
+    this.logger.log(`Password reset successful for user ${record.userId}`);
+    return { message: 'Mot de passe réinitialisé. Reconnectez-vous.' };
+  }
+
+  // ==========================================
+  // EMAIL VERIFICATION
+  // ==========================================
+
+  /**
+   * Génère + envoie un email de vérification à l'user courant.
+   * Idempotent : si un token actif existe, on le remplace.
+   */
+  async sendEmailVerification(
+    userId: string,
+  ): Promise<{ message: string; devToken?: string }> {
+    const isDev = this.configService.get<string>('nodeEnv') === 'development';
+    const user = await this.usersService.findById(userId);
+    if (!user) {
+      throw new NotFoundException('Utilisateur introuvable');
+    }
+    if (!user.email) {
+      throw new BadRequestException("Cet utilisateur n'a pas d'email enregistré");
+    }
+    if (user.isEmailVerified) {
+      return { message: 'Email déjà vérifié.' };
+    }
+
+    const rawToken = crypto.randomBytes(32).toString('hex');
+    const tokenHash = crypto.createHash('sha256').update(rawToken).digest('hex');
+
+    await this.emailVerificationRepository.delete({ userId });
+
+    await this.emailVerificationRepository.save(
+      this.emailVerificationRepository.create({
+        userId,
+        email: user.email,
+        tokenHash,
+        expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000), // 24h
+      }),
+    );
+
+    const frontUrl =
+      this.configService.get<string>('FRONTEND_URL') || 'http://localhost:4200';
+    const verifyLink = `${frontUrl}/auth/verify-email?token=${rawToken}`;
+    this.emailService
+      .sendEmailVerificationEmail(user.email, verifyLink)
+      .catch((err) =>
+        this.logger.error(
+          `Verification email failed for ${user.email}: ${err?.message ?? err}`,
+        ),
+      );
+
+    this.logger.log(`Email verification token sent to user ${userId}`);
+    return {
+      message: 'Email de vérification envoyé. Vérifiez votre boîte mail.',
+      ...(isDev && { devToken: rawToken }),
+    };
+  }
+
+  /**
+   * Valide un token de vérification email et marque l'user comme vérifié.
+   */
+  async verifyEmail(rawToken: string): Promise<{ message: string; email: string }> {
+    if (!rawToken || rawToken.length < 32) {
+      throw new BadRequestException('Token invalide');
+    }
+    const tokenHash = crypto.createHash('sha256').update(rawToken).digest('hex');
+    const record = await this.emailVerificationRepository.findOne({ where: { tokenHash } });
+    if (!record) {
+      throw new BadRequestException('Token invalide ou expiré');
+    }
+    if (record.usedAt) {
+      throw new BadRequestException('Ce lien a déjà été utilisé');
+    }
+    if (record.expiresAt.getTime() < Date.now()) {
+      throw new BadRequestException('Ce lien a expiré');
+    }
+
+    await this.usersService.verifyEmail(record.userId);
+
+    record.usedAt = new Date();
+    await this.emailVerificationRepository.save(record);
+
+    this.logger.log(`Email verified for user ${record.userId} (${record.email})`);
+    return { message: 'Email vérifié avec succès.', email: record.email };
   }
 }

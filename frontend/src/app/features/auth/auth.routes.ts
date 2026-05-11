@@ -30,4 +30,16 @@ export const AUTH_ROUTES: Routes = [
       import('./components/forgot-password/forgot-password.component').then((m) => m.ForgotPasswordComponent),
     title: 'Mot de passe oublié - RepairFone',
   },
+  {
+    path: 'reset-password',
+    loadComponent: () =>
+      import('./components/reset-password/reset-password.component').then((m) => m.ResetPasswordComponent),
+    title: 'Nouveau mot de passe - RepairFone',
+  },
+  {
+    path: 'verify-email',
+    loadComponent: () =>
+      import('./components/verify-email/verify-email.component').then((m) => m.VerifyEmailComponent),
+    title: 'Vérification email - RepairFone',
+  },
 ];

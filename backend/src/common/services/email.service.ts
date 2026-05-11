@@ -272,6 +272,14 @@ export class EmailService {
     });
   }
 
+  async sendEmailVerificationEmail(email: string, verifyLink: string): Promise<EmailResult> {
+    return this.sendEmail({
+      to: email,
+      subject: `[${this.appName}] Vérifiez votre adresse email`,
+      html: this.getEmailVerificationTemplate(verifyLink),
+    });
+  }
+
   async sendOtpEmail(email: string, code: string): Promise<EmailResult> {
     return this.sendEmail({
       to: email,
@@ -510,6 +518,18 @@ export class EmailService {
       </div>
       <p><strong>Ce code expire dans 5 minutes.</strong></p>
       <p style="font-size: 12px; color: #6b7280;">Si vous n'avez pas demandé ce code, ignorez cet email.</p>
+    `);
+  }
+
+  private getEmailVerificationTemplate(verifyLink: string): string {
+    return this.getBaseTemplate(`
+      <h2>Confirmez votre email</h2>
+      <p>Bienvenue sur ${this.appName} ! Pour finaliser votre inscription, cliquez sur le bouton ci-dessous :</p>
+      <p style="text-align: center;">
+        <a href="${verifyLink}" class="btn">Vérifier mon email</a>
+      </p>
+      <p><strong>Ce lien expire dans 24 heures.</strong></p>
+      <p style="font-size: 12px; color: #6b7280;">Si vous n'avez pas créé de compte, ignorez cet email.</p>
     `);
   }
 

@@ -93,6 +93,10 @@ export class UsersService {
     });
   }
 
+  async verifyEmail(id: string): Promise<void> {
+    await this.userRepository.update(id, { isEmailVerified: true });
+  }
+
   async updateLastLogin(id: string): Promise<void> {
     await this.userRepository.update(id, { lastLoginAt: new Date() });
   }

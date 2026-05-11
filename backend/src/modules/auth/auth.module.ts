@@ -8,6 +8,8 @@ import { AuthController } from './auth.controller';
 import { JwtStrategy } from './strategies/jwt.strategy';
 import { OtpCode } from './entities/otp.entity';
 import { RefreshToken } from './entities/refresh-token.entity';
+import { PasswordResetToken } from './entities/password-reset-token.entity';
+import { EmailVerificationToken } from './entities/email-verification-token.entity';
 import { UsersModule } from '../users/users.module';
 import { SmsService } from '../../common/services/sms.service';
 import { EmailService } from '../../common/services/email.service';
@@ -27,7 +29,7 @@ import { FirebaseService } from '../../common/services/firebase.service';
       }),
       inject: [ConfigService],
     }),
-    TypeOrmModule.forFeature([OtpCode, RefreshToken]),
+    TypeOrmModule.forFeature([OtpCode, RefreshToken, PasswordResetToken, EmailVerificationToken]),
   ],
   controllers: [AuthController],
   providers: [AuthService, JwtStrategy, SmsService, EmailService, FirebaseService],
