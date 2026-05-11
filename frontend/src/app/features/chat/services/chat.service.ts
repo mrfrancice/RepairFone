@@ -276,6 +276,22 @@ export class ChatService implements OnDestroy {
     );
   }
 
+  /**
+   * Upload une pièce jointe pour une conversation et retourne son URL.
+   * À chaîner avec sendMessage(...).
+   */
+  async uploadAttachment(conversationId: string, file: File): Promise<string> {
+    const formData = new FormData();
+    formData.append('file', file);
+    const res = await firstValueFrom(
+      this.api.post<{ url: string }>(
+        `/chat/conversations/${conversationId}/attachments`,
+        formData,
+      ),
+    );
+    return res.url;
+  }
+
   async markAsRead(conversationId: string): Promise<void> {
     return firstValueFrom(
       this.api.post<void>(`/chat/conversations/${conversationId}/read`, {})

@@ -721,8 +721,14 @@ export class ChatRoomComponent implements OnInit, OnDestroy, AfterViewChecked {
     this.chatService.sendStopTyping(conversationId);
 
     try {
-      // In a real app, upload images first and get URLs
-      const attachmentUrls = images.length > 0 ? ['placeholder-url'] : undefined;
+      // Upload chaque image sélectionnée et collecte les URLs serveur.
+      // Parallélisé pour rester rapide même avec plusieurs photos.
+      let attachmentUrls: string[] | undefined;
+      if (images.length > 0) {
+        attachmentUrls = await Promise.all(
+          images.map((img) => this.chatService.uploadAttachment(conversationId, img.file)),
+        );
+      }
 
       await this.chatService.sendMessage({
         conversationId,
@@ -731,6 +737,8 @@ export class ChatRoomComponent implements OnInit, OnDestroy, AfterViewChecked {
       });
 
       this.messageText = '';
+      // Libère les blob: URLs créées en preview pour éviter les fuites mémoire.
+      images.forEach((img) => URL.revokeObjectURL(img.preview));
       this.selectedImages.set([]);
       this.shouldScrollToBottom = true;
     } catch (err) {

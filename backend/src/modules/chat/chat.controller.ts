@@ -6,12 +6,17 @@ import {
   Param,
   Query,
   UseGuards,
+  UseInterceptors,
+  UploadedFile,
+  BadRequestException,
   ParseUUIDPipe,
 } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiBearerAuth, ApiQuery } from '@nestjs/swagger';
+import { FileInterceptor } from '@nestjs/platform-express';
+import { ApiTags, ApiOperation, ApiBearerAuth, ApiQuery, ApiConsumes } from '@nestjs/swagger';
 import { ChatService, CreateConversationDto, SendMessageDto, MessageFilters } from './chat.service';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
+import { FileUploadService } from '../../common/services/file-upload.service';
 import { User } from '../users/entities/user.entity';
 
 @ApiTags('Chat')
@@ -19,7 +24,10 @@ import { User } from '../users/entities/user.entity';
 @UseGuards(JwtAuthGuard)
 @ApiBearerAuth()
 export class ChatController {
-  constructor(private readonly chatService: ChatService) {}
+  constructor(
+    private readonly chatService: ChatService,
+    private readonly fileUploadService: FileUploadService,
+  ) {}
 
   @Get('conversations')
   @ApiOperation({ summary: 'Mes conversations' })
@@ -66,6 +74,54 @@ export class ChatController {
       content: body.content,
       attachments: body.attachments,
     });
+  }
+
+  /**
+   * Upload d'une pièce jointe pour une conversation.
+   *
+   * Flow client : POST ici pour récupérer l'URL, puis envoyer un
+   * message avec ces URLs dans le tableau `attachments`. Permet d'envoyer
+   * plusieurs photos dans un seul message texte sans gonfler le payload.
+   *
+   * SÉCURITÉ : la vérification d'accès à la conversation est faite par
+   * le service avant l'upload. Sans cela, n'importe quel utilisateur
+   * authentifié pourrait uploader des fichiers vers n'importe quel
+   * conversationId.
+   */
+  @Post('conversations/:id/attachments')
+  @UseInterceptors(FileInterceptor('file'))
+  @ApiConsumes('multipart/form-data')
+  @ApiOperation({ summary: 'Uploader une pièce jointe (image/PDF) pour une conversation' })
+  async uploadAttachment(
+    @CurrentUser() user: User,
+    @Param('id', ParseUUIDPipe) conversationId: string,
+    @UploadedFile()
+    file:
+      | { originalname: string; buffer: Buffer; mimetype: string; size: number }
+      | undefined,
+  ): Promise<{ url: string }> {
+    if (!file) {
+      throw new BadRequestException('Fichier manquant (champ multipart "file")');
+    }
+
+    // Vérifie que l'utilisateur a bien accès à cette conversation
+    await this.chatService.getConversation(conversationId, user.id, user.role);
+
+    const result = await this.fileUploadService.uploadChatAttachment(
+      {
+        originalName: file.originalname,
+        mimeType: file.mimetype,
+        size: file.size,
+        buffer: file.buffer,
+      },
+      conversationId,
+    );
+
+    if (!result.success || !result.url) {
+      throw new BadRequestException(result.error || 'Échec de l\'upload');
+    }
+
+    return { url: result.url };
   }
 
   @Post('conversations/:id/read')

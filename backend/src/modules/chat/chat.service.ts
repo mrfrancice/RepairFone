@@ -1,6 +1,8 @@
 import { Injectable, NotFoundException, ForbiddenException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, FindOptionsWhere, LessThan, IsNull } from 'typeorm';
+import { IsUUID, IsString, IsOptional, IsArray, IsInt, Min, Max } from 'class-validator';
+import { Type } from 'class-transformer';
 import { Conversation } from './entities/conversation.entity';
 import { Message, SenderType, MessageAttachment } from './entities/message.entity';
 import { RepairRequest } from '../requests/entities/repair-request.entity';
@@ -8,17 +10,34 @@ import { RepairerProfile } from '../users/entities/repairer-profile.entity';
 import { User, UserRole } from '../users/entities/user.entity';
 
 export class CreateConversationDto {
+  @IsUUID()
   requestId: string;
 }
 
 export class SendMessageDto {
-  conversationId: string;
+  // conversationId vient de l'URL (param), pas du body — pas de @IsUUID
+  // requis ici. On le garde optionnel pour le typage interne.
+  conversationId?: string;
+
+  @IsString()
   content: string;
+
+  @IsOptional()
+  @IsArray()
+  @IsString({ each: true })
   attachments?: string[];
 }
 
 export class MessageFilters {
+  @IsOptional()
+  @IsString()
   before?: string;
+
+  @IsOptional()
+  @Type(() => Number)
+  @IsInt()
+  @Min(1)
+  @Max(100)
   limit?: number;
 }
 
@@ -141,6 +160,9 @@ export class ChatService {
   }
 
   async sendMessage(userId: string, userRole: UserRole, dto: SendMessageDto): Promise<Message> {
+    if (!dto.conversationId) {
+      throw new NotFoundException('conversationId requis');
+    }
     const conversation = await this.getConversation(dto.conversationId, userId, userRole);
 
     const senderType = userRole === UserRole.REPAIRER ? SenderType.REPAIRER : SenderType.CLIENT;
