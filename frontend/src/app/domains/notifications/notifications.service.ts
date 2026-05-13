@@ -1,46 +1,10 @@
 import { Injectable, inject, signal } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { ApiService } from './api.service';
-import { LoggerService } from './logger.service';
 import { firstValueFrom } from 'rxjs';
+import { ApiService } from '@app/core/services/api.service';
+import { LoggerService } from '@app/core/services/logger.service';
 import { environment } from '../../../environments/environment';
-
-export type NotificationType =
-  | 'request_created'
-  | 'request_accepted'
-  | 'request_rejected'
-  | 'quote_received'
-  | 'quote_accepted'
-  | 'quote_rejected'
-  | 'repair_started'
-  | 'repair_completed'
-  | 'payment_received'
-  | 'payment_requested'
-  | 'dispute_opened'
-  | 'dispute_resolved'
-  | 'new_message'
-  | 'new_review'
-  | 'profile_verified';
-
-export interface AppNotification {
-  id: string;
-  userId: string;
-  type: NotificationType;
-  title: string;
-  message: string;
-  data?: Record<string, any>;
-  read: boolean;
-  createdAt: string;
-}
-
-export interface NotificationPreferences {
-  push: boolean;
-  sms: boolean;
-  email: boolean;
-  types: {
-    [key in NotificationType]?: boolean;
-  };
-}
+import type { AppNotification, NotificationPreferences, NotificationType } from './types';
 
 interface PushSubscriptionPayload {
   endpoint: string;
@@ -50,8 +14,15 @@ interface PushSubscriptionPayload {
   };
 }
 
+/**
+ * Service notifications : CRUD API + state singleton + push (VAPID).
+ *
+ * NB : ce service melange volontairement CRUD metier et infra push. Un split
+ * en deux services (NotificationsApiService / NotificationsPushService) est
+ * envisageable mais hors-scope du refactor d'architecture en cours.
+ */
 @Injectable({ providedIn: 'root' })
-export class NotificationService {
+export class NotificationsService {
   private readonly api = inject(ApiService);
   private readonly http = inject(HttpClient);
   private readonly logger = inject(LoggerService);
@@ -70,22 +41,19 @@ export class NotificationService {
     this.checkPushSupport();
   }
 
-  // Check if push notifications are supported
   private checkPushSupport(): void {
     this.pushSupported.set(
       'serviceWorker' in navigator &&
-      'PushManager' in window &&
-      'Notification' in window
+        'PushManager' in window &&
+        'Notification' in window
     );
   }
 
-  // Initialize notifications
   async init(): Promise<void> {
     await this.loadNotifications();
     await this.checkPushPermission();
   }
 
-  // Load notifications from API
   async loadNotifications(page = 1, limit = 20): Promise<void> {
     this.isLoading.set(true);
 
@@ -105,13 +73,12 @@ export class NotificationService {
 
       this.unreadCount.set(response.unread);
     } catch (err) {
-      this.logger.error('NotificationService', 'Error loading notifications', err);
+      this.logger.error('NotificationsService', 'Error loading notifications', err);
     } finally {
       this.isLoading.set(false);
     }
   }
 
-  // Mark notification as read
   async markAsRead(notificationId: string): Promise<void> {
     try {
       await firstValueFrom(
@@ -126,16 +93,13 @@ export class NotificationService {
 
       this.unreadCount.update((count) => Math.max(0, count - 1));
     } catch (err) {
-      this.logger.error('NotificationService', 'Error marking notification as read', err);
+      this.logger.error('NotificationsService', 'Error marking notification as read', err);
     }
   }
 
-  // Mark all notifications as read
   async markAllAsRead(): Promise<void> {
     try {
-      await firstValueFrom(
-        this.api.post<void>('/notifications/read-all', {})
-      );
+      await firstValueFrom(this.api.post<void>('/notifications/read-all', {}));
 
       this.notifications.update((notifications) =>
         notifications.map((n) => ({ ...n, read: true }))
@@ -143,16 +107,13 @@ export class NotificationService {
 
       this.unreadCount.set(0);
     } catch (err) {
-      this.logger.error('NotificationService', 'Error marking all notifications as read', err);
+      this.logger.error('NotificationsService', 'Error marking all notifications as read', err);
     }
   }
 
-  // Delete notification
   async deleteNotification(notificationId: string): Promise<void> {
     try {
-      await firstValueFrom(
-        this.api.delete<void>(`/notifications/${notificationId}`)
-      );
+      await firstValueFrom(this.api.delete<void>(`/notifications/${notificationId}`));
 
       const notification = this.notifications().find((n) => n.id === notificationId);
       this.notifications.update((notifications) =>
@@ -163,18 +124,17 @@ export class NotificationService {
         this.unreadCount.update((count) => Math.max(0, count - 1));
       }
     } catch (err) {
-      this.logger.error('NotificationService', 'Error deleting notification', err);
+      this.logger.error('NotificationsService', 'Error deleting notification', err);
     }
   }
 
-  // Get notification preferences
   async getPreferences(): Promise<NotificationPreferences> {
     try {
       return await firstValueFrom(
         this.api.get<NotificationPreferences>('/notifications/preferences')
       );
     } catch (err) {
-      this.logger.error('NotificationService', 'Error loading notification preferences', err);
+      this.logger.error('NotificationsService', 'Error loading notification preferences', err);
       return {
         push: false,
         sms: true,
@@ -184,19 +144,17 @@ export class NotificationService {
     }
   }
 
-  // Update notification preferences
   async updatePreferences(preferences: Partial<NotificationPreferences>): Promise<void> {
     try {
       await firstValueFrom(
         this.api.put<void>('/notifications/preferences', preferences)
       );
     } catch (err) {
-      this.logger.error('NotificationService', 'Error updating notification preferences', err);
+      this.logger.error('NotificationsService', 'Error updating notification preferences', err);
       throw err;
     }
   }
 
-  // Check current push permission status
   private async checkPushPermission(): Promise<void> {
     if (!this.pushSupported()) return;
 
@@ -204,7 +162,6 @@ export class NotificationService {
     this.pushEnabled.set(permission === 'granted');
   }
 
-  // Request push notification permission
   async requestPushPermission(): Promise<boolean> {
     if (!this.pushSupported()) {
       console.warn('Push notifications not supported');
@@ -223,34 +180,30 @@ export class NotificationService {
       this.pushEnabled.set(false);
       return false;
     } catch (err) {
-      this.logger.error('NotificationService', 'Error requesting push permission', err);
+      this.logger.error('NotificationsService', 'Error requesting push permission', err);
       return false;
     }
   }
 
-  // Subscribe to push notifications via /push backend (VAPID, W3C standard)
   private async subscribeToPush(): Promise<void> {
     try {
-      // Le SW Angular (NGSW) est enregistré automatiquement par provideServiceWorker.
-      // En dev (ng serve), il n'est PAS enregistré → push désactivé.
+      // Le SW Angular (NGSW) est enregistre automatiquement par provideServiceWorker.
+      // En dev (ng serve), il n'est PAS enregistre → push desactive.
       const registration = await navigator.serviceWorker.getRegistration();
       if (!registration) {
-        throw new Error('Service worker non enregistré (mode dev ?)');
+        throw new Error('Service worker non enregistre (mode dev ?)');
       }
       this.swRegistration = registration;
 
-      // Get VAPID public key from server (404 si non configuré côté backend)
       const { publicKey } = await firstValueFrom(
         this.api.get<{ publicKey: string }>('/push/vapid-public-key')
       );
 
-      // Subscribe to push
       const subscription = await this.swRegistration.pushManager.subscribe({
         userVisibleOnly: true,
         applicationServerKey: this.urlBase64ToUint8Array(publicKey) as BufferSource,
       });
 
-      // Send subscription to server
       const subscriptionJson = subscription.toJSON();
       const keys = subscriptionJson.keys || {};
       const payload: PushSubscriptionPayload = {
@@ -261,16 +214,13 @@ export class NotificationService {
         },
       };
 
-      await firstValueFrom(
-        this.api.post<void>('/push/subscribe', payload)
-      );
+      await firstValueFrom(this.api.post<void>('/push/subscribe', payload));
     } catch (err) {
-      this.logger.error('NotificationService', 'Error subscribing to push', err);
+      this.logger.error('NotificationsService', 'Error subscribing to push', err);
       throw err;
     }
   }
 
-  // Unsubscribe from push notifications
   async unsubscribeFromPush(): Promise<void> {
     if (!this.swRegistration) return;
 
@@ -280,7 +230,6 @@ export class NotificationService {
       if (subscription) {
         await subscription.unsubscribe();
 
-        // Notify server via DELETE /push/subscribe avec body (HttpClient direct)
         await firstValueFrom(
           this.http.request<void>('DELETE', `${environment.apiUrl}/push/subscribe`, {
             body: { endpoint: subscription.endpoint },
@@ -290,16 +239,13 @@ export class NotificationService {
 
       this.pushEnabled.set(false);
     } catch (err) {
-      this.logger.error('NotificationService', 'Error unsubscribing from push', err);
+      this.logger.error('NotificationsService', 'Error unsubscribing from push', err);
     }
   }
 
-  // Convert VAPID key to Uint8Array
   private urlBase64ToUint8Array(base64String: string): Uint8Array {
     const padding = '='.repeat((4 - (base64String.length % 4)) % 4);
-    const base64 = (base64String + padding)
-      .replace(/-/g, '+')
-      .replace(/_/g, '/');
+    const base64 = (base64String + padding).replace(/-/g, '+').replace(/_/g, '/');
 
     const rawData = window.atob(base64);
     const outputArray = new Uint8Array(rawData.length);
@@ -311,7 +257,6 @@ export class NotificationService {
     return outputArray;
   }
 
-  // Show local notification (for testing or when app is in foreground)
   showLocalNotification(title: string, options?: NotificationOptions): void {
     if (!this.pushEnabled() || Notification.permission !== 'granted') {
       console.warn('Cannot show notification: permission not granted');
@@ -325,13 +270,10 @@ export class NotificationService {
     });
   }
 
-  // Handle incoming notification (called from service worker)
   handleIncomingNotification(notification: AppNotification): void {
-    // Add to local state
     this.notifications.update((notifications) => [notification, ...notifications]);
     this.unreadCount.update((count) => count + 1);
 
-    // Show local notification if app is in foreground
     if (document.visibilityState === 'visible') {
       this.showLocalNotification(notification.title, {
         body: notification.message,
@@ -341,7 +283,6 @@ export class NotificationService {
     }
   }
 
-  // Get notification type label
   getTypeLabel(type: NotificationType): string {
     const labels: Record<NotificationType, string> = {
       request_created: 'Nouvelle demande',
@@ -364,7 +305,6 @@ export class NotificationService {
     return labels[type] || type;
   }
 
-  // Get notification type icon
   getTypeIcon(type: NotificationType): string {
     const icons: Record<NotificationType, string> = {
       request_created: '📱',
@@ -387,7 +327,6 @@ export class NotificationService {
     return icons[type] || '🔔';
   }
 
-  // Get notification route based on type and data
   getNotificationRoute(notification: AppNotification): string[] {
     const { type, data } = notification;
 
@@ -428,7 +367,6 @@ export class NotificationService {
     }
   }
 
-  // Format notification time
   formatTime(dateStr: string): string {
     const date = new Date(dateStr);
     const now = new Date();

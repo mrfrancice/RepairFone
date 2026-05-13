@@ -1,7 +1,11 @@
 import { Component, inject, ChangeDetectionStrategy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
-import { NotificationService } from '../../../core/services/notification.service';
+// NB : notification-bell est un widget metier (compte de notifications) mais reside
+// dans shared/ pour etre reutilise. La regle shared-cannot-import-domains signale
+// cette violation — sera resolue en Phase 3 en deplacant le composant dans
+// features/common/components/notification-bell.
+import { NotificationsService } from '@app/domains/notifications';
 
 @Component({
   selector: 'app-notification-bell',
@@ -63,5 +67,5 @@ import { NotificationService } from '../../../core/services/notification.service
   `]
 })
 export class NotificationBellComponent {
-  readonly notificationService = inject(NotificationService);
+  readonly notificationService = inject(NotificationsService);
 }

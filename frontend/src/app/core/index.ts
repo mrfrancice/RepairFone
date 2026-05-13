@@ -1,7 +1,7 @@
 // Core Services
 export * from './services/api.service';
 export * from './services/secure-storage.service';
-export * from './services/notification.service';
+// NotificationsService a migre dans @app/domains/notifications (Phase 2.2)
 export * from './services/toast.service';
 export * from './services/logger.service';
 export * from './services/theme.service';
