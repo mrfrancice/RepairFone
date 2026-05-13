@@ -6,7 +6,9 @@
     "start": "ng serve",
     "build": "ng build",
     "watch": "ng build --watch --configuration development",
-    "test": "ng test"
+    "test": "ng test",
+    "deps:check": "depcruise --config .dependency-cruiser.cjs src/app",
+    "deps:graph": "depcruise --config .dependency-cruiser.cjs --output-type dot src/app | dot -T svg > docs/dependency-graph.svg"
   },
   "prettier": {
     "printWidth": 100,
@@ -48,6 +50,7 @@
     "@angular/cli": "^20.3.10",
     "@angular/compiler-cli": "^20.3.16",
     "@types/jasmine": "~5.1.0",
+    "dependency-cruiser": "^17.4.0",
     "jasmine-core": "~5.9.0",
     "karma": "~6.4.0",
     "karma-chrome-launcher": "~3.2.0",

@@ -21,6 +21,7 @@
       "@app/shared": ["src/app/shared/index.ts"],
       "@app/shared/*": ["src/app/shared/*"],
       "@app/features/*": ["src/app/features/*"],
+      "@app/domains/*": ["src/app/domains/*"],
       "@app/models": ["src/app/shared/models/index.ts"]
     }
   },
