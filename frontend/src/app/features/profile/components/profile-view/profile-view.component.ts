@@ -3,7 +3,7 @@ import { CommonModule } from '@angular/common';
 import { Router, RouterLink } from '@angular/router';
 import { AuthStore, User } from '../../../../core/stores/auth.store';
 import { AuthService } from '../../../auth/services/auth.service';
-import { ProfileService } from '../../services/profile.service';
+import { UsersService } from '@app/domains/users';
 import { RequestsService, RequestStats } from '../../../requests/services/requests.service';
 import { ReviewsService, Review, SubRatings, StepRatingStats, StepRating } from '../../../reviews/services/reviews.service';
 import { SecureStorageService } from '../../../../core/services/secure-storage.service';
@@ -1300,7 +1300,7 @@ import { PhoneFormatPipe } from '../../../../shared/pipes/phone-format.pipe';
 export class ProfileViewComponent implements OnInit {
   private readonly authStore = inject(AuthStore);
   private readonly authService = inject(AuthService);
-  private readonly profileService = inject(ProfileService);
+  private readonly profileService = inject(UsersService);
   private readonly requestsService = inject(RequestsService);
   private readonly reviewsService = inject(ReviewsService);
   private readonly router = inject(Router);

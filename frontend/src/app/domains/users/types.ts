@@ -44,3 +44,33 @@ export interface OtpVerifyRequest {
   phone: string;
   code: string;
 }
+
+// === PROFIL ===
+
+export interface UpdateProfileDto {
+  firstName?: string;
+  lastName?: string;
+  avatarUrl?: string;
+}
+
+export interface UpdateRepairerProfileDto {
+  businessName?: string;
+  businessType?: string;
+  rccmNumber?: string;
+  taxId?: string;
+  businessPhone?: string;
+  businessEmail?: string;
+  yearsOfExperience?: string;
+  description?: string;
+  city?: string;
+  commune?: string;
+  quarter?: string;
+  address?: string;
+  landmark?: string;
+  latitude?: number | null;
+  longitude?: number | null;
+  specialties?: string[];
+  isAvailable?: boolean;
+  acceptsHomeService?: boolean;
+  homeServiceRadiusKm?: number;
+}

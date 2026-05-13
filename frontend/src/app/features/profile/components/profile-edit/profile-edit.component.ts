@@ -3,7 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule, ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
 import { AuthStore } from '../../../../core/stores/auth.store';
-import { ProfileService, UpdateProfileDto, UpdateRepairerProfileDto } from '../../services/profile.service';
+import { UsersService, type UpdateProfileDto, type UpdateRepairerProfileDto } from '@app/domains/users';
 import { LocationService, City, Commune, Quarter } from '../../../../core/services/location.service';
 import { SettingsService } from '../../../../core/services/settings.service';
 import { UiHeaderComponent } from '../../../../shared/components/ui-header/ui-header.component';
@@ -1509,7 +1509,7 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 })
 export class ProfileEditComponent implements OnInit {
   private readonly authStore = inject(AuthStore);
-  private readonly profileService = inject(ProfileService);
+  private readonly profileService = inject(UsersService);
   private readonly locationService = inject(LocationService);
   private readonly settingsService = inject(SettingsService);
   private readonly router = inject(Router);
