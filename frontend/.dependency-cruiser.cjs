@@ -34,9 +34,14 @@ module.exports = {
       name: 'shared-cannot-import-domains',
       comment:
         "shared/ est une boîte à outils générique sans métier. Si tu vois un import depuis " +
-        'domains/, c\'est que le code partagé est en réalité métier — déplace-le dans le domain.',
+        'domains/, c\'est que le code partagé est en réalité métier — déplace-le dans le domain. ' +
+        'EXCEPTION : shared/models/index.ts est un barrel de rétro-compatibilité temporaire ' +
+        '(supprimé en Phase 4). Tout nouveau code doit importer directement depuis @app/domains/*.',
       severity: 'warn',
-      from: { path: '^src/app/shared/' },
+      from: {
+        path: '^src/app/shared/',
+        pathNot: '^src/app/shared/models/index\\.ts$',
+      },
       to: { path: '^src/app/domains/' },
     },
     {
@@ -55,16 +60,14 @@ module.exports = {
       to: { path: '^src/app/features/' },
     },
     {
-      name: 'domain-cannot-import-other-domain-internals',
+      name: 'must-use-domain-public-api',
       comment:
-        "Un domaine ne peut importer un autre domaine QUE via son index.ts (surface publique). " +
-        'Importer des fichiers internes crée un couplage fragile.',
+        "Depuis l'extérieur de domains/, on accède à un domaine UNIQUEMENT par son index.ts. " +
+        'Importer un fichier interne (types.ts, *.service.ts) court-circuite la surface publique. ' +
+        'NB : on accepte volontairement que index.ts ré-exporte ses propres fichiers internes.',
       severity: 'warn',
-      from: { path: '^src/app/domains/([^/]+)/' },
-      to: {
-        path: '^src/app/domains/(?!\\1/)([^/]+)/(?!index\\.ts$).+',
-        pathNot: '^src/app/domains/\\1/',
-      },
+      from: { pathNot: '^src/app/domains/' },
+      to: { path: '^src/app/domains/[^/]+/(?!index\\.ts$)[^/]+\\.ts$' },
     },
 
     // ─────────────────────────────────────────────────────────────────────
