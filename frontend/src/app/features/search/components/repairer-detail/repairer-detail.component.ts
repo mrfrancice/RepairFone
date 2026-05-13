@@ -3,7 +3,8 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { Location } from '@angular/common';
-import { SearchService, Repairer, ServiceType, RepairerReview, Device } from '../../services/search.service';
+import { SearchService, Repairer, RepairerReview } from '../../services/search.service';
+import { DevicesService, type Device, type ServiceType } from '@app/domains/devices';
 import { SearchStore } from '../../stores/search.store';
 import { AuthStore } from '../../../../core/stores/auth.store';
 import { ReviewsService, StepRatingStats, RatingCategory } from '../../../reviews/services/reviews.service';
@@ -2263,6 +2264,7 @@ interface QualityScore {
 })
 export class RepairerDetailComponent implements OnInit {
   private readonly searchService = inject(SearchService);
+  private readonly devicesService = inject(DevicesService);
   private readonly searchStore = inject(SearchStore);
   readonly authStore = inject(AuthStore); // Public for template access
   private readonly requestsService = inject(RequestsService);
@@ -2351,7 +2353,7 @@ export class RepairerDetailComponent implements OnInit {
 
   private async loadCategories(): Promise<void> {
     try {
-      const categories = await this.searchService.getDeviceCategories();
+      const categories = await this.devicesService.getDeviceCategories();
       if (categories && categories.length > 0) {
         this.categories.set(categories);
       }
@@ -2386,7 +2388,7 @@ export class RepairerDetailComponent implements OnInit {
 
         // Load brands for category
         try {
-          const brands = await this.searchService.getDeviceBrands(storeDevice.category || 'smartphone');
+          const brands = await this.devicesService.getDeviceBrands(storeDevice.category || 'smartphone');
           this.brands.set(brands);
         } catch {
           // Ignore brand loading errors
@@ -2394,7 +2396,7 @@ export class RepairerDetailComponent implements OnInit {
 
         // Load devices for brand
         try {
-          const result = await this.searchService.getDevices({
+          const result = await this.devicesService.getDevices({
             category: storeDevice.category,
             brand: storeDevice.brand,
           });
@@ -2404,7 +2406,7 @@ export class RepairerDetailComponent implements OnInit {
         }
 
         // Load service types for device
-        const services = await this.searchService.getServiceTypes(storeDevice.id);
+        const services = await this.devicesService.getServiceTypes(storeDevice.id);
         this.serviceTypes.set(services);
         this.formServiceTypes.set(services);
 
@@ -2685,7 +2687,7 @@ export class RepairerDetailComponent implements OnInit {
 
     this.isLoadingBrands.set(true);
     try {
-      const brands = await this.searchService.getDeviceBrands(category);
+      const brands = await this.devicesService.getDeviceBrands(category);
       this.brands.set(brands);
     } catch (err) {
       this.logger.error('RepairerDetailComponent', 'Error loading brands', err);
@@ -2701,7 +2703,7 @@ export class RepairerDetailComponent implements OnInit {
 
     this.isLoadingModels.set(true);
     try {
-      const result = await this.searchService.getDevices({
+      const result = await this.devicesService.getDevices({
         category: this.selectedCategory() || undefined,
         brand: brand,
       });
@@ -2734,7 +2736,7 @@ export class RepairerDetailComponent implements OnInit {
       // Load service types for step 2
       this.isLoadingServices.set(true);
       try {
-        const services = await this.searchService.getServiceTypes(this.selectedDevice()!.id);
+        const services = await this.devicesService.getServiceTypes(this.selectedDevice()!.id);
         this.formServiceTypes.set(services);
       } catch (err) {
         this.logger.error('RepairerDetailComponent', 'Error loading services', err);

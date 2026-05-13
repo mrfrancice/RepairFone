@@ -1,5 +1,6 @@
 import { Injectable, signal, computed } from '@angular/core';
-import { Device, ServiceType, Repairer, SearchParams, LocationDetails } from '../services/search.service';
+import type { Device, ServiceType } from '@app/domains/devices';
+import { Repairer, SearchParams, LocationDetails } from '../services/search.service';
 
 export type ServiceMode = 'shop' | 'home';
 

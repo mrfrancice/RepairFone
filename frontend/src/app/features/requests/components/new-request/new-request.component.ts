@@ -5,7 +5,8 @@ import { Router, ActivatedRoute } from '@angular/router';
 import { Subject, debounceTime } from 'rxjs';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { RequestsService, CreateRequestDto, UrgencyLevel } from '../../services/requests.service';
-import { SearchService, Device, ServiceType, Repairer } from '../../../search/services/search.service';
+import { SearchService, Repairer } from '../../../search/services/search.service';
+import { DevicesService, type Device, type ServiceType } from '@app/domains/devices';
 import { SearchStore } from '../../../search/stores/search.store';
 import { UiImageUploadComponent, UploadedImage } from '../../../../shared/components/ui-image-upload/ui-image-upload.component';
 import { UiButtonComponent } from '../../../../shared/components/ui-button/ui-button.component';
@@ -1092,6 +1093,7 @@ interface RequestStep {
 export class NewRequestComponent implements OnInit {
   private readonly requestsService = inject(RequestsService);
   private readonly searchService = inject(SearchService);
+  private readonly devicesService = inject(DevicesService);
   readonly store = inject(SearchStore);
   private readonly router = inject(Router);
   private readonly route = inject(ActivatedRoute);
@@ -1282,7 +1284,7 @@ export class NewRequestComponent implements OnInit {
       ];
 
       if (deviceId) {
-        promises.push(this.searchService.getDevice(deviceId));
+        promises.push(this.devicesService.getDevice(deviceId));
       }
 
       const results = await Promise.all(promises);
@@ -1291,7 +1293,7 @@ export class NewRequestComponent implements OnInit {
       if (deviceId && results[1]) {
         this.device.set(results[1]);
         // Load service types for this device
-        const services = await this.searchService.getServiceTypes(deviceId);
+        const services = await this.devicesService.getServiceTypes(deviceId);
         if (serviceId) {
           const service = services.find((s) => s.id === serviceId);
           this.serviceType.set(service || services[0] || null);

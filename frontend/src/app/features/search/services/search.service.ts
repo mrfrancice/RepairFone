@@ -1,25 +1,7 @@
 import { Injectable, inject, signal } from '@angular/core';
-import { firstValueFrom, catchError, of } from 'rxjs';
+import { firstValueFrom } from 'rxjs';
 import { ApiService } from '../../../core/services/api.service';
 import { LoggerService } from '../../../core/services/logger.service';
-
-export interface Device {
-  id: string;
-  brand: string;
-  model: string;
-  category: string;
-  imageUrl?: string;
-  serviceTypes?: ServiceType[];
-}
-
-export interface ServiceType {
-  id: string;
-  deviceId: string;
-  name: string;
-  description?: string;
-  basePrice: number;
-  estimatedDuration: number;
-}
 
 export interface RepairerProfile {
   id: string;
@@ -111,38 +93,8 @@ export class SearchService {
   // ==========================================
   // API METHODS
   // ==========================================
-
-  async getDevices(params?: {
-    brand?: string;
-    category?: string;
-    search?: string;
-  }): Promise<{ data: Device[]; total: number }> {
-    return firstValueFrom(
-      this.api.get<{ data: Device[]; total: number }>('/devices', params)
-    );
-  }
-
-  async getDeviceBrands(category?: string): Promise<string[]> {
-    return firstValueFrom(
-      this.api.get<string[]>('/devices/brands', category ? { category } : undefined)
-    );
-  }
-
-  async getDeviceCategories(): Promise<string[]> {
-    return firstValueFrom(
-      this.api.get<string[]>('/devices/categories')
-    );
-  }
-
-  async getDevice(id: string): Promise<Device> {
-    return firstValueFrom(this.api.get<Device>(`/devices/${id}`));
-  }
-
-  async getServiceTypes(deviceId: string): Promise<ServiceType[]> {
-    return firstValueFrom(
-      this.api.get<ServiceType[]>(`/service-types/device/${deviceId}`)
-    );
-  }
+  // NB : getDevices/getDeviceBrands/getDeviceCategories/getDevice/getServiceTypes
+  // ont migre vers @app/domains/devices (DevicesService) — Phase 2.1 du refactor.
 
   async searchRepairers(params: SearchParams): Promise<SearchResult> {
     this.isLoading.set(true);
