@@ -7,7 +7,7 @@ import { SearchService, Repairer, RepairerReview } from '../../services/search.s
 import { DevicesService, type Device, type ServiceType } from '@app/domains/devices';
 import { SearchStore } from '../../stores/search.store';
 import { AuthStore } from '../../../../core/stores/auth.store';
-import { ReviewsService, StepRatingStats, RatingCategory } from '../../../reviews/services/reviews.service';
+import { ReviewsService, StepRatingStats, RatingCategory } from '@app/domains/reviews';
 import { RequestsService, CreateRequestDto } from '../../../requests/services/requests.service';
 import { ChatService } from '../../../chat/services/chat.service';
 import { UiHeaderComponent } from '../../../../shared/components/ui-header/ui-header.component';

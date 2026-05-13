@@ -2,8 +2,7 @@ import { Component, inject, OnInit, signal, ChangeDetectionStrategy } from '@ang
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
-import { ConseilsService, Expert } from '../../services/conseils.service';
-import { ConseilsStore } from '../../stores/conseils.store';
+import { ConseilsService, Expert, ConseilsStore } from '@app/domains/conseils';
 import { AuthStore } from '../../../../core/stores/auth.store';
 import { UiHeaderComponent } from '../../../../shared/components/ui-header/ui-header.component';
 import { InitialsPipe } from '../../../../shared/pipes/initials.pipe';

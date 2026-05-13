@@ -1,6 +1,6 @@
 import { Injectable, inject, signal } from '@angular/core';
 import { firstValueFrom } from 'rxjs';
-import { ApiService } from '../../../core/services/api.service';
+import { ApiService } from '@app/core/services/api.service';
 
 export interface SubRatings {
   quality: number;       // Qualité de la réparation (1-5)

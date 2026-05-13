@@ -1,13 +1,17 @@
 import { Component, Input, Output, EventEmitter, inject, signal, computed, ChangeDetectionStrategy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+// NB : step-rating est un widget metier (note + envoi API reviews) mais
+// reside dans shared/. La regle shared-cannot-import-domains signale cette
+// violation — sera resolue en Phase 3 en deplacant vers
+// features/common/components/step-rating (voir aussi notification-bell).
 import {
   ReviewsService,
   RatingStep,
   RatingCategory,
   CreateStepRatingDto,
   StepRatingItem,
-} from '../../../features/reviews/services/reviews.service';
+} from '@app/domains/reviews';
 
 @Component({
   selector: 'app-step-rating',

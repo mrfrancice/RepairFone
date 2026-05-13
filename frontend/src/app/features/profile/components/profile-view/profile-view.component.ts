@@ -5,7 +5,7 @@ import { AuthStore, User } from '../../../../core/stores/auth.store';
 import { AuthService } from '../../../auth/services/auth.service';
 import { UsersService } from '@app/domains/users';
 import { RequestsService, RequestStats } from '../../../requests/services/requests.service';
-import { ReviewsService, Review, SubRatings, StepRatingStats, StepRating } from '../../../reviews/services/reviews.service';
+import { ReviewsService, Review, SubRatings, StepRatingStats, StepRating } from '@app/domains/reviews';
 import { SecureStorageService } from '../../../../core/services/secure-storage.service';
 import { LoggerService } from '../../../../core/services/logger.service';
 import { UiHeaderComponent } from '../../../../shared/components/ui-header/ui-header.component';

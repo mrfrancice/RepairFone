@@ -6,7 +6,7 @@ import { SearchService, Repairer } from '../../services/search.service';
 import { SearchStore } from '../../stores/search.store';
 import { UiHeaderComponent } from '../../../../shared/components/ui-header/ui-header.component';
 import { UiErrorStateComponent } from '../../../../shared/components/ui-error-state/ui-error-state.component';
-import { ReviewsService } from '../../../reviews/services/reviews.service';
+import { ReviewsService } from '@app/domains/reviews';
 import { InfiniteScrollDirective } from '../../../../shared/directives/infinite-scroll.directive';
 
 @Component({

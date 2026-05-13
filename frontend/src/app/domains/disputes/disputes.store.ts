@@ -1,5 +1,5 @@
 import { Injectable, signal, computed } from '@angular/core';
-import { Dispute, DisputeStatus, DisputeMessage } from '../services/disputes.service';
+import { Dispute, DisputeStatus, DisputeMessage } from './disputes.service';
 
 export interface DisputeFormState {
   requestId: string | null;

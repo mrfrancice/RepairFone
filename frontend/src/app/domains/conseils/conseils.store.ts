@@ -1,6 +1,6 @@
 import { Injectable, signal, computed } from '@angular/core';
-import { ConseilType, ConseilFormat } from '../../../shared/models';
-import { Expert, ConseilSession, ConseilMessage } from '../services/conseils.service';
+import type { ConseilType, ConseilFormat } from './types';
+import type { Expert, ConseilSession, ConseilMessage } from './conseils.service';
 
 @Injectable({ providedIn: 'root' })
 export class ConseilsStore {

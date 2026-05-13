@@ -3,7 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { RequestsService, RepairRequest, RequestStatus, UpdateStatusDto } from '../../services/requests.service';
-import { ReviewsService, RatingStep, StepRating } from '../../../reviews/services/reviews.service';
+import { ReviewsService, RatingStep, StepRating } from '@app/domains/reviews';
 import { QuotesService, Quote, QuotePart } from '../../../quotes/services/quotes.service';
 import { AuthStore } from '../../../../core/stores/auth.store';
 import { UiHeaderComponent } from '../../../../shared/components/ui-header/ui-header.component';

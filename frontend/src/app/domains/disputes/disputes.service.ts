@@ -1,7 +1,7 @@
 import { Injectable, inject, signal } from '@angular/core';
 import { firstValueFrom } from 'rxjs';
-import { ApiService } from '../../../core/services/api.service';
-import { ChipVariant } from '../../../shared/components/ui-chip/ui-chip.component';
+import { ApiService } from '@app/core/services/api.service';
+import { ChipVariant } from '@app/shared/components/ui-chip/ui-chip.component';
 
 export type DisputeReason =
   | 'non_conforming_repair'

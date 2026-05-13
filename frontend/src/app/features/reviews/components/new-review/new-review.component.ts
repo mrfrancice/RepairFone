@@ -2,7 +2,7 @@ import { Component, inject, signal, OnInit, ChangeDetectionStrategy } from '@ang
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
-import { ReviewsService, CreateReviewDto, SubRatings } from '../../services/reviews.service';
+import { ReviewsService, CreateReviewDto, SubRatings } from '@app/domains/reviews';
 import { RequestsService, RepairRequest } from '../../../requests/services/requests.service';
 import { UiCardComponent } from '../../../../shared/components/ui-card/ui-card.component';
 import { UiButtonComponent } from '../../../../shared/components/ui-button/ui-button.component';

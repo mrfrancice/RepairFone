@@ -2,8 +2,7 @@ import { Component, inject, OnInit, signal, ViewChild, ElementRef, ChangeDetecti
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
-import { DisputesService, Dispute, DisputeMessage } from '../../services/disputes.service';
-import { DisputesStore } from '../../stores/disputes.store';
+import { DisputesService, Dispute, DisputeMessage, DisputesStore } from '@app/domains/disputes';
 import { UiCardComponent } from '../../../../shared/components/ui-card/ui-card.component';
 import { UiButtonComponent } from '../../../../shared/components/ui-button/ui-button.component';
 import { UiLoadingComponent } from '../../../../shared/components/ui-loading/ui-loading.component';

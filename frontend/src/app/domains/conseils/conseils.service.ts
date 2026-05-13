@@ -1,12 +1,8 @@
 import { Injectable, inject } from '@angular/core';
 import { firstValueFrom } from 'rxjs';
-import { ApiService } from '../../../core/services/api.service';
-import {
-  ConseilRequest,
-  ConseilType,
-  ConseilFormat,
-  PaginatedResponse,
-} from '../../../shared/models';
+import { ApiService } from '@app/core/services/api.service';
+import type { ConseilRequest, ConseilType, ConseilFormat } from './types';
+import type { PaginatedResponse } from '@app/shared/models/api';
 
 // Message spécifique aux sessions de conseils
 export interface ConseilMessage {
