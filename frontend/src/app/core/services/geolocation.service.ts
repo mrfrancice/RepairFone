@@ -57,7 +57,9 @@ export class GeolocationService {
   readonly lastPosition = this._lastPosition.asReadonly();
 
   isSupported(): boolean {
-    return typeof navigator !== 'undefined' && 'geolocation' in navigator;
+    // `'geolocation' in navigator` est vrai meme si la valeur est undefined
+    // (iframe sandboxed, polyfill, etc.). Tester la valeur reelle.
+    return typeof navigator !== 'undefined' && !!navigator.geolocation;
   }
 
   /**
