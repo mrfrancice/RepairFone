@@ -63,7 +63,9 @@ export class PushController {
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
   @HttpCode(HttpStatus.NO_CONTENT)
-  @ApiOperation({ summary: "Supprime un abonnement push (envoyer l'endpoint dans body)" })
+  @ApiOperation({
+    summary: "Supprime un abonnement push (envoyer l'endpoint dans body)",
+  })
   async unsubscribe(@Body() body: { endpoint: string }) {
     await this.pushService.unsubscribe(body.endpoint);
   }

@@ -44,10 +44,18 @@ export class AddQuotesNotificationsIndexes1736810000000 implements MigrationInte
   }
 
   public async down(queryRunner: QueryRunner): Promise<void> {
-    await queryRunner.query(`DROP INDEX IF EXISTS "idx_notifications_user_created"`);
-    await queryRunner.query(`DROP INDEX IF EXISTS "idx_notifications_user_read"`);
-    await queryRunner.query(`DROP INDEX IF EXISTS "idx_quotes_request_created"`);
+    await queryRunner.query(
+      `DROP INDEX IF EXISTS "idx_notifications_user_created"`,
+    );
+    await queryRunner.query(
+      `DROP INDEX IF EXISTS "idx_notifications_user_read"`,
+    );
+    await queryRunner.query(
+      `DROP INDEX IF EXISTS "idx_quotes_request_created"`,
+    );
     await queryRunner.query(`DROP INDEX IF EXISTS "idx_quotes_status_created"`);
-    await queryRunner.query(`DROP INDEX IF EXISTS "idx_quotes_repairer_status"`);
+    await queryRunner.query(
+      `DROP INDEX IF EXISTS "idx_quotes_repairer_status"`,
+    );
   }
 }

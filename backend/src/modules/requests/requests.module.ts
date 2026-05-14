@@ -11,7 +11,12 @@ import { DevicesModule } from '../devices/devices.module';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([RepairRequest, RequestStatusHistory, RepairerProfile, Payment]),
+    TypeOrmModule.forFeature([
+      RepairRequest,
+      RequestStatusHistory,
+      RepairerProfile,
+      Payment,
+    ]),
     UsersModule,
     DevicesModule,
   ],

@@ -1,10 +1,4 @@
-import {
-  Entity,
-  Column,
-  OneToOne,
-  JoinColumn,
-  Index,
-} from 'typeorm';
+import { Entity, Column, OneToOne, JoinColumn, Index } from 'typeorm';
 import { BaseEntity } from '../../../common/entities/base.entity';
 import { User } from '../../users/entities/user.entity';
 
@@ -57,7 +51,13 @@ export class Expert extends BaseEntity {
   @Column({ name: 'response_time', type: 'int', default: 15 })
   responseTime: number; // in minutes
 
-  @Column({ name: 'price_per_session', type: 'decimal', precision: 10, scale: 2, default: 2000 })
+  @Column({
+    name: 'price_per_session',
+    type: 'decimal',
+    precision: 10,
+    scale: 2,
+    default: 2000,
+  })
   pricePerSession: number;
 
   @Column({ type: 'varchar', length: 3, default: 'XOF' })

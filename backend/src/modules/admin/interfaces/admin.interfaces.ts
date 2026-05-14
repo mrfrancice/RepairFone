@@ -3,7 +3,10 @@
  * Replaces `any[]` with properly typed interfaces
  */
 
-import { VerificationStatus, Certification } from '../../users/entities/repairer-profile.entity';
+import {
+  VerificationStatus,
+  Certification,
+} from '../../users/entities/repairer-profile.entity';
 import { UserRole, UserStatus } from '../../users/entities/user.entity';
 
 // =============================================================================

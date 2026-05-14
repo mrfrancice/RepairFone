@@ -1,7 +1,14 @@
-import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  BadRequestException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { RepairerProfile, VerificationStatus } from '../users/entities/repairer-profile.entity';
+import {
+  RepairerProfile,
+  VerificationStatus,
+} from '../users/entities/repairer-profile.entity';
 import { User, UserStatus, UserRole } from '../users/entities/user.entity';
 import {
   AdminRepairerListItem,
@@ -32,7 +39,9 @@ export class AdminService {
   /**
    * Get all repairers with filters (for admin dashboard)
    */
-  async getRepairers(params: RepairerListParams): Promise<AdminRepairerListResponse> {
+  async getRepairers(
+    params: RepairerListParams,
+  ): Promise<AdminRepairerListResponse> {
     const { status = 'all', page = 1, limit = 20, search } = params;
 
     const queryBuilder = this.repairerRepository
@@ -41,7 +50,9 @@ export class AdminService {
 
     // Filter by status
     if (status !== 'all') {
-      queryBuilder.andWhere('repairer.verificationStatus = :status', { status });
+      queryBuilder.andWhere('repairer.verificationStatus = :status', {
+        status,
+      });
     }
 
     // Search by business name, user name, or phone
@@ -97,15 +108,17 @@ export class AdminService {
       specialties: profile.specialties,
       yearsOfExperience: profile.yearsOfExperience,
       // User info
-      user: profile.user ? {
-        id: profile.user.id,
-        firstName: profile.user.firstName,
-        lastName: profile.user.lastName,
-        phone: profile.user.phone,
-        email: profile.user.email,
-        avatarUrl: profile.user.avatarUrl,
-        createdAt: profile.user.createdAt,
-      } : null,
+      user: profile.user
+        ? {
+            id: profile.user.id,
+            firstName: profile.user.firstName,
+            lastName: profile.user.lastName,
+            phone: profile.user.phone,
+            email: profile.user.email,
+            avatarUrl: profile.user.avatarUrl,
+            createdAt: profile.user.createdAt,
+          }
+        : null,
     }));
 
     return { data, total, page, limit, stats };
@@ -172,15 +185,17 @@ export class AdminService {
       createdAt: profile.createdAt,
       updatedAt: profile.updatedAt,
       // User
-      user: profile.user ? {
-        id: profile.user.id,
-        firstName: profile.user.firstName,
-        lastName: profile.user.lastName,
-        phone: profile.user.phone,
-        email: profile.user.email,
-        avatarUrl: profile.user.avatarUrl,
-        createdAt: profile.user.createdAt,
-      } : null,
+      user: profile.user
+        ? {
+            id: profile.user.id,
+            firstName: profile.user.firstName,
+            lastName: profile.user.lastName,
+            phone: profile.user.phone,
+            email: profile.user.email,
+            avatarUrl: profile.user.avatarUrl,
+            createdAt: profile.user.createdAt,
+          }
+        : null,
     };
   }
 
@@ -202,11 +217,17 @@ export class AdminService {
     }
 
     // Check current status
-    if (profile.verificationStatus === VerificationStatus.VERIFIED && decision.status === 'verified') {
+    if (
+      profile.verificationStatus === VerificationStatus.VERIFIED &&
+      decision.status === 'verified'
+    ) {
       throw new BadRequestException('Ce réparateur est déjà vérifié');
     }
 
-    if (profile.verificationStatus === VerificationStatus.REJECTED && decision.status === 'rejected') {
+    if (
+      profile.verificationStatus === VerificationStatus.REJECTED &&
+      decision.status === 'rejected'
+    ) {
       throw new BadRequestException('Ce réparateur est déjà rejeté');
     }
 
@@ -276,7 +297,7 @@ export class AdminService {
     }
 
     if (profile.verificationStatus !== VerificationStatus.SUSPENDED) {
-      throw new BadRequestException('Ce réparateur n\'est pas suspendu');
+      throw new BadRequestException("Ce réparateur n'est pas suspendu");
     }
 
     profile.verificationStatus = VerificationStatus.VERIFIED;
@@ -391,7 +412,12 @@ export class AdminService {
 
     return {
       repairers: {
-        total: repairerStats.pending + repairerStats.underReview + repairerStats.verified + repairerStats.rejected + repairerStats.suspended,
+        total:
+          repairerStats.pending +
+          repairerStats.underReview +
+          repairerStats.verified +
+          repairerStats.rejected +
+          repairerStats.suspended,
         pending: repairerStats.pending,
         verified: repairerStats.verified,
       },
@@ -445,7 +471,7 @@ export class AdminService {
     };
     const sortColumn = sortColumnMap[sort] ?? 'user.createdAt';
     const sortDirection = order.toUpperCase() === 'ASC' ? 'ASC' : 'DESC';
-    queryBuilder.orderBy(sortColumn, sortDirection as 'ASC' | 'DESC');
+    queryBuilder.orderBy(sortColumn, sortDirection);
 
     const total = await queryBuilder.getCount();
     const users = await queryBuilder
@@ -504,11 +530,13 @@ export class AdminService {
       preferredLanguage: user.preferredLanguage,
       createdAt: user.createdAt,
       updatedAt: user.updatedAt,
-      repairerProfile: repairerProfile ? {
-        id: repairerProfile.id,
-        businessName: repairerProfile.businessName,
-        verificationStatus: repairerProfile.verificationStatus,
-      } : null,
+      repairerProfile: repairerProfile
+        ? {
+            id: repairerProfile.id,
+            businessName: repairerProfile.businessName,
+            verificationStatus: repairerProfile.verificationStatus,
+          }
+        : null,
     };
   }
 
@@ -561,7 +589,8 @@ export class AdminService {
       });
       if (profile) {
         profile.verificationStatus = VerificationStatus.SUSPENDED;
-        profile.verificationNotes = reason || 'Compte suspendu par l\'administrateur';
+        profile.verificationNotes =
+          reason || "Compte suspendu par l'administrateur";
         profile.isAvailable = false;
         await this.repairerRepository.save(profile);
       }

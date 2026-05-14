@@ -1,7 +1,9 @@
 import { TypeOrmModuleOptions } from '@nestjs/typeorm';
 import { ConfigService } from '@nestjs/config';
 
-export const getDatabaseConfig = (configService: ConfigService): TypeOrmModuleOptions => {
+export const getDatabaseConfig = (
+  configService: ConfigService,
+): TypeOrmModuleOptions => {
   const nodeEnv = configService.get<string>('nodeEnv');
   const isProd = nodeEnv === 'production';
 

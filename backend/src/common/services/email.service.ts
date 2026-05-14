@@ -25,8 +25,12 @@ class MockEmailProvider implements EmailProvider {
   private readonly logger = new Logger('MockEmailProvider');
 
   async sendEmail(options: EmailOptions): Promise<EmailResult> {
-    this.logger.log(`[MOCK EMAIL] To: ${options.to}, Subject: ${options.subject}`);
-    this.logger.debug(`Content: ${options.text || options.html?.substring(0, 100)}`);
+    this.logger.log(
+      `[MOCK EMAIL] To: ${options.to}, Subject: ${options.subject}`,
+    );
+    this.logger.debug(
+      `Content: ${options.text || options.html?.substring(0, 100)}`,
+    );
     return {
       success: true,
       messageId: `mock-${Date.now()}`,
@@ -63,7 +67,9 @@ class SmtpEmailProvider implements EmailProvider {
       });
       this.logger.log('SMTP transporter initialized');
     } catch {
-      this.logger.error('Nodemailer not installed. Run: npm install nodemailer');
+      this.logger.error(
+        'Nodemailer not installed. Run: npm install nodemailer',
+      );
     }
   }
 
@@ -87,7 +93,8 @@ class SmtpEmailProvider implements EmailProvider {
         messageId: info.messageId,
       };
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      const errorMessage =
+        error instanceof Error ? error.message : 'Unknown error';
       this.logger.error(`SMTP error: ${errorMessage}`);
       return {
         success: false,
@@ -140,7 +147,8 @@ class ResendEmailProvider implements EmailProvider {
 
       return { success: true, messageId: data?.id || `resend-${Date.now()}` };
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      const errorMessage =
+        error instanceof Error ? error.message : 'Unknown error';
       this.logger.error(`Resend network error: ${errorMessage}`);
       return { success: false, error: errorMessage };
     }
@@ -164,7 +172,7 @@ class SendGridEmailProvider implements EmailProvider {
       const response = await fetch(this.baseUrl, {
         method: 'POST',
         headers: {
-          'Authorization': `Bearer ${this.apiKey}`,
+          Authorization: `Bearer ${this.apiKey}`,
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
@@ -181,15 +189,19 @@ class SendGridEmailProvider implements EmailProvider {
 
       if (!response.ok) {
         const errorData = await response.text();
-        throw new Error(`SendGrid API error: ${response.status} - ${errorData}`);
+        throw new Error(
+          `SendGrid API error: ${response.status} - ${errorData}`,
+        );
       }
 
       return {
         success: true,
-        messageId: response.headers.get('x-message-id') || `sendgrid-${Date.now()}`,
+        messageId:
+          response.headers.get('x-message-id') || `sendgrid-${Date.now()}`,
       };
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      const errorMessage =
+        error instanceof Error ? error.message : 'Unknown error';
       this.logger.error(`SendGrid error: ${errorMessage}`);
       return {
         success: false,
@@ -208,12 +220,14 @@ export class EmailService {
 
   constructor(private readonly configService: ConfigService) {
     this.appName = this.configService.get<string>('APP_NAME') || 'RepairFone';
-    this.fromEmail = this.configService.get<string>('EMAIL_FROM') || 'noreply@repairfone.ci';
+    this.fromEmail =
+      this.configService.get<string>('EMAIL_FROM') || 'noreply@repairfone.ci';
     this.initializeProvider();
   }
 
   private initializeProvider(): void {
-    const providerName = this.configService.get<string>('EMAIL_PROVIDER') || 'mock';
+    const providerName =
+      this.configService.get<string>('EMAIL_PROVIDER') || 'mock';
 
     switch (providerName.toLowerCase()) {
       case 'smtp':
@@ -227,7 +241,13 @@ export class EmailService {
           this.logger.warn('SMTP credentials missing, falling back to mock');
           this.provider = new MockEmailProvider();
         } else {
-          this.provider = new SmtpEmailProvider(host, port, user, pass, this.fromEmail);
+          this.provider = new SmtpEmailProvider(
+            host,
+            port,
+            user,
+            pass,
+            this.fromEmail,
+          );
           this.logger.log('Email provider: SMTP initialized');
         }
         break;
@@ -264,7 +284,10 @@ export class EmailService {
 
   // ==================== User Emails ====================
 
-  async sendWelcomeEmail(email: string, firstName: string): Promise<EmailResult> {
+  async sendWelcomeEmail(
+    email: string,
+    firstName: string,
+  ): Promise<EmailResult> {
     return this.sendEmail({
       to: email,
       subject: `Bienvenue sur ${this.appName}!`,
@@ -272,7 +295,10 @@ export class EmailService {
     });
   }
 
-  async sendEmailVerificationEmail(email: string, verifyLink: string): Promise<EmailResult> {
+  async sendEmailVerificationEmail(
+    email: string,
+    verifyLink: string,
+  ): Promise<EmailResult> {
     return this.sendEmail({
       to: email,
       subject: `[${this.appName}] Vérifiez votre adresse email`,
@@ -288,7 +314,10 @@ export class EmailService {
     });
   }
 
-  async sendPasswordResetEmail(email: string, resetLink: string): Promise<EmailResult> {
+  async sendPasswordResetEmail(
+    email: string,
+    resetLink: string,
+  ): Promise<EmailResult> {
     return this.sendEmail({
       to: email,
       subject: `[${this.appName}] Réinitialisation de mot de passe`,
@@ -308,7 +337,12 @@ export class EmailService {
     return this.sendEmail({
       to: clientEmail,
       subject: `[${this.appName}] Nouveau devis reçu`,
-      html: this.getNewQuoteTemplate(clientName, repairerName, amount, deviceInfo),
+      html: this.getNewQuoteTemplate(
+        clientName,
+        repairerName,
+        amount,
+        deviceInfo,
+      ),
     });
   }
 
@@ -337,7 +371,12 @@ export class EmailService {
     return this.sendEmail({
       to: email,
       subject: `[${this.appName}] Confirmation de paiement`,
-      html: this.getPaymentConfirmationTemplate(name, amount, transactionRef, deviceInfo),
+      html: this.getPaymentConfirmationTemplate(
+        name,
+        amount,
+        transactionRef,
+        deviceInfo,
+      ),
     });
   }
 
@@ -362,24 +401,26 @@ export class EmailService {
     status: string,
     deviceInfo: string,
   ): Promise<EmailResult> {
-    const statusMessages: Record<string, { subject: string; message: string }> = {
-      accepted: {
-        subject: 'Demande acceptée',
-        message: 'Votre demande de réparation a été acceptée par le réparateur.',
-      },
-      in_progress: {
-        subject: 'Réparation en cours',
-        message: 'Votre réparation est maintenant en cours.',
-      },
-      completed: {
-        subject: 'Réparation terminée',
-        message: 'Bonne nouvelle! Votre réparation est terminée.',
-      },
-      delivered: {
-        subject: 'Appareil livré',
-        message: 'Votre appareil a été livré avec succès.',
-      },
-    };
+    const statusMessages: Record<string, { subject: string; message: string }> =
+      {
+        accepted: {
+          subject: 'Demande acceptée',
+          message:
+            'Votre demande de réparation a été acceptée par le réparateur.',
+        },
+        in_progress: {
+          subject: 'Réparation en cours',
+          message: 'Votre réparation est maintenant en cours.',
+        },
+        completed: {
+          subject: 'Réparation terminée',
+          message: 'Bonne nouvelle! Votre réparation est terminée.',
+        },
+        delivered: {
+          subject: 'Appareil livré',
+          message: 'Votre appareil a été livré avec succès.',
+        },
+      };
 
     const statusInfo = statusMessages[status] || {
       subject: `Mise à jour de statut`,
@@ -619,7 +660,11 @@ export class EmailService {
     `);
   }
 
-  private getRepairStatusTemplate(name: string, message: string, deviceInfo: string): string {
+  private getRepairStatusTemplate(
+    name: string,
+    message: string,
+    deviceInfo: string,
+  ): string {
     return this.getBaseTemplate(`
       <h2>Mise à jour de votre réparation</h2>
       <p>Bonjour ${name},</p>
@@ -651,7 +696,11 @@ export class EmailService {
     `);
   }
 
-  private getDisputeCreatedTemplate(name: string, disputeId: string, reason: string): string {
+  private getDisputeCreatedTemplate(
+    name: string,
+    disputeId: string,
+    reason: string,
+  ): string {
     return this.getBaseTemplate(`
       <h2>Litige créé</h2>
       <p>Bonjour ${name},</p>

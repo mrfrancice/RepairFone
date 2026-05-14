@@ -42,7 +42,9 @@ export class FirebaseService implements OnModuleInit {
     const privateKey = this.configService.get<string>('FIREBASE_PRIVATE_KEY');
 
     if (!projectId || !clientEmail || !privateKey) {
-      this.logger.warn('Firebase credentials not configured. Phone auth will use fallback OTP system.');
+      this.logger.warn(
+        'Firebase credentials not configured. Phone auth will use fallback OTP system.',
+      );
       return;
     }
 
@@ -64,7 +66,9 @@ export class FirebaseService implements OnModuleInit {
 
       this.logger.log('Firebase Admin SDK initialized successfully');
     } catch (error) {
-      this.logger.error(`Failed to initialize Firebase: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      this.logger.error(
+        `Failed to initialize Firebase: ${error instanceof Error ? error.message : 'Unknown error'}`,
+      );
     }
   }
 
@@ -91,7 +95,9 @@ export class FirebaseService implements OnModuleInit {
         displayName: decodedToken.name,
       };
     } catch (error) {
-      this.logger.error(`Token verification failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      this.logger.error(
+        `Token verification failed: ${error instanceof Error ? error.message : 'Unknown error'}`,
+      );
       return null;
     }
   }
@@ -114,10 +120,12 @@ export class FirebaseService implements OnModuleInit {
       };
     } catch (error) {
       // User not found is expected for new users
-      if ((error as any).code === 'auth/user-not-found') {
+      if (error.code === 'auth/user-not-found') {
         return null;
       }
-      this.logger.error(`Get user by phone failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      this.logger.error(
+        `Get user by phone failed: ${error instanceof Error ? error.message : 'Unknown error'}`,
+      );
       return null;
     }
   }
@@ -125,7 +133,10 @@ export class FirebaseService implements OnModuleInit {
   /**
    * Create a custom token for a user (for backend-initiated auth)
    */
-  async createCustomToken(uid: string, claims?: Record<string, any>): Promise<string | null> {
+  async createCustomToken(
+    uid: string,
+    claims?: Record<string, any>,
+  ): Promise<string | null> {
     if (!this.app) {
       return null;
     }
@@ -133,7 +144,9 @@ export class FirebaseService implements OnModuleInit {
     try {
       return await admin.auth().createCustomToken(uid, claims);
     } catch (error) {
-      this.logger.error(`Create custom token failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      this.logger.error(
+        `Create custom token failed: ${error instanceof Error ? error.message : 'Unknown error'}`,
+      );
       return null;
     }
   }
@@ -150,7 +163,9 @@ export class FirebaseService implements OnModuleInit {
       await admin.auth().revokeRefreshTokens(uid);
       return true;
     } catch (error) {
-      this.logger.error(`Revoke tokens failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      this.logger.error(
+        `Revoke tokens failed: ${error instanceof Error ? error.message : 'Unknown error'}`,
+      );
       return false;
     }
   }
@@ -165,7 +180,9 @@ export class FirebaseService implements OnModuleInit {
     payload: PushNotificationPayload,
   ): Promise<PushNotificationResult> {
     if (!this.app) {
-      this.logger.warn('Firebase not initialized, cannot send push notification');
+      this.logger.warn(
+        'Firebase not initialized, cannot send push notification',
+      );
       return { success: false, error: 'Firebase not initialized' };
     }
 
@@ -183,7 +200,9 @@ export class FirebaseService implements OnModuleInit {
           notification: {
             sound: 'default',
             clickAction: 'FLUTTER_NOTIFICATION_CLICK',
-            ...(payload.badge !== undefined && { notificationCount: payload.badge }),
+            ...(payload.badge !== undefined && {
+              notificationCount: payload.badge,
+            }),
           },
         },
         apns: {
@@ -203,11 +222,14 @@ export class FirebaseService implements OnModuleInit {
       };
 
       await admin.messaging().send(message);
-      this.logger.log(`Push notification sent to token: ${token.substring(0, 20)}...`);
+      this.logger.log(
+        `Push notification sent to token: ${token.substring(0, 20)}...`,
+      );
 
       return { success: true, successCount: 1 };
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      const errorMessage =
+        error instanceof Error ? error.message : 'Unknown error';
       this.logger.error(`Push notification failed: ${errorMessage}`);
       return { success: false, error: errorMessage };
     }
@@ -274,7 +296,8 @@ export class FirebaseService implements OnModuleInit {
         failedTokens: failedTokens.length > 0 ? failedTokens : undefined,
       };
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      const errorMessage =
+        error instanceof Error ? error.message : 'Unknown error';
       this.logger.error(`Multicast push failed: ${errorMessage}`);
       return { success: false, error: errorMessage };
     }
@@ -350,7 +373,8 @@ export class FirebaseService implements OnModuleInit {
 
       return { success: true };
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      const errorMessage =
+        error instanceof Error ? error.message : 'Unknown error';
       this.logger.error(`Topic notification failed: ${errorMessage}`);
       return { success: false, error: errorMessage };
     }
@@ -460,7 +484,10 @@ export class FirebaseService implements OnModuleInit {
   ): Promise<PushNotificationResult> {
     return this.sendPushNotification(token, {
       title: senderName,
-      body: messagePreview.length > 100 ? messagePreview.substring(0, 97) + '...' : messagePreview,
+      body:
+        messagePreview.length > 100
+          ? messagePreview.substring(0, 97) + '...'
+          : messagePreview,
       data: {
         type: 'new_message',
         conversationId,
@@ -500,14 +527,17 @@ export class FirebaseService implements OnModuleInit {
     message?: string,
   ): Promise<PushNotificationResult> {
     const statusMessages: Record<string, string> = {
-      investigating: 'Votre litige est en cours d\'investigation',
+      investigating: "Votre litige est en cours d'investigation",
       resolved: 'Votre litige a été résolu',
       closed: 'Le litige a été clôturé',
     };
 
     return this.sendPushNotification(token, {
       title: 'Mise à jour du litige',
-      body: message || statusMessages[disputeStatus] || 'Mise à jour de votre litige',
+      body:
+        message ||
+        statusMessages[disputeStatus] ||
+        'Mise à jour de votre litige',
       data: {
         type: 'dispute_update',
         disputeId,

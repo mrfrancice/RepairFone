@@ -23,7 +23,9 @@ export class LocationsController {
    */
   @Public()
   @Get('cities/:cityId/communes')
-  async getCommunesByCity(@Param('cityId') cityId: string): Promise<Location[]> {
+  async getCommunesByCity(
+    @Param('cityId') cityId: string,
+  ): Promise<Location[]> {
     return this.locationsService.getCommunesByCity(cityId);
   }
 
@@ -33,7 +35,9 @@ export class LocationsController {
    */
   @Public()
   @Get('communes')
-  async getCommunesByCityName(@Query('city') cityName: string): Promise<Location[]> {
+  async getCommunesByCityName(
+    @Query('city') cityName: string,
+  ): Promise<Location[]> {
     return this.locationsService.getCommunesByCityName(cityName);
   }
 
@@ -43,7 +47,9 @@ export class LocationsController {
    */
   @Public()
   @Get('communes/:communeId/quarters')
-  async getQuartersByCommune(@Param('communeId') communeId: string): Promise<Location[]> {
+  async getQuartersByCommune(
+    @Param('communeId') communeId: string,
+  ): Promise<Location[]> {
     return this.locationsService.getQuartersByCommune(communeId);
   }
 
@@ -57,7 +63,10 @@ export class LocationsController {
     @Query('commune') communeName: string,
     @Query('city') cityName?: string,
   ): Promise<Location[]> {
-    return this.locationsService.getQuartersByCommuneName(communeName, cityName);
+    return this.locationsService.getQuartersByCommuneName(
+      communeName,
+      cityName,
+    );
   }
 
   /**

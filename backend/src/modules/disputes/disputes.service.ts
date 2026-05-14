@@ -1,13 +1,33 @@
-import { Injectable, NotFoundException, ForbiddenException, BadRequestException } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  ForbiddenException,
+  BadRequestException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, FindOptionsWhere } from 'typeorm';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { IsOptional, IsEnum, IsInt, Min, Max } from 'class-validator';
 import { Type } from 'class-transformer';
-import { Dispute, DisputeReason, DisputeStatus, DisputeResolution } from './entities/dispute.entity';
-import { DisputeCreatedEvent, DisputeResolvedEvent, EventNames } from '../../common/events';
-import { DisputeMessage, DisputeMessageSenderType } from './entities/dispute-message.entity';
-import { RepairRequest, RequestStatus } from '../requests/entities/repair-request.entity';
+import {
+  Dispute,
+  DisputeReason,
+  DisputeStatus,
+  DisputeResolution,
+} from './entities/dispute.entity';
+import {
+  DisputeCreatedEvent,
+  DisputeResolvedEvent,
+  EventNames,
+} from '../../common/events';
+import {
+  DisputeMessage,
+  DisputeMessageSenderType,
+} from './entities/dispute-message.entity';
+import {
+  RepairRequest,
+  RequestStatus,
+} from '../requests/entities/repair-request.entity';
 import { RepairerProfile } from '../users/entities/repairer-profile.entity';
 import { UserRole } from '../users/entities/user.entity';
 
@@ -72,7 +92,9 @@ export class DisputesService {
     }
 
     if (request.clientId !== clientId) {
-      throw new ForbiddenException('Vous ne pouvez pas créer un litige pour cette demande');
+      throw new ForbiddenException(
+        'Vous ne pouvez pas créer un litige pour cette demande',
+      );
     }
 
     // Check if dispute already exists
@@ -87,14 +109,14 @@ export class DisputesService {
     // BIZ-103: Vérifier qu'un réparateur est assigné avant de créer le litige
     if (!request.repairerId) {
       throw new BadRequestException(
-        'Impossible de créer un litige: aucun réparateur n\'est assigné à cette demande'
+        "Impossible de créer un litige: aucun réparateur n'est assigné à cette demande",
       );
     }
 
     const dispute = this.disputeRepo.create({
       requestId: dto.requestId,
       clientId,
-      repairerId: request.repairerId!,
+      repairerId: request.repairerId,
       reason: dto.reason,
       description: dto.description,
       evidencePhotos: dto.evidencePhotos || [],
@@ -108,7 +130,7 @@ export class DisputesService {
       savedDispute.id,
       dto.requestId,
       clientId,
-      request.repairerId!,
+      request.repairerId,
       dto.reason,
       dto.description,
     );
@@ -117,10 +139,23 @@ export class DisputesService {
     return this.findOne(savedDispute.id, clientId, UserRole.CLIENT);
   }
 
-  async findOne(id: string, userId: string, userRole: UserRole): Promise<Dispute> {
+  async findOne(
+    id: string,
+    userId: string,
+    userRole: UserRole,
+  ): Promise<Dispute> {
     const dispute = await this.disputeRepo.findOne({
       where: { id },
-      relations: ['client', 'repairer', 'repairer.user', 'request', 'request.device', 'request.serviceType', 'messages', 'messages.sender'],
+      relations: [
+        'client',
+        'repairer',
+        'repairer.user',
+        'request',
+        'request.device',
+        'request.serviceType',
+        'messages',
+        'messages.sender',
+      ],
     });
 
     if (!dispute) {
@@ -143,7 +178,11 @@ export class DisputesService {
     });
   }
 
-  async findByUser(userId: string, userRole: UserRole, filters: DisputeFilters): Promise<{ data: Dispute[]; total: number }> {
+  async findByUser(
+    userId: string,
+    userRole: UserRole,
+    filters: DisputeFilters,
+  ): Promise<{ data: Dispute[]; total: number }> {
     const page = filters.page || 1;
     const limit = filters.limit || 20;
     const skip = (page - 1) * limit;
@@ -168,7 +207,14 @@ export class DisputesService {
 
     const [data, total] = await this.disputeRepo.findAndCount({
       where,
-      relations: ['client', 'repairer', 'repairer.user', 'request', 'request.device', 'request.serviceType'],
+      relations: [
+        'client',
+        'repairer',
+        'repairer.user',
+        'request',
+        'request.device',
+        'request.serviceType',
+      ],
       order: { createdAt: 'DESC' },
       skip,
       take: limit,
@@ -227,7 +273,11 @@ export class DisputesService {
       resolvedAt: 'dispute.resolvedAt',
     };
     const sortColumn = sortColumnMap[sort] ?? 'dispute.createdAt';
-    qb.orderBy(sortColumn, order.toUpperCase() === 'ASC' ? 'ASC' : 'DESC', 'NULLS LAST');
+    qb.orderBy(
+      sortColumn,
+      order.toUpperCase() === 'ASC' ? 'ASC' : 'DESC',
+      'NULLS LAST',
+    );
     qb.skip((page - 1) * limit).take(limit);
 
     const [data, total] = await qb.getManyAndCount();
@@ -252,7 +302,8 @@ export class DisputesService {
       paymentId: input.paymentId,
       reason: DisputeReason.OTHER,
       status: DisputeStatus.OPEN,
-      description: '[DEBUG] Litige généré pour tester les flows de modération admin.',
+      description:
+        '[DEBUG] Litige généré pour tester les flows de modération admin.',
       evidencePhotos: [],
     });
     return this.disputeRepo.save(dispute);
@@ -316,12 +367,18 @@ export class DisputesService {
     return {
       total,
       byStatus,
-      avgResolutionDays: resolutionRow?.avgDays != null ? Number(resolutionRow.avgDays) : null,
+      avgResolutionDays:
+        resolutionRow?.avgDays != null ? Number(resolutionRow.avgDays) : null,
       totalRefundedAmount: Number(refundRow?.total ?? 0),
     };
   }
 
-  async addMessage(disputeId: string, userId: string, userRole: UserRole, dto: AddMessageDto): Promise<DisputeMessage> {
+  async addMessage(
+    disputeId: string,
+    userId: string,
+    userRole: UserRole,
+    dto: AddMessageDto,
+  ): Promise<DisputeMessage> {
     const dispute = await this.findOne(disputeId, userId, userRole);
 
     let senderType: DisputeMessageSenderType;
@@ -344,7 +401,11 @@ export class DisputesService {
     return this.messageRepo.save(message);
   }
 
-  async addEvidence(disputeId: string, clientId: string, photos: string[]): Promise<Dispute> {
+  async addEvidence(
+    disputeId: string,
+    clientId: string,
+    photos: string[],
+  ): Promise<Dispute> {
     const dispute = await this.disputeRepo.findOne({
       where: { id: disputeId },
     });
@@ -354,7 +415,9 @@ export class DisputesService {
     }
 
     if (dispute.clientId !== clientId) {
-      throw new ForbiddenException('Vous ne pouvez pas ajouter des preuves à ce litige');
+      throw new ForbiddenException(
+        'Vous ne pouvez pas ajouter des preuves à ce litige',
+      );
     }
 
     dispute.evidencePhotos = [...dispute.evidencePhotos, ...photos];
@@ -386,7 +449,11 @@ export class DisputesService {
     return this.findOne(disputeId, clientId, UserRole.CLIENT);
   }
 
-  async resolve(disputeId: string, adminId: string, dto: ResolveDisputeDto): Promise<Dispute> {
+  async resolve(
+    disputeId: string,
+    adminId: string,
+    dto: ResolveDisputeDto,
+  ): Promise<Dispute> {
     const dispute = await this.disputeRepo.findOne({
       where: { id: disputeId },
     });
@@ -395,7 +462,10 @@ export class DisputesService {
       throw new NotFoundException('Litige non trouvé');
     }
 
-    if (dispute.status === DisputeStatus.RESOLVED || dispute.status === DisputeStatus.CLOSED) {
+    if (
+      dispute.status === DisputeStatus.RESOLVED ||
+      dispute.status === DisputeStatus.CLOSED
+    ) {
       throw new BadRequestException('Ce litige est déjà résolu');
     }
 
@@ -441,7 +511,11 @@ export class DisputesService {
     return this.findOne(disputeId, adminId, UserRole.ADMIN);
   }
 
-  private async hasDisputeAccess(dispute: Dispute, userId: string, userRole: UserRole): Promise<boolean> {
+  private async hasDisputeAccess(
+    dispute: Dispute,
+    userId: string,
+    userRole: UserRole,
+  ): Promise<boolean> {
     if (userRole === UserRole.ADMIN) {
       return true;
     }

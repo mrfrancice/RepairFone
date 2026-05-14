@@ -22,4 +22,4 @@ export const EventNames = {
   DISPUTE_RESOLVED: 'dispute.resolved',
 } as const;
 
-export type EventName = typeof EventNames[keyof typeof EventNames];
+export type EventName = (typeof EventNames)[keyof typeof EventNames];

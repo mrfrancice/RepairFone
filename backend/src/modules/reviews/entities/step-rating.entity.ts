@@ -1,11 +1,4 @@
-import {
-  Entity,
-  Column,
-  ManyToOne,
-  JoinColumn,
-  Index,
-  Unique,
-} from 'typeorm';
+import { Entity, Column, ManyToOne, JoinColumn, Index, Unique } from 'typeorm';
 import { BaseEntity } from '../../../common/entities/base.entity';
 import { User } from '../../users/entities/user.entity';
 import { RepairerProfile } from '../../users/entities/repairer-profile.entity';
@@ -15,21 +8,21 @@ import { RepairRequest } from '../../requests/entities/repair-request.entity';
  * Étapes où le client peut noter le réparateur
  */
 export enum RatingStep {
-  QUOTE_ACCEPTED = 'quote_accepted',     // Après acceptation du devis
-  IN_PROGRESS = 'in_progress',           // Pendant la réparation
-  COMPLETED = 'completed',               // Après completion de la réparation
-  DELIVERED = 'delivered',               // Après livraison
+  QUOTE_ACCEPTED = 'quote_accepted', // Après acceptation du devis
+  IN_PROGRESS = 'in_progress', // Pendant la réparation
+  COMPLETED = 'completed', // Après completion de la réparation
+  DELIVERED = 'delivered', // Après livraison
 }
 
 /**
  * Catégories de notation
  */
 export enum RatingCategory {
-  COMMUNICATION = 'communication',       // Communication avec le réparateur
-  QUALITY = 'quality',                   // Qualité du travail
-  TIMELINESS = 'timeliness',             // Respect des délais
-  PRICE = 'price',                       // Rapport qualité/prix
-  OVERALL = 'overall',                   // Note globale
+  COMMUNICATION = 'communication', // Communication avec le réparateur
+  QUALITY = 'quality', // Qualité du travail
+  TIMELINESS = 'timeliness', // Respect des délais
+  PRICE = 'price', // Rapport qualité/prix
+  OVERALL = 'overall', // Note globale
 }
 
 @Entity('step_ratings')

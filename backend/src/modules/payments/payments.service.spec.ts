@@ -88,7 +88,11 @@ describe('PaymentsService', () => {
       } as Payment;
       paymentRepo.findOne.mockResolvedValue(payment);
 
-      const result = await service.findOne('payment-1', 'client-1', UserRole.CLIENT);
+      const result = await service.findOne(
+        'payment-1',
+        'client-1',
+        UserRole.CLIENT,
+      );
       expect(result).toBe(payment);
     });
   });

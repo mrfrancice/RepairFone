@@ -1,4 +1,11 @@
-import { IsString, IsNumber, IsOptional, IsInt, IsNotEmpty, Min } from 'class-validator';
+import {
+  IsString,
+  IsNumber,
+  IsOptional,
+  IsInt,
+  IsNotEmpty,
+  Min,
+} from 'class-validator';
 
 export class CreateQuotePartDto {
   @IsString()

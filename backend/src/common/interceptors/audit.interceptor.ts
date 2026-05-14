@@ -57,10 +57,16 @@ export class AuditInterceptor implements NestInterceptor {
         next: async (responseData) => {
           try {
             // Resolve the request-scoped AuditService
-            const auditService = await this.moduleRef.resolve(AuditService, contextId, { strict: false });
+            const auditService = await this.moduleRef.resolve(
+              AuditService,
+              contextId,
+              { strict: false },
+            );
 
             if (!auditService) {
-              this.logger.warn('AuditService not available, skipping audit log');
+              this.logger.warn(
+                'AuditService not available, skipping audit log',
+              );
               return;
             }
 
@@ -152,7 +158,7 @@ export class AuditInterceptor implements NestInterceptor {
     // Handle kebab-case
     const words = singular.split('-');
     return words
-      .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+      .map((word) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
       .join('');
   }
 
@@ -176,7 +182,8 @@ export class AuditInterceptor implements NestInterceptor {
   }
 
   private isUuid(value: string): boolean {
-    const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+    const uuidRegex =
+      /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
     return uuidRegex.test(value);
   }
 
@@ -217,9 +224,17 @@ export class AuditInterceptor implements NestInterceptor {
     const sanitized: Record<string, any> = {};
 
     for (const [key, value] of Object.entries(body)) {
-      if (sensitiveFields.some(field => key.toLowerCase().includes(field.toLowerCase()))) {
+      if (
+        sensitiveFields.some((field) =>
+          key.toLowerCase().includes(field.toLowerCase()),
+        )
+      ) {
         sanitized[key] = '[REDACTED]';
-      } else if (typeof value === 'object' && value !== null && !Array.isArray(value)) {
+      } else if (
+        typeof value === 'object' &&
+        value !== null &&
+        !Array.isArray(value)
+      ) {
         sanitized[key] = this.sanitizeBody(value);
       } else {
         sanitized[key] = value;

@@ -15,17 +15,7 @@ import { UsersModule } from '../../modules/users/users.module';
     forwardRef(() => NotificationsModule),
     forwardRef(() => UsersModule),
   ],
-  providers: [
-    QuoteListener,
-    PaymentListener,
-    RequestListener,
-    ReviewListener,
-  ],
-  exports: [
-    QuoteListener,
-    PaymentListener,
-    RequestListener,
-    ReviewListener,
-  ],
+  providers: [QuoteListener, PaymentListener, RequestListener, ReviewListener],
+  exports: [QuoteListener, PaymentListener, RequestListener, ReviewListener],
 })
 export class ListenersModule {}

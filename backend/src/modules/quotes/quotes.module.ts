@@ -8,9 +8,7 @@ import { RepairRequest } from '../requests/entities/repair-request.entity';
 import { RepairerProfile } from '../users/entities/repairer-profile.entity';
 
 @Module({
-  imports: [
-    TypeOrmModule.forFeature([Quote, RepairRequest, RepairerProfile]),
-  ],
+  imports: [TypeOrmModule.forFeature([Quote, RepairRequest, RepairerProfile])],
   controllers: [QuotesController],
   providers: [QuotesService, QuotesScheduler],
   exports: [QuotesService],

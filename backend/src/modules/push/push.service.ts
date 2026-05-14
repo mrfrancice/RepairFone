@@ -38,10 +38,13 @@ export class PushService implements OnModuleInit {
   onModuleInit(): void {
     const publicKey = this.config.get<string>('VAPID_PUBLIC_KEY');
     const privateKey = this.config.get<string>('VAPID_PRIVATE_KEY');
-    const subject = this.config.get<string>('VAPID_SUBJECT') || 'mailto:admin@repairfone.ci';
+    const subject =
+      this.config.get<string>('VAPID_SUBJECT') || 'mailto:admin@repairfone.ci';
 
     if (!publicKey || !privateKey) {
-      this.logger.warn('Web Push désactivé (VAPID_PUBLIC_KEY / VAPID_PRIVATE_KEY manquants)');
+      this.logger.warn(
+        'Web Push désactivé (VAPID_PUBLIC_KEY / VAPID_PRIVATE_KEY manquants)',
+      );
       return;
     }
 
@@ -64,7 +67,9 @@ export class PushService implements OnModuleInit {
     subscription: { endpoint: string; keys: { p256dh: string; auth: string } },
     userAgent?: string,
   ): Promise<PushSubscription> {
-    const existing = await this.subRepo.findOne({ where: { endpoint: subscription.endpoint } });
+    const existing = await this.subRepo.findOne({
+      where: { endpoint: subscription.endpoint },
+    });
     if (existing) {
       existing.userId = userId;
       existing.p256dh = subscription.keys.p256dh;
@@ -91,7 +96,10 @@ export class PushService implements OnModuleInit {
    * Envoie un push à tous les abonnements actifs d'un user.
    * Les abonnements expirés (410 Gone) sont automatiquement supprimés.
    */
-  async sendToUser(userId: string, payload: PushPayload): Promise<{ sent: number; failed: number }> {
+  async sendToUser(
+    userId: string,
+    payload: PushPayload,
+  ): Promise<{ sent: number; failed: number }> {
     if (!this.enabled) return { sent: 0, failed: 0 };
 
     const subs = await this.subRepo.find({ where: { userId } });
@@ -115,7 +123,9 @@ export class PushService implements OnModuleInit {
           failed++;
           // 410 Gone / 404 Not Found = abonnement périmé → cleanup
           if (err?.statusCode === 410 || err?.statusCode === 404) {
-            this.logger.debug(`Abonnement périmé supprimé: ${sub.endpoint.slice(-30)}`);
+            this.logger.debug(
+              `Abonnement périmé supprimé: ${sub.endpoint.slice(-30)}`,
+            );
             await this.subRepo.delete({ id: sub.id });
           } else {
             this.logger.error(

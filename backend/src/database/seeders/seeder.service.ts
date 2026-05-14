@@ -2,11 +2,25 @@ import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import * as bcrypt from 'bcrypt';
-import { User, UserRole, UserStatus } from '../../modules/users/entities/user.entity';
-import { RepairerProfile, VerificationStatus } from '../../modules/users/entities/repairer-profile.entity';
-import { Device, DeviceCategory } from '../../modules/devices/entities/device.entity';
+import {
+  User,
+  UserRole,
+  UserStatus,
+} from '../../modules/users/entities/user.entity';
+import {
+  RepairerProfile,
+  VerificationStatus,
+} from '../../modules/users/entities/repairer-profile.entity';
+import {
+  Device,
+  DeviceCategory,
+} from '../../modules/devices/entities/device.entity';
 import { ServiceType } from '../../modules/devices/entities/service-type.entity';
-import { Expert, ConseilType, ConseilFormat } from '../../modules/conseils/entities/expert.entity';
+import {
+  Expert,
+  ConseilType,
+  ConseilFormat,
+} from '../../modules/conseils/entities/expert.entity';
 
 @Injectable()
 export class SeederService implements OnModuleInit {
@@ -98,11 +112,12 @@ export class SeederService implements OnModuleInit {
         },
         profile: {
           businessName: 'Tech Repair Pro',
-          description: 'Expert en réparation iPhone et Samsung depuis 8 ans. Spécialiste micro-soudure.',
+          description:
+            'Expert en réparation iPhone et Samsung depuis 8 ans. Spécialiste micro-soudure.',
           address: 'Cocody Angré, Abidjan',
           city: 'Abidjan',
           commune: 'Cocody',
-          latitude: 5.3600,
+          latitude: 5.36,
           longitude: -4.0083,
           ratingAvg: 0,
           ratingCount: 0,
@@ -121,12 +136,13 @@ export class SeederService implements OnModuleInit {
         },
         profile: {
           businessName: 'Mobile Fix CI',
-          description: 'Réparation tous smartphones et tablettes. Service rapide et garanti.',
+          description:
+            'Réparation tous smartphones et tablettes. Service rapide et garanti.',
           address: 'Marcory Zone 4, Abidjan',
           city: 'Abidjan',
           commune: 'Marcory',
-          latitude: 5.3450,
-          longitude: -4.0200,
+          latitude: 5.345,
+          longitude: -4.02,
           ratingAvg: 0,
           ratingCount: 0,
           totalRepairs: 156,
@@ -148,8 +164,8 @@ export class SeederService implements OnModuleInit {
           address: 'Plateau Centre, Abidjan',
           city: 'Abidjan',
           commune: 'Plateau',
-          latitude: 5.3550,
-          longitude: -4.0100,
+          latitude: 5.355,
+          longitude: -4.01,
           ratingAvg: 0,
           ratingCount: 0,
           totalRepairs: 312,
@@ -167,12 +183,13 @@ export class SeederService implements OnModuleInit {
         },
         profile: {
           businessName: 'PC Clinic Abidjan',
-          description: 'Spécialiste ordinateurs portables et fixes. Récupération de données.',
+          description:
+            'Spécialiste ordinateurs portables et fixes. Récupération de données.',
           address: 'Riviera Palmeraie, Abidjan',
           city: 'Abidjan',
           commune: 'Cocody',
-          latitude: 5.3700,
-          longitude: -4.0050,
+          latitude: 5.37,
+          longitude: -4.005,
           ratingAvg: 0,
           ratingCount: 0,
           totalRepairs: 189,
@@ -226,81 +243,366 @@ export class SeederService implements OnModuleInit {
 
     const devices = [
       // Smartphones - Apple
-      { brand: 'Apple', model: 'iPhone 15 Pro Max', category: DeviceCategory.SMARTPHONE, releaseYear: 2023 },
-      { brand: 'Apple', model: 'iPhone 15 Pro', category: DeviceCategory.SMARTPHONE, releaseYear: 2023 },
-      { brand: 'Apple', model: 'iPhone 15', category: DeviceCategory.SMARTPHONE, releaseYear: 2023 },
-      { brand: 'Apple', model: 'iPhone 14 Pro Max', category: DeviceCategory.SMARTPHONE, releaseYear: 2022 },
-      { brand: 'Apple', model: 'iPhone 14 Pro', category: DeviceCategory.SMARTPHONE, releaseYear: 2022 },
-      { brand: 'Apple', model: 'iPhone 14', category: DeviceCategory.SMARTPHONE, releaseYear: 2022 },
-      { brand: 'Apple', model: 'iPhone 13 Pro', category: DeviceCategory.SMARTPHONE, releaseYear: 2021 },
-      { brand: 'Apple', model: 'iPhone 13', category: DeviceCategory.SMARTPHONE, releaseYear: 2021 },
-      { brand: 'Apple', model: 'iPhone 12', category: DeviceCategory.SMARTPHONE, releaseYear: 2020 },
-      { brand: 'Apple', model: 'iPhone 11', category: DeviceCategory.SMARTPHONE, releaseYear: 2019 },
-      { brand: 'Apple', model: 'iPhone SE (2022)', category: DeviceCategory.SMARTPHONE, releaseYear: 2022 },
+      {
+        brand: 'Apple',
+        model: 'iPhone 15 Pro Max',
+        category: DeviceCategory.SMARTPHONE,
+        releaseYear: 2023,
+      },
+      {
+        brand: 'Apple',
+        model: 'iPhone 15 Pro',
+        category: DeviceCategory.SMARTPHONE,
+        releaseYear: 2023,
+      },
+      {
+        brand: 'Apple',
+        model: 'iPhone 15',
+        category: DeviceCategory.SMARTPHONE,
+        releaseYear: 2023,
+      },
+      {
+        brand: 'Apple',
+        model: 'iPhone 14 Pro Max',
+        category: DeviceCategory.SMARTPHONE,
+        releaseYear: 2022,
+      },
+      {
+        brand: 'Apple',
+        model: 'iPhone 14 Pro',
+        category: DeviceCategory.SMARTPHONE,
+        releaseYear: 2022,
+      },
+      {
+        brand: 'Apple',
+        model: 'iPhone 14',
+        category: DeviceCategory.SMARTPHONE,
+        releaseYear: 2022,
+      },
+      {
+        brand: 'Apple',
+        model: 'iPhone 13 Pro',
+        category: DeviceCategory.SMARTPHONE,
+        releaseYear: 2021,
+      },
+      {
+        brand: 'Apple',
+        model: 'iPhone 13',
+        category: DeviceCategory.SMARTPHONE,
+        releaseYear: 2021,
+      },
+      {
+        brand: 'Apple',
+        model: 'iPhone 12',
+        category: DeviceCategory.SMARTPHONE,
+        releaseYear: 2020,
+      },
+      {
+        brand: 'Apple',
+        model: 'iPhone 11',
+        category: DeviceCategory.SMARTPHONE,
+        releaseYear: 2019,
+      },
+      {
+        brand: 'Apple',
+        model: 'iPhone SE (2022)',
+        category: DeviceCategory.SMARTPHONE,
+        releaseYear: 2022,
+      },
 
       // Smartphones - Samsung
-      { brand: 'Samsung', model: 'Galaxy S24 Ultra', category: DeviceCategory.SMARTPHONE, releaseYear: 2024 },
-      { brand: 'Samsung', model: 'Galaxy S24+', category: DeviceCategory.SMARTPHONE, releaseYear: 2024 },
-      { brand: 'Samsung', model: 'Galaxy S24', category: DeviceCategory.SMARTPHONE, releaseYear: 2024 },
-      { brand: 'Samsung', model: 'Galaxy S23 Ultra', category: DeviceCategory.SMARTPHONE, releaseYear: 2023 },
-      { brand: 'Samsung', model: 'Galaxy S23', category: DeviceCategory.SMARTPHONE, releaseYear: 2023 },
-      { brand: 'Samsung', model: 'Galaxy A54', category: DeviceCategory.SMARTPHONE, releaseYear: 2023 },
-      { brand: 'Samsung', model: 'Galaxy A34', category: DeviceCategory.SMARTPHONE, releaseYear: 2023 },
-      { brand: 'Samsung', model: 'Galaxy A14', category: DeviceCategory.SMARTPHONE, releaseYear: 2023 },
-      { brand: 'Samsung', model: 'Galaxy Z Fold 5', category: DeviceCategory.SMARTPHONE, releaseYear: 2023 },
-      { brand: 'Samsung', model: 'Galaxy Z Flip 5', category: DeviceCategory.SMARTPHONE, releaseYear: 2023 },
+      {
+        brand: 'Samsung',
+        model: 'Galaxy S24 Ultra',
+        category: DeviceCategory.SMARTPHONE,
+        releaseYear: 2024,
+      },
+      {
+        brand: 'Samsung',
+        model: 'Galaxy S24+',
+        category: DeviceCategory.SMARTPHONE,
+        releaseYear: 2024,
+      },
+      {
+        brand: 'Samsung',
+        model: 'Galaxy S24',
+        category: DeviceCategory.SMARTPHONE,
+        releaseYear: 2024,
+      },
+      {
+        brand: 'Samsung',
+        model: 'Galaxy S23 Ultra',
+        category: DeviceCategory.SMARTPHONE,
+        releaseYear: 2023,
+      },
+      {
+        brand: 'Samsung',
+        model: 'Galaxy S23',
+        category: DeviceCategory.SMARTPHONE,
+        releaseYear: 2023,
+      },
+      {
+        brand: 'Samsung',
+        model: 'Galaxy A54',
+        category: DeviceCategory.SMARTPHONE,
+        releaseYear: 2023,
+      },
+      {
+        brand: 'Samsung',
+        model: 'Galaxy A34',
+        category: DeviceCategory.SMARTPHONE,
+        releaseYear: 2023,
+      },
+      {
+        brand: 'Samsung',
+        model: 'Galaxy A14',
+        category: DeviceCategory.SMARTPHONE,
+        releaseYear: 2023,
+      },
+      {
+        brand: 'Samsung',
+        model: 'Galaxy Z Fold 5',
+        category: DeviceCategory.SMARTPHONE,
+        releaseYear: 2023,
+      },
+      {
+        brand: 'Samsung',
+        model: 'Galaxy Z Flip 5',
+        category: DeviceCategory.SMARTPHONE,
+        releaseYear: 2023,
+      },
 
       // Smartphones - Xiaomi
-      { brand: 'Xiaomi', model: '14 Pro', category: DeviceCategory.SMARTPHONE, releaseYear: 2024 },
-      { brand: 'Xiaomi', model: '14', category: DeviceCategory.SMARTPHONE, releaseYear: 2024 },
-      { brand: 'Xiaomi', model: 'Redmi Note 13 Pro', category: DeviceCategory.SMARTPHONE, releaseYear: 2024 },
-      { brand: 'Xiaomi', model: 'Redmi Note 13', category: DeviceCategory.SMARTPHONE, releaseYear: 2024 },
-      { brand: 'Xiaomi', model: 'Redmi 13', category: DeviceCategory.SMARTPHONE, releaseYear: 2024 },
+      {
+        brand: 'Xiaomi',
+        model: '14 Pro',
+        category: DeviceCategory.SMARTPHONE,
+        releaseYear: 2024,
+      },
+      {
+        brand: 'Xiaomi',
+        model: '14',
+        category: DeviceCategory.SMARTPHONE,
+        releaseYear: 2024,
+      },
+      {
+        brand: 'Xiaomi',
+        model: 'Redmi Note 13 Pro',
+        category: DeviceCategory.SMARTPHONE,
+        releaseYear: 2024,
+      },
+      {
+        brand: 'Xiaomi',
+        model: 'Redmi Note 13',
+        category: DeviceCategory.SMARTPHONE,
+        releaseYear: 2024,
+      },
+      {
+        brand: 'Xiaomi',
+        model: 'Redmi 13',
+        category: DeviceCategory.SMARTPHONE,
+        releaseYear: 2024,
+      },
 
       // Smartphones - Huawei
-      { brand: 'Huawei', model: 'P60 Pro', category: DeviceCategory.SMARTPHONE, releaseYear: 2023 },
-      { brand: 'Huawei', model: 'Mate 60 Pro', category: DeviceCategory.SMARTPHONE, releaseYear: 2023 },
-      { brand: 'Huawei', model: 'Nova 11', category: DeviceCategory.SMARTPHONE, releaseYear: 2023 },
+      {
+        brand: 'Huawei',
+        model: 'P60 Pro',
+        category: DeviceCategory.SMARTPHONE,
+        releaseYear: 2023,
+      },
+      {
+        brand: 'Huawei',
+        model: 'Mate 60 Pro',
+        category: DeviceCategory.SMARTPHONE,
+        releaseYear: 2023,
+      },
+      {
+        brand: 'Huawei',
+        model: 'Nova 11',
+        category: DeviceCategory.SMARTPHONE,
+        releaseYear: 2023,
+      },
 
       // Smartphones - Tecno & Infinix (populaires en Afrique)
-      { brand: 'Tecno', model: 'Camon 20 Pro', category: DeviceCategory.SMARTPHONE, releaseYear: 2023 },
-      { brand: 'Tecno', model: 'Camon 20', category: DeviceCategory.SMARTPHONE, releaseYear: 2023 },
-      { brand: 'Tecno', model: 'Spark 10 Pro', category: DeviceCategory.SMARTPHONE, releaseYear: 2023 },
-      { brand: 'Tecno', model: 'Spark 10', category: DeviceCategory.SMARTPHONE, releaseYear: 2023 },
-      { brand: 'Tecno', model: 'Pop 7 Pro', category: DeviceCategory.SMARTPHONE, releaseYear: 2023 },
-      { brand: 'Infinix', model: 'Note 30 Pro', category: DeviceCategory.SMARTPHONE, releaseYear: 2023 },
-      { brand: 'Infinix', model: 'Note 30', category: DeviceCategory.SMARTPHONE, releaseYear: 2023 },
-      { brand: 'Infinix', model: 'Hot 30', category: DeviceCategory.SMARTPHONE, releaseYear: 2023 },
-      { brand: 'Infinix', model: 'Smart 7', category: DeviceCategory.SMARTPHONE, releaseYear: 2023 },
+      {
+        brand: 'Tecno',
+        model: 'Camon 20 Pro',
+        category: DeviceCategory.SMARTPHONE,
+        releaseYear: 2023,
+      },
+      {
+        brand: 'Tecno',
+        model: 'Camon 20',
+        category: DeviceCategory.SMARTPHONE,
+        releaseYear: 2023,
+      },
+      {
+        brand: 'Tecno',
+        model: 'Spark 10 Pro',
+        category: DeviceCategory.SMARTPHONE,
+        releaseYear: 2023,
+      },
+      {
+        brand: 'Tecno',
+        model: 'Spark 10',
+        category: DeviceCategory.SMARTPHONE,
+        releaseYear: 2023,
+      },
+      {
+        brand: 'Tecno',
+        model: 'Pop 7 Pro',
+        category: DeviceCategory.SMARTPHONE,
+        releaseYear: 2023,
+      },
+      {
+        brand: 'Infinix',
+        model: 'Note 30 Pro',
+        category: DeviceCategory.SMARTPHONE,
+        releaseYear: 2023,
+      },
+      {
+        brand: 'Infinix',
+        model: 'Note 30',
+        category: DeviceCategory.SMARTPHONE,
+        releaseYear: 2023,
+      },
+      {
+        brand: 'Infinix',
+        model: 'Hot 30',
+        category: DeviceCategory.SMARTPHONE,
+        releaseYear: 2023,
+      },
+      {
+        brand: 'Infinix',
+        model: 'Smart 7',
+        category: DeviceCategory.SMARTPHONE,
+        releaseYear: 2023,
+      },
 
       // Computers/Laptops - HP
-      { brand: 'HP', model: 'Pavilion 15', category: DeviceCategory.COMPUTER, releaseYear: 2023 },
-      { brand: 'HP', model: 'EliteBook 840 G9', category: DeviceCategory.COMPUTER, releaseYear: 2023 },
-      { brand: 'HP', model: 'ProBook 450 G9', category: DeviceCategory.COMPUTER, releaseYear: 2023 },
-      { brand: 'HP', model: 'Victus 16', category: DeviceCategory.COMPUTER, releaseYear: 2023 },
+      {
+        brand: 'HP',
+        model: 'Pavilion 15',
+        category: DeviceCategory.COMPUTER,
+        releaseYear: 2023,
+      },
+      {
+        brand: 'HP',
+        model: 'EliteBook 840 G9',
+        category: DeviceCategory.COMPUTER,
+        releaseYear: 2023,
+      },
+      {
+        brand: 'HP',
+        model: 'ProBook 450 G9',
+        category: DeviceCategory.COMPUTER,
+        releaseYear: 2023,
+      },
+      {
+        brand: 'HP',
+        model: 'Victus 16',
+        category: DeviceCategory.COMPUTER,
+        releaseYear: 2023,
+      },
 
       // Computers/Laptops - Dell
-      { brand: 'Dell', model: 'XPS 15', category: DeviceCategory.COMPUTER, releaseYear: 2023 },
-      { brand: 'Dell', model: 'XPS 13', category: DeviceCategory.COMPUTER, releaseYear: 2023 },
-      { brand: 'Dell', model: 'Inspiron 15 3000', category: DeviceCategory.COMPUTER, releaseYear: 2023 },
-      { brand: 'Dell', model: 'Latitude 5540', category: DeviceCategory.COMPUTER, releaseYear: 2023 },
+      {
+        brand: 'Dell',
+        model: 'XPS 15',
+        category: DeviceCategory.COMPUTER,
+        releaseYear: 2023,
+      },
+      {
+        brand: 'Dell',
+        model: 'XPS 13',
+        category: DeviceCategory.COMPUTER,
+        releaseYear: 2023,
+      },
+      {
+        brand: 'Dell',
+        model: 'Inspiron 15 3000',
+        category: DeviceCategory.COMPUTER,
+        releaseYear: 2023,
+      },
+      {
+        brand: 'Dell',
+        model: 'Latitude 5540',
+        category: DeviceCategory.COMPUTER,
+        releaseYear: 2023,
+      },
 
       // Computers/Laptops - Lenovo
-      { brand: 'Lenovo', model: 'ThinkPad X1 Carbon', category: DeviceCategory.COMPUTER, releaseYear: 2023 },
-      { brand: 'Lenovo', model: 'ThinkPad T14', category: DeviceCategory.COMPUTER, releaseYear: 2023 },
-      { brand: 'Lenovo', model: 'IdeaPad 3', category: DeviceCategory.COMPUTER, releaseYear: 2023 },
-      { brand: 'Lenovo', model: 'Legion 5 Pro', category: DeviceCategory.COMPUTER, releaseYear: 2023 },
+      {
+        brand: 'Lenovo',
+        model: 'ThinkPad X1 Carbon',
+        category: DeviceCategory.COMPUTER,
+        releaseYear: 2023,
+      },
+      {
+        brand: 'Lenovo',
+        model: 'ThinkPad T14',
+        category: DeviceCategory.COMPUTER,
+        releaseYear: 2023,
+      },
+      {
+        brand: 'Lenovo',
+        model: 'IdeaPad 3',
+        category: DeviceCategory.COMPUTER,
+        releaseYear: 2023,
+      },
+      {
+        brand: 'Lenovo',
+        model: 'Legion 5 Pro',
+        category: DeviceCategory.COMPUTER,
+        releaseYear: 2023,
+      },
 
       // Computers/Laptops - Apple
-      { brand: 'Apple', model: 'MacBook Pro 16"', category: DeviceCategory.COMPUTER, releaseYear: 2023 },
-      { brand: 'Apple', model: 'MacBook Pro 14"', category: DeviceCategory.COMPUTER, releaseYear: 2023 },
-      { brand: 'Apple', model: 'MacBook Air M2', category: DeviceCategory.COMPUTER, releaseYear: 2022 },
-      { brand: 'Apple', model: 'MacBook Air M1', category: DeviceCategory.COMPUTER, releaseYear: 2020 },
+      {
+        brand: 'Apple',
+        model: 'MacBook Pro 16"',
+        category: DeviceCategory.COMPUTER,
+        releaseYear: 2023,
+      },
+      {
+        brand: 'Apple',
+        model: 'MacBook Pro 14"',
+        category: DeviceCategory.COMPUTER,
+        releaseYear: 2023,
+      },
+      {
+        brand: 'Apple',
+        model: 'MacBook Air M2',
+        category: DeviceCategory.COMPUTER,
+        releaseYear: 2022,
+      },
+      {
+        brand: 'Apple',
+        model: 'MacBook Air M1',
+        category: DeviceCategory.COMPUTER,
+        releaseYear: 2020,
+      },
 
       // Computers/Laptops - Asus
-      { brand: 'Asus', model: 'ROG Strix G15', category: DeviceCategory.COMPUTER, releaseYear: 2023 },
-      { brand: 'Asus', model: 'VivoBook 15', category: DeviceCategory.COMPUTER, releaseYear: 2023 },
-      { brand: 'Asus', model: 'ZenBook 14', category: DeviceCategory.COMPUTER, releaseYear: 2023 },
+      {
+        brand: 'Asus',
+        model: 'ROG Strix G15',
+        category: DeviceCategory.COMPUTER,
+        releaseYear: 2023,
+      },
+      {
+        brand: 'Asus',
+        model: 'VivoBook 15',
+        category: DeviceCategory.COMPUTER,
+        releaseYear: 2023,
+      },
+      {
+        brand: 'Asus',
+        model: 'ZenBook 14',
+        category: DeviceCategory.COMPUTER,
+        releaseYear: 2023,
+      },
     ];
 
     const deviceEntities = devices.map((d) => this.deviceRepository.create(d));
@@ -322,41 +624,145 @@ export class SeederService implements OnModuleInit {
     const devices = await this.deviceRepository.find();
 
     const smartphoneServices = [
-      { name: 'Remplacement écran', description: 'Remplacement écran LCD/OLED complet', basePrice: 25000, estimatedDuration: 60 },
-      { name: 'Remplacement batterie', description: 'Batterie neuve avec garantie', basePrice: 12000, estimatedDuration: 30 },
-      { name: 'Réparation connecteur de charge', description: 'Port USB-C ou Lightning', basePrice: 8000, estimatedDuration: 45 },
-      { name: 'Réparation haut-parleur', description: 'Haut-parleur ou micro', basePrice: 10000, estimatedDuration: 40 },
-      { name: 'Réparation caméra arrière', description: 'Module caméra principale', basePrice: 20000, estimatedDuration: 50 },
-      { name: 'Réparation caméra avant', description: 'Caméra selfie / Face ID', basePrice: 15000, estimatedDuration: 45 },
-      { name: 'Dégâts des eaux', description: 'Nettoyage et réparation oxydation', basePrice: 15000, estimatedDuration: 120 },
-      { name: 'Récupération de données', description: 'Extraction données téléphone HS', basePrice: 25000, estimatedDuration: 180 },
-      { name: 'Mise à jour logicielle', description: 'Réinstallation système', basePrice: 5000, estimatedDuration: 60 },
-      { name: 'Remplacement vitre arrière', description: 'Vitre arrière et châssis', basePrice: 18000, estimatedDuration: 60 },
+      {
+        name: 'Remplacement écran',
+        description: 'Remplacement écran LCD/OLED complet',
+        basePrice: 25000,
+        estimatedDuration: 60,
+      },
+      {
+        name: 'Remplacement batterie',
+        description: 'Batterie neuve avec garantie',
+        basePrice: 12000,
+        estimatedDuration: 30,
+      },
+      {
+        name: 'Réparation connecteur de charge',
+        description: 'Port USB-C ou Lightning',
+        basePrice: 8000,
+        estimatedDuration: 45,
+      },
+      {
+        name: 'Réparation haut-parleur',
+        description: 'Haut-parleur ou micro',
+        basePrice: 10000,
+        estimatedDuration: 40,
+      },
+      {
+        name: 'Réparation caméra arrière',
+        description: 'Module caméra principale',
+        basePrice: 20000,
+        estimatedDuration: 50,
+      },
+      {
+        name: 'Réparation caméra avant',
+        description: 'Caméra selfie / Face ID',
+        basePrice: 15000,
+        estimatedDuration: 45,
+      },
+      {
+        name: 'Dégâts des eaux',
+        description: 'Nettoyage et réparation oxydation',
+        basePrice: 15000,
+        estimatedDuration: 120,
+      },
+      {
+        name: 'Récupération de données',
+        description: 'Extraction données téléphone HS',
+        basePrice: 25000,
+        estimatedDuration: 180,
+      },
+      {
+        name: 'Mise à jour logicielle',
+        description: 'Réinstallation système',
+        basePrice: 5000,
+        estimatedDuration: 60,
+      },
+      {
+        name: 'Remplacement vitre arrière',
+        description: 'Vitre arrière et châssis',
+        basePrice: 18000,
+        estimatedDuration: 60,
+      },
     ];
 
     const computerServices = [
-      { name: 'Remplacement écran', description: 'Écran LCD/LED laptop', basePrice: 45000, estimatedDuration: 90 },
-      { name: 'Remplacement clavier', description: 'Clavier complet', basePrice: 25000, estimatedDuration: 60 },
-      { name: 'Remplacement batterie', description: 'Batterie laptop neuve', basePrice: 30000, estimatedDuration: 45 },
-      { name: 'Upgrade RAM', description: 'Ajout/remplacement mémoire', basePrice: 15000, estimatedDuration: 30 },
-      { name: 'Upgrade SSD', description: 'Installation disque SSD', basePrice: 20000, estimatedDuration: 60 },
-      { name: 'Nettoyage ventilateur', description: 'Dépoussiérage et pâte thermique', basePrice: 10000, estimatedDuration: 45 },
-      { name: 'Réinstallation système', description: 'Windows/macOS/Linux', basePrice: 15000, estimatedDuration: 120 },
-      { name: 'Récupération de données', description: 'Disque dur défaillant', basePrice: 35000, estimatedDuration: 240 },
-      { name: 'Réparation carte mère', description: 'Diagnostic et micro-soudure', basePrice: 50000, estimatedDuration: 180 },
-      { name: 'Remplacement chargeur DC', description: 'Port alimentation', basePrice: 20000, estimatedDuration: 60 },
+      {
+        name: 'Remplacement écran',
+        description: 'Écran LCD/LED laptop',
+        basePrice: 45000,
+        estimatedDuration: 90,
+      },
+      {
+        name: 'Remplacement clavier',
+        description: 'Clavier complet',
+        basePrice: 25000,
+        estimatedDuration: 60,
+      },
+      {
+        name: 'Remplacement batterie',
+        description: 'Batterie laptop neuve',
+        basePrice: 30000,
+        estimatedDuration: 45,
+      },
+      {
+        name: 'Upgrade RAM',
+        description: 'Ajout/remplacement mémoire',
+        basePrice: 15000,
+        estimatedDuration: 30,
+      },
+      {
+        name: 'Upgrade SSD',
+        description: 'Installation disque SSD',
+        basePrice: 20000,
+        estimatedDuration: 60,
+      },
+      {
+        name: 'Nettoyage ventilateur',
+        description: 'Dépoussiérage et pâte thermique',
+        basePrice: 10000,
+        estimatedDuration: 45,
+      },
+      {
+        name: 'Réinstallation système',
+        description: 'Windows/macOS/Linux',
+        basePrice: 15000,
+        estimatedDuration: 120,
+      },
+      {
+        name: 'Récupération de données',
+        description: 'Disque dur défaillant',
+        basePrice: 35000,
+        estimatedDuration: 240,
+      },
+      {
+        name: 'Réparation carte mère',
+        description: 'Diagnostic et micro-soudure',
+        basePrice: 50000,
+        estimatedDuration: 180,
+      },
+      {
+        name: 'Remplacement chargeur DC',
+        description: 'Port alimentation',
+        basePrice: 20000,
+        estimatedDuration: 60,
+      },
     ];
 
     const serviceTypes: ServiceType[] = [];
 
     for (const device of devices) {
-      const services = device.category === DeviceCategory.SMARTPHONE ? smartphoneServices : computerServices;
+      const services =
+        device.category === DeviceCategory.SMARTPHONE
+          ? smartphoneServices
+          : computerServices;
 
       for (const service of services) {
         // Adjust prices based on brand (Apple/Samsung more expensive)
         let priceMultiplier = 1;
         if (device.brand === 'Apple') priceMultiplier = 1.5;
-        else if (device.brand === 'Samsung' && device.model.includes('Ultra')) priceMultiplier = 1.3;
+        else if (device.brand === 'Samsung' && device.model.includes('Ultra'))
+          priceMultiplier = 1.3;
 
         serviceTypes.push(
           this.serviceTypeRepository.create({
@@ -396,9 +802,13 @@ export class SeederService implements OnModuleInit {
           lastName: 'Diallo',
         },
         expert: {
-          bio: 'Expert en réparation mobile avec 8 ans d\'expérience. Spécialiste diagnostic et dépannage smartphones.',
+          bio: "Expert en réparation mobile avec 8 ans d'expérience. Spécialiste diagnostic et dépannage smartphones.",
           specialties: ['Smartphones', 'Tablettes', 'Diagnostic'],
-          conseilTypes: [ConseilType.DIAGNOSTIC, ConseilType.SOFTWARE, ConseilType.MAINTENANCE],
+          conseilTypes: [
+            ConseilType.DIAGNOSTIC,
+            ConseilType.SOFTWARE,
+            ConseilType.MAINTENANCE,
+          ],
           conseilFormats: [ConseilFormat.CHAT, ConseilFormat.CALL],
           ratingAvg: 0,
           ratingCount: 0,
@@ -417,7 +827,7 @@ export class SeederService implements OnModuleInit {
           lastName: 'Ndiaye',
         },
         expert: {
-          bio: 'Spécialiste en dépannage informatique et conseil en achat. 10 ans d\'expérience.',
+          bio: "Spécialiste en dépannage informatique et conseil en achat. 10 ans d'expérience.",
           specialties: ['Ordinateurs', 'Logiciels', 'Windows', 'Mac'],
           conseilTypes: [ConseilType.SOFTWARE, ConseilType.PURCHASE],
           conseilFormats: [ConseilFormat.CHAT, ConseilFormat.CALL],
@@ -438,9 +848,14 @@ export class SeederService implements OnModuleInit {
           lastName: 'Sow',
         },
         expert: {
-          bio: 'Technicien certifié Apple avec expertise complète sur l\'écosystème iOS et macOS.',
+          bio: "Technicien certifié Apple avec expertise complète sur l'écosystème iOS et macOS.",
           specialties: ['iPhone', 'MacBook', 'Apple', 'iOS'],
-          conseilTypes: [ConseilType.DIAGNOSTIC, ConseilType.SOFTWARE, ConseilType.PURCHASE, ConseilType.MAINTENANCE],
+          conseilTypes: [
+            ConseilType.DIAGNOSTIC,
+            ConseilType.SOFTWARE,
+            ConseilType.PURCHASE,
+            ConseilType.MAINTENANCE,
+          ],
           conseilFormats: [ConseilFormat.CHAT, ConseilFormat.CALL],
           ratingAvg: 0,
           ratingCount: 0,
@@ -503,7 +918,10 @@ export class SeederService implements OnModuleInit {
     await this.expertRepository.createQueryBuilder().delete().execute();
     await this.serviceTypeRepository.createQueryBuilder().delete().execute();
     await this.deviceRepository.createQueryBuilder().delete().execute();
-    await this.repairerProfileRepository.createQueryBuilder().delete().execute();
+    await this.repairerProfileRepository
+      .createQueryBuilder()
+      .delete()
+      .execute();
     await this.userRepository.createQueryBuilder().delete().execute();
 
     this.logger.log('✅ All data cleared');

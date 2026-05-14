@@ -23,7 +23,12 @@ import { SmsService } from '../../common/services/sms.service';
 import { EmailService } from '../../common/services/email.service';
 import { FirebaseService } from '../../common/services/firebase.service';
 import { RegisterDto, LoginDto, RepairerProfileDto } from './dto';
-import { AUTH, BUSINESS, SUCCESS_MESSAGES, HTTP_MESSAGES } from '../../common/constants';
+import {
+  AUTH,
+  BUSINESS,
+  SUCCESS_MESSAGES,
+  HTTP_MESSAGES,
+} from '../../common/constants';
 
 // Re-export DTOs for backward compatibility
 export { RegisterDto, LoginDto, RepairerProfileDto } from './dto';
@@ -59,18 +64,27 @@ export class AuthService {
     private readonly emailVerificationRepository: Repository<EmailVerificationToken>,
   ) {}
 
-  async register(dto: RegisterDto): Promise<{ user: User; message: string; devCode?: string }> {
-    this.logger.log(`Registration attempt for phone: ${dto.phone.slice(0, -4)}****`);
+  async register(
+    dto: RegisterDto,
+  ): Promise<{ user: User; message: string; devCode?: string }> {
+    this.logger.log(
+      `Registration attempt for phone: ${dto.phone.slice(0, -4)}****`,
+    );
 
     // Check if phone already exists
     const existingUser = await this.usersService.findByPhone(dto.phone);
     if (existingUser) {
-      this.logger.warn(`Registration failed: phone already exists ${dto.phone.slice(0, -4)}****`);
+      this.logger.warn(
+        `Registration failed: phone already exists ${dto.phone.slice(0, -4)}****`,
+      );
       throw new ConflictException('Ce numero de telephone est deja utilise');
     }
 
     // Hash password using centralized constant
-    const passwordHash = await bcrypt.hash(dto.password, AUTH.PASSWORD_SALT_ROUNDS);
+    const passwordHash = await bcrypt.hash(
+      dto.password,
+      AUTH.PASSWORD_SALT_ROUNDS,
+    );
 
     // Create user
     const user = await this.usersService.create({
@@ -86,7 +100,9 @@ export class AuthService {
       const profileData = dto.repairerProfile;
       await this.repairersService.create(user.id, {
         // Personal identification
-        dateOfBirth: profileData.dateOfBirth ? new Date(profileData.dateOfBirth) : undefined,
+        dateOfBirth: profileData.dateOfBirth
+          ? new Date(profileData.dateOfBirth)
+          : undefined,
         nationalIdNumber: profileData.nationalIdNumber,
         personalAddress: profileData.personalAddress,
 
@@ -112,7 +128,9 @@ export class AuthService {
         specialties: profileData.specialties || [],
         yearsOfExperience: profileData.yearsOfExperience,
         acceptsHomeService: profileData.acceptsHomeService || false,
-        homeServiceRadiusKm: profileData.homeServiceRadiusKm || BUSINESS.DEFAULT_HOME_SERVICE_RADIUS_KM,
+        homeServiceRadiusKm:
+          profileData.homeServiceRadiusKm ||
+          BUSINESS.DEFAULT_HOME_SERVICE_RADIUS_KM,
       });
     }
 
@@ -135,18 +153,20 @@ export class AuthService {
     const user = await this.usersService.findByPhone(dto.phone);
 
     if (!user) {
-      this.logger.warn(`Login failed: user not found ${dto.phone.slice(0, -4)}****`);
+      this.logger.warn(
+        `Login failed: user not found ${dto.phone.slice(0, -4)}****`,
+      );
       throw new UnauthorizedException('Identifiants incorrects');
     }
 
     // Check if account is locked
     if (user.lockedUntil && new Date() < new Date(user.lockedUntil)) {
       const remainingMinutes = Math.ceil(
-        (new Date(user.lockedUntil).getTime() - Date.now()) / (1000 * 60)
+        (new Date(user.lockedUntil).getTime() - Date.now()) / (1000 * 60),
       );
       this.logger.warn(`Login blocked: account locked for user ${user.id}`);
       throw new UnauthorizedException(
-        `Compte temporairement verrouille. Reessayez dans ${remainingMinutes} minute(s).`
+        `Compte temporairement verrouille. Reessayez dans ${remainingMinutes} minute(s).`,
       );
     }
 
@@ -157,32 +177,43 @@ export class AuthService {
       user.lockedUntil = undefined;
     }
 
-    const isPasswordValid = await bcrypt.compare(dto.password, user.passwordHash);
+    const isPasswordValid = await bcrypt.compare(
+      dto.password,
+      user.passwordHash,
+    );
     if (!isPasswordValid) {
       // Increment failed attempts
       const newAttempts = (user.failedLoginAttempts || 0) + 1;
 
       if (newAttempts >= MAX_FAILED_ATTEMPTS) {
         // Lock the account
-        const lockUntil = new Date(Date.now() + LOCKOUT_DURATION_MINUTES * 60 * 1000);
+        const lockUntil = new Date(
+          Date.now() + LOCKOUT_DURATION_MINUTES * 60 * 1000,
+        );
         await this.usersService.lockAccount(user.id, lockUntil, newAttempts);
-        this.logger.warn(`Account locked due to too many failed attempts: ${user.id}`);
+        this.logger.warn(
+          `Account locked due to too many failed attempts: ${user.id}`,
+        );
         throw new UnauthorizedException(
-          `Trop de tentatives echouees. Compte verrouille pour ${LOCKOUT_DURATION_MINUTES} minutes.`
+          `Trop de tentatives echouees. Compte verrouille pour ${LOCKOUT_DURATION_MINUTES} minutes.`,
         );
       }
 
       await this.usersService.incrementFailedAttempts(user.id, newAttempts);
       const remainingAttempts = MAX_FAILED_ATTEMPTS - newAttempts;
-      this.logger.warn(`Login failed: invalid password for user ${user.id}, ${remainingAttempts} attempts remaining`);
+      this.logger.warn(
+        `Login failed: invalid password for user ${user.id}, ${remainingAttempts} attempts remaining`,
+      );
       throw new UnauthorizedException(
-        `Identifiants incorrects. ${remainingAttempts} tentative(s) restante(s).`
+        `Identifiants incorrects. ${remainingAttempts} tentative(s) restante(s).`,
       );
     }
 
     if (!user.isPhoneVerified) {
       this.logger.warn(`Login failed: phone not verified for user ${user.id}`);
-      throw new UnauthorizedException('Veuillez d\'abord verifier votre numero de telephone');
+      throw new UnauthorizedException(
+        "Veuillez d'abord verifier votre numero de telephone",
+      );
     }
 
     if (user.status === 'suspended') {
@@ -202,7 +233,9 @@ export class AuthService {
     return this.generateTokens(user);
   }
 
-  async generateOtp(phone: string): Promise<{ message: string; devCode?: string }> {
+  async generateOtp(
+    phone: string,
+  ): Promise<{ message: string; devCode?: string }> {
     // SEC-002: Use crypto.randomInt for cryptographically secure OTP generation
     // Generate 6-digit code using secure random (100000 to 999999)
     const min = Math.pow(10, 5); // 100000
@@ -213,7 +246,9 @@ export class AuthService {
     await this.otpRepository.delete({ phone });
 
     // Create new OTP using centralized constant as fallback
-    const expirationMinutes = this.configService.get<number>('otp.expirationMinutes') || AUTH.OTP_EXPIRATION_MINUTES;
+    const expirationMinutes =
+      this.configService.get<number>('otp.expirationMinutes') ||
+      AUTH.OTP_EXPIRATION_MINUTES;
     const otp = this.otpRepository.create({
       phone,
       code,
@@ -233,7 +268,11 @@ export class AuthService {
     if (user?.email) {
       this.emailService
         .sendOtpEmail(user.email, code)
-        .catch((err) => this.logger.error(`OTP email fallback échoué pour ${user.email}: ${err?.message ?? err}`));
+        .catch((err) =>
+          this.logger.error(
+            `OTP email fallback échoué pour ${user.email}: ${err?.message ?? err}`,
+          ),
+        );
     }
 
     // En prod, on tolère un SMS qui échoue SI l'email a pu être envoyé
@@ -282,7 +321,10 @@ export class AuthService {
     // crypto.timingSafeEqual requires buffers of equal length
     const storedCodeBuffer = Buffer.from(otp.code.padEnd(6, '0'));
     const providedCodeBuffer = Buffer.from(code.padEnd(6, '0'));
-    const isCodeValid = crypto.timingSafeEqual(storedCodeBuffer, providedCodeBuffer);
+    const isCodeValid = crypto.timingSafeEqual(
+      storedCodeBuffer,
+      providedCodeBuffer,
+    );
 
     if (!isCodeValid) {
       throw new BadRequestException('Code OTP invalide');
@@ -351,14 +393,18 @@ export class AuthService {
     const accessToken = this.jwtService.sign(payload);
 
     // Generate refresh token using centralized constant
-    const refreshTokenExpirySeconds = AUTH.REFRESH_TOKEN_EXPIRY_DAYS * 24 * 60 * 60;
+    const refreshTokenExpirySeconds =
+      AUTH.REFRESH_TOKEN_EXPIRY_DAYS * 24 * 60 * 60;
     const refreshToken = this.jwtService.sign(payload, {
       secret: this.configService.get<string>('jwt.refreshSecret'),
       expiresIn: refreshTokenExpirySeconds,
     });
 
     // Store refresh token
-    const tokenHash = await bcrypt.hash(refreshToken, AUTH.REFRESH_TOKEN_SALT_ROUNDS);
+    const tokenHash = await bcrypt.hash(
+      refreshToken,
+      AUTH.REFRESH_TOKEN_SALT_ROUNDS,
+    );
     const refreshTokenEntity = this.refreshTokenRepository.create({
       userId: user.id,
       tokenHash,
@@ -377,14 +423,19 @@ export class AuthService {
    * Authenticate using Firebase Phone Auth
    * Creates user if doesn't exist, otherwise logs in
    */
-  async authenticateWithFirebase(idToken: string, displayName?: string): Promise<AuthTokens> {
+  async authenticateWithFirebase(
+    idToken: string,
+    displayName?: string,
+  ): Promise<AuthTokens> {
     this.logger.log('Firebase authentication attempt');
 
     // Verify Firebase ID token
     const firebaseUser = await this.firebaseService.verifyIdToken(idToken);
 
     if (!firebaseUser || !firebaseUser.phoneNumber) {
-      throw new UnauthorizedException('Token Firebase invalide ou numéro de téléphone manquant');
+      throw new UnauthorizedException(
+        'Token Firebase invalide ou numéro de téléphone manquant',
+      );
     }
 
     const phone = firebaseUser.phoneNumber;
@@ -426,7 +477,9 @@ export class AuthService {
     } else {
       // Update Firebase UID if not set
       if (!user.firebaseUid) {
-        await this.usersService.update(user.id, { firebaseUid: firebaseUser.uid });
+        await this.usersService.update(user.id, {
+          firebaseUid: firebaseUser.uid,
+        });
       }
 
       // Ensure phone is marked as verified
@@ -476,18 +529,25 @@ export class AuthService {
     // Cherche l'user par téléphone OU email
     const normalizedPhone = identifier.replace(/\s/g, '');
     const user =
-      (await this.usersService.findByPhone(normalizedPhone).catch(() => null)) ||
+      (await this.usersService
+        .findByPhone(normalizedPhone)
+        .catch(() => null)) ||
       (await this.usersService.findByEmail(identifier).catch(() => null));
 
     if (!user) {
-      this.logger.log(`Password reset requested for unknown identifier: ${identifier.slice(0, 4)}***`);
+      this.logger.log(
+        `Password reset requested for unknown identifier: ${identifier.slice(0, 4)}***`,
+      );
       // Réponse identique pour ne pas leaker l'existence du compte.
       return success;
     }
 
     // Génération du token brut (32 bytes hex = 64 chars) + hash SHA-256.
     const rawToken = crypto.randomBytes(32).toString('hex');
-    const tokenHash = crypto.createHash('sha256').update(rawToken).digest('hex');
+    const tokenHash = crypto
+      .createHash('sha256')
+      .update(rawToken)
+      .digest('hex');
 
     // Invalide les anciens tokens du même user (1 demande active à la fois).
     await this.passwordResetRepository.delete({ userId: user.id });
@@ -504,15 +564,20 @@ export class AuthService {
     // Envoi du mail si l'user a un email (sinon on n'a pas de canal).
     if (user.email) {
       const frontUrl =
-        this.configService.get<string>('FRONTEND_URL') || 'http://localhost:4200';
+        this.configService.get<string>('FRONTEND_URL') ||
+        'http://localhost:4200';
       const resetLink = `${frontUrl}/auth/reset-password?token=${rawToken}`;
       this.emailService
         .sendPasswordResetEmail(user.email, resetLink)
         .catch((err) =>
-          this.logger.error(`Reset email failed for ${user.email}: ${err?.message ?? err}`),
+          this.logger.error(
+            `Reset email failed for ${user.email}: ${err?.message ?? err}`,
+          ),
         );
     } else {
-      this.logger.warn(`User ${user.id} has no email — reset link cannot be delivered`);
+      this.logger.warn(
+        `User ${user.id} has no email — reset link cannot be delivered`,
+      );
     }
 
     this.logger.log(`Password reset token created for user ${user.id}`);
@@ -532,7 +597,10 @@ export class AuthService {
    * - Révoque tous les refresh tokens de l'user → toutes les sessions
    *   actives sont déconnectées (force le re-login partout).
    */
-  async resetPassword(rawToken: string, newPassword: string): Promise<{ message: string }> {
+  async resetPassword(
+    rawToken: string,
+    newPassword: string,
+  ): Promise<{ message: string }> {
     if (!rawToken || rawToken.length < 32) {
       throw new BadRequestException('Token invalide');
     }
@@ -543,8 +611,13 @@ export class AuthService {
       );
     }
 
-    const tokenHash = crypto.createHash('sha256').update(rawToken).digest('hex');
-    const record = await this.passwordResetRepository.findOne({ where: { tokenHash } });
+    const tokenHash = crypto
+      .createHash('sha256')
+      .update(rawToken)
+      .digest('hex');
+    const record = await this.passwordResetRepository.findOne({
+      where: { tokenHash },
+    });
 
     if (!record) {
       throw new BadRequestException('Token invalide ou expiré');
@@ -590,14 +663,19 @@ export class AuthService {
       throw new NotFoundException('Utilisateur introuvable');
     }
     if (!user.email) {
-      throw new BadRequestException("Cet utilisateur n'a pas d'email enregistré");
+      throw new BadRequestException(
+        "Cet utilisateur n'a pas d'email enregistré",
+      );
     }
     if (user.isEmailVerified) {
       return { message: 'Email déjà vérifié.' };
     }
 
     const rawToken = crypto.randomBytes(32).toString('hex');
-    const tokenHash = crypto.createHash('sha256').update(rawToken).digest('hex');
+    const tokenHash = crypto
+      .createHash('sha256')
+      .update(rawToken)
+      .digest('hex');
 
     await this.emailVerificationRepository.delete({ userId });
 
@@ -631,12 +709,19 @@ export class AuthService {
   /**
    * Valide un token de vérification email et marque l'user comme vérifié.
    */
-  async verifyEmail(rawToken: string): Promise<{ message: string; email: string }> {
+  async verifyEmail(
+    rawToken: string,
+  ): Promise<{ message: string; email: string }> {
     if (!rawToken || rawToken.length < 32) {
       throw new BadRequestException('Token invalide');
     }
-    const tokenHash = crypto.createHash('sha256').update(rawToken).digest('hex');
-    const record = await this.emailVerificationRepository.findOne({ where: { tokenHash } });
+    const tokenHash = crypto
+      .createHash('sha256')
+      .update(rawToken)
+      .digest('hex');
+    const record = await this.emailVerificationRepository.findOne({
+      where: { tokenHash },
+    });
     if (!record) {
       throw new BadRequestException('Token invalide ou expiré');
     }
@@ -652,7 +737,9 @@ export class AuthService {
     record.usedAt = new Date();
     await this.emailVerificationRepository.save(record);
 
-    this.logger.log(`Email verified for user ${record.userId} (${record.email})`);
+    this.logger.log(
+      `Email verified for user ${record.userId} (${record.email})`,
+    );
     return { message: 'Email vérifié avec succès.', email: record.email };
   }
 }

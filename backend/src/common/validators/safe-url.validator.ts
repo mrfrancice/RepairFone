@@ -24,19 +24,24 @@ import {
 @ValidatorConstraint({ async: false })
 export class IsSafeUrlConstraint implements ValidatorConstraintInterface {
   private readonly ALLOWED_PROTOCOLS = ['https:', 'data:'];
-  private readonly ALLOWED_DATA_MIME_TYPES = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
+  private readonly ALLOWED_DATA_MIME_TYPES = [
+    'image/jpeg',
+    'image/png',
+    'image/gif',
+    'image/webp',
+  ];
 
   // Private IP ranges that should be blocked
   private readonly BLOCKED_IP_PATTERNS = [
-    /^127\./,                           // Loopback
-    /^10\./,                            // Class A private
-    /^172\.(1[6-9]|2[0-9]|3[01])\./,   // Class B private
-    /^192\.168\./,                      // Class C private
-    /^169\.254\./,                      // Link-local
-    /^0\./,                             // Reserved
-    /^::1$/,                            // IPv6 loopback
-    /^fc00:/i,                          // IPv6 unique local
-    /^fe80:/i,                          // IPv6 link-local
+    /^127\./, // Loopback
+    /^10\./, // Class A private
+    /^172\.(1[6-9]|2[0-9]|3[01])\./, // Class B private
+    /^192\.168\./, // Class C private
+    /^169\.254\./, // Link-local
+    /^0\./, // Reserved
+    /^::1$/, // IPv6 loopback
+    /^fc00:/i, // IPv6 unique local
+    /^fe80:/i, // IPv6 link-local
   ];
 
   // Blocked hostnames
@@ -46,9 +51,9 @@ export class IsSafeUrlConstraint implements ValidatorConstraintInterface {
     '127.0.0.1',
     '::1',
     '0.0.0.0',
-    'metadata.google.internal',        // GCP metadata
-    '169.254.169.254',                 // AWS/GCP/Azure metadata
-    'metadata.azure.com',              // Azure metadata
+    'metadata.google.internal', // GCP metadata
+    '169.254.169.254', // AWS/GCP/Azure metadata
+    'metadata.azure.com', // Azure metadata
   ];
 
   validate(url: string, args: ValidationArguments): boolean {
@@ -133,7 +138,7 @@ export class IsSafeUrlConstraint implements ValidatorConstraintInterface {
  * images: string[];
  */
 export function IsSafeUrl(validationOptions?: ValidationOptions) {
-  return function (object: Object, propertyName: string) {
+  return function (object: object, propertyName: string) {
     registerDecorator({
       target: object.constructor,
       propertyName: propertyName,

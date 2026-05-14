@@ -89,7 +89,7 @@ export class UpdateRepairerProfileDto {
   // ===== INFORMATIONS BUSINESS =====
 
   @ApiPropertyOptional({
-    description: 'Nom de l\'entreprise ou du commerce',
+    description: "Nom de l'entreprise ou du commerce",
     example: 'TechRepair Abidjan',
   })
   @IsOptional()
@@ -99,7 +99,7 @@ export class UpdateRepairerProfileDto {
   businessName?: string;
 
   @ApiPropertyOptional({
-    description: 'Description de l\'activité',
+    description: "Description de l'activité",
     example: 'Spécialiste réparation iPhone et Samsung depuis 10 ans',
   })
   @IsOptional()
@@ -108,7 +108,7 @@ export class UpdateRepairerProfileDto {
   description?: string;
 
   @ApiPropertyOptional({
-    description: 'Type d\'entreprise',
+    description: "Type d'entreprise",
     example: 'individual',
     enum: ['individual', 'company', 'auto_entrepreneur'],
   })
@@ -216,7 +216,7 @@ export class UpdateRepairerProfileDto {
   specialties?: string[];
 
   @ApiPropertyOptional({
-    description: 'Années d\'expérience',
+    description: "Années d'expérience",
     example: 5,
   })
   @IsOptional()
@@ -246,7 +246,7 @@ export class UpdateRepairerProfileDto {
   acceptsHomeService?: boolean;
 
   @ApiPropertyOptional({
-    description: 'Rayon d\'intervention à domicile (km)',
+    description: "Rayon d'intervention à domicile (km)",
     example: 15,
   })
   @IsOptional()

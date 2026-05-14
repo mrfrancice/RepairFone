@@ -1,9 +1,18 @@
-import { Injectable, NotFoundException, BadRequestException, ForbiddenException } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  BadRequestException,
+  ForbiddenException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { Review } from './entities/review.entity';
-import { StepRating, RatingStep, RatingCategory } from './entities/step-rating.entity';
+import {
+  StepRating,
+  RatingStep,
+  RatingCategory,
+} from './entities/step-rating.entity';
 import { RequestsService } from '../requests/requests.service';
 import { RepairersService } from '../users/repairers.service';
 import { RequestStatus } from '../requests/entities/repair-request.entity';
@@ -11,7 +20,12 @@ import { CreateReviewDto, ReviewFilters, CreateStepRatingDto } from './dto';
 import { ReviewCreatedEvent, EventNames } from '../../common/events';
 
 // Re-export DTOs for backward compatibility
-export { CreateReviewDto, ReviewFilters, StepRatingItemDto, CreateStepRatingDto } from './dto';
+export {
+  CreateReviewDto,
+  ReviewFilters,
+  StepRatingItemDto,
+  CreateStepRatingDto,
+} from './dto';
 
 @Injectable()
 export class ReviewsService {
@@ -30,12 +44,16 @@ export class ReviewsService {
     const request = await this.requestsService.findOne(dto.requestId);
 
     if (request.clientId !== clientId) {
-      throw new ForbiddenException('Vous ne pouvez noter que vos propres demandes');
+      throw new ForbiddenException(
+        'Vous ne pouvez noter que vos propres demandes',
+      );
     }
 
     // BIZ-110: Reviews autorisées uniquement après livraison
     if (request.status !== RequestStatus.DELIVERED) {
-      throw new BadRequestException('Vous ne pouvez noter que les réparations livrées');
+      throw new BadRequestException(
+        'Vous ne pouvez noter que les réparations livrées',
+      );
     }
 
     // Check if already reviewed
@@ -95,13 +113,17 @@ export class ReviewsService {
     return review;
   }
 
-  async findByRepairer(repairerIdOrUserId: string, filters: ReviewFilters): Promise<{ data: Review[]; total: number; average: number }> {
+  async findByRepairer(
+    repairerIdOrUserId: string,
+    filters: ReviewFilters,
+  ): Promise<{ data: Review[]; total: number; average: number }> {
     const { page = 1, limit = 20 } = filters;
     const skip = (page - 1) * limit;
 
     // Try to get profile ID from user ID first
     let profileId = repairerIdOrUserId;
-    const profile = await this.repairersService.findByUserId(repairerIdOrUserId);
+    const profile =
+      await this.repairersService.findByUserId(repairerIdOrUserId);
     if (profile) {
       profileId = profile.id;
     }
@@ -126,13 +148,21 @@ export class ReviewsService {
     return { data, total, average: Math.round(average * 10) / 10 };
   }
 
-  async findByClient(clientId: string, filters: ReviewFilters): Promise<{ data: Review[]; total: number }> {
+  async findByClient(
+    clientId: string,
+    filters: ReviewFilters,
+  ): Promise<{ data: Review[]; total: number }> {
     const { page = 1, limit = 20 } = filters;
     const skip = (page - 1) * limit;
 
     const [data, total] = await this.reviewRepository.findAndCount({
       where: { clientId },
-      relations: ['repairer', 'repairer.repairerProfile', 'request', 'request.device'],
+      relations: [
+        'repairer',
+        'repairer.repairerProfile',
+        'request',
+        'request.device',
+      ],
       order: { createdAt: 'DESC' },
       skip,
       take: limit,
@@ -169,7 +199,8 @@ export class ReviewsService {
   }> {
     // Try to get profile ID from user ID first
     let profileId = repairerIdOrUserId;
-    const profile = await this.repairersService.findByUserId(repairerIdOrUserId);
+    const profile =
+      await this.repairersService.findByUserId(repairerIdOrUserId);
     if (profile) {
       profileId = profile.id;
     }
@@ -205,22 +236,31 @@ export class ReviewsService {
   /**
    * Créer des notes par étape pour une demande
    */
-  async createStepRating(clientId: string, dto: CreateStepRatingDto): Promise<StepRating[]> {
+  async createStepRating(
+    clientId: string,
+    dto: CreateStepRatingDto,
+  ): Promise<StepRating[]> {
     const request = await this.requestsService.findOne(dto.requestId);
 
     if (request.clientId !== clientId) {
-      throw new ForbiddenException('Vous ne pouvez noter que vos propres demandes');
+      throw new ForbiddenException(
+        'Vous ne pouvez noter que vos propres demandes',
+      );
     }
 
     // Vérifier qu'un réparateur est assigné à la demande
     if (!request.repairerId) {
-      throw new BadRequestException('Aucun réparateur n\'est assigné à cette demande');
+      throw new BadRequestException(
+        "Aucun réparateur n'est assigné à cette demande",
+      );
     }
 
     // Vérifier que le statut permet cette étape de notation
     const allowedStatuses = this.getAllowedStatusesForStep(dto.step);
     if (!allowedStatuses.includes(request.status)) {
-      throw new BadRequestException(`Vous ne pouvez pas noter à cette étape. Statut actuel: ${request.status}`);
+      throw new BadRequestException(
+        `Vous ne pouvez pas noter à cette étape. Statut actuel: ${request.status}`,
+      );
     }
 
     const savedRatings: StepRating[] = [];
@@ -297,7 +337,11 @@ export class ReviewsService {
   /**
    * Vérifier si le client peut noter à une étape donnée
    */
-  async canRateAtStep(clientId: string, requestId: string, step: RatingStep): Promise<{
+  async canRateAtStep(
+    clientId: string,
+    requestId: string,
+    step: RatingStep,
+  ): Promise<{
     canRate: boolean;
     alreadyRated: boolean;
     reason?: string;
@@ -305,12 +349,20 @@ export class ReviewsService {
     const request = await this.requestsService.findOne(requestId);
 
     if (request.clientId !== clientId) {
-      return { canRate: false, alreadyRated: false, reason: 'Ce n\'est pas votre demande' };
+      return {
+        canRate: false,
+        alreadyRated: false,
+        reason: "Ce n'est pas votre demande",
+      };
     }
 
     const allowedStatuses = this.getAllowedStatusesForStep(step);
     if (!allowedStatuses.includes(request.status)) {
-      return { canRate: false, alreadyRated: false, reason: `Statut actuel (${request.status}) ne permet pas cette notation` };
+      return {
+        canRate: false,
+        alreadyRated: false,
+        reason: `Statut actuel (${request.status}) ne permet pas cette notation`,
+      };
     }
 
     // Vérifier si déjà noté (au moins une catégorie)
@@ -335,7 +387,8 @@ export class ReviewsService {
     recentRatings: StepRating[];
   }> {
     let profileId = repairerIdOrUserId;
-    const profile = await this.repairersService.findByUserId(repairerIdOrUserId);
+    const profile =
+      await this.repairersService.findByUserId(repairerIdOrUserId);
     if (profile) {
       profileId = profile.id;
     }
@@ -394,7 +447,8 @@ export class ReviewsService {
 
     return {
       overall: {
-        average: Math.round((parseFloat(overallResult?.average) || 0) * 10) / 10,
+        average:
+          Math.round((parseFloat(overallResult?.average) || 0) * 10) / 10,
         count: parseInt(overallResult?.count, 10) || 0,
       },
       byCategory,
@@ -406,7 +460,9 @@ export class ReviewsService {
   /**
    * Mettre à jour les statistiques de notation du réparateur
    */
-  private async updateRepairerStepRatingStats(repairerId: string): Promise<void> {
+  private async updateRepairerStepRatingStats(
+    repairerId: string,
+  ): Promise<void> {
     const result = await this.stepRatingRepository
       .createQueryBuilder('sr')
       .select('AVG(sr.rating)', 'average')
@@ -418,7 +474,11 @@ export class ReviewsService {
     const ratingCount = parseInt(result?.count, 10) || 0;
 
     // Mettre à jour le profil du réparateur
-    await this.repairersService.updateRating(repairerId, avgRating, ratingCount);
+    await this.repairersService.updateRating(
+      repairerId,
+      avgRating,
+      ratingCount,
+    );
   }
 
   /**
@@ -427,9 +487,17 @@ export class ReviewsService {
   private getAllowedStatusesForStep(step: RatingStep): RequestStatus[] {
     switch (step) {
       case RatingStep.QUOTE_ACCEPTED:
-        return [RequestStatus.ACCEPTED, RequestStatus.COMPLETED, RequestStatus.DELIVERED];
+        return [
+          RequestStatus.ACCEPTED,
+          RequestStatus.COMPLETED,
+          RequestStatus.DELIVERED,
+        ];
       case RatingStep.IN_PROGRESS:
-        return [RequestStatus.ACCEPTED, RequestStatus.COMPLETED, RequestStatus.DELIVERED];
+        return [
+          RequestStatus.ACCEPTED,
+          RequestStatus.COMPLETED,
+          RequestStatus.DELIVERED,
+        ];
       case RatingStep.COMPLETED:
         return [RequestStatus.COMPLETED, RequestStatus.DELIVERED];
       case RatingStep.DELIVERED:

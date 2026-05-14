@@ -96,7 +96,13 @@ export class Dispute extends BaseEntity {
   @Column({ name: 'resolution_notes', type: 'text', nullable: true })
   resolutionNotes?: string;
 
-  @Column({ name: 'refund_amount', type: 'decimal', precision: 10, scale: 2, nullable: true })
+  @Column({
+    name: 'refund_amount',
+    type: 'decimal',
+    precision: 10,
+    scale: 2,
+    nullable: true,
+  })
   refundAmount?: number;
 
   @Column({ name: 'resolved_at', type: 'timestamptz', nullable: true })

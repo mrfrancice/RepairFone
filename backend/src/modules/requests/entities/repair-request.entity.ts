@@ -13,15 +13,15 @@ import { Device } from '../../devices/entities/device.entity';
 import { ServiceType } from '../../devices/entities/service-type.entity';
 
 export enum RequestStatus {
-  PENDING = 'pending',          // En cours d'analyse
-  ACCEPTED = 'accepted',        // Acceptée
-  REJECTED = 'rejected',        // Rejetée
-  IN_PROGRESS = 'in_progress',  // En cours de réparation
+  PENDING = 'pending', // En cours d'analyse
+  ACCEPTED = 'accepted', // Acceptée
+  REJECTED = 'rejected', // Rejetée
+  IN_PROGRESS = 'in_progress', // En cours de réparation
   AWAITING_PARTS = 'awaiting_parts', // En attente de pièces
-  COMPLETED = 'completed',      // Terminée
-  DELIVERED = 'delivered',      // Livrée
-  CANCELLED = 'cancelled',      // Annulée
-  DISPUTED = 'disputed',        // Litigée
+  COMPLETED = 'completed', // Terminée
+  DELIVERED = 'delivered', // Livrée
+  CANCELLED = 'cancelled', // Annulée
+  DISPUTED = 'disputed', // Litigée
 }
 
 export enum DeliveryMode {
@@ -85,13 +85,28 @@ export class RepairRequest extends BaseEntity {
   @Column({ type: 'text' })
   description: string;
 
-  @Column({ name: 'device_brand', type: 'varchar', length: 100, nullable: true })
+  @Column({
+    name: 'device_brand',
+    type: 'varchar',
+    length: 100,
+    nullable: true,
+  })
   deviceBrand?: string;
 
-  @Column({ name: 'device_model', type: 'varchar', length: 255, nullable: true })
+  @Column({
+    name: 'device_model',
+    type: 'varchar',
+    length: 255,
+    nullable: true,
+  })
   deviceModel?: string;
 
-  @Column({ name: 'device_serial_number', type: 'varchar', length: 100, nullable: true })
+  @Column({
+    name: 'device_serial_number',
+    type: 'varchar',
+    length: 100,
+    nullable: true,
+  })
   deviceSerialNumber?: string;
 
   @Column({ type: 'jsonb', default: [] })
@@ -151,13 +166,30 @@ export class RepairRequest extends BaseEntity {
   @Column({ name: 'accepted_at', type: 'timestamptz', nullable: true })
   acceptedAt?: Date;
 
-  @Column({ name: 'preferred_time', type: 'varchar', length: 50, nullable: true })
+  @Column({
+    name: 'preferred_time',
+    type: 'varchar',
+    length: 50,
+    nullable: true,
+  })
   preferredTime?: string;
 
-  @Column({ name: 'client_latitude', type: 'decimal', precision: 10, scale: 8, nullable: true })
+  @Column({
+    name: 'client_latitude',
+    type: 'decimal',
+    precision: 10,
+    scale: 8,
+    nullable: true,
+  })
   clientLatitude?: number;
 
-  @Column({ name: 'client_longitude', type: 'decimal', precision: 11, scale: 8, nullable: true })
+  @Column({
+    name: 'client_longitude',
+    type: 'decimal',
+    precision: 11,
+    scale: 8,
+    nullable: true,
+  })
   clientLongitude?: number;
 
   @Column({ name: 'client_address', type: 'text', nullable: true })
@@ -169,7 +201,13 @@ export class RepairRequest extends BaseEntity {
   @Column({ name: 'urgency', type: 'varchar', length: 20, default: 'normal' })
   urgency: 'normal' | 'express';
 
-  @Column({ name: 'urgency_supplement', type: 'decimal', precision: 10, scale: 2, nullable: true })
+  @Column({
+    name: 'urgency_supplement',
+    type: 'decimal',
+    precision: 10,
+    scale: 2,
+    nullable: true,
+  })
   urgencySupplement?: number;
 
   @OneToMany('RequestStatusHistory', 'request')

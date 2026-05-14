@@ -12,5 +12,5 @@ export class UpdateRequestStatusDto {
 
   @IsOptional()
   @IsString()
-  rejectionReason?: string;  // Motif de rejet (obligatoire si status = rejected)
+  rejectionReason?: string; // Motif de rejet (obligatoire si status = rejected)
 }

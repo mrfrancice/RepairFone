@@ -12,9 +12,17 @@ import {
   HttpStatus,
   BadRequestException,
 } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiBearerAuth, ApiQuery } from '@nestjs/swagger';
+import {
+  ApiTags,
+  ApiOperation,
+  ApiBearerAuth,
+  ApiQuery,
+} from '@nestjs/swagger';
 import { AdminService } from './admin.service';
-import type { VerificationDecisionDto, RepairerListParams } from './admin.service';
+import type {
+  VerificationDecisionDto,
+  RepairerListParams,
+} from './admin.service';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
 import { RolesGuard } from '../../common/guards/roles.guard';
 import { Roles } from '../../common/decorators/roles.decorator';
@@ -22,10 +30,18 @@ import { CurrentUser } from '../../common/decorators/current-user.decorator';
 import { User, UserRole, UserStatus } from '../users/entities/user.entity';
 import { VerificationStatus } from '../users/entities/repairer-profile.entity';
 import { PaymentsService } from '../payments/payments.service';
-import { PaymentStatus, PaymentMethod, PaymentType } from '../payments/entities/payment.entity';
+import {
+  PaymentStatus,
+  PaymentMethod,
+  PaymentType,
+} from '../payments/entities/payment.entity';
 import { DisputesService } from '../disputes/disputes.service';
 import type { ResolveDisputeDto } from '../disputes/disputes.service';
-import { DisputeStatus, DisputeReason, DisputeResolution } from '../disputes/entities/dispute.entity';
+import {
+  DisputeStatus,
+  DisputeReason,
+  DisputeResolution,
+} from '../disputes/entities/dispute.entity';
 
 @ApiTags('Admin')
 @Controller('admin')
@@ -55,7 +71,18 @@ export class AdminController {
 
   @Get('repairers')
   @ApiOperation({ summary: 'List all repairers with filters' })
-  @ApiQuery({ name: 'status', required: false, enum: ['all', 'pending', 'under_review', 'verified', 'rejected', 'suspended'] })
+  @ApiQuery({
+    name: 'status',
+    required: false,
+    enum: [
+      'all',
+      'pending',
+      'under_review',
+      'verified',
+      'rejected',
+      'suspended',
+    ],
+  })
   @ApiQuery({ name: 'page', required: false, type: Number })
   @ApiQuery({ name: 'limit', required: false, type: Number })
   @ApiQuery({ name: 'search', required: false, type: String })
@@ -107,12 +134,17 @@ export class AdminController {
     @Body() decision: VerificationDecisionDto,
     @CurrentUser() admin: User,
   ) {
-    const result = await this.adminService.verifyRepairer(id, decision, admin.id);
+    const result = await this.adminService.verifyRepairer(
+      id,
+      decision,
+      admin.id,
+    );
     return {
       success: true,
-      message: decision.status === 'verified'
-        ? 'Réparateur vérifié avec succès'
-        : 'Réparateur rejeté',
+      message:
+        decision.status === 'verified'
+          ? 'Réparateur vérifié avec succès'
+          : 'Réparateur rejeté',
       data: {
         id: result.id,
         verificationStatus: result.verificationStatus,
@@ -178,12 +210,24 @@ export class AdminController {
 
   @Get('users')
   @ApiOperation({ summary: 'List all users with filters' })
-  @ApiQuery({ name: 'role', required: false, enum: ['all', 'client', 'repairer'] })
-  @ApiQuery({ name: 'status', required: false, enum: ['all', 'pending', 'active', 'suspended', 'deactivated'] })
+  @ApiQuery({
+    name: 'role',
+    required: false,
+    enum: ['all', 'client', 'repairer'],
+  })
+  @ApiQuery({
+    name: 'status',
+    required: false,
+    enum: ['all', 'pending', 'active', 'suspended', 'deactivated'],
+  })
   @ApiQuery({ name: 'page', required: false, type: Number })
   @ApiQuery({ name: 'limit', required: false, type: Number })
   @ApiQuery({ name: 'search', required: false, type: String })
-  @ApiQuery({ name: 'sort', required: false, enum: ['createdAt', 'firstName', 'role', 'status'] })
+  @ApiQuery({
+    name: 'sort',
+    required: false,
+    enum: ['createdAt', 'firstName', 'role', 'status'],
+  })
   @ApiQuery({ name: 'order', required: false, enum: ['asc', 'desc'] })
   async getUsers(
     @Query('role') role?: string,
@@ -267,13 +311,29 @@ export class AdminController {
 
   @Get('payments')
   @ApiOperation({ summary: 'List all payments with filters (admin audit)' })
-  @ApiQuery({ name: 'status', required: false, enum: ['all', ...Object.values(PaymentStatus)] })
-  @ApiQuery({ name: 'paymentMethod', required: false, enum: ['all', ...Object.values(PaymentMethod)] })
-  @ApiQuery({ name: 'paymentType', required: false, enum: ['all', ...Object.values(PaymentType)] })
+  @ApiQuery({
+    name: 'status',
+    required: false,
+    enum: ['all', ...Object.values(PaymentStatus)],
+  })
+  @ApiQuery({
+    name: 'paymentMethod',
+    required: false,
+    enum: ['all', ...Object.values(PaymentMethod)],
+  })
+  @ApiQuery({
+    name: 'paymentType',
+    required: false,
+    enum: ['all', ...Object.values(PaymentType)],
+  })
   @ApiQuery({ name: 'page', required: false, type: Number })
   @ApiQuery({ name: 'limit', required: false, type: Number })
   @ApiQuery({ name: 'search', required: false, type: String })
-  @ApiQuery({ name: 'sort', required: false, enum: ['createdAt', 'amount', 'status', 'paidAt'] })
+  @ApiQuery({
+    name: 'sort',
+    required: false,
+    enum: ['createdAt', 'amount', 'status', 'paidAt'],
+  })
   @ApiQuery({ name: 'order', required: false, enum: ['asc', 'desc'] })
   async getPayments(
     @Query('status') status?: string,
@@ -321,12 +381,24 @@ export class AdminController {
 
   @Get('disputes')
   @ApiOperation({ summary: 'List all disputes with filters (admin audit)' })
-  @ApiQuery({ name: 'status', required: false, enum: ['all', ...Object.values(DisputeStatus)] })
-  @ApiQuery({ name: 'reason', required: false, enum: ['all', ...Object.values(DisputeReason)] })
+  @ApiQuery({
+    name: 'status',
+    required: false,
+    enum: ['all', ...Object.values(DisputeStatus)],
+  })
+  @ApiQuery({
+    name: 'reason',
+    required: false,
+    enum: ['all', ...Object.values(DisputeReason)],
+  })
   @ApiQuery({ name: 'page', required: false, type: Number })
   @ApiQuery({ name: 'limit', required: false, type: Number })
   @ApiQuery({ name: 'search', required: false, type: String })
-  @ApiQuery({ name: 'sort', required: false, enum: ['createdAt', 'status', 'resolvedAt'] })
+  @ApiQuery({
+    name: 'sort',
+    required: false,
+    enum: ['createdAt', 'status', 'resolvedAt'],
+  })
   @ApiQuery({ name: 'order', required: false, enum: ['asc', 'desc'] })
   async getDisputes(
     @Query('status') status?: string,
@@ -372,7 +444,9 @@ export class AdminController {
 
   @Post('disputes/:id/note')
   @HttpCode(HttpStatus.CREATED)
-  @ApiOperation({ summary: 'Ajouter une note interne admin (apparaît dans le fil)' })
+  @ApiOperation({
+    summary: 'Ajouter une note interne admin (apparaît dans le fil)',
+  })
   async addDisputeNote(
     @Param('id', ParseUUIDPipe) id: string,
     @CurrentUser() user: User,
@@ -388,17 +462,24 @@ export class AdminController {
 
   @Patch('disputes/:id/resolve')
   @HttpCode(HttpStatus.OK)
-  @ApiOperation({ summary: 'Résoudre un litige (statut + résolution + notes + refund optionnel)' })
+  @ApiOperation({
+    summary:
+      'Résoudre un litige (statut + résolution + notes + refund optionnel)',
+  })
   async resolveDispute(
     @Param('id', ParseUUIDPipe) id: string,
     @CurrentUser() user: User,
-    @Body() body: {
+    @Body()
+    body: {
       resolution: DisputeResolution;
       notes?: string;
       refundAmount?: number;
     },
   ) {
-    if (!body?.resolution || !Object.values(DisputeResolution).includes(body.resolution)) {
+    if (
+      !body?.resolution ||
+      !Object.values(DisputeResolution).includes(body.resolution)
+    ) {
       throw new BadRequestException('Résolution invalide');
     }
     // Validation : refund_full ET refund_partial exigent un montant strictement positif.
@@ -421,7 +502,10 @@ export class AdminController {
 
   @Post('payments/:id/refund')
   @HttpCode(HttpStatus.OK)
-  @ApiOperation({ summary: 'Refund manuel (admin) — marque REFUNDED, n\'appelle pas le gateway' })
+  @ApiOperation({
+    summary:
+      "Refund manuel (admin) — marque REFUNDED, n'appelle pas le gateway",
+  })
   async refundPayment(
     @Param('id', ParseUUIDPipe) id: string,
     @CurrentUser() user: User,
@@ -435,7 +519,9 @@ export class AdminController {
 
   @Patch('payments/:id/block')
   @HttpCode(HttpStatus.OK)
-  @ApiOperation({ summary: 'Bloquer un paiement (suspect, en attente de vérification)' })
+  @ApiOperation({
+    summary: 'Bloquer un paiement (suspect, en attente de vérification)',
+  })
   async blockPayment(
     @Param('id', ParseUUIDPipe) id: string,
     @CurrentUser() user: User,
@@ -470,7 +556,9 @@ export class AdminController {
    */
   @Post('_debug/seed-dispute-from-payment/:paymentId')
   @HttpCode(HttpStatus.CREATED)
-  @ApiOperation({ summary: '[DEV] Génère une dispute factice depuis un paiement' })
+  @ApiOperation({
+    summary: '[DEV] Génère une dispute factice depuis un paiement',
+  })
   async seedDisputeFromPayment(
     @Param('paymentId', ParseUUIDPipe) paymentId: string,
   ) {

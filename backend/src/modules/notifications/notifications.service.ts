@@ -1,9 +1,20 @@
 import { Injectable, NotFoundException, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, FindOptionsWhere } from 'typeorm';
-import { IsOptional, IsBoolean, IsEnum, IsInt, Min, Max } from 'class-validator';
+import {
+  IsOptional,
+  IsBoolean,
+  IsEnum,
+  IsInt,
+  Min,
+  Max,
+} from 'class-validator';
 import { Type, Transform } from 'class-transformer';
-import { Notification, NotificationType, NotificationChannel } from './entities/notification.entity';
+import {
+  Notification,
+  NotificationType,
+  NotificationChannel,
+} from './entities/notification.entity';
 import { PushService } from '../push/push.service';
 
 export class CreateNotificationDto {
@@ -72,18 +83,26 @@ export class NotificationsService {
       .sendToUser(dto.userId, {
         title: dto.title,
         body: dto.body,
-        url: dto.referenceType && dto.referenceId
-          ? `/${dto.referenceType}s/${dto.referenceId}`
-          : '/notifications',
+        url:
+          dto.referenceType && dto.referenceId
+            ? `/${dto.referenceType}s/${dto.referenceId}`
+            : '/notifications',
         tag: dto.type,
         data: { notificationId: saved.id, ...dto.data },
       })
-      .catch((err) => this.logger.error(`Push échec pour user ${dto.userId}: ${err?.message ?? err}`));
+      .catch((err) =>
+        this.logger.error(
+          `Push échec pour user ${dto.userId}: ${err?.message ?? err}`,
+        ),
+      );
 
     return saved;
   }
 
-  async findByUser(userId: string, filters: NotificationFilters): Promise<{ data: Notification[]; total: number; unreadCount: number }> {
+  async findByUser(
+    userId: string,
+    filters: NotificationFilters,
+  ): Promise<{ data: Notification[]; total: number; unreadCount: number }> {
     const page = filters.page || 1;
     const limit = filters.limit || 20;
     const skip = (page - 1) * limit;
@@ -153,7 +172,11 @@ export class NotificationsService {
   }
 
   // Helper methods for creating specific notification types
-  async notifyRequestReceived(repairerId: string, requestId: string, clientName: string): Promise<Notification> {
+  async notifyRequestReceived(
+    repairerId: string,
+    requestId: string,
+    clientName: string,
+  ): Promise<Notification> {
     return this.create({
       userId: repairerId,
       type: NotificationType.REQUEST_RECEIVED,
@@ -164,7 +187,11 @@ export class NotificationsService {
     });
   }
 
-  async notifyQuoteReceived(clientId: string, quoteId: string, repairerName: string): Promise<Notification> {
+  async notifyQuoteReceived(
+    clientId: string,
+    quoteId: string,
+    repairerName: string,
+  ): Promise<Notification> {
     return this.create({
       userId: clientId,
       type: NotificationType.QUOTE_RECEIVED,
@@ -175,7 +202,10 @@ export class NotificationsService {
     });
   }
 
-  async notifyQuoteAccepted(repairerId: string, quoteId: string): Promise<Notification> {
+  async notifyQuoteAccepted(
+    repairerId: string,
+    quoteId: string,
+  ): Promise<Notification> {
     return this.create({
       userId: repairerId,
       type: NotificationType.QUOTE_ACCEPTED,
@@ -186,7 +216,10 @@ export class NotificationsService {
     });
   }
 
-  async notifyRepairCompleted(clientId: string, requestId: string): Promise<Notification> {
+  async notifyRepairCompleted(
+    clientId: string,
+    requestId: string,
+  ): Promise<Notification> {
     return this.create({
       userId: clientId,
       type: NotificationType.REPAIR_COMPLETED,
@@ -197,7 +230,11 @@ export class NotificationsService {
     });
   }
 
-  async notifyMessageReceived(userId: string, conversationId: string, senderName: string): Promise<Notification> {
+  async notifyMessageReceived(
+    userId: string,
+    conversationId: string,
+    senderName: string,
+  ): Promise<Notification> {
     return this.create({
       userId,
       type: NotificationType.MESSAGE_RECEIVED,
@@ -208,7 +245,11 @@ export class NotificationsService {
     });
   }
 
-  async notifyPaymentReceived(repairerId: string, paymentId: string, amount: number): Promise<Notification> {
+  async notifyPaymentReceived(
+    repairerId: string,
+    paymentId: string,
+    amount: number,
+  ): Promise<Notification> {
     return this.create({
       userId: repairerId,
       type: NotificationType.PAYMENT_RECEIVED,
@@ -252,7 +293,10 @@ export class NotificationsService {
     });
   }
 
-  async notifyDisputeOpened(repairerId: string, disputeId: string): Promise<Notification> {
+  async notifyDisputeOpened(
+    repairerId: string,
+    disputeId: string,
+  ): Promise<Notification> {
     return this.create({
       userId: repairerId,
       type: NotificationType.DISPUTE_OPENED,
@@ -263,7 +307,11 @@ export class NotificationsService {
     });
   }
 
-  async notifyReviewReceived(repairerId: string, reviewId: string, rating: number): Promise<Notification> {
+  async notifyReviewReceived(
+    repairerId: string,
+    reviewId: string,
+    rating: number,
+  ): Promise<Notification> {
     return this.create({
       userId: repairerId,
       type: NotificationType.REVIEW_RECEIVED,

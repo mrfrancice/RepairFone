@@ -54,7 +54,9 @@ describe('QuotesService', () => {
     it('throws NotFoundException when quote does not exist', async () => {
       quoteRepo.findOne.mockResolvedValue(null);
 
-      await expect(service.findOne('non-existent')).rejects.toThrow(NotFoundException);
+      await expect(service.findOne('non-existent')).rejects.toThrow(
+        NotFoundException,
+      );
     });
 
     it('returns quote when found', async () => {

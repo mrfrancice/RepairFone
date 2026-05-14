@@ -45,7 +45,9 @@ class MockPaymentGateway implements PaymentGateway {
   private readonly logger = new Logger('MockPaymentGateway');
 
   async initiate(params: any): Promise<PaymentInitResult> {
-    this.logger.log(`[MOCK] Initiating payment: ${params.amount} ${params.currency}`);
+    this.logger.log(
+      `[MOCK] Initiating payment: ${params.amount} ${params.currency}`,
+    );
     return {
       success: true,
       paymentUrl: `http://localhost:3000/mock-payment/${params.transactionId}`,
@@ -62,8 +64,13 @@ class MockPaymentGateway implements PaymentGateway {
     };
   }
 
-  async refund(transactionId: string, amount?: number): Promise<PaymentRefundResult> {
-    this.logger.log(`[MOCK] Refunding payment: ${transactionId}, amount: ${amount}`);
+  async refund(
+    transactionId: string,
+    amount?: number,
+  ): Promise<PaymentRefundResult> {
+    this.logger.log(
+      `[MOCK] Refunding payment: ${transactionId}, amount: ${amount}`,
+    );
     return {
       success: true,
       refundId: `MOCK-REFUND-${Date.now()}`,
@@ -120,10 +127,11 @@ class CinetPayGateway implements PaymentGateway {
 
       return {
         success: false,
-        error: data.message || 'Erreur lors de l\'initiation du paiement',
+        error: data.message || "Erreur lors de l'initiation du paiement",
       };
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      const errorMessage =
+        error instanceof Error ? error.message : 'Unknown error';
       this.logger.error(`CinetPay initiate error: ${errorMessage}`);
       return {
         success: false,
@@ -149,8 +157,12 @@ class CinetPayGateway implements PaymentGateway {
       const data = await response.json();
 
       if (data.code === '00') {
-        const status = data.data.status === 'ACCEPTED' ? 'completed' :
-                       data.data.status === 'REFUSED' ? 'failed' : 'pending';
+        const status =
+          data.data.status === 'ACCEPTED'
+            ? 'completed'
+            : data.data.status === 'REFUSED'
+              ? 'failed'
+              : 'pending';
         return {
           success: true,
           status,
@@ -164,7 +176,8 @@ class CinetPayGateway implements PaymentGateway {
         error: data.message,
       };
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      const errorMessage =
+        error instanceof Error ? error.message : 'Unknown error';
       this.logger.error(`CinetPay verify error: ${errorMessage}`);
       return {
         success: false,
@@ -174,7 +187,10 @@ class CinetPayGateway implements PaymentGateway {
     }
   }
 
-  async refund(transactionId: string, amount?: number): Promise<PaymentRefundResult> {
+  async refund(
+    transactionId: string,
+    amount?: number,
+  ): Promise<PaymentRefundResult> {
     // CinetPay refund requires contacting support
     this.logger.warn('CinetPay refunds require manual processing');
     return {
@@ -201,44 +217,53 @@ class PayDunyaGateway implements PaymentGateway {
   private readonly mode: 'test' | 'live';
   private readonly baseUrl: string;
 
-  constructor(masterKey: string, privateKey: string, token: string, mode: 'test' | 'live' = 'test') {
+  constructor(
+    masterKey: string,
+    privateKey: string,
+    token: string,
+    mode: 'test' | 'live' = 'test',
+  ) {
     this.masterKey = masterKey;
     this.privateKey = privateKey;
     this.token = token;
     this.mode = mode;
-    this.baseUrl = mode === 'live'
-      ? 'https://app.paydunya.com/api/v1'
-      : 'https://app.paydunya.com/sandbox-api/v1';
+    this.baseUrl =
+      mode === 'live'
+        ? 'https://app.paydunya.com/api/v1'
+        : 'https://app.paydunya.com/sandbox-api/v1';
   }
 
   async initiate(params: any): Promise<PaymentInitResult> {
     try {
       // First, create an invoice
-      const invoiceResponse = await fetch(`${this.baseUrl}/checkout-invoice/create`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'PAYDUNYA-MASTER-KEY': this.masterKey,
-          'PAYDUNYA-PRIVATE-KEY': this.privateKey,
-          'PAYDUNYA-TOKEN': this.token,
+      const invoiceResponse = await fetch(
+        `${this.baseUrl}/checkout-invoice/create`,
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'PAYDUNYA-MASTER-KEY': this.masterKey,
+            'PAYDUNYA-PRIVATE-KEY': this.privateKey,
+            'PAYDUNYA-TOKEN': this.token,
+          },
+          body: JSON.stringify({
+            invoice: {
+              total_amount: params.amount,
+              description: params.description,
+            },
+            store: {
+              name: 'RepairFone',
+            },
+            custom_data: {
+              transaction_id: params.transactionId,
+            },
+            actions: {
+              return_url: params.returnUrl,
+              callback_url: params.notifyUrl,
+            },
+          }),
         },
-        body: JSON.stringify({
-          invoice: {
-            total_amount: params.amount,
-            description: params.description,
-          },
-          store: {
-            name: 'RepairFone',
-          },
-          custom_data: {
-            transaction_id: params.transactionId,
-          },
-          actions: {
-            return_url: params.returnUrl,
-            callback_url: params.notifyUrl,
-          },
-        }),
-      });
+      );
 
       const data = await invoiceResponse.json();
 
@@ -255,7 +280,8 @@ class PayDunyaGateway implements PaymentGateway {
         error: data.response_text || 'Erreur PayDunya',
       };
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      const errorMessage =
+        error instanceof Error ? error.message : 'Unknown error';
       this.logger.error(`PayDunya initiate error: ${errorMessage}`);
       return {
         success: false,
@@ -266,20 +292,27 @@ class PayDunyaGateway implements PaymentGateway {
 
   async verify(transactionId: string): Promise<PaymentVerifyResult> {
     try {
-      const response = await fetch(`${this.baseUrl}/checkout-invoice/confirm/${transactionId}`, {
-        method: 'GET',
-        headers: {
-          'PAYDUNYA-MASTER-KEY': this.masterKey,
-          'PAYDUNYA-PRIVATE-KEY': this.privateKey,
-          'PAYDUNYA-TOKEN': this.token,
+      const response = await fetch(
+        `${this.baseUrl}/checkout-invoice/confirm/${transactionId}`,
+        {
+          method: 'GET',
+          headers: {
+            'PAYDUNYA-MASTER-KEY': this.masterKey,
+            'PAYDUNYA-PRIVATE-KEY': this.privateKey,
+            'PAYDUNYA-TOKEN': this.token,
+          },
         },
-      });
+      );
 
       const data = await response.json();
 
       if (data.response_code === '00') {
-        const status = data.invoice.status === 'completed' ? 'completed' :
-                       data.invoice.status === 'cancelled' ? 'failed' : 'pending';
+        const status =
+          data.invoice.status === 'completed'
+            ? 'completed'
+            : data.invoice.status === 'cancelled'
+              ? 'failed'
+              : 'pending';
         return {
           success: true,
           status,
@@ -293,7 +326,8 @@ class PayDunyaGateway implements PaymentGateway {
         error: data.response_text,
       };
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      const errorMessage =
+        error instanceof Error ? error.message : 'Unknown error';
       this.logger.error(`PayDunya verify error: ${errorMessage}`);
       return {
         success: false,
@@ -303,7 +337,10 @@ class PayDunyaGateway implements PaymentGateway {
     }
   }
 
-  async refund(transactionId: string, amount?: number): Promise<PaymentRefundResult> {
+  async refund(
+    transactionId: string,
+    amount?: number,
+  ): Promise<PaymentRefundResult> {
     // PayDunya supports refunds via API
     try {
       const response = await fetch(`${this.baseUrl}/refund`, {
@@ -334,7 +371,8 @@ class PayDunyaGateway implements PaymentGateway {
         error: data.response_text || 'Erreur de remboursement',
       };
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      const errorMessage =
+        error instanceof Error ? error.message : 'Unknown error';
       this.logger.error(`PayDunya refund error: ${errorMessage}`);
       return {
         success: false,
@@ -354,41 +392,70 @@ export class PaymentGatewayService {
 
   constructor(private readonly configService: ConfigService) {
     this.currency = this.configService.get<string>('PAYMENT_CURRENCY') || 'XOF';
-    this.returnUrl = this.configService.get<string>('PAYMENT_RETURN_URL') || 'http://localhost:4200/payment/callback';
-    this.notifyUrl = this.configService.get<string>('PAYMENT_NOTIFY_URL') || 'http://localhost:3000/api/payments/webhook';
+    this.returnUrl =
+      this.configService.get<string>('PAYMENT_RETURN_URL') ||
+      'http://localhost:4200/payment/callback';
+    this.notifyUrl =
+      this.configService.get<string>('PAYMENT_NOTIFY_URL') ||
+      'http://localhost:3000/api/payments/webhook';
     this.initializeGateway();
   }
 
   private initializeGateway(): void {
-    const providerName = this.configService.get<string>('PAYMENT_PROVIDER') || 'mock';
+    const providerName =
+      this.configService.get<string>('PAYMENT_PROVIDER') || 'mock';
 
     switch (providerName.toLowerCase()) {
       case 'cinetpay':
         const cinetApiKey = this.configService.get<string>('CINETPAY_API_KEY');
         const cinetSiteId = this.configService.get<string>('CINETPAY_SITE_ID');
-        const cinetSecretKey = this.configService.get<string>('CINETPAY_SECRET_KEY');
+        const cinetSecretKey = this.configService.get<string>(
+          'CINETPAY_SECRET_KEY',
+        );
 
         if (!cinetApiKey || !cinetSiteId || !cinetSecretKey) {
-          this.logger.warn('CinetPay credentials missing, falling back to mock');
+          this.logger.warn(
+            'CinetPay credentials missing, falling back to mock',
+          );
           this.gateway = new MockPaymentGateway();
         } else {
-          this.gateway = new CinetPayGateway(cinetApiKey, cinetSiteId, cinetSecretKey);
+          this.gateway = new CinetPayGateway(
+            cinetApiKey,
+            cinetSiteId,
+            cinetSecretKey,
+          );
           this.logger.log('Payment gateway: CinetPay initialized');
         }
         break;
 
       case 'paydunya':
-        const pdMasterKey = this.configService.get<string>('PAYDUNYA_MASTER_KEY');
-        const pdPrivateKey = this.configService.get<string>('PAYDUNYA_PRIVATE_KEY');
+        const pdMasterKey = this.configService.get<string>(
+          'PAYDUNYA_MASTER_KEY',
+        );
+        const pdPrivateKey = this.configService.get<string>(
+          'PAYDUNYA_PRIVATE_KEY',
+        );
         const pdToken = this.configService.get<string>('PAYDUNYA_TOKEN');
-        const pdMode = this.configService.get<string>('PAYDUNYA_MODE') as 'test' | 'live' || 'test';
+        const pdMode =
+          (this.configService.get<string>('PAYDUNYA_MODE') as
+            | 'test'
+            | 'live') || 'test';
 
         if (!pdMasterKey || !pdPrivateKey || !pdToken) {
-          this.logger.warn('PayDunya credentials missing, falling back to mock');
+          this.logger.warn(
+            'PayDunya credentials missing, falling back to mock',
+          );
           this.gateway = new MockPaymentGateway();
         } else {
-          this.gateway = new PayDunyaGateway(pdMasterKey, pdPrivateKey, pdToken, pdMode);
-          this.logger.log(`Payment gateway: PayDunya initialized (${pdMode} mode)`);
+          this.gateway = new PayDunyaGateway(
+            pdMasterKey,
+            pdPrivateKey,
+            pdToken,
+            pdMode,
+          );
+          this.logger.log(
+            `Payment gateway: PayDunya initialized (${pdMode} mode)`,
+          );
         }
         break;
 
@@ -429,7 +496,10 @@ export class PaymentGatewayService {
   /**
    * Request a refund
    */
-  async refundPayment(transactionId: string, amount?: number): Promise<PaymentRefundResult> {
+  async refundPayment(
+    transactionId: string,
+    amount?: number,
+  ): Promise<PaymentRefundResult> {
     return this.gateway.refund(transactionId, amount);
   }
 

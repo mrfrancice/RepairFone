@@ -10,7 +10,11 @@ import {
   ParseUUIDPipe,
 } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
-import { ServiceTypesService, CreateServiceTypeDto, UpdateServiceTypeDto } from './service-types.service';
+import {
+  ServiceTypesService,
+  CreateServiceTypeDto,
+  UpdateServiceTypeDto,
+} from './service-types.service';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
 import { RolesGuard } from '../../common/guards/roles.guard';
 import { Roles } from '../../common/decorators/roles.decorator';
@@ -30,7 +34,7 @@ export class ServiceTypesController {
 
   @Get(':id')
   @Public()
-  @ApiOperation({ summary: 'Détails d\'un type de service' })
+  @ApiOperation({ summary: "Détails d'un type de service" })
   findOne(@Param('id', ParseUUIDPipe) id: string) {
     return this.serviceTypesService.findOne(id);
   }
@@ -49,7 +53,10 @@ export class ServiceTypesController {
   @Roles('admin')
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Modifier un type de service (admin)' })
-  update(@Param('id', ParseUUIDPipe) id: string, @Body() dto: UpdateServiceTypeDto) {
+  update(
+    @Param('id', ParseUUIDPipe) id: string,
+    @Body() dto: UpdateServiceTypeDto,
+  ) {
     return this.serviceTypesService.update(id, dto);
   }
 
@@ -66,7 +73,9 @@ export class ServiceTypesController {
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('admin')
   @ApiBearerAuth()
-  @ApiOperation({ summary: 'Initialiser les services pour un appareil (admin)' })
+  @ApiOperation({
+    summary: 'Initialiser les services pour un appareil (admin)',
+  })
   seed(
     @Param('deviceId', ParseUUIDPipe) deviceId: string,
     @Param('category') category: string,

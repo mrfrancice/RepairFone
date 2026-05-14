@@ -10,8 +10,18 @@ import {
   UseGuards,
   ParseUUIDPipe,
 } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiBearerAuth, ApiQuery } from '@nestjs/swagger';
-import { DevicesService, CreateDeviceDto, UpdateDeviceDto, SearchDevicesDto } from './devices.service';
+import {
+  ApiTags,
+  ApiOperation,
+  ApiBearerAuth,
+  ApiQuery,
+} from '@nestjs/swagger';
+import {
+  DevicesService,
+  CreateDeviceDto,
+  UpdateDeviceDto,
+  SearchDevicesDto,
+} from './devices.service';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
 import { RolesGuard } from '../../common/guards/roles.guard';
 import { Roles } from '../../common/decorators/roles.decorator';
@@ -51,7 +61,7 @@ export class DevicesController {
 
   @Get(':id')
   @Public()
-  @ApiOperation({ summary: 'Détails d\'un appareil' })
+  @ApiOperation({ summary: "Détails d'un appareil" })
   findOne(@Param('id', ParseUUIDPipe) id: string) {
     return this.devicesService.findOne(id);
   }
@@ -96,7 +106,10 @@ export class DevicesController {
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('admin')
   @ApiBearerAuth()
-  @ApiOperation({ summary: 'Réinitialiser tous les appareils (admin) - ATTENTION: supprime les données existantes' })
+  @ApiOperation({
+    summary:
+      'Réinitialiser tous les appareils (admin) - ATTENTION: supprime les données existantes',
+  })
   reseed() {
     return this.devicesService.reseedDevices();
   }

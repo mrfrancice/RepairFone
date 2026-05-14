@@ -1,10 +1,26 @@
-import { Injectable, NotFoundException, ForbiddenException } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  ForbiddenException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, FindOptionsWhere, LessThan, IsNull } from 'typeorm';
-import { IsUUID, IsString, IsOptional, IsArray, IsInt, Min, Max } from 'class-validator';
+import {
+  IsUUID,
+  IsString,
+  IsOptional,
+  IsArray,
+  IsInt,
+  Min,
+  Max,
+} from 'class-validator';
 import { Type } from 'class-transformer';
 import { Conversation } from './entities/conversation.entity';
-import { Message, SenderType, MessageAttachment } from './entities/message.entity';
+import {
+  Message,
+  SenderType,
+  MessageAttachment,
+} from './entities/message.entity';
 import { RepairRequest } from '../requests/entities/repair-request.entity';
 import { RepairerProfile } from '../users/entities/repairer-profile.entity';
 import { User, UserRole } from '../users/entities/user.entity';
@@ -54,7 +70,11 @@ export class ChatService {
     private readonly repairerRepo: Repository<RepairerProfile>,
   ) {}
 
-  async getOrCreateConversation(userId: string, userRole: UserRole, dto: CreateConversationDto): Promise<Conversation> {
+  async getOrCreateConversation(
+    userId: string,
+    userRole: UserRole,
+    dto: CreateConversationDto,
+  ): Promise<Conversation> {
     const request = await this.requestRepo.findOne({
       where: { id: dto.requestId },
       relations: ['client', 'repairer'],
@@ -76,7 +96,9 @@ export class ChatService {
 
     // Create new conversation
     if (!request.repairerId) {
-      throw new ForbiddenException('Cette demande n\'a pas encore de réparateur assigné');
+      throw new ForbiddenException(
+        "Cette demande n'a pas encore de réparateur assigné",
+      );
     }
 
     conversation = this.conversationRepo.create({
@@ -91,10 +113,21 @@ export class ChatService {
     return this.getConversation(conversation.id, userId, userRole);
   }
 
-  async getConversation(id: string, userId: string, userRole: UserRole): Promise<Conversation> {
+  async getConversation(
+    id: string,
+    userId: string,
+    userRole: UserRole,
+  ): Promise<Conversation> {
     const conversation = await this.conversationRepo.findOne({
       where: { id },
-      relations: ['client', 'repairer', 'repairer.user', 'request', 'request.device', 'request.serviceType'],
+      relations: [
+        'client',
+        'repairer',
+        'repairer.user',
+        'request',
+        'request.device',
+        'request.serviceType',
+      ],
     });
 
     if (!conversation) {
@@ -102,7 +135,11 @@ export class ChatService {
     }
 
     // Check access
-    const hasAccess = await this.hasConversationAccess(conversation, userId, userRole);
+    const hasAccess = await this.hasConversationAccess(
+      conversation,
+      userId,
+      userRole,
+    );
     if (!hasAccess) {
       throw new ForbiddenException('Accès non autorisé à cette conversation');
     }
@@ -110,7 +147,10 @@ export class ChatService {
     return conversation;
   }
 
-  async getConversations(userId: string, userRole: UserRole): Promise<Conversation[]> {
+  async getConversations(
+    userId: string,
+    userRole: UserRole,
+  ): Promise<Conversation[]> {
     let where: FindOptionsWhere<Conversation>;
 
     if (userRole === UserRole.REPAIRER) {
@@ -127,13 +167,29 @@ export class ChatService {
 
     return this.conversationRepo.find({
       where,
-      relations: ['client', 'repairer', 'repairer.user', 'request', 'request.device', 'request.serviceType'],
+      relations: [
+        'client',
+        'repairer',
+        'repairer.user',
+        'request',
+        'request.device',
+        'request.serviceType',
+      ],
       order: { lastMessageAt: 'DESC' },
     });
   }
 
-  async getMessages(conversationId: string, userId: string, userRole: UserRole, filters: MessageFilters): Promise<{ data: Message[]; hasMore: boolean }> {
-    const conversation = await this.getConversation(conversationId, userId, userRole);
+  async getMessages(
+    conversationId: string,
+    userId: string,
+    userRole: UserRole,
+    filters: MessageFilters,
+  ): Promise<{ data: Message[]; hasMore: boolean }> {
+    const conversation = await this.getConversation(
+      conversationId,
+      userId,
+      userRole,
+    );
 
     const limit = filters.limit || 50;
 
@@ -159,19 +215,30 @@ export class ChatService {
     return { data, hasMore };
   }
 
-  async sendMessage(userId: string, userRole: UserRole, dto: SendMessageDto): Promise<Message> {
+  async sendMessage(
+    userId: string,
+    userRole: UserRole,
+    dto: SendMessageDto,
+  ): Promise<Message> {
     if (!dto.conversationId) {
       throw new NotFoundException('conversationId requis');
     }
-    const conversation = await this.getConversation(dto.conversationId, userId, userRole);
+    const conversation = await this.getConversation(
+      dto.conversationId,
+      userId,
+      userRole,
+    );
 
-    const senderType = userRole === UserRole.REPAIRER ? SenderType.REPAIRER : SenderType.CLIENT;
+    const senderType =
+      userRole === UserRole.REPAIRER ? SenderType.REPAIRER : SenderType.CLIENT;
 
-    const attachments: MessageAttachment[] = (dto.attachments || []).map((url, index) => ({
-      id: `att-${Date.now()}-${index}`,
-      type: url.match(/\.(jpg|jpeg|png|gif|webp)$/i) ? 'image' : 'file',
-      url,
-    }));
+    const attachments: MessageAttachment[] = (dto.attachments || []).map(
+      (url, index) => ({
+        id: `att-${Date.now()}-${index}`,
+        type: url.match(/\.(jpg|jpeg|png|gif|webp)$/i) ? 'image' : 'file',
+        url,
+      }),
+    );
 
     const message = this.messageRepo.create({
       conversationId: conversation.id,
@@ -198,8 +265,16 @@ export class ChatService {
     }) as Promise<Message>;
   }
 
-  async markAsRead(conversationId: string, userId: string, userRole: UserRole): Promise<void> {
-    const conversation = await this.getConversation(conversationId, userId, userRole);
+  async markAsRead(
+    conversationId: string,
+    userId: string,
+    userRole: UserRole,
+  ): Promise<void> {
+    const conversation = await this.getConversation(
+      conversationId,
+      userId,
+      userRole,
+    );
 
     if (userRole === UserRole.REPAIRER) {
       conversation.repairerUnreadCount = 0;
@@ -209,7 +284,8 @@ export class ChatService {
     await this.conversationRepo.save(conversation);
 
     // Mark messages as read
-    const senderType = userRole === UserRole.REPAIRER ? SenderType.CLIENT : SenderType.REPAIRER;
+    const senderType =
+      userRole === UserRole.REPAIRER ? SenderType.CLIENT : SenderType.REPAIRER;
     await this.messageRepo.update(
       {
         conversationId: conversation.id,
@@ -220,7 +296,10 @@ export class ChatService {
     );
   }
 
-  async getTotalUnreadCount(userId: string, userRole: UserRole): Promise<number> {
+  async getTotalUnreadCount(
+    userId: string,
+    userRole: UserRole,
+  ): Promise<number> {
     let where: FindOptionsWhere<Conversation>;
 
     if (userRole === UserRole.REPAIRER) {
@@ -238,11 +317,20 @@ export class ChatService {
     const conversations = await this.conversationRepo.find({ where });
 
     return conversations.reduce((sum, conv) => {
-      return sum + (userRole === UserRole.REPAIRER ? conv.repairerUnreadCount : conv.clientUnreadCount);
+      return (
+        sum +
+        (userRole === UserRole.REPAIRER
+          ? conv.repairerUnreadCount
+          : conv.clientUnreadCount)
+      );
     }, 0);
   }
 
-  private async hasConversationAccess(conversation: Conversation, userId: string, userRole: UserRole): Promise<boolean> {
+  private async hasConversationAccess(
+    conversation: Conversation,
+    userId: string,
+    userRole: UserRole,
+  ): Promise<boolean> {
     if (conversation.clientId === userId) {
       return true;
     }

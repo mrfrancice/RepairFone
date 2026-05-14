@@ -11,7 +11,12 @@ import { RepairersController } from './repairers.controller';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([User, RepairerProfile, RepairRequest, RefreshToken]),
+    TypeOrmModule.forFeature([
+      User,
+      RepairerProfile,
+      RepairRequest,
+      RefreshToken,
+    ]),
   ],
   controllers: [UsersController, RepairersController],
   providers: [UsersService, RepairersService],

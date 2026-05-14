@@ -16,7 +16,7 @@ import { ApiPropertyOptional } from '@nestjs/swagger';
  */
 export class UpdateUserDto {
   @ApiPropertyOptional({
-    description: 'Prénom de l\'utilisateur',
+    description: "Prénom de l'utilisateur",
     example: 'Jean',
     maxLength: 100,
   })
@@ -27,7 +27,7 @@ export class UpdateUserDto {
   firstName?: string;
 
   @ApiPropertyOptional({
-    description: 'Nom de famille de l\'utilisateur',
+    description: "Nom de famille de l'utilisateur",
     example: 'Dupont',
     maxLength: 100,
   })
@@ -38,11 +38,12 @@ export class UpdateUserDto {
   lastName?: string;
 
   @ApiPropertyOptional({
-    description: 'Adresse email (sera marquée comme non vérifiée après modification)',
+    description:
+      'Adresse email (sera marquée comme non vérifiée après modification)',
     example: 'jean.dupont@example.com',
   })
   @IsOptional()
-  @IsEmail({}, { message: 'L\'adresse email n\'est pas valide' })
+  @IsEmail({}, { message: "L'adresse email n'est pas valide" })
   @MaxLength(255)
   email?: string;
 

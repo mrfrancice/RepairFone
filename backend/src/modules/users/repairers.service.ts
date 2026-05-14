@@ -3,7 +3,10 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { IsOptional, IsNumber, IsString, IsBoolean } from 'class-validator';
 import { Type } from 'class-transformer';
-import { RepairerProfile, VerificationStatus } from './entities/repairer-profile.entity';
+import {
+  RepairerProfile,
+  VerificationStatus,
+} from './entities/repairer-profile.entity';
 
 /**
  * CODE-010: Typed interface for repairer search results
@@ -146,7 +149,10 @@ export class RepairersService {
       .createQueryBuilder('repairer')
       .leftJoinAndSelect('repairer.user', 'user')
       .where('repairer.verificationStatus NOT IN (:...excludedStatuses)', {
-        excludedStatuses: [VerificationStatus.REJECTED, VerificationStatus.SUSPENDED],
+        excludedStatuses: [
+          VerificationStatus.REJECTED,
+          VerificationStatus.SUSPENDED,
+        ],
       })
       .andWhere('repairer.isBlocked = false')
       .andWhere('repairer.ratingAvg >= :minRating', { minRating });
@@ -164,11 +170,12 @@ export class RepairersService {
     if (latitude && longitude) {
       // Approximate bounding box (1 degree ≈ 111 km)
       const latDelta = searchRadius / 111;
-      const lngDelta = searchRadius / (111 * Math.cos(latitude * Math.PI / 180));
+      const lngDelta =
+        searchRadius / (111 * Math.cos((latitude * Math.PI) / 180));
 
       queryBuilder.andWhere(
         '(repairer.latitude IS NULL OR repairer.longitude IS NULL OR ' +
-        '(repairer.latitude BETWEEN :minLat AND :maxLat AND repairer.longitude BETWEEN :minLng AND :maxLng))',
+          '(repairer.latitude BETWEEN :minLat AND :maxLat AND repairer.longitude BETWEEN :minLng AND :maxLng))',
         {
           minLat: latitude - latDelta,
           maxLat: latitude + latDelta,
@@ -182,7 +189,10 @@ export class RepairersService {
     // puis trier par note décroissante. Évite que des comptes neufs
     // sans aucun avis polluent le haut du classement à égalité.
     queryBuilder
-      .addSelect('CASE WHEN repairer.ratingCount > 0 THEN 1 ELSE 0 END', 'has_reviews')
+      .addSelect(
+        'CASE WHEN repairer.ratingCount > 0 THEN 1 ELSE 0 END',
+        'has_reviews',
+      )
       .orderBy('has_reviews', 'DESC')
       .addOrderBy('repairer.ratingAvg', 'DESC')
       .addOrderBy('repairer.totalRepairs', 'DESC');
@@ -223,7 +233,8 @@ export class RepairersService {
           reviewCount: profile.ratingCount || 0,
           isAvailable: profile.isAvailable,
           specialties: [],
-          isVerified: profile.verificationStatus === VerificationStatus.VERIFIED,
+          isVerified:
+            profile.verificationStatus === VerificationStatus.VERIFIED,
           responseTime: 15,
           completedRepairs: profile.totalRepairs || 0,
           yearsOfExperience: 0,
@@ -248,14 +259,21 @@ export class RepairersService {
   }
 
   // Haversine formula for distance calculation
-  private calculateDistance(lat1: number, lon1: number, lat2: number, lon2: number): number {
+  private calculateDistance(
+    lat1: number,
+    lon1: number,
+    lat2: number,
+    lon2: number,
+  ): number {
     const R = 6371; // Earth's radius in km
     const dLat = this.toRad(lat2 - lat1);
     const dLon = this.toRad(lon2 - lon1);
     const a =
       Math.sin(dLat / 2) * Math.sin(dLat / 2) +
-      Math.cos(this.toRad(lat1)) * Math.cos(this.toRad(lat2)) *
-      Math.sin(dLon / 2) * Math.sin(dLon / 2);
+      Math.cos(this.toRad(lat1)) *
+        Math.cos(this.toRad(lat2)) *
+        Math.sin(dLon / 2) *
+        Math.sin(dLon / 2);
     const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
     return Math.round(R * c * 10) / 10; // Round to 1 decimal
   }
@@ -264,7 +282,10 @@ export class RepairersService {
     return deg * (Math.PI / 180);
   }
 
-  async create(userId: string, data: Partial<RepairerProfile>): Promise<RepairerProfile> {
+  async create(
+    userId: string,
+    data: Partial<RepairerProfile>,
+  ): Promise<RepairerProfile> {
     const repairer = this.repairerRepository.create({
       ...data,
       userId,
@@ -272,7 +293,10 @@ export class RepairersService {
     return this.repairerRepository.save(repairer);
   }
 
-  async update(id: string, data: Partial<RepairerProfile>): Promise<RepairerProfile> {
+  async update(
+    id: string,
+    data: Partial<RepairerProfile>,
+  ): Promise<RepairerProfile> {
     const repairer = await this.findById(id);
     Object.assign(repairer, data);
     return this.repairerRepository.save(repairer);
@@ -291,7 +315,11 @@ export class RepairersService {
     return this.repairerRepository.save(repairer);
   }
 
-  async updateRating(repairerId: string, rating: number, reviewCount: number): Promise<void> {
+  async updateRating(
+    repairerId: string,
+    rating: number,
+    reviewCount: number,
+  ): Promise<void> {
     const roundedRating = Math.round(rating * 100) / 100;
 
     // Vérifier si le réparateur doit être bloqué (note cumulée <= -10)
@@ -313,7 +341,10 @@ export class RepairersService {
     }
   }
 
-  async blockRepairer(repairerId: string, reason: string): Promise<RepairerProfile> {
+  async blockRepairer(
+    repairerId: string,
+    reason: string,
+  ): Promise<RepairerProfile> {
     const repairer = await this.findById(repairerId);
     repairer.isBlocked = true;
     repairer.blockedAt = new Date();

@@ -1,4 +1,12 @@
-import { IsUUID, IsEnum, IsString, IsOptional, IsArray, ValidateNested, IsNotEmpty } from 'class-validator';
+import {
+  IsUUID,
+  IsEnum,
+  IsString,
+  IsOptional,
+  IsArray,
+  ValidateNested,
+  IsNotEmpty,
+} from 'class-validator';
 import { Type } from 'class-transformer';
 import { RatingStep } from '../entities/step-rating.entity';
 import { StepRatingItemDto } from './step-rating-item.dto';

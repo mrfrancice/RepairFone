@@ -33,7 +33,8 @@ export class MonitoringService {
       dsn,
       environment: this.config.get<string>('NODE_ENV') || 'development',
       // Échantillonnage : 100% en dev, 10% en prod (limite la facture)
-      tracesSampleRate: this.config.get<string>('NODE_ENV') === 'production' ? 0.1 : 1.0,
+      tracesSampleRate:
+        this.config.get<string>('NODE_ENV') === 'production' ? 0.1 : 1.0,
       // Capture release : utile pour corréler erreurs et déploiements
       release: this.config.get<string>('APP_VERSION'),
       // Filtre des erreurs : on n'envoie pas les HTTP 4xx (ce sont des erreurs utilisateur)
@@ -52,7 +53,10 @@ export class MonitoringService {
 
   captureException(error: unknown, context?: Record<string, unknown>): void {
     if (!this.initialized) {
-      this.logger.error('captureException (Sentry non-init)', { error, context });
+      this.logger.error('captureException (Sentry non-init)', {
+        error,
+        context,
+      });
       return;
     }
     Sentry.captureException(error, { extra: context });

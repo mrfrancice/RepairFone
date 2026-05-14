@@ -1,10 +1,4 @@
-import {
-  Entity,
-  Column,
-  ManyToOne,
-  JoinColumn,
-  Index,
-} from 'typeorm';
+import { Entity, Column, ManyToOne, JoinColumn, Index } from 'typeorm';
 import { BaseEntity } from '../../../common/entities/base.entity';
 import { User } from '../../users/entities/user.entity';
 import { RepairerProfile } from '../../users/entities/repairer-profile.entity';
@@ -45,10 +39,22 @@ export class Quote extends BaseEntity {
   @Column({ name: 'labor_cost', type: 'decimal', precision: 10, scale: 2 })
   laborCost: number;
 
-  @Column({ name: 'parts_cost', type: 'decimal', precision: 10, scale: 2, default: 0 })
+  @Column({
+    name: 'parts_cost',
+    type: 'decimal',
+    precision: 10,
+    scale: 2,
+    default: 0,
+  })
   partsCost: number;
 
-  @Column({ name: 'urgency_supplement', type: 'decimal', precision: 10, scale: 2, default: 0 })
+  @Column({
+    name: 'urgency_supplement',
+    type: 'decimal',
+    precision: 10,
+    scale: 2,
+    default: 0,
+  })
   urgencySupplement: number;
 
   @Column({ name: 'total_amount', type: 'decimal', precision: 10, scale: 2 })
@@ -86,6 +92,12 @@ export class Quote extends BaseEntity {
   @Column({ name: 'rejection_reason', type: 'text', nullable: true })
   rejectionReason?: string;
 
-  @Column({ name: 'client_proposed_price', type: 'decimal', precision: 10, scale: 2, nullable: true })
+  @Column({
+    name: 'client_proposed_price',
+    type: 'decimal',
+    precision: 10,
+    scale: 2,
+    nullable: true,
+  })
   clientProposedPrice?: number;
 }

@@ -1,4 +1,14 @@
-import { IsUUID, IsNumber, IsString, IsOptional, IsArray, ValidateNested, Min, IsInt, IsNotEmpty } from 'class-validator';
+import {
+  IsUUID,
+  IsNumber,
+  IsString,
+  IsOptional,
+  IsArray,
+  ValidateNested,
+  Min,
+  IsInt,
+  IsNotEmpty,
+} from 'class-validator';
 import { Type } from 'class-transformer';
 import { CreateQuotePartDto } from './create-quote-part.dto';
 

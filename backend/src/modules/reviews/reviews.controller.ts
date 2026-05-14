@@ -9,7 +9,12 @@ import {
   ParseUUIDPipe,
   ForbiddenException,
 } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiBearerAuth, ApiQuery } from '@nestjs/swagger';
+import {
+  ApiTags,
+  ApiOperation,
+  ApiBearerAuth,
+  ApiQuery,
+} from '@nestjs/swagger';
 import { ReviewsService } from './reviews.service';
 import { CreateReviewDto, ReviewFilters, CreateStepRatingDto } from './dto';
 import { RatingStep } from './entities/step-rating.entity';
@@ -46,7 +51,7 @@ export class ReviewsController {
 
   @Get('repairer/:repairerId')
   @Public()
-  @ApiOperation({ summary: 'Avis d\'un réparateur' })
+  @ApiOperation({ summary: "Avis d'un réparateur" })
   @ApiQuery({ name: 'page', required: false })
   @ApiQuery({ name: 'limit', required: false })
   findByRepairer(
@@ -58,7 +63,7 @@ export class ReviewsController {
 
   @Get('repairer/:repairerId/stats')
   @Public()
-  @ApiOperation({ summary: 'Statistiques des avis d\'un réparateur' })
+  @ApiOperation({ summary: "Statistiques des avis d'un réparateur" })
   getRepairerStats(@Param('repairerId', ParseUUIDPipe) repairerId: string) {
     return this.reviewsService.getRepairerStats(repairerId);
   }
@@ -66,7 +71,7 @@ export class ReviewsController {
   @Get('request/:requestId')
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
-  @ApiOperation({ summary: 'Avis d\'une demande' })
+  @ApiOperation({ summary: "Avis d'une demande" })
   async findByRequest(
     @Param('requestId', ParseUUIDPipe) requestId: string,
     @CurrentUser() user: User,
@@ -84,7 +89,7 @@ export class ReviewsController {
     const isAdmin = user.role === 'admin';
 
     if (!isClient && !isRepairer && !isAdmin) {
-      throw new ForbiddenException('Vous n\'avez pas accès à cet avis');
+      throw new ForbiddenException("Vous n'avez pas accès à cet avis");
     }
 
     return review;
@@ -92,7 +97,7 @@ export class ReviewsController {
 
   @Get(':id')
   @Public()
-  @ApiOperation({ summary: 'Détails d\'un avis' })
+  @ApiOperation({ summary: "Détails d'un avis" })
   findOne(@Param('id', ParseUUIDPipe) id: string) {
     return this.reviewsService.findOne(id);
   }
@@ -103,19 +108,23 @@ export class ReviewsController {
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Créer des notes par étape (client)' })
-  createStepRating(@CurrentUser() user: User, @Body() dto: CreateStepRatingDto) {
+  createStepRating(
+    @CurrentUser() user: User,
+    @Body() dto: CreateStepRatingDto,
+  ) {
     return this.reviewsService.createStepRating(user.id, dto);
   }
 
   @Get('step-ratings/request/:requestId')
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
-  @ApiOperation({ summary: 'Notes par étape d\'une demande' })
+  @ApiOperation({ summary: "Notes par étape d'une demande" })
   async getStepRatingsForRequest(
     @Param('requestId', ParseUUIDPipe) requestId: string,
     @CurrentUser() user: User,
   ) {
-    const result = await this.reviewsService.getStepRatingsForRequest(requestId);
+    const result =
+      await this.reviewsService.getStepRatingsForRequest(requestId);
 
     if (!result.ratings || result.ratings.length === 0) {
       return result;
@@ -128,7 +137,7 @@ export class ReviewsController {
     const isAdmin = user.role === 'admin';
 
     if (!isClient && !isRepairer && !isAdmin) {
-      throw new ForbiddenException('Vous n\'avez pas accès à ces notes');
+      throw new ForbiddenException("Vous n'avez pas accès à ces notes");
     }
 
     return result;
@@ -148,8 +157,10 @@ export class ReviewsController {
 
   @Get('step-ratings/repairer/:repairerId/stats')
   @Public()
-  @ApiOperation({ summary: 'Statistiques de notes par étape d\'un réparateur' })
-  getRepairerStepRatingStats(@Param('repairerId', ParseUUIDPipe) repairerId: string) {
+  @ApiOperation({ summary: "Statistiques de notes par étape d'un réparateur" })
+  getRepairerStepRatingStats(
+    @Param('repairerId', ParseUUIDPipe) repairerId: string,
+  ) {
     return this.reviewsService.getRepairerStepRatingStats(repairerId);
   }
 }

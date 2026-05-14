@@ -1,10 +1,15 @@
 import { Injectable, BadRequestException } from '@nestjs/common';
 import { Readable } from 'stream';
-import { Payment, PaymentStatus, PaymentMethod, PaymentType } from './entities/payment.entity';
+import {
+  Payment,
+  PaymentStatus,
+  PaymentMethod,
+  PaymentType,
+} from './entities/payment.entity';
 
 // pdfkit n'expose pas un default export ESM compatible : on charge via require()
 // pour rester compatible avec isolatedModules + emitDecoratorMetadata.
-// eslint-disable-next-line @typescript-eslint/no-var-requires
+
 const PDFDocument = require('pdfkit');
 
 /**
@@ -41,7 +46,7 @@ export class ReceiptService {
       .fontSize(10)
       .fillColor('#666')
       .text('Plateforme de réparation mobile et informatique', 50, 75)
-      .text('Côte d\'Ivoire', 50, 89);
+      .text("Côte d'Ivoire", 50, 89);
 
     doc
       .fontSize(18)
@@ -49,8 +54,12 @@ export class ReceiptService {
       .text('REÇU DE PAIEMENT', 350, 50, { align: 'right' })
       .fontSize(10)
       .fillColor('#666')
-      .text(`N° ${payment.paymentNumber ?? payment.id}`, 350, 75, { align: 'right' })
-      .text(this.formatDate(payment.paidAt ?? payment.createdAt), 350, 89, { align: 'right' });
+      .text(`N° ${payment.paymentNumber ?? payment.id}`, 350, 75, {
+        align: 'right',
+      })
+      .text(this.formatDate(payment.paidAt ?? payment.createdAt), 350, 89, {
+        align: 'right',
+      });
 
     // Trait de séparation
     doc
@@ -71,7 +80,11 @@ export class ReceiptService {
 
     // ===== Détails parties =====
     let y = 200;
-    doc.fillColor('#1A1A1A').fontSize(12).text('Client', 50, y).text('Réparateur', 300, y);
+    doc
+      .fillColor('#1A1A1A')
+      .fontSize(12)
+      .text('Client', 50, y)
+      .text('Réparateur', 300, y);
 
     y += 18;
     const repairerUser = payment.repairer?.user;
@@ -91,7 +104,10 @@ export class ReceiptService {
 
     // ===== Appareil + service =====
     y += 50;
-    doc.fontSize(12).fillColor('#1A1A1A').text('Détails de la réparation', 50, y);
+    doc
+      .fontSize(12)
+      .fillColor('#1A1A1A')
+      .text('Détails de la réparation', 50, y);
 
     y += 22;
     if (payment.request?.device) {
@@ -109,20 +125,24 @@ export class ReceiptService {
       doc.text(`Service : ${payment.request.serviceType.name}`, 50, y);
       y += 14;
     }
-    doc.text(`Type de paiement : ${this.paymentTypeLabel(payment.paymentType)}`, 50, y);
+    doc.text(
+      `Type de paiement : ${this.paymentTypeLabel(payment.paymentType)}`,
+      50,
+      y,
+    );
 
     // ===== Montants =====
     y += 50;
-    doc
-      .roundedRect(50, y, 500, 100, 6)
-      .fillColor('#FAFAFA')
-      .fill();
+    doc.roundedRect(50, y, 500, 100, 6).fillColor('#FAFAFA').fill();
 
     doc
       .fillColor('#1A1A1A')
       .fontSize(11)
       .text('Montant', 70, y + 18)
-      .text(this.formatAmount(payment.amount), 470, y + 18, { width: 60, align: 'right' });
+      .text(this.formatAmount(payment.amount), 470, y + 18, {
+        width: 60,
+        align: 'right',
+      });
 
     if (payment.platformFee) {
       doc
@@ -149,14 +169,20 @@ export class ReceiptService {
 
     // ===== Méthode + référence =====
     y += 130;
-    doc.fontSize(11).fillColor('#1A1A1A').text(
-      `Mode de paiement : ${this.paymentMethodLabel(payment.paymentMethod)}`,
-      50,
-      y,
-    );
+    doc
+      .fontSize(11)
+      .fillColor('#1A1A1A')
+      .text(
+        `Mode de paiement : ${this.paymentMethodLabel(payment.paymentMethod)}`,
+        50,
+        y,
+      );
     if (payment.transactionRef) {
       y += 16;
-      doc.fontSize(10).fillColor('#666').text(`Référence transaction : ${payment.transactionRef}`, 50, y);
+      doc
+        .fontSize(10)
+        .fillColor('#666')
+        .text(`Référence transaction : ${payment.transactionRef}`, 50, y);
     }
 
     // ===== Footer =====
@@ -195,7 +221,9 @@ export class ReceiptService {
     });
   }
 
-  private fullName(person: { firstName?: string; lastName?: string } | null | undefined): string {
+  private fullName(
+    person: { firstName?: string; lastName?: string } | null | undefined,
+  ): string {
     if (!person) return '—';
     return [person.firstName, person.lastName].filter(Boolean).join(' ') || '—';
   }
@@ -208,7 +236,7 @@ export class ReceiptService {
       [PaymentMethod.CASH]: 'Espèces',
       [PaymentMethod.CARD]: 'Carte bancaire',
     };
-    return method ? labels[method] ?? String(method) : '—';
+    return method ? (labels[method] ?? String(method)) : '—';
   }
 
   private paymentTypeLabel(type?: PaymentType | null): string {
@@ -218,6 +246,6 @@ export class ReceiptService {
       [PaymentType.FULL]: 'Paiement intégral',
       [PaymentType.REFUND]: 'Remboursement',
     };
-    return type ? labels[type] ?? String(type) : '—';
+    return type ? (labels[type] ?? String(type)) : '—';
   }
 }

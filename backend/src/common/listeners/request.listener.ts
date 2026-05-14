@@ -23,7 +23,9 @@ export class RequestListener {
    * - Update statistics based on status changes
    */
   @OnEvent(EventNames.REQUEST_STATUS_CHANGED, { async: true })
-  async handleRequestStatusChanged(event: RequestStatusChangedEvent): Promise<void> {
+  async handleRequestStatusChanged(
+    event: RequestStatusChangedEvent,
+  ): Promise<void> {
     this.logger.log(event.toLogString());
 
     try {
@@ -46,20 +48,29 @@ export class RequestListener {
         await this.handleAwaitingParts(event);
       }
     } catch (error) {
-      this.logger.error(`Failed to handle request status changed event: ${error.message}`, error.stack);
+      this.logger.error(
+        `Failed to handle request status changed event: ${error.message}`,
+        error.stack,
+      );
     }
   }
 
-  private async handleRequestCompleted(event: RequestStatusChangedEvent): Promise<void> {
+  private async handleRequestCompleted(
+    event: RequestStatusChangedEvent,
+  ): Promise<void> {
     // Notify client that repair is completed
     await this.notificationsService.notifyRepairCompleted(
       event.clientId,
       event.requestId,
     );
-    this.logger.debug(`Completion notification sent to client ${event.clientId} for request ${event.requestNumber}`);
+    this.logger.debug(
+      `Completion notification sent to client ${event.clientId} for request ${event.requestNumber}`,
+    );
   }
 
-  private async handleRequestAccepted(event: RequestStatusChangedEvent): Promise<void> {
+  private async handleRequestAccepted(
+    event: RequestStatusChangedEvent,
+  ): Promise<void> {
     // Notify client that request was accepted
     await this.notificationsService.create({
       userId: event.clientId,
@@ -69,10 +80,14 @@ export class RequestListener {
       referenceType: 'request',
       referenceId: event.requestId,
     });
-    this.logger.debug(`Acceptance notification sent to client ${event.clientId} for request ${event.requestNumber}`);
+    this.logger.debug(
+      `Acceptance notification sent to client ${event.clientId} for request ${event.requestNumber}`,
+    );
   }
 
-  private async handleRequestRejected(event: RequestStatusChangedEvent): Promise<void> {
+  private async handleRequestRejected(
+    event: RequestStatusChangedEvent,
+  ): Promise<void> {
     // Notify client that request was rejected
     await this.notificationsService.create({
       userId: event.clientId,
@@ -82,18 +97,25 @@ export class RequestListener {
       referenceType: 'request',
       referenceId: event.requestId,
     });
-    this.logger.debug(`Rejection notification sent to client ${event.clientId} for request ${event.requestNumber}`);
+    this.logger.debug(
+      `Rejection notification sent to client ${event.clientId} for request ${event.requestNumber}`,
+    );
   }
 
-  private async handleRequestCancelled(event: RequestStatusChangedEvent): Promise<void> {
+  private async handleRequestCancelled(
+    event: RequestStatusChangedEvent,
+  ): Promise<void> {
     // Notify the other party about cancellation
-    const notifyUserId = event.changedBy === event.clientId && event.repairerId
-      ? event.repairerId
-      : event.clientId;
+    const notifyUserId =
+      event.changedBy === event.clientId && event.repairerId
+        ? event.repairerId
+        : event.clientId;
 
     if (event.changedBy === event.clientId && event.repairerId) {
       // Client cancelled - notify repairer
-      const repairerProfile = await this.repairersService.findByIdOrNull(event.repairerId);
+      const repairerProfile = await this.repairersService.findByIdOrNull(
+        event.repairerId,
+      );
       if (repairerProfile) {
         await this.notificationsService.create({
           userId: repairerProfile.userId,
@@ -115,10 +137,14 @@ export class RequestListener {
         referenceId: event.requestId,
       });
     }
-    this.logger.debug(`Cancellation notification sent for request ${event.requestNumber}`);
+    this.logger.debug(
+      `Cancellation notification sent for request ${event.requestNumber}`,
+    );
   }
 
-  private async handleRepairStarted(event: RequestStatusChangedEvent): Promise<void> {
+  private async handleRepairStarted(
+    event: RequestStatusChangedEvent,
+  ): Promise<void> {
     // Notify client that repair has started
     await this.notificationsService.create({
       userId: event.clientId,
@@ -128,10 +154,14 @@ export class RequestListener {
       referenceType: 'request',
       referenceId: event.requestId,
     });
-    this.logger.debug(`Repair started notification sent to client ${event.clientId} for request ${event.requestNumber}`);
+    this.logger.debug(
+      `Repair started notification sent to client ${event.clientId} for request ${event.requestNumber}`,
+    );
   }
 
-  private async handleRequestDelivered(event: RequestStatusChangedEvent): Promise<void> {
+  private async handleRequestDelivered(
+    event: RequestStatusChangedEvent,
+  ): Promise<void> {
     // Notify client that the device has been delivered
     await this.notificationsService.create({
       userId: event.clientId,
@@ -141,24 +171,34 @@ export class RequestListener {
       referenceType: 'request',
       referenceId: event.requestId,
     });
-    this.logger.debug(`Delivery notification sent to client ${event.clientId} for request ${event.requestNumber}`);
+    this.logger.debug(
+      `Delivery notification sent to client ${event.clientId} for request ${event.requestNumber}`,
+    );
   }
 
-  private async handleRequestDisputed(event: RequestStatusChangedEvent): Promise<void> {
+  private async handleRequestDisputed(
+    event: RequestStatusChangedEvent,
+  ): Promise<void> {
     // Notify repairer about the dispute
     if (event.repairerId) {
-      const repairerProfile = await this.repairersService.findByIdOrNull(event.repairerId);
+      const repairerProfile = await this.repairersService.findByIdOrNull(
+        event.repairerId,
+      );
       if (repairerProfile) {
         await this.notificationsService.notifyDisputeOpened(
           repairerProfile.userId,
           event.requestId,
         );
-        this.logger.debug(`Dispute notification sent to repairer ${repairerProfile.userId} for request ${event.requestNumber}`);
+        this.logger.debug(
+          `Dispute notification sent to repairer ${repairerProfile.userId} for request ${event.requestNumber}`,
+        );
       }
     }
   }
 
-  private async handleAwaitingParts(event: RequestStatusChangedEvent): Promise<void> {
+  private async handleAwaitingParts(
+    event: RequestStatusChangedEvent,
+  ): Promise<void> {
     // Notify client that repair is waiting for parts
     await this.notificationsService.create({
       userId: event.clientId,
@@ -168,6 +208,8 @@ export class RequestListener {
       referenceType: 'request',
       referenceId: event.requestId,
     });
-    this.logger.debug(`Awaiting parts notification sent to client ${event.clientId} for request ${event.requestNumber}`);
+    this.logger.debug(
+      `Awaiting parts notification sent to client ${event.clientId} for request ${event.requestNumber}`,
+    );
   }
 }

@@ -30,7 +30,9 @@ export class CreateSettingsTables1736100000000 implements MigrationInterface {
         CONSTRAINT "PK_specialties" PRIMARY KEY ("id")
       )
     `);
-    await queryRunner.query(`CREATE INDEX IF NOT EXISTS "IDX_specialties_code" ON "specialties" ("code")`);
+    await queryRunner.query(
+      `CREATE INDEX IF NOT EXISTS "IDX_specialties_code" ON "specialties" ("code")`,
+    );
 
     // Create problem_categories table if not exists
     await queryRunner.query(`
@@ -49,7 +51,9 @@ export class CreateSettingsTables1736100000000 implements MigrationInterface {
         CONSTRAINT "PK_problem_categories" PRIMARY KEY ("id")
       )
     `);
-    await queryRunner.query(`CREATE INDEX IF NOT EXISTS "IDX_problem_categories_code" ON "problem_categories" ("code")`);
+    await queryRunner.query(
+      `CREATE INDEX IF NOT EXISTS "IDX_problem_categories_code" ON "problem_categories" ("code")`,
+    );
 
     // Create business_types table if not exists
     await queryRunner.query(`
@@ -69,7 +73,9 @@ export class CreateSettingsTables1736100000000 implements MigrationInterface {
         CONSTRAINT "PK_business_types" PRIMARY KEY ("id")
       )
     `);
-    await queryRunner.query(`CREATE INDEX IF NOT EXISTS "IDX_business_types_code" ON "business_types" ("code")`);
+    await queryRunner.query(
+      `CREATE INDEX IF NOT EXISTS "IDX_business_types_code" ON "business_types" ("code")`,
+    );
 
     // Create experience_ranges table if not exists
     await queryRunner.query(`
@@ -88,7 +94,9 @@ export class CreateSettingsTables1736100000000 implements MigrationInterface {
         CONSTRAINT "PK_experience_ranges" PRIMARY KEY ("id")
       )
     `);
-    await queryRunner.query(`CREATE INDEX IF NOT EXISTS "IDX_experience_ranges_code" ON "experience_ranges" ("code")`);
+    await queryRunner.query(
+      `CREATE INDEX IF NOT EXISTS "IDX_experience_ranges_code" ON "experience_ranges" ("code")`,
+    );
 
     // Create id_document_types table if not exists
     await queryRunner.query(`
@@ -106,7 +114,9 @@ export class CreateSettingsTables1736100000000 implements MigrationInterface {
         CONSTRAINT "PK_id_document_types" PRIMARY KEY ("id")
       )
     `);
-    await queryRunner.query(`CREATE INDEX IF NOT EXISTS "IDX_id_document_types_code" ON "id_document_types" ("code")`);
+    await queryRunner.query(
+      `CREATE INDEX IF NOT EXISTS "IDX_id_document_types_code" ON "id_document_types" ("code")`,
+    );
 
     // Create badge_types table if not exists
     await queryRunner.query(`
@@ -126,7 +136,9 @@ export class CreateSettingsTables1736100000000 implements MigrationInterface {
         CONSTRAINT "PK_badge_types" PRIMARY KEY ("id")
       )
     `);
-    await queryRunner.query(`CREATE INDEX IF NOT EXISTS "IDX_badge_types_code" ON "badge_types" ("code")`);
+    await queryRunner.query(
+      `CREATE INDEX IF NOT EXISTS "IDX_badge_types_code" ON "badge_types" ("code")`,
+    );
 
     // Create app_configs table if not exists
     await queryRunner.query(`
@@ -145,7 +157,9 @@ export class CreateSettingsTables1736100000000 implements MigrationInterface {
         CONSTRAINT "PK_app_configs" PRIMARY KEY ("id")
       )
     `);
-    await queryRunner.query(`CREATE INDEX IF NOT EXISTS "IDX_app_configs_key" ON "app_configs" ("key")`);
+    await queryRunner.query(
+      `CREATE INDEX IF NOT EXISTS "IDX_app_configs_key" ON "app_configs" ("key")`,
+    );
   }
 
   public async down(queryRunner: QueryRunner): Promise<void> {
@@ -155,16 +169,22 @@ export class CreateSettingsTables1736100000000 implements MigrationInterface {
     await queryRunner.query(`DROP INDEX IF EXISTS "IDX_badge_types_code"`);
     await queryRunner.query(`DROP TABLE IF EXISTS "badge_types"`);
 
-    await queryRunner.query(`DROP INDEX IF EXISTS "IDX_id_document_types_code"`);
+    await queryRunner.query(
+      `DROP INDEX IF EXISTS "IDX_id_document_types_code"`,
+    );
     await queryRunner.query(`DROP TABLE IF EXISTS "id_document_types"`);
 
-    await queryRunner.query(`DROP INDEX IF EXISTS "IDX_experience_ranges_code"`);
+    await queryRunner.query(
+      `DROP INDEX IF EXISTS "IDX_experience_ranges_code"`,
+    );
     await queryRunner.query(`DROP TABLE IF EXISTS "experience_ranges"`);
 
     await queryRunner.query(`DROP INDEX IF EXISTS "IDX_business_types_code"`);
     await queryRunner.query(`DROP TABLE IF EXISTS "business_types"`);
 
-    await queryRunner.query(`DROP INDEX IF EXISTS "IDX_problem_categories_code"`);
+    await queryRunner.query(
+      `DROP INDEX IF EXISTS "IDX_problem_categories_code"`,
+    );
     await queryRunner.query(`DROP TABLE IF EXISTS "problem_categories"`);
 
     await queryRunner.query(`DROP INDEX IF EXISTS "IDX_specialties_code"`);

@@ -1,10 +1,4 @@
-import {
-  Entity,
-  Column,
-  ManyToOne,
-  JoinColumn,
-  Index,
-} from 'typeorm';
+import { Entity, Column, ManyToOne, JoinColumn, Index } from 'typeorm';
 import { BaseEntity } from '../../../common/entities/base.entity';
 import { User } from '../../users/entities/user.entity';
 
@@ -64,7 +58,12 @@ export class Notification extends BaseEntity {
   @Column({ type: 'jsonb', nullable: true })
   data?: Record<string, any>;
 
-  @Column({ name: 'reference_type', type: 'varchar', length: 50, nullable: true })
+  @Column({
+    name: 'reference_type',
+    type: 'varchar',
+    length: 50,
+    nullable: true,
+  })
   referenceType?: string; // 'request', 'quote', 'payment', 'dispute', etc.
 
   @Column({ name: 'reference_id', type: 'uuid', nullable: true })

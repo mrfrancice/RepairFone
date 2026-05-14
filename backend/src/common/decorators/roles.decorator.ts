@@ -7,4 +7,5 @@ export enum UserRole {
 }
 
 export const ROLES_KEY = 'roles';
-export const Roles = (...roles: (UserRole | string)[]) => SetMetadata(ROLES_KEY, roles);
+export const Roles = (...roles: (UserRole | string)[]) =>
+  SetMetadata(ROLES_KEY, roles);

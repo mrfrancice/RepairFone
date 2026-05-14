@@ -66,7 +66,8 @@ class LocalStorageProvider implements StorageProvider {
         key,
       };
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      const errorMessage =
+        error instanceof Error ? error.message : 'Unknown error';
       this.logger.error(`Local upload error: ${errorMessage}`);
       return {
         success: false,
@@ -111,7 +112,10 @@ class S3StorageProvider implements StorageProvider {
     this.initializeClient(accessKeyId, secretAccessKey);
   }
 
-  private async initializeClient(accessKeyId: string, secretAccessKey: string): Promise<void> {
+  private async initializeClient(
+    accessKeyId: string,
+    secretAccessKey: string,
+  ): Promise<void> {
     try {
       const { S3Client } = require('@aws-sdk/client-s3');
       this.s3Client = new S3Client({
@@ -123,7 +127,9 @@ class S3StorageProvider implements StorageProvider {
       });
       this.logger.log('S3 client initialized');
     } catch {
-      this.logger.error('AWS SDK not installed. Run: npm install @aws-sdk/client-s3');
+      this.logger.error(
+        'AWS SDK not installed. Run: npm install @aws-sdk/client-s3',
+      );
     }
   }
 
@@ -151,7 +157,8 @@ class S3StorageProvider implements StorageProvider {
         key,
       };
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      const errorMessage =
+        error instanceof Error ? error.message : 'Unknown error';
       this.logger.error(`S3 upload error: ${errorMessage}`);
       return {
         success: false,
@@ -206,7 +213,9 @@ class CloudinaryStorageProvider implements StorageProvider {
       this.cloudinary = cloudinary;
       this.logger.log('Cloudinary client initialized');
     } catch {
-      this.logger.error('Cloudinary SDK not installed. Run: npm install cloudinary');
+      this.logger.error(
+        'Cloudinary SDK not installed. Run: npm install cloudinary',
+      );
     }
   }
 
@@ -238,7 +247,8 @@ class CloudinaryStorageProvider implements StorageProvider {
         key: result.public_id,
       };
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      const errorMessage =
+        error instanceof Error ? error.message : 'Unknown error';
       this.logger.error(`Cloudinary upload error: ${errorMessage}`);
       return {
         success: false,
@@ -271,7 +281,12 @@ export class FileUploadService {
 
   // Default limits
   private readonly defaultMaxSize = 10 * 1024 * 1024; // 10MB
-  private readonly imageTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
+  private readonly imageTypes = [
+    'image/jpeg',
+    'image/png',
+    'image/gif',
+    'image/webp',
+  ];
   private readonly documentTypes = [
     'application/pdf',
     'image/jpeg',
@@ -285,35 +300,54 @@ export class FileUploadService {
   }
 
   private initializeProvider(): void {
-    const providerName = this.configService.get<string>('STORAGE_PROVIDER') || 'local';
+    const providerName =
+      this.configService.get<string>('STORAGE_PROVIDER') || 'local';
 
     switch (providerName.toLowerCase()) {
       case 's3':
       case 'aws':
         const awsKey = this.configService.get<string>('AWS_ACCESS_KEY_ID');
-        const awsSecret = this.configService.get<string>('AWS_SECRET_ACCESS_KEY');
+        const awsSecret = this.configService.get<string>(
+          'AWS_SECRET_ACCESS_KEY',
+        );
         const bucket = this.configService.get<string>('AWS_S3_BUCKET');
-        const region = this.configService.get<string>('AWS_REGION') || 'eu-west-1';
+        const region =
+          this.configService.get<string>('AWS_REGION') || 'eu-west-1';
 
         if (!awsKey || !awsSecret || !bucket) {
           this.logger.warn('AWS credentials missing, falling back to local');
           this.provider = this.createLocalProvider();
         } else {
-          this.provider = new S3StorageProvider(awsKey, awsSecret, bucket, region);
+          this.provider = new S3StorageProvider(
+            awsKey,
+            awsSecret,
+            bucket,
+            region,
+          );
           this.logger.log('Storage provider: AWS S3 initialized');
         }
         break;
 
       case 'cloudinary':
-        const cloudName = this.configService.get<string>('CLOUDINARY_CLOUD_NAME');
+        const cloudName = this.configService.get<string>(
+          'CLOUDINARY_CLOUD_NAME',
+        );
         const apiKey = this.configService.get<string>('CLOUDINARY_API_KEY');
-        const apiSecret = this.configService.get<string>('CLOUDINARY_API_SECRET');
+        const apiSecret = this.configService.get<string>(
+          'CLOUDINARY_API_SECRET',
+        );
 
         if (!cloudName || !apiKey || !apiSecret) {
-          this.logger.warn('Cloudinary credentials missing, falling back to local');
+          this.logger.warn(
+            'Cloudinary credentials missing, falling back to local',
+          );
           this.provider = this.createLocalProvider();
         } else {
-          this.provider = new CloudinaryStorageProvider(cloudName, apiKey, apiSecret);
+          this.provider = new CloudinaryStorageProvider(
+            cloudName,
+            apiKey,
+            apiSecret,
+          );
           this.logger.log('Storage provider: Cloudinary initialized');
         }
         break;
@@ -327,8 +361,10 @@ export class FileUploadService {
   }
 
   private createLocalProvider(): LocalStorageProvider {
-    const uploadDir = this.configService.get<string>('UPLOAD_DIR') || './uploads';
-    const baseUrl = this.configService.get<string>('API_URL') || 'http://localhost:3000';
+    const uploadDir =
+      this.configService.get<string>('UPLOAD_DIR') || './uploads';
+    const baseUrl =
+      this.configService.get<string>('API_URL') || 'http://localhost:3000';
     return new LocalStorageProvider(uploadDir, baseUrl);
   }
 
@@ -431,7 +467,10 @@ export class FileUploadService {
 
   // ==================== Private Methods ====================
 
-  private async uploadFile(file: FileInfo, options: UploadOptions): Promise<UploadResult> {
+  private async uploadFile(
+    file: FileInfo,
+    options: UploadOptions,
+  ): Promise<UploadResult> {
     // Validate file size
     const maxSize = options.maxSize || this.defaultMaxSize;
     if (file.size > maxSize) {
@@ -441,7 +480,10 @@ export class FileUploadService {
     }
 
     // Validate file type
-    const allowedTypes = options.allowedTypes || [...this.imageTypes, ...this.documentTypes];
+    const allowedTypes = options.allowedTypes || [
+      ...this.imageTypes,
+      ...this.documentTypes,
+    ];
     if (!allowedTypes.includes(file.mimeType)) {
       throw new BadRequestException(
         `File type not allowed. Allowed types: ${allowedTypes.join(', ')}`,
@@ -477,7 +519,8 @@ export class FileUploadService {
       'image/webp': '.webp',
       'application/pdf': '.pdf',
       'application/msword': '.doc',
-      'application/vnd.openxmlformats-officedocument.wordprocessingml.document': '.docx',
+      'application/vnd.openxmlformats-officedocument.wordprocessingml.document':
+        '.docx',
     };
 
     return mimeExtensions[mimeType] || '';

@@ -27,7 +27,9 @@ export class ReviewListener {
 
     try {
       // Get repairer profile to find the user ID for notification
-      const repairerProfile = await this.repairersService.findByIdOrNull(event.repairerId);
+      const repairerProfile = await this.repairersService.findByIdOrNull(
+        event.repairerId,
+      );
 
       if (repairerProfile) {
         // Send notification to repairer about new review
@@ -43,9 +45,13 @@ export class ReviewListener {
 
       // Log review sentiment for analytics
       if (event.isPositive()) {
-        this.logger.log(`Positive review (${event.rating}/5) received for repairer ${event.repairerId}`);
+        this.logger.log(
+          `Positive review (${event.rating}/5) received for repairer ${event.repairerId}`,
+        );
       } else if (event.isNegative()) {
-        this.logger.warn(`Negative review (${event.rating}/5) received for repairer ${event.repairerId}`);
+        this.logger.warn(
+          `Negative review (${event.rating}/5) received for repairer ${event.repairerId}`,
+        );
       }
 
       // Log if review has a comment (useful for sentiment analysis in the future)
@@ -53,7 +59,10 @@ export class ReviewListener {
         this.logger.debug(`Review ${event.reviewId} includes a comment`);
       }
     } catch (error) {
-      this.logger.error(`Failed to handle review created event: ${error.message}`, error.stack);
+      this.logger.error(
+        `Failed to handle review created event: ${error.message}`,
+        error.stack,
+      );
     }
   }
 }

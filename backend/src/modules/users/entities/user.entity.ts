@@ -1,10 +1,4 @@
-import {
-  Entity,
-  Column,
-  OneToOne,
-  OneToMany,
-  Index,
-} from 'typeorm';
+import { Entity, Column, OneToOne, OneToMany, Index } from 'typeorm';
 import { Exclude } from 'class-transformer';
 import { BaseEntity } from '../../../common/entities/base.entity';
 
@@ -73,10 +67,21 @@ export class User extends BaseEntity {
   @Column({ name: 'locked_until', type: 'timestamptz', nullable: true })
   lockedUntil?: Date;
 
-  @Column({ name: 'preferred_language', type: 'varchar', length: 5, default: 'fr' })
+  @Column({
+    name: 'preferred_language',
+    type: 'varchar',
+    length: 5,
+    default: 'fr',
+  })
   preferredLanguage: string;
 
-  @Column({ name: 'firebase_uid', type: 'varchar', length: 128, nullable: true, unique: true })
+  @Column({
+    name: 'firebase_uid',
+    type: 'varchar',
+    length: 128,
+    nullable: true,
+    unique: true,
+  })
   @Index()
   firebaseUid?: string;
 
@@ -84,6 +89,8 @@ export class User extends BaseEntity {
   repairerProfile?: import('./repairer-profile.entity').RepairerProfile;
 
   get fullName(): string {
-    return [this.firstName, this.lastName].filter(Boolean).join(' ') || 'Utilisateur';
+    return (
+      [this.firstName, this.lastName].filter(Boolean).join(' ') || 'Utilisateur'
+    );
   }
 }

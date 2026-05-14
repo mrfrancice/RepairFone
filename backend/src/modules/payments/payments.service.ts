@@ -1,8 +1,18 @@
-import { Injectable, NotFoundException, ForbiddenException, BadRequestException } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  ForbiddenException,
+  BadRequestException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, FindOptionsWhere, DataSource } from 'typeorm';
 import { EventEmitter2 } from '@nestjs/event-emitter';
-import { Payment, PaymentStatus, PaymentMethod, PaymentType } from './entities/payment.entity';
+import {
+  Payment,
+  PaymentStatus,
+  PaymentMethod,
+  PaymentType,
+} from './entities/payment.entity';
 import { Quote, QuoteStatus } from '../quotes/entities/quote.entity';
 import { RepairRequest } from '../requests/entities/repair-request.entity';
 import { RepairerProfile } from '../users/entities/repairer-profile.entity';
@@ -64,21 +74,29 @@ export class PaymentsService {
       // BIZ-101: Vérifier que le devis est accepté avant d'autoriser le paiement
       if (quote.status !== QuoteStatus.ACCEPTED) {
         throw new BadRequestException(
-          'Le paiement ne peut être effectué que sur un devis accepté'
+          'Le paiement ne peut être effectué que sur un devis accepté',
         );
       }
 
       // Calculate amounts
       const quoteAmount = Number(quote.totalAmount);
-      const platformFee = Math.round(quoteAmount * (this.PLATFORM_FEE_PERCENT / 100));
+      const platformFee = Math.round(
+        quoteAmount * (this.PLATFORM_FEE_PERCENT / 100),
+      );
       let amount: number;
 
       if (dto.paymentType === PaymentType.DEPOSIT) {
-        amount = Math.round((quoteAmount + platformFee) * (this.DEPOSIT_PERCENT / 100));
+        amount = Math.round(
+          (quoteAmount + platformFee) * (this.DEPOSIT_PERCENT / 100),
+        );
       } else if (dto.paymentType === PaymentType.BALANCE) {
         // Get existing deposit payment
         const depositPayment = await queryRunner.manager.findOne(Payment, {
-          where: { quoteId: dto.quoteId, paymentType: PaymentType.DEPOSIT, status: PaymentStatus.COMPLETED },
+          where: {
+            quoteId: dto.quoteId,
+            paymentType: PaymentType.DEPOSIT,
+            status: PaymentStatus.COMPLETED,
+          },
         });
         if (!depositPayment) {
           throw new BadRequestException('Aucun acompte trouvé');
@@ -126,10 +144,21 @@ export class PaymentsService {
     }
   }
 
-  async findOne(id: string, userId: string, userRole: UserRole): Promise<Payment> {
+  async findOne(
+    id: string,
+    userId: string,
+    userRole: UserRole,
+  ): Promise<Payment> {
     const payment = await this.paymentRepo.findOne({
       where: { id },
-      relations: ['client', 'repairer', 'repairer.user', 'request', 'request.device', 'request.serviceType'],
+      relations: [
+        'client',
+        'repairer',
+        'repairer.user',
+        'request',
+        'request.device',
+        'request.serviceType',
+      ],
     });
 
     if (!payment) {
@@ -152,7 +181,11 @@ export class PaymentsService {
     });
   }
 
-  async findByUser(userId: string, userRole: UserRole, filters: PaymentFilters): Promise<{ data: Payment[]; total: number }> {
+  async findByUser(
+    userId: string,
+    userRole: UserRole,
+    filters: PaymentFilters,
+  ): Promise<{ data: Payment[]; total: number }> {
     const page = filters.page || 1;
     const limit = filters.limit || 20;
     const skip = (page - 1) * limit;
@@ -181,7 +214,14 @@ export class PaymentsService {
 
     const [data, total] = await this.paymentRepo.findAndCount({
       where,
-      relations: ['request', 'request.device', 'request.serviceType', 'client', 'repairer', 'repairer.user'],
+      relations: [
+        'request',
+        'request.device',
+        'request.serviceType',
+        'client',
+        'repairer',
+        'repairer.user',
+      ],
       order: { createdAt: 'DESC' },
       skip,
       take: limit,
@@ -292,7 +332,9 @@ export class PaymentsService {
     adminId: string,
     reason: string,
   ): Promise<Payment> {
-    const payment = await this.paymentRepo.findOne({ where: { id: paymentId } });
+    const payment = await this.paymentRepo.findOne({
+      where: { id: paymentId },
+    });
     if (!payment) {
       throw new NotFoundException('Paiement non trouvé');
     }
@@ -335,7 +377,9 @@ export class PaymentsService {
     adminId: string,
     reason: string,
   ): Promise<Payment> {
-    const payment = await this.paymentRepo.findOne({ where: { id: paymentId } });
+    const payment = await this.paymentRepo.findOne({
+      where: { id: paymentId },
+    });
     if (!payment) {
       throw new NotFoundException('Paiement non trouvé');
     }
@@ -343,7 +387,9 @@ export class PaymentsService {
       throw new BadRequestException('Le paiement est déjà bloqué');
     }
     if (payment.status === PaymentStatus.REFUNDED) {
-      throw new BadRequestException('Impossible de bloquer un paiement remboursé');
+      throw new BadRequestException(
+        'Impossible de bloquer un paiement remboursé',
+      );
     }
     payment.status = PaymentStatus.BLOCKED;
     payment.blockedAt = new Date();
@@ -369,15 +415,21 @@ export class PaymentsService {
   }
 
   async adminUnblock(paymentId: string, adminId: string): Promise<Payment> {
-    const payment = await this.paymentRepo.findOne({ where: { id: paymentId } });
+    const payment = await this.paymentRepo.findOne({
+      where: { id: paymentId },
+    });
     if (!payment) {
       throw new NotFoundException('Paiement non trouvé');
     }
     if (payment.status !== PaymentStatus.BLOCKED) {
-      throw new BadRequestException('Seuls les paiements bloqués peuvent être débloqués');
+      throw new BadRequestException(
+        'Seuls les paiements bloqués peuvent être débloqués',
+      );
     }
     // Restaure COMPLETED si paidAt existe, sinon PROCESSING.
-    payment.status = payment.paidAt ? PaymentStatus.COMPLETED : PaymentStatus.PROCESSING;
+    payment.status = payment.paidAt
+      ? PaymentStatus.COMPLETED
+      : PaymentStatus.PROCESSING;
     payment.metadata = {
       ...(payment.metadata ?? {}),
       unblockedByAdminId: adminId,
@@ -408,7 +460,10 @@ export class PaymentsService {
 
     const aggregates = await this.paymentRepo
       .createQueryBuilder('p')
-      .select('COALESCE(SUM(CASE WHEN p.status = :completed THEN p.amount ELSE 0 END), 0)', 'gross')
+      .select(
+        'COALESCE(SUM(CASE WHEN p.status = :completed THEN p.amount ELSE 0 END), 0)',
+        'gross',
+      )
       .addSelect(
         'COALESCE(SUM(CASE WHEN p.status = :completed THEN p.platformFee ELSE 0 END), 0)',
         'platformFees',
@@ -417,7 +472,10 @@ export class PaymentsService {
         'COALESCE(SUM(CASE WHEN p.status = :refunded THEN p.amount ELSE 0 END), 0)',
         'refunded',
       )
-      .setParameters({ completed: PaymentStatus.COMPLETED, refunded: PaymentStatus.REFUNDED })
+      .setParameters({
+        completed: PaymentStatus.COMPLETED,
+        refunded: PaymentStatus.REFUNDED,
+      })
       .getRawOne<{ gross: string; platformFees: string; refunded: string }>();
 
     return {
@@ -431,7 +489,11 @@ export class PaymentsService {
     };
   }
 
-  async verify(paymentId: string, clientId: string, otp?: string): Promise<Payment> {
+  async verify(
+    paymentId: string,
+    clientId: string,
+    otp?: string,
+  ): Promise<Payment> {
     const queryRunner = this.dataSource.createQueryRunner();
     await queryRunner.connect();
     await queryRunner.startTransaction();
@@ -478,7 +540,10 @@ export class PaymentsService {
         payment.paymentMethod,
         payment.transactionRef,
       );
-      this.eventEmitter.emit(EventNames.PAYMENT_COMPLETED, paymentCompletedEvent);
+      this.eventEmitter.emit(
+        EventNames.PAYMENT_COMPLETED,
+        paymentCompletedEvent,
+      );
 
       return this.findOne(paymentId, clientId, UserRole.CLIENT);
     } catch (error) {
@@ -489,7 +554,11 @@ export class PaymentsService {
     }
   }
 
-  async requestRefund(paymentId: string, clientId: string, reason: string): Promise<Payment> {
+  async requestRefund(
+    paymentId: string,
+    clientId: string,
+    reason: string,
+  ): Promise<Payment> {
     const queryRunner = this.dataSource.createQueryRunner();
     await queryRunner.connect();
     await queryRunner.startTransaction();
@@ -565,7 +634,11 @@ export class PaymentsService {
     return payment;
   }
 
-  private async hasPaymentAccess(payment: Payment, userId: string, userRole: UserRole): Promise<boolean> {
+  private async hasPaymentAccess(
+    payment: Payment,
+    userId: string,
+    userRole: UserRole,
+  ): Promise<boolean> {
     if (userRole === UserRole.ADMIN) {
       return true;
     }
