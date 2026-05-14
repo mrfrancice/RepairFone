@@ -416,7 +416,7 @@ import { GeolocationService } from '../../../../core/services/geolocation.servic
       @if (selectedPhoto()) {
         <div class="photo-modal" (click)="selectedPhoto.set(null)">
           <button class="photo-close">✕</button>
-          <img [src]="selectedPhoto()" />
+          <img [src]="selectedPhoto()" alt="Photo agrandie" />
         </div>
       }
     </div>
