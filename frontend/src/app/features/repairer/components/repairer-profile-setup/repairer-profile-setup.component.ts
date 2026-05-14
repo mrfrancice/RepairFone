@@ -8,6 +8,7 @@ import { UiButtonComponent } from '../../../../shared/components/ui-button/ui-bu
 import { UiStepperComponent } from '../../../../shared/components/ui-stepper/ui-stepper.component';
 import { UiSliderComponent } from '../../../../shared/components/ui-slider/ui-slider.component';
 import { LoggerService } from '../../../../core/services/logger.service';
+import { GeolocationService } from '../../../../core/services/geolocation.service';
 import { UiHeaderComponent } from '@app/features/common/components';
 
 @Component({
@@ -896,6 +897,7 @@ export class RepairerProfileSetupComponent implements OnInit {
   readonly store = inject(RepairersStore);
   private readonly router = inject(Router);
   private readonly logger = inject(LoggerService);
+  private readonly geolocation = inject(GeolocationService);
 
   readonly isSubmitting = signal(false);
   readonly showSuccess = signal(false);
@@ -939,29 +941,21 @@ export class RepairerProfileSetupComponent implements OnInit {
     return stepMap[this.store.profileForm().step] || 0;
   }
 
-  detectLocation(): void {
-    if (!navigator.geolocation) {
-      alert('La géolocalisation n\'est pas supportée par votre navigateur');
-      return;
-    }
-
+  async detectLocation(): Promise<void> {
     this.isDetectingLocation.set(true);
-
-    navigator.geolocation.getCurrentPosition(
-      (position) => {
-        this.store.setProfileFormServiceArea({
-          latitude: position.coords.latitude,
-          longitude: position.coords.longitude,
-          radius: this.store.profileForm().serviceArea.radius,
-        });
-        this.isDetectingLocation.set(false);
-      },
-      (error) => {
-        this.logger.error('RepairerProfileSetupComponent', 'Geolocation error', error);
-        this.isDetectingLocation.set(false);
-        alert('Impossible de détecter votre position');
-      }
-    );
+    try {
+      const coords = await this.geolocation.getCurrentPosition();
+      this.store.setProfileFormServiceArea({
+        latitude: coords.latitude,
+        longitude: coords.longitude,
+        radius: this.store.profileForm().serviceArea.radius,
+      });
+    } catch (err: any) {
+      this.logger.error('RepairerProfileSetupComponent', 'Geolocation error', err);
+      alert(err?.message || 'Impossible de détecter votre position');
+    } finally {
+      this.isDetectingLocation.set(false);
+    }
   }
 
   updateRadius(value: number): void {

@@ -5,6 +5,7 @@ import { Router } from '@angular/router';
 import { AuthStore } from '../../../../core/stores/auth.store';
 import { UsersService, type UpdateProfileDto, type UpdateRepairerProfileDto } from '@app/domains/users';
 import { LocationService, City, Commune, Quarter } from '../../../../core/services/location.service';
+import { GeolocationService } from '../../../../core/services/geolocation.service';
 import { SettingsService } from '../../../../core/services/settings.service';
 import { UiHeaderComponent } from '@app/features/common/components';
 import { FormatDatePipe } from '../../../../shared/pipes/format-date.pipe';
@@ -1509,6 +1510,7 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 })
 export class ProfileEditComponent implements OnInit {
   private readonly authStore = inject(AuthStore);
+  private readonly geolocation = inject(GeolocationService);
   private readonly profileService = inject(UsersService);
   private readonly locationService = inject(LocationService);
   private readonly settingsService = inject(SettingsService);
@@ -1821,42 +1823,21 @@ export class ProfileEditComponent implements OnInit {
   }
 
   // Location methods
-  getCurrentLocation(): void {
-    if (!navigator.geolocation) {
-      this.locationError.set('La géolocalisation n\'est pas supportée');
-      return;
-    }
-
+  async getCurrentLocation(): Promise<void> {
     this.isGettingLocation.set(true);
     this.locationError.set(null);
-
-    navigator.geolocation.getCurrentPosition(
-      (position) => {
-        this.profileForm.patchValue({
-          latitude: position.coords.latitude,
-          longitude: position.coords.longitude,
-        });
-        this.hasLocation.set(true);
-        this.isGettingLocation.set(false);
-      },
-      (error) => {
-        this.isGettingLocation.set(false);
-        switch (error.code) {
-          case error.PERMISSION_DENIED:
-            this.locationError.set('Accès à la position refusé');
-            break;
-          case error.POSITION_UNAVAILABLE:
-            this.locationError.set('Position non disponible');
-            break;
-          case error.TIMEOUT:
-            this.locationError.set('Délai dépassé');
-            break;
-          default:
-            this.locationError.set('Erreur de géolocalisation');
-        }
-      },
-      { enableHighAccuracy: true, timeout: 15000, maximumAge: 0 }
-    );
+    try {
+      const coords = await this.geolocation.getCurrentPosition({ maximumAge: 0 });
+      this.profileForm.patchValue({
+        latitude: coords.latitude,
+        longitude: coords.longitude,
+      });
+      this.hasLocation.set(true);
+    } catch (err: any) {
+      this.locationError.set(err?.message || 'Erreur de géolocalisation');
+    } finally {
+      this.isGettingLocation.set(false);
+    }
   }
 
   clearLocation(): void {

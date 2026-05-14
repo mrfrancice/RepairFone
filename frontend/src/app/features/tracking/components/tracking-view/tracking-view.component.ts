@@ -9,6 +9,7 @@ import { UiButtonComponent } from '../../../../shared/components/ui-button/ui-bu
 import { StepRatingComponent } from '@app/features/common/components';
 import { FormatDatePipe } from '../../../../shared/pipes/format-date.pipe';
 import { LoggerService } from '../../../../core/services/logger.service';
+import { GeolocationService } from '../../../../core/services/geolocation.service';
 import { UiHeaderComponent } from '@app/features/common/components';
 
 @Component({
@@ -973,6 +974,7 @@ export class TrackingViewComponent implements OnInit, OnDestroy {
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
   private readonly logger = inject(LoggerService);
+  private readonly geolocation = inject(GeolocationService);
 
   readonly request = signal<RepairRequest | null>(null);
   readonly isLoading = signal(true);
@@ -1173,19 +1175,9 @@ export class TrackingViewComponent implements OnInit, OnDestroy {
   }
 
   private async detectUserLocation(): Promise<void> {
-    if (!navigator.geolocation) return;
-
     try {
-      const position = await new Promise<GeolocationPosition>((resolve, reject) => {
-        navigator.geolocation.getCurrentPosition(resolve, reject, {
-          enableHighAccuracy: true,
-          timeout: 10000
-        });
-      });
-      this.userLocation.set({
-        lat: position.coords.latitude,
-        lng: position.coords.longitude
-      });
+      const coords = await this.geolocation.getCurrentPosition();
+      this.userLocation.set({ lat: coords.latitude, lng: coords.longitude });
     } catch (err) {
       this.logger.error('TrackingViewComponent', 'Error getting user location', err);
     }

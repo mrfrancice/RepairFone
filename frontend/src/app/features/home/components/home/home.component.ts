@@ -12,6 +12,7 @@ import { UiHeaderComponent } from '@app/features/common/components';
 import { StatusLabelsService, RequestStatus } from '../../../../shared/services/status-labels.service';
 import { UiErrorStateComponent } from '../../../../shared/components/ui-error-state/ui-error-state.component';
 import { LoggerService } from '../../../../core/services/logger.service';
+import { GeolocationService } from '../../../../core/services/geolocation.service';
 import { formatDistanceKm } from '../../../../shared/utils/format.utils';
 
 interface NearbyRepairer {
@@ -1083,6 +1084,7 @@ export class HomeComponent implements OnInit {
   private readonly searchService = inject(SearchService);
   readonly statusLabels = inject(StatusLabelsService);
   private readonly logger = inject(LoggerService);
+  private readonly geolocation = inject(GeolocationService);
 
   readonly locationStatus = signal<'idle' | 'loading' | 'success' | 'error'>('idle');
   readonly userAddress = signal<string>('Abidjan, Cote d\'Ivoire');
@@ -1132,21 +1134,10 @@ export class HomeComponent implements OnInit {
   async detectLocation(): Promise<void> {
     this.locationStatus.set('loading');
     try {
-      if ('geolocation' in navigator) {
-        navigator.geolocation.getCurrentPosition(
-          (position) => {
-            // In production, reverse geocode this position
-            this.userAddress.set('Cocody, Abidjan');
-            this.locationStatus.set('success');
-          },
-          () => {
-            this.locationStatus.set('error');
-          },
-          { timeout: 10000 }
-        );
-      } else {
-        this.locationStatus.set('error');
-      }
+      await this.geolocation.getCurrentPosition();
+      // In production, reverse geocode this position
+      this.userAddress.set('Cocody, Abidjan');
+      this.locationStatus.set('success');
     } catch {
       this.locationStatus.set('error');
     }

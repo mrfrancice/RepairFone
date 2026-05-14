@@ -7,6 +7,7 @@ export * from './services/logger.service';
 export * from './services/theme.service';
 export * from './services/biometric.service';
 export * from './services/haptic.service';
+export * from './services/geolocation.service';
 
 // Core Stores
 export * from './stores/auth.store';

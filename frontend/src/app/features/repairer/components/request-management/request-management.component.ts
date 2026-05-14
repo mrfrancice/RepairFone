@@ -10,6 +10,7 @@ import { FormatDatePipe } from '../../../../shared/pipes/format-date.pipe';
 import { InitialsPipe } from '../../../../shared/pipes/initials.pipe';
 import { PhoneFormatPipe } from '../../../../shared/pipes/phone-format.pipe';
 import { LoggerService } from '../../../../core/services/logger.service';
+import { GeolocationService } from '../../../../core/services/geolocation.service';
 
 @Component({
   selector: 'app-request-management',
@@ -1324,6 +1325,7 @@ export class RequestManagementComponent implements OnInit {
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
   private readonly logger = inject(LoggerService);
+  private readonly geolocation = inject(GeolocationService);
 
   readonly isLoading = signal(false);
   readonly isLoadingMore = signal(false);
@@ -1618,26 +1620,15 @@ export class RequestManagementComponent implements OnInit {
     this.loadRequests();
   }
 
-  detectLocation(): void {
+  async detectLocation(): Promise<void> {
     this.locationStatus.set('loading');
-    if ('geolocation' in navigator) {
-      navigator.geolocation.getCurrentPosition(
-        (position) => {
-          // En production, faire du reverse geocoding
-          const repairerProfile = this.authStore.user()?.repairerProfile;
-          if (repairerProfile?.address) {
-            this.userAddress.set(repairerProfile.address);
-          } else {
-            this.userAddress.set('Cocody, Abidjan');
-          }
-          this.locationStatus.set('success');
-        },
-        () => {
-          this.locationStatus.set('error');
-        },
-        { timeout: 10000 }
-      );
-    } else {
+    try {
+      await this.geolocation.getCurrentPosition();
+      // En production, faire du reverse geocoding
+      const repairerProfile = this.authStore.user()?.repairerProfile;
+      this.userAddress.set(repairerProfile?.address || 'Cocody, Abidjan');
+      this.locationStatus.set('success');
+    } catch {
       this.locationStatus.set('error');
     }
   }
