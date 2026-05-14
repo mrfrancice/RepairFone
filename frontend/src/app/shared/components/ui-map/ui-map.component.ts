@@ -15,11 +15,13 @@ import {
   ChangeDetectionStrategy
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import type * as Leaflet from 'leaflet';
 import { LoggerService } from '../../../core/services/logger.service';
 import { GeolocationService } from '../../../core/services/geolocation.service';
 
-// Declare Leaflet types
-declare const L: any;
+// Leaflet est chargé dynamiquement via CDN dans loadLeaflet();
+// la déclaration globale typée fournit l'autocomplete sans charger le bundle.
+declare const L: typeof Leaflet;
 
 export interface MapMarker {
   id: string;
@@ -191,9 +193,9 @@ export class UiMapComponent implements OnInit, AfterViewInit, OnDestroy, OnChang
   readonly isLoading = signal(true);
   readonly error = signal<string | null>(null);
 
-  private map: any;
-  private markerLayer: any;
-  private routeLayer: any;
+  private map: Leaflet.Map | undefined;
+  private markerLayer: Leaflet.LayerGroup | undefined;
+  private routeLayer: Leaflet.LayerGroup | undefined;
   private leafletLoaded = false;
 
   ngOnInit(): void {
@@ -287,7 +289,7 @@ export class UiMapComponent implements OnInit, AfterViewInit, OnDestroy, OnChang
 
       // Add click handler
       if (this.interactive) {
-        this.map.on('click', (e: any) => {
+        this.map.on('click', (e: Leaflet.LeafletMouseEvent) => {
           this.mapClick.emit({ lat: e.latlng.lat, lng: e.latlng.lng });
         });
       }
@@ -304,14 +306,15 @@ export class UiMapComponent implements OnInit, AfterViewInit, OnDestroy, OnChang
   }
 
   private updateMarkers(): void {
-    if (!this.markerLayer) return;
+    const layer = this.markerLayer;
+    if (!layer) return;
 
-    this.markerLayer.clearLayers();
+    layer.clearLayers();
 
     this.markers.forEach(marker => {
       const icon = this.createIcon(marker.icon || 'default');
       const leafletMarker = L.marker([marker.latitude, marker.longitude], { icon })
-        .addTo(this.markerLayer);
+        .addTo(layer);
 
       if (marker.popup) {
         leafletMarker.bindPopup(marker.popup);
@@ -344,7 +347,7 @@ export class UiMapComponent implements OnInit, AfterViewInit, OnDestroy, OnChang
     }
   }
 
-  private createIcon(type: string): any {
+  private createIcon(type: string): Leaflet.DivIcon {
     const iconConfigs: Record<string, { color: string; symbol: string }> = {
       default: { color: '#FF9800', symbol: '' },
       user: { color: '#4CAF50', symbol: '' },
