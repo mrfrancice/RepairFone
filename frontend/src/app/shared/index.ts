@@ -1,6 +1,3 @@
-// Shared Models
-export * from './models';
-
 // Shared Components - UI Kit
 export { UiButtonComponent } from './components/ui-button/ui-button.component';
 export { UiInputComponent } from './components/ui-input/ui-input.component';
