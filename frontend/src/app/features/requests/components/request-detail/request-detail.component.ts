@@ -9,6 +9,7 @@ import { AuthStore } from '../../../../core/stores/auth.store';
 import { UiHeaderComponent } from '@app/features/common/components';
 import { StepRatingComponent } from '@app/features/common/components';
 import { LoggerService } from '../../../../core/services/logger.service';
+import { getErrorMessage } from '../../../../shared/utils/error.utils';
 
 // Interface pour les étapes du timeline
 interface TimelineStep {
@@ -3089,8 +3090,8 @@ export class RequestDetailComponent implements OnInit {
 
       const updated = await this.requestsService.updateStatus(request.id, dto);
       this.request.set(updated);
-    } catch (err: any) {
-      this.error.set(err.message || 'Erreur lors de l\'acceptation');
+    } catch (err: unknown) {
+      this.error.set(getErrorMessage(err, 'Erreur lors de l\'acceptation'));
     } finally {
       this.isUpdating.set(false);
     }
@@ -3129,8 +3130,8 @@ export class RequestDetailComponent implements OnInit {
       const updated = await this.requestsService.updateStatus(request.id, dto);
       this.request.set(updated);
       this.closeRejectModal();
-    } catch (err: any) {
-      this.rejectError.set(err.message || 'Erreur lors du rejet');
+    } catch (err: unknown) {
+      this.rejectError.set(getErrorMessage(err, 'Erreur lors du rejet'));
     } finally {
       this.isUpdating.set(false);
     }
@@ -3151,8 +3152,8 @@ export class RequestDetailComponent implements OnInit {
 
       const updated = await this.requestsService.updateStatus(request.id, dto);
       this.request.set(updated);
-    } catch (err: any) {
-      this.error.set(err.message || 'Erreur lors de la mise à jour');
+    } catch (err: unknown) {
+      this.error.set(getErrorMessage(err, 'Erreur lors de la mise à jour'));
     } finally {
       this.isUpdating.set(false);
     }
@@ -3173,8 +3174,8 @@ export class RequestDetailComponent implements OnInit {
 
       const updated = await this.requestsService.updateStatus(request.id, dto);
       this.request.set(updated);
-    } catch (err: any) {
-      this.error.set(err.message || 'Erreur lors de la mise à jour');
+    } catch (err: unknown) {
+      this.error.set(getErrorMessage(err, 'Erreur lors de la mise à jour'));
     } finally {
       this.isUpdating.set(false);
     }
@@ -3260,8 +3261,8 @@ export class RequestDetailComponent implements OnInit {
 
       // Reload request to get updated status
       await this.loadRequest(request.id);
-    } catch (err: any) {
-      this.quoteError.set(err.message || 'Erreur lors de la création du devis');
+    } catch (err: unknown) {
+      this.quoteError.set(getErrorMessage(err, 'Erreur lors de la création du devis'));
     } finally {
       this.isCreatingQuote.set(false);
     }
@@ -3278,8 +3279,8 @@ export class RequestDetailComponent implements OnInit {
     try {
       const updatedQuote = await this.quotesService.acceptQuote(quote.id);
       this.quote.set(updatedQuote);
-    } catch (err: any) {
-      this.quoteError.set(err.message || 'Erreur lors de l\'acceptation du devis');
+    } catch (err: unknown) {
+      this.quoteError.set(getErrorMessage(err, 'Erreur lors de l\'acceptation du devis'));
     } finally {
       this.isUpdating.set(false);
     }
@@ -3337,8 +3338,8 @@ export class RequestDetailComponent implements OnInit {
       if (request) {
         await this.loadRequest(request.id);
       }
-    } catch (err: any) {
-      this.quoteError.set(err.message || 'Erreur lors du refus du devis');
+    } catch (err: unknown) {
+      this.quoteError.set(getErrorMessage(err, 'Erreur lors du refus du devis'));
     } finally {
       this.isUpdating.set(false);
     }
@@ -3372,8 +3373,8 @@ export class RequestDetailComponent implements OnInit {
       if (request) {
         await this.loadRequest(request.id);
       }
-    } catch (err: any) {
-      this.quoteError.set(err.message || 'Erreur lors de l\'acceptation de la contre-proposition');
+    } catch (err: unknown) {
+      this.quoteError.set(getErrorMessage(err, 'Erreur lors de l\'acceptation de la contre-proposition'));
     } finally {
       this.isUpdating.set(false);
     }
@@ -3398,8 +3399,8 @@ export class RequestDetailComponent implements OnInit {
       if (request) {
         await this.loadRequest(request.id);
       }
-    } catch (err: any) {
-      this.quoteError.set(err.message || 'Erreur lors de l\'annulation de la négociation');
+    } catch (err: unknown) {
+      this.quoteError.set(getErrorMessage(err, 'Erreur lors de l\'annulation de la négociation'));
     } finally {
       this.isUpdating.set(false);
     }

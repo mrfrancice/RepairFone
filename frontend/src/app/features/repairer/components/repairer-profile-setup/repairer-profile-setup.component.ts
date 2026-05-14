@@ -2,13 +2,14 @@ import { Component, inject, OnInit, signal, ChangeDetectionStrategy } from '@ang
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
-import { RepairersService, RepairersStore, type UpdateRepairerSettingsDto } from '@app/domains/repairers';
+import { RepairersService, RepairersStore, type UpdateRepairerSettingsDto, type DaySchedule, type KycDocument } from '@app/domains/repairers';
 import { UiCardComponent } from '../../../../shared/components/ui-card/ui-card.component';
 import { UiButtonComponent } from '../../../../shared/components/ui-button/ui-button.component';
 import { UiStepperComponent } from '../../../../shared/components/ui-stepper/ui-stepper.component';
 import { UiSliderComponent } from '../../../../shared/components/ui-slider/ui-slider.component';
 import { LoggerService } from '../../../../core/services/logger.service';
 import { GeolocationService } from '../../../../core/services/geolocation.service';
+import { getErrorMessage } from '../../../../shared/utils/error.utils';
 import { UiHeaderComponent } from '@app/features/common/components';
 
 @Component({
@@ -950,9 +951,9 @@ export class RepairerProfileSetupComponent implements OnInit {
         longitude: coords.longitude,
         radius: this.store.profileForm().serviceArea.radius,
       });
-    } catch (err: any) {
+    } catch (err: unknown) {
       this.logger.error('RepairerProfileSetupComponent', 'Geolocation error', err);
-      alert(err?.message || 'Impossible de détecter votre position');
+      alert(getErrorMessage(err, 'Impossible de détecter votre position'));
     } finally {
       this.isDetectingLocation.set(false);
     }
@@ -966,22 +967,22 @@ export class RepairerProfileSetupComponent implements OnInit {
   }
 
   isDayClosed(day: string): boolean {
-    const hours = this.store.profileForm().workingHours as any;
+    const hours = this.store.profileForm().workingHours as Record<string, DaySchedule | undefined>;
     return hours[day]?.closed === true || !hours[day];
   }
 
   getDayOpen(day: string): string {
-    const hours = this.store.profileForm().workingHours as any;
+    const hours = this.store.profileForm().workingHours as Record<string, DaySchedule | undefined>;
     return hours[day]?.open || '08:00';
   }
 
   getDayClose(day: string): string {
-    const hours = this.store.profileForm().workingHours as any;
+    const hours = this.store.profileForm().workingHours as Record<string, DaySchedule | undefined>;
     return hours[day]?.close || '18:00';
   }
 
   toggleDay(day: string): void {
-    const currentHours = { ...this.store.profileForm().workingHours } as any;
+    const currentHours = { ...this.store.profileForm().workingHours } as Record<string, DaySchedule | undefined>;
 
     if (currentHours[day]?.closed === false || currentHours[day]) {
       currentHours[day] = { closed: true };
@@ -994,14 +995,14 @@ export class RepairerProfileSetupComponent implements OnInit {
 
   setDayOpen(day: string, event: Event): void {
     const value = (event.target as HTMLInputElement).value;
-    const currentHours = { ...this.store.profileForm().workingHours } as any;
+    const currentHours = { ...this.store.profileForm().workingHours } as Record<string, DaySchedule | undefined>;
     currentHours[day] = { ...currentHours[day], open: value };
     this.store.setProfileFormWorkingHours(currentHours);
   }
 
   setDayClose(day: string, event: Event): void {
     const value = (event.target as HTMLInputElement).value;
-    const currentHours = { ...this.store.profileForm().workingHours } as any;
+    const currentHours = { ...this.store.profileForm().workingHours } as Record<string, DaySchedule | undefined>;
     currentHours[day] = { ...currentHours[day], close: value };
     this.store.setProfileFormWorkingHours(currentHours);
   }
@@ -1030,7 +1031,7 @@ export class RepairerProfileSetupComponent implements OnInit {
       const reader = new FileReader();
       reader.onload = async () => {
         try {
-          await this.repairerService.uploadKycDocument(type as any, reader.result as string);
+          await this.repairerService.uploadKycDocument(type as KycDocument['type'], reader.result as string);
           this.kycUploaded.update(uploaded => ({ ...uploaded, [type]: true }));
         } catch (err) {
           this.logger.error('RepairerProfileSetupComponent', 'KYC upload failed', err);
@@ -1062,7 +1063,7 @@ export class RepairerProfileSetupComponent implements OnInit {
       const profile = await this.repairerService.updateProfile(dto);
       this.store.setProfile(profile);
       this.showSuccess.set(true);
-    } catch (err: any) {
+    } catch (err: unknown) {
       this.logger.error('RepairerProfileSetupComponent', 'Profile update failed', err);
     } finally {
       this.isSubmitting.set(false);
