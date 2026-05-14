@@ -8,7 +8,7 @@ import {
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, FindOptionsWhere, DataSource } from 'typeorm';
 import { EventEmitter2 } from '@nestjs/event-emitter';
-import { Quote, QuoteStatus, QuotePart } from './entities/quote.entity';
+import { Quote, QuoteStatus } from './entities/quote.entity';
 import {
   RepairRequest,
   RequestStatus,

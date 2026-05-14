@@ -8,7 +8,7 @@ import {
 
 @ValidatorConstraint({ async: false })
 export class IsStrongPasswordConstraint implements ValidatorConstraintInterface {
-  validate(password: string, args: ValidationArguments): boolean {
+  validate(password: string, _args: ValidationArguments): boolean {
     if (!password || typeof password !== 'string') {
       return false;
     }

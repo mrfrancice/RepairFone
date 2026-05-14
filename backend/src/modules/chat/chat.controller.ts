@@ -22,7 +22,6 @@ import {
 import {
   ChatService,
   CreateConversationDto,
-  SendMessageDto,
   MessageFilters,
 } from './chat.service';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';

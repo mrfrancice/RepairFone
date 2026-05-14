@@ -1,4 +1,4 @@
-import { Entity, Column, OneToOne, OneToMany, Index } from 'typeorm';
+import { Entity, Column, OneToOne, Index } from 'typeorm';
 import { Exclude } from 'class-transformer';
 import { BaseEntity } from '../../../common/entities/base.entity';
 

@@ -8,11 +8,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { Review } from './entities/review.entity';
-import {
-  StepRating,
-  RatingStep,
-  RatingCategory,
-} from './entities/step-rating.entity';
+import { StepRating, RatingStep } from './entities/step-rating.entity';
 import { RequestsService } from '../requests/requests.service';
 import { RepairersService } from '../users/repairers.service';
 import { RequestStatus } from '../requests/entities/repair-request.entity';

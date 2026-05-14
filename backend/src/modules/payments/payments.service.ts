@@ -492,7 +492,7 @@ export class PaymentsService {
   async verify(
     paymentId: string,
     clientId: string,
-    otp?: string,
+    _otp?: string,
   ): Promise<Payment> {
     const queryRunner = this.dataSource.createQueryRunner();
     await queryRunner.connect();

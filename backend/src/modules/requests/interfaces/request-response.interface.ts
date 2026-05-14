@@ -1,6 +1,5 @@
 import {
   RequestStatus,
-  DeliveryMode,
   RepairRequest,
 } from '../entities/repair-request.entity';
 
@@ -69,35 +68,6 @@ export interface StatusHistoryEntry {
   comment?: string;
   changedBy: string;
   createdAt: Date;
-}
-
-/**
- * Base request response properties (common fields)
- */
-interface BaseRequestFields {
-  id: string;
-  requestNumber: string;
-  clientId: string;
-  repairerId?: string;
-  deviceId?: string;
-  serviceTypeId?: string;
-  status: RequestStatus;
-  description?: string;
-  images?: string[];
-  urgency?: string;
-  currency?: string;
-  preferredDate?: Date;
-  preferredTime?: string;
-  clientLatitude?: number;
-  clientLongitude?: number;
-  clientAddress?: string;
-  deliveryMode?: DeliveryMode;
-  rejectionReason?: string;
-  acceptedAt?: Date;
-  rejectedAt?: Date;
-  completedAt?: Date;
-  createdAt: Date;
-  updatedAt: Date;
 }
 
 /**

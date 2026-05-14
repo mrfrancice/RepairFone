@@ -2,7 +2,7 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
 import { getRepositoryToken } from '@nestjs/typeorm';
-import { Repository, MoreThan } from 'typeorm';
+import { Repository } from 'typeorm';
 import {
   UnauthorizedException,
   BadRequestException,
@@ -266,7 +266,7 @@ describe('AuthService', () => {
       smsService.sendOtp.mockResolvedValue({ success: true });
 
       // Act
-      const result = await service.register(repairerDto);
+      const _result = await service.register(repairerDto);
 
       // Assert
       expect(repairersService.create).toHaveBeenCalledWith(

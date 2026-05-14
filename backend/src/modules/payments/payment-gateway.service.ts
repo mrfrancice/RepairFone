@@ -188,8 +188,8 @@ class CinetPayGateway implements PaymentGateway {
   }
 
   async refund(
-    transactionId: string,
-    amount?: number,
+    _transactionId: string,
+    _amount?: number,
   ): Promise<PaymentRefundResult> {
     // CinetPay refund requires contacting support
     this.logger.warn('CinetPay refunds require manual processing');
