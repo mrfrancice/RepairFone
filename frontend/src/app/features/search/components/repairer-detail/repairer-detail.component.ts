@@ -14,6 +14,7 @@ import { UiHeaderComponent } from '@app/features/common/components';
 import { FormatDatePipe } from '../../../../shared/pipes/format-date.pipe';
 import { LoggerService } from '../../../../core/services/logger.service';
 import { ToastService } from '../../../../core/services/toast.service';
+import { formatDistanceKm } from '../../../../shared/utils/format.utils';
 
 interface QualityScore {
   label: string;
@@ -2637,12 +2638,7 @@ export class RepairerDetailComponent implements OnInit {
     return 'R';
   }
 
-  formatDistance(km: number): string {
-    if (km < 1) {
-      return `${Math.round(km * 1000)} m`;
-    }
-    return `${km.toFixed(1)} km`;
-  }
+  readonly formatDistance = formatDistanceKm;
 
   // ==========================================
   // REPAIR REQUEST FORM METHODS

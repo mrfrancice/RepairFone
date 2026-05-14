@@ -12,6 +12,7 @@ import { UiHeaderComponent } from '@app/features/common/components';
 import { StatusLabelsService, RequestStatus } from '../../../../shared/services/status-labels.service';
 import { UiErrorStateComponent } from '../../../../shared/components/ui-error-state/ui-error-state.component';
 import { LoggerService } from '../../../../core/services/logger.service';
+import { formatDistanceKm } from '../../../../shared/utils/format.utils';
 
 interface NearbyRepairer {
   id: string;
@@ -1287,12 +1288,7 @@ export class HomeComponent implements OnInit {
     this.router.navigate(['/auth/register'], { queryParams: { role: 'repairer' } });
   }
 
-  formatDistance(km: number): string {
-    if (km < 1) {
-      return `${Math.round(km * 1000)} m`;
-    }
-    return `${km.toFixed(1)} km`;
-  }
+  readonly formatDistance = formatDistanceKm;
 
   formatTime(dateStr: string): string {
     const date = new Date(dateStr);

@@ -8,6 +8,7 @@ import { UiHeaderComponent } from '@app/features/common/components';
 import { UiErrorStateComponent } from '../../../../shared/components/ui-error-state/ui-error-state.component';
 import { ReviewsService } from '@app/domains/reviews';
 import { InfiniteScrollDirective } from '../../../../shared/directives/infinite-scroll.directive';
+import { formatDistanceKm } from '../../../../shared/utils/format.utils';
 
 @Component({
   selector: 'app-search-results',
@@ -1398,12 +1399,7 @@ export class SearchResultsComponent implements OnInit {
     return 'R';
   }
 
-  formatDistance(km: number): string {
-    if (km < 1) {
-      return `${Math.round(km * 1000)} m`;
-    }
-    return `${km.toFixed(1)} km`;
-  }
+  readonly formatDistance = formatDistanceKm;
 
   openMapView(): void {
     this.showMapView.set(true);
