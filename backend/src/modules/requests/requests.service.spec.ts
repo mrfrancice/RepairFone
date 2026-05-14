@@ -321,7 +321,7 @@ describe('RequestsService', () => {
       );
 
       // Act
-      const result = await service.createRequest(clientId, fullCreateDto);
+      const _result = await service.createRequest(clientId, fullCreateDto);
 
       // Assert
       expect(requestRepository.create).toHaveBeenCalledWith(
@@ -524,7 +524,7 @@ describe('RequestsService', () => {
       statusHistoryRepository.save.mockResolvedValue(mockStatusHistory);
 
       // Act
-      const result = await service.updateStatus(
+      const _result = await service.updateStatus(
         requestId,
         userId,
         'repairer',
@@ -653,7 +653,7 @@ describe('RequestsService', () => {
       statusHistoryRepository.save.mockResolvedValue(mockStatusHistory);
 
       // Act
-      const result = await service.updateStatus(
+      const _result = await service.updateStatus(
         requestId,
         'client-uuid-1',
         'client',

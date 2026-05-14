@@ -106,7 +106,7 @@ export class RequestListener {
     event: RequestStatusChangedEvent,
   ): Promise<void> {
     // Notify the other party about cancellation
-    const notifyUserId =
+    const _notifyUserId =
       event.changedBy === event.clientId && event.repairerId
         ? event.repairerId
         : event.clientId;

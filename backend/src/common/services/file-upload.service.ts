@@ -388,7 +388,7 @@ export class FileUploadService {
   /**
    * Upload user avatar
    */
-  async uploadAvatar(file: FileInfo, userId: string): Promise<UploadResult> {
+  async uploadAvatar(file: FileInfo, _userId: string): Promise<UploadResult> {
     return this.uploadFile(file, {
       folder: `avatars`,
       maxSize: 2 * 1024 * 1024, // 2MB

@@ -11,17 +11,14 @@ import {
 } from '../users/entities/repairer-profile.entity';
 import { User, UserStatus, UserRole } from '../users/entities/user.entity';
 import {
-  AdminRepairerListItem,
   AdminRepairerListResponse,
   AdminRepairerDetailResponse,
-  AdminUserListItem,
   AdminUserListResponse,
   AdminUserDetailResponse,
   RepairerListParams,
   UserListParams,
   VerificationDecisionDto,
   VerificationStats,
-  RepairerUserInfo,
 } from './interfaces';
 
 // Re-export interfaces for backward compatibility
@@ -205,7 +202,7 @@ export class AdminService {
   async verifyRepairer(
     id: string,
     decision: VerificationDecisionDto,
-    adminId: string,
+    _adminId: string,
   ): Promise<RepairerProfile> {
     const profile = await this.repairerRepository.findOne({
       where: { id },

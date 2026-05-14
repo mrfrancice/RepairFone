@@ -22,7 +22,7 @@ import { EmailVerificationToken } from './entities/email-verification-token.enti
 import { SmsService } from '../../common/services/sms.service';
 import { EmailService } from '../../common/services/email.service';
 import { FirebaseService } from '../../common/services/firebase.service';
-import { RegisterDto, LoginDto, RepairerProfileDto } from './dto';
+import { RegisterDto, LoginDto } from './dto';
 import {
   AUTH,
   BUSINESS,

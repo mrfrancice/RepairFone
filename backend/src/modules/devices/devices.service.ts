@@ -6,7 +6,7 @@ import {
   Logger,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository, Like, ILike } from 'typeorm';
+import { Repository } from 'typeorm';
 import {
   IsString,
   IsOptional,
@@ -601,7 +601,7 @@ export class DevicesService {
           device.category,
         );
         created++;
-      } catch (err) {
+      } catch (_err) {
         // Skip duplicates
         this.logger.debug(
           `Skipped duplicate: ${deviceDto.brand} ${deviceDto.model}`,

@@ -56,7 +56,7 @@ export class IsSafeUrlConstraint implements ValidatorConstraintInterface {
     'metadata.azure.com', // Azure metadata
   ];
 
-  validate(url: string, args: ValidationArguments): boolean {
+  validate(url: string, _args: ValidationArguments): boolean {
     if (!url || typeof url !== 'string') {
       return false;
     }
@@ -122,7 +122,7 @@ export class IsSafeUrlConstraint implements ValidatorConstraintInterface {
     return this.ALLOWED_DATA_MIME_TYPES.includes(mimeType);
   }
 
-  defaultMessage(args: ValidationArguments): string {
+  defaultMessage(_args: ValidationArguments): string {
     return 'URL invalide ou non securisee. Seules les URLs HTTPS et les images base64 sont autorisees.';
   }
 }

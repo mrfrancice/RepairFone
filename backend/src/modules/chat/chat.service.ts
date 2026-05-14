@@ -23,7 +23,7 @@ import {
 } from './entities/message.entity';
 import { RepairRequest } from '../requests/entities/repair-request.entity';
 import { RepairerProfile } from '../users/entities/repairer-profile.entity';
-import { User, UserRole } from '../users/entities/user.entity';
+import { UserRole } from '../users/entities/user.entity';
 
 export class CreateConversationDto {
   @IsUUID()

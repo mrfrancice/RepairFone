@@ -1,6 +1,5 @@
 import { Entity, Column, ManyToOne, JoinColumn, Index } from 'typeorm';
 import { BaseEntity } from '../../../common/entities/base.entity';
-import { User } from '../../users/entities/user.entity';
 import { RepairerProfile } from '../../users/entities/repairer-profile.entity';
 import { RepairRequest } from '../../requests/entities/repair-request.entity';
 
