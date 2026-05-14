@@ -2,7 +2,7 @@ import { Component, inject, OnInit, signal, ChangeDetectionStrategy } from '@ang
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
 import { ConseilsService, Expert, ConseilsStore } from '@app/domains/conseils';
-import { UiHeaderComponent } from '../../../../shared/components/ui-header/ui-header.component';
+import { UiHeaderComponent } from '@app/features/common/components';
 import { UiErrorStateComponent } from '../../../../shared/components/ui-error-state/ui-error-state.component';
 import { InitialsPipe } from '../../../../shared/pipes/initials.pipe';
 import { LoggerService } from '../../../../core/services/logger.service';

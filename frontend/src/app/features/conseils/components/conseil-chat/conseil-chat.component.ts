@@ -4,7 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import { ConseilsService, ConseilSession, ConseilMessage, ConseilsStore } from '@app/domains/conseils';
 import { StatusLabelsService, SessionStatus } from '../../../../shared/services/status-labels.service';
-import { UiHeaderComponent } from '../../../../shared/components/ui-header/ui-header.component';
+import { UiHeaderComponent } from '@app/features/common/components';
 import { LoggerService } from '../../../../core/services/logger.service';
 
 @Component({

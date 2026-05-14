@@ -6,7 +6,7 @@ import { PaymentsService, PaymentsStore, type PaymentType, type PaymentMethod } 
 import { QuotesService } from '@app/domains/quotes';
 import { UiButtonComponent } from '../../../../shared/components/ui-button/ui-button.component';
 import { UiLoadingComponent } from '../../../../shared/components/ui-loading/ui-loading.component';
-import { UiHeaderComponent } from '../../../../shared/components/ui-header/ui-header.component';
+import { UiHeaderComponent } from '@app/features/common/components';
 import { UiStepperComponent } from '../../../../shared/components/ui-stepper/ui-stepper.component';
 import { FormatDatePipe } from '../../../../shared/pipes/format-date.pipe';
 import { LoggerService } from '../../../../core/services/logger.service';

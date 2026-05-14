@@ -5,7 +5,7 @@ import { RepairersService, RepairersStore, type RepairerStats, type RepairerRequ
 import { AuthStore } from '../../../../core/stores/auth.store';
 import { LoggerService } from '../../../../core/services/logger.service';
 import { UiLoadingComponent } from '../../../../shared/components/ui-loading/ui-loading.component';
-import { UiHeaderComponent } from '../../../../shared/components/ui-header/ui-header.component';
+import { UiHeaderComponent } from '@app/features/common/components';
 import { UiErrorStateComponent } from '../../../../shared/components/ui-error-state/ui-error-state.component';
 import { InitialsPipe } from '../../../../shared/pipes/initials.pipe';
 

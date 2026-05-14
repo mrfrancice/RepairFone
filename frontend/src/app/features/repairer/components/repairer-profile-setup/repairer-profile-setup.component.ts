@@ -8,7 +8,7 @@ import { UiButtonComponent } from '../../../../shared/components/ui-button/ui-bu
 import { UiStepperComponent } from '../../../../shared/components/ui-stepper/ui-stepper.component';
 import { UiSliderComponent } from '../../../../shared/components/ui-slider/ui-slider.component';
 import { LoggerService } from '../../../../core/services/logger.service';
-import { UiHeaderComponent } from '../../../../shared/components/ui-header/ui-header.component';
+import { UiHeaderComponent } from '@app/features/common/components';
 
 @Component({
   selector: 'app-repairer-profile-setup',

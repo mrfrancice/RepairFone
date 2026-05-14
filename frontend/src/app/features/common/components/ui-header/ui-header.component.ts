@@ -1,7 +1,7 @@
 import { Component, Input, Output, EventEmitter, inject, computed, ChangeDetectionStrategy } from '@angular/core';
 import { CommonModule, Location } from '@angular/common';
 import { Router, RouterLink } from '@angular/router';
-import { AuthStore } from '../../../core/stores/auth.store';
+import { AuthStore } from '@app/core/stores/auth.store';
 import { NotificationBellComponent } from '../notification-bell/notification-bell.component';
 
 @Component({

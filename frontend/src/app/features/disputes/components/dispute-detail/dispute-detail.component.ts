@@ -9,7 +9,7 @@ import { UiLoadingComponent } from '../../../../shared/components/ui-loading/ui-
 import { UiPriceDisplayComponent } from '../../../../shared/components/ui-price-display/ui-price-display.component';
 import { FormatDatePipe } from '../../../../shared/pipes/format-date.pipe';
 import { LoggerService } from '../../../../core/services/logger.service';
-import { UiHeaderComponent } from '../../../../shared/components/ui-header/ui-header.component';
+import { UiHeaderComponent } from '@app/features/common/components';
 
 @Component({
   selector: 'app-dispute-detail',

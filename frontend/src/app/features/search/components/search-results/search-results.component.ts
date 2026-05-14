@@ -4,7 +4,7 @@ import { Router, RouterLink } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { SearchService, Repairer } from '../../services/search.service';
 import { SearchStore } from '../../stores/search.store';
-import { UiHeaderComponent } from '../../../../shared/components/ui-header/ui-header.component';
+import { UiHeaderComponent } from '@app/features/common/components';
 import { UiErrorStateComponent } from '../../../../shared/components/ui-error-state/ui-error-state.component';
 import { ReviewsService } from '@app/domains/reviews';
 import { InfiniteScrollDirective } from '../../../../shared/directives/infinite-scroll.directive';

@@ -15,7 +15,7 @@ import {
   DisputeForAdmin,
   DisputesAdminStats,
 } from '../../services/admin.service';
-import { UiHeaderComponent } from '../../../../shared/components/ui-header/ui-header.component';
+import { UiHeaderComponent } from '@app/features/common/components';
 import { HeaderSearchComponent } from '../../../../shared/components/header-search/header-search.component';
 import {
   UiDataGridComponent,

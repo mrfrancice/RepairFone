@@ -5,7 +5,7 @@ import { Router, ActivatedRoute } from '@angular/router';
 import { SearchService, LocationDetails } from '../../services/search.service';
 import { DevicesService, type Device, type ServiceType } from '@app/domains/devices';
 import { SearchStore } from '../../stores/search.store';
-import { UiHeaderComponent } from '../../../../shared/components/ui-header/ui-header.component';
+import { UiHeaderComponent } from '@app/features/common/components';
 import { LoggerService } from '../../../../core/services/logger.service';
 
 interface Problem {

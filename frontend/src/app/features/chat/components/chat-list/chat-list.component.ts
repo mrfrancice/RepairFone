@@ -8,7 +8,7 @@ import { UiEmptyStateComponent } from '../../../../shared/components/ui-empty-st
 import { UiErrorStateComponent } from '../../../../shared/components/ui-error-state/ui-error-state.component';
 import { InitialsPipe } from '../../../../shared/pipes/initials.pipe';
 import { LoggerService } from '../../../../core/services/logger.service';
-import { UiHeaderComponent } from '../../../../shared/components/ui-header/ui-header.component';
+import { UiHeaderComponent } from '@app/features/common/components';
 
 @Component({
   selector: 'app-chat-list',

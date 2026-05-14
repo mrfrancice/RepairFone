@@ -6,7 +6,7 @@ import { AuthStore } from '../../../../core/stores/auth.store';
 import { UsersService, type UpdateProfileDto, type UpdateRepairerProfileDto } from '@app/domains/users';
 import { LocationService, City, Commune, Quarter } from '../../../../core/services/location.service';
 import { SettingsService } from '../../../../core/services/settings.service';
-import { UiHeaderComponent } from '../../../../shared/components/ui-header/ui-header.component';
+import { UiHeaderComponent } from '@app/features/common/components';
 import { FormatDatePipe } from '../../../../shared/pipes/format-date.pipe';
 import { PhoneFormatPipe } from '../../../../shared/pipes/phone-format.pipe';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';

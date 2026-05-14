@@ -3,7 +3,7 @@ import { CommonModule } from '@angular/common';
 import { ReviewsService, Review, StepRating, StepRatingStats } from '@app/domains/reviews';
 import { AuthStore } from '../../../../core/stores/auth.store';
 import { LoggerService } from '../../../../core/services/logger.service';
-import { UiHeaderComponent } from '../../../../shared/components/ui-header/ui-header.component';
+import { UiHeaderComponent } from '@app/features/common/components';
 import { UiErrorStateComponent } from '../../../../shared/components/ui-error-state/ui-error-state.component';
 import { FormatDatePipe } from '../../../../shared/pipes/format-date.pipe';
 import { InitialsPipe } from '../../../../shared/pipes/initials.pipe';

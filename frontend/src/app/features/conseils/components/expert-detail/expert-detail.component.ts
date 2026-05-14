@@ -4,7 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import { ConseilsService, Expert, ConseilsStore } from '@app/domains/conseils';
 import { AuthStore } from '../../../../core/stores/auth.store';
-import { UiHeaderComponent } from '../../../../shared/components/ui-header/ui-header.component';
+import { UiHeaderComponent } from '@app/features/common/components';
 import { InitialsPipe } from '../../../../shared/pipes/initials.pipe';
 import { LoggerService } from '../../../../core/services/logger.service';
 

@@ -6,7 +6,7 @@ import { UiButtonComponent } from '../../../../shared/components/ui-button/ui-bu
 import { UiLoadingComponent } from '../../../../shared/components/ui-loading/ui-loading.component';
 import { FormatDatePipe } from '../../../../shared/pipes/format-date.pipe';
 import { LoggerService } from '../../../../core/services/logger.service';
-import { UiHeaderComponent } from '../../../../shared/components/ui-header/ui-header.component';
+import { UiHeaderComponent } from '@app/features/common/components';
 
 @Component({
   selector: 'app-quote-detail',

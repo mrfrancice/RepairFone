@@ -14,7 +14,7 @@ import {
 import { FormatDatePipe } from '../../../../shared/pipes/format-date.pipe';
 import { TabItem } from '../../../../shared/models';
 import { LoggerService } from '../../../../core/services/logger.service';
-import { UiHeaderComponent } from '../../../../shared/components/ui-header/ui-header.component';
+import { UiHeaderComponent } from '@app/features/common/components';
 import { HeaderSearchComponent } from '../../../../shared/components/header-search/header-search.component';
 
 @Component({

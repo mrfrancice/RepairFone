@@ -5,7 +5,7 @@ import { ActivatedRoute, Router } from '@angular/router';
 import { DisputesService, DisputeReason, CreateDisputeDto, DisputesStore } from '@app/domains/disputes';
 import { UiButtonComponent } from '../../../../shared/components/ui-button/ui-button.component';
 import { UiStepperComponent } from '../../../../shared/components/ui-stepper/ui-stepper.component';
-import { UiHeaderComponent } from '../../../../shared/components/ui-header/ui-header.component';
+import { UiHeaderComponent } from '@app/features/common/components';
 import { LoggerService } from '../../../../core/services/logger.service';
 
 @Component({

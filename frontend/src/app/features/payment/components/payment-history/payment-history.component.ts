@@ -15,7 +15,7 @@ import {
   UiDataGridColumnComponent,
 } from '../../../../shared/components/ui-data-grid';
 import { FormatDatePipe } from '../../../../shared/pipes/format-date.pipe';
-import { UiHeaderComponent } from '../../../../shared/components/ui-header/ui-header.component';
+import { UiHeaderComponent } from '@app/features/common/components';
 import { HeaderSearchComponent } from '../../../../shared/components/header-search/header-search.component';
 
 @Component({

@@ -8,7 +8,7 @@ import { RequestsService, type RequestStats } from '@app/domains/requests';
 import { ReviewsService, Review, SubRatings, StepRatingStats, StepRating } from '@app/domains/reviews';
 import { SecureStorageService } from '../../../../core/services/secure-storage.service';
 import { LoggerService } from '../../../../core/services/logger.service';
-import { UiHeaderComponent } from '../../../../shared/components/ui-header/ui-header.component';
+import { UiHeaderComponent } from '@app/features/common/components';
 import { UiSkeletonComponent } from '../../../../shared/components/ui-skeleton/ui-skeleton.component';
 import { InitialsPipe } from '../../../../shared/pipes/initials.pipe';
 import { PhoneFormatPipe } from '../../../../shared/pipes/phone-format.pipe';

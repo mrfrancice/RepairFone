@@ -9,7 +9,7 @@ import { UiButtonComponent } from '../../../../shared/components/ui-button/ui-bu
 import { UiLoadingComponent } from '../../../../shared/components/ui-loading/ui-loading.component';
 import { UiStepperComponent } from '../../../../shared/components/ui-stepper/ui-stepper.component';
 import { LoggerService } from '../../../../core/services/logger.service';
-import { UiHeaderComponent } from '../../../../shared/components/ui-header/ui-header.component';
+import { UiHeaderComponent } from '@app/features/common/components';
 
 @Component({
   selector: 'app-new-review',

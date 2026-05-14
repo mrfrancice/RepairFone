@@ -5,7 +5,7 @@ import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { ChatService, ChatStore, type ChatMessage, type Conversation } from '@app/domains/chat';
 import { AuthStore } from '../../../../core/stores/auth.store';
 import { UiLoadingComponent } from '../../../../shared/components/ui-loading/ui-loading.component';
-import { UiHeaderComponent } from '../../../../shared/components/ui-header/ui-header.component';
+import { UiHeaderComponent } from '@app/features/common/components';
 import { FormatDatePipe } from '../../../../shared/pipes/format-date.pipe';
 import { InitialsPipe } from '../../../../shared/pipes/initials.pipe';
 import { LoggerService } from '../../../../core/services/logger.service';

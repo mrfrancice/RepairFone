@@ -10,7 +10,7 @@ import { AuthStore } from '../../../../core/stores/auth.store';
 import { ReviewsService, StepRatingStats, RatingCategory } from '@app/domains/reviews';
 import { RequestsService, type CreateRequestDto } from '@app/domains/requests';
 import { ChatService } from '@app/domains/chat';
-import { UiHeaderComponent } from '../../../../shared/components/ui-header/ui-header.component';
+import { UiHeaderComponent } from '@app/features/common/components';
 import { FormatDatePipe } from '../../../../shared/pipes/format-date.pipe';
 import { LoggerService } from '../../../../core/services/logger.service';
 import { ToastService } from '../../../../core/services/toast.service';

@@ -7,7 +7,7 @@ import {
 } from '@app/domains/notifications';
 import { ToastService } from '../../../../core/services/toast.service';
 import { UiLoadingComponent } from '../../../../shared/components/ui-loading/ui-loading.component';
-import { UiHeaderComponent } from '../../../../shared/components/ui-header/ui-header.component';
+import { UiHeaderComponent } from '@app/features/common/components';
 
 interface NotificationCategory {
   title: string;

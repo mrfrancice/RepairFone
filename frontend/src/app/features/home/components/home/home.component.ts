@@ -8,7 +8,7 @@ import { SearchService } from '../../../search/services/search.service';
 import { UiSearchBarComponent } from '@app/shared';
 import { UiAvatarComponent } from '../../../../shared/components/ui-avatar/ui-avatar.component';
 import { UiSkeletonComponent } from '../../../../shared/components/ui-skeleton/ui-skeleton.component';
-import { UiHeaderComponent } from '../../../../shared/components/ui-header/ui-header.component';
+import { UiHeaderComponent } from '@app/features/common/components';
 import { StatusLabelsService, RequestStatus } from '../../../../shared/services/status-labels.service';
 import { UiErrorStateComponent } from '../../../../shared/components/ui-error-state/ui-error-state.component';
 import { LoggerService } from '../../../../core/services/logger.service';

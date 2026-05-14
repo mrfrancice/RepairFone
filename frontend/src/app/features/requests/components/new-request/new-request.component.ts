@@ -11,7 +11,7 @@ import { SearchStore } from '../../../search/stores/search.store';
 import { UiImageUploadComponent, UploadedImage } from '../../../../shared/components/ui-image-upload/ui-image-upload.component';
 import { UiButtonComponent } from '../../../../shared/components/ui-button/ui-button.component';
 import { UiStepperComponent, StepConfig } from '../../../../shared/components/ui-stepper/ui-stepper.component';
-import { UiHeaderComponent } from '../../../../shared/components/ui-header/ui-header.component';
+import { UiHeaderComponent } from '@app/features/common/components';
 import { FormatDatePipe } from '../../../../shared/pipes/format-date.pipe';
 import { LoggerService } from '../../../../core/services/logger.service';
 import { ToastService } from '../../../../core/services/toast.service';

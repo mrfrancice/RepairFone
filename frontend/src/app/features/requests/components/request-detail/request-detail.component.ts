@@ -6,8 +6,8 @@ import { RequestsService, type RepairRequest, type RequestStatus, type UpdateSta
 import { ReviewsService, RatingStep, StepRating } from '@app/domains/reviews';
 import { QuotesService, type Quote, type QuotePart } from '@app/domains/quotes';
 import { AuthStore } from '../../../../core/stores/auth.store';
-import { UiHeaderComponent } from '../../../../shared/components/ui-header/ui-header.component';
-import { StepRatingComponent } from '../../../../shared/components/step-rating/step-rating.component';
+import { UiHeaderComponent } from '@app/features/common/components';
+import { StepRatingComponent } from '@app/features/common/components';
 import { LoggerService } from '../../../../core/services/logger.service';
 
 // Interface pour les étapes du timeline

@@ -5,7 +5,7 @@ import { RepairersService, RepairersStore, type RepairerRequest, type RequestFil
 import { AuthStore } from '../../../../core/stores/auth.store';
 import { StatusLabelsService, RequestStatus } from '../../../../shared/services/status-labels.service';
 import { HeaderSearchComponent } from '../../../../shared/components/header-search/header-search.component';
-import { UiHeaderComponent } from '../../../../shared/components/ui-header/ui-header.component';
+import { UiHeaderComponent } from '@app/features/common/components';
 import { FormatDatePipe } from '../../../../shared/pipes/format-date.pipe';
 import { InitialsPipe } from '../../../../shared/pipes/initials.pipe';
 import { PhoneFormatPipe } from '../../../../shared/pipes/phone-format.pipe';

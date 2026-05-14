@@ -6,7 +6,7 @@ import { UiErrorStateComponent } from '../../../../shared/components/ui-error-st
 import { FormatDatePipe } from '../../../../shared/pipes/format-date.pipe';
 import { StatusLabelsService, SessionStatus } from '../../../../shared/services/status-labels.service';
 import { LoggerService } from '../../../../core/services/logger.service';
-import { UiHeaderComponent } from '../../../../shared/components/ui-header/ui-header.component';
+import { UiHeaderComponent } from '@app/features/common/components';
 
 @Component({
   selector: 'app-conseil-sessions',
