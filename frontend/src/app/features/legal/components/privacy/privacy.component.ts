@@ -1,6 +1,6 @@
 import { Component, ChangeDetectionStrategy } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { UiHeaderComponent } from '../../../../shared/components/ui-header/ui-header.component';
+import { UiHeaderComponent } from '@app/features/common/components';
 
 @Component({
   selector: 'app-privacy',

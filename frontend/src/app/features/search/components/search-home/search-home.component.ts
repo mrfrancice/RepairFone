@@ -2,9 +2,10 @@ import { Component, inject, signal, OnInit, ChangeDetectionStrategy } from '@ang
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router, ActivatedRoute } from '@angular/router';
-import { SearchService, Device, ServiceType, LocationDetails } from '../../services/search.service';
+import { SearchService, LocationDetails } from '../../services/search.service';
+import { DevicesService, type Device, type ServiceType } from '@app/domains/devices';
 import { SearchStore } from '../../stores/search.store';
-import { UiHeaderComponent } from '../../../../shared/components/ui-header/ui-header.component';
+import { UiHeaderComponent } from '@app/features/common/components';
 import { LoggerService } from '../../../../core/services/logger.service';
 
 interface Problem {
@@ -858,6 +859,7 @@ interface Problem {
 })
 export class SearchHomeComponent implements OnInit {
   private readonly searchService = inject(SearchService);
+  private readonly devicesService = inject(DevicesService);
   private readonly router = inject(Router);
   private readonly route = inject(ActivatedRoute);
   readonly store = inject(SearchStore);
@@ -958,7 +960,7 @@ export class SearchHomeComponent implements OnInit {
 
   async loadCategories(): Promise<void> {
     try {
-      const categories = await this.searchService.getDeviceCategories();
+      const categories = await this.devicesService.getDeviceCategories();
       // Use default categories if API returns empty
       if (categories && categories.length > 0) {
         this.categories.set(categories);
@@ -1039,7 +1041,7 @@ export class SearchHomeComponent implements OnInit {
 
     try {
       // Pass category to get relevant brands
-      const brands = await this.searchService.getDeviceBrands(category);
+      const brands = await this.devicesService.getDeviceBrands(category);
       this.brands.set(brands);
       await this.loadDevices();
     } catch (err) {
@@ -1057,7 +1059,7 @@ export class SearchHomeComponent implements OnInit {
 
   async loadDevices(): Promise<void> {
     try {
-      const result = await this.searchService.getDevices({
+      const result = await this.devicesService.getDevices({
         category: this.selectedCategory() || undefined,
         brand: this.selectedBrand || undefined,
       });
@@ -1077,7 +1079,7 @@ export class SearchHomeComponent implements OnInit {
     this.serviceTypes.set([]);
 
     try {
-      const services = await this.searchService.getServiceTypes(device.id);
+      const services = await this.devicesService.getServiceTypes(device.id);
       this.serviceTypes.set(services);
     } catch (err) {
       this.logger.error('SearchHomeComponent', 'Error loading service types', err);

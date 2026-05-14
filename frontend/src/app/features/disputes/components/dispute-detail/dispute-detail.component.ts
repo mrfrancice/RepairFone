@@ -2,15 +2,14 @@ import { Component, inject, OnInit, signal, ViewChild, ElementRef, ChangeDetecti
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
-import { DisputesService, Dispute, DisputeMessage } from '../../services/disputes.service';
-import { DisputesStore } from '../../stores/disputes.store';
+import { DisputesService, Dispute, DisputeMessage, DisputesStore } from '@app/domains/disputes';
 import { UiCardComponent } from '../../../../shared/components/ui-card/ui-card.component';
 import { UiButtonComponent } from '../../../../shared/components/ui-button/ui-button.component';
 import { UiLoadingComponent } from '../../../../shared/components/ui-loading/ui-loading.component';
 import { UiPriceDisplayComponent } from '../../../../shared/components/ui-price-display/ui-price-display.component';
 import { FormatDatePipe } from '../../../../shared/pipes/format-date.pipe';
 import { LoggerService } from '../../../../core/services/logger.service';
-import { UiHeaderComponent } from '../../../../shared/components/ui-header/ui-header.component';
+import { UiHeaderComponent } from '@app/features/common/components';
 
 @Component({
   selector: 'app-dispute-detail',

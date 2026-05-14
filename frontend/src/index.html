@@ -7,10 +7,11 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="description" content="RepairFone - Trouvez les meilleurs réparateurs de téléphones mobiles en Côte d'Ivoire">
 
-  <!-- Security Meta Tags -->
-  <meta http-equiv="X-Content-Type-Options" content="nosniff">
-  <meta http-equiv="X-Frame-Options" content="DENY">
-  <meta http-equiv="X-XSS-Protection" content="1; mode=block">
+  <!-- Security : les headers HTTP X-Frame-Options, X-Content-Type-Options,
+       Referrer-Policy sont envoyes par nginx (cf. frontend/nginx.conf en prod).
+       Les <meta http-equiv> pour ces headers sont interdits par la spec
+       (le navigateur les ignore et logue un warning). X-XSS-Protection est
+       deprecated (retire de Chrome, jamais implemente sur Firefox/Safari). -->
   <meta name="referrer" content="strict-origin-when-cross-origin">
 
   <!-- PWA -->

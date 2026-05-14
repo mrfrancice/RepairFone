@@ -2,8 +2,7 @@ import { Component, inject, OnInit, signal, computed, ChangeDetectionStrategy } 
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
 import { environment } from '../../../../../environments/environment';
-import { PaymentService, Payment, PaymentStatus } from '../../services/payment.service';
-import { PaymentStore } from '../../stores/payment.store';
+import { PaymentsService, PaymentsStore, type Payment, type PaymentStatus } from '@app/domains/payments';
 import { AuthStore } from '../../../../core/stores/auth.store';
 import { UiCardComponent } from '../../../../shared/components/ui-card/ui-card.component';
 import { UiLoadingComponent } from '../../../../shared/components/ui-loading/ui-loading.component';
@@ -16,7 +15,7 @@ import {
   UiDataGridColumnComponent,
 } from '../../../../shared/components/ui-data-grid';
 import { FormatDatePipe } from '../../../../shared/pipes/format-date.pipe';
-import { UiHeaderComponent } from '../../../../shared/components/ui-header/ui-header.component';
+import { UiHeaderComponent } from '@app/features/common/components';
 import { HeaderSearchComponent } from '../../../../shared/components/header-search/header-search.component';
 
 @Component({
@@ -435,8 +434,8 @@ import { HeaderSearchComponent } from '../../../../shared/components/header-sear
   `]
 })
 export class PaymentHistoryComponent implements OnInit {
-  readonly paymentService = inject(PaymentService);
-  readonly store = inject(PaymentStore);
+  readonly paymentService = inject(PaymentsService);
+  readonly store = inject(PaymentsStore);
   readonly authStore = inject(AuthStore);
   private readonly router = inject(Router);
 

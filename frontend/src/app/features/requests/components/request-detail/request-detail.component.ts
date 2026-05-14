@@ -2,12 +2,12 @@ import { Component, inject, signal, OnInit, computed, ChangeDetectionStrategy } 
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
-import { RequestsService, RepairRequest, RequestStatus, UpdateStatusDto } from '../../services/requests.service';
-import { ReviewsService, RatingStep, StepRating } from '../../../reviews/services/reviews.service';
-import { QuotesService, Quote, QuotePart } from '../../../quotes/services/quotes.service';
+import { RequestsService, type RepairRequest, type RequestStatus, type UpdateStatusDto } from '@app/domains/requests';
+import { ReviewsService, RatingStep, StepRating } from '@app/domains/reviews';
+import { QuotesService, type Quote, type QuotePart } from '@app/domains/quotes';
 import { AuthStore } from '../../../../core/stores/auth.store';
-import { UiHeaderComponent } from '../../../../shared/components/ui-header/ui-header.component';
-import { StepRatingComponent } from '../../../../shared/components/step-rating/step-rating.component';
+import { UiHeaderComponent } from '@app/features/common/components';
+import { StepRatingComponent } from '@app/features/common/components';
 import { LoggerService } from '../../../../core/services/logger.service';
 
 // Interface pour les étapes du timeline

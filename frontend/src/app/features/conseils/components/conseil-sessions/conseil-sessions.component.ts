@@ -1,13 +1,12 @@
 import { Component, inject, OnInit, signal, ChangeDetectionStrategy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router, RouterLink } from '@angular/router';
-import { ConseilsService, ConseilSession } from '../../services/conseils.service';
-import { ConseilsStore } from '../../stores/conseils.store';
+import { ConseilsService, ConseilSession, ConseilsStore } from '@app/domains/conseils';
 import { UiErrorStateComponent } from '../../../../shared/components/ui-error-state/ui-error-state.component';
 import { FormatDatePipe } from '../../../../shared/pipes/format-date.pipe';
 import { StatusLabelsService, SessionStatus } from '../../../../shared/services/status-labels.service';
 import { LoggerService } from '../../../../core/services/logger.service';
-import { UiHeaderComponent } from '../../../../shared/components/ui-header/ui-header.component';
+import { UiHeaderComponent } from '@app/features/common/components';
 
 @Component({
   selector: 'app-conseil-sessions',

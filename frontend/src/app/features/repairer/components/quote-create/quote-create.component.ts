@@ -2,14 +2,15 @@ import { Component, inject, OnInit, signal, computed, ChangeDetectionStrategy } 
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
-import { RepairerService, RepairerRequest, CreateQuoteDto, QuotePart } from '../../services/repairer.service';
-import { QuotesService, Quote } from '../../../quotes/services/quotes.service';
+import { RepairersService, type RepairerRequest } from '@app/domains/repairers';
+import { type CreateQuoteDto, type QuotePart } from '@app/domains/quotes';
+import { QuotesService, type Quote } from '@app/domains/quotes';
 import {
   UiButtonComponent,
   UiLoadingComponent,
   UiModalComponent,
 } from '@app/shared';
-import { UiHeaderComponent } from '../../../../shared/components/ui-header/ui-header.component';
+import { UiHeaderComponent } from '@app/features/common/components';
 import { LoggerService } from '../../../../core/services/logger.service';
 
 // Liste prédéfinie des pièces détachées
@@ -81,14 +82,19 @@ interface SelectedPart {
       <!-- Error State -->
       @if (!isLoading() && !request()) {
         <div class="error-container">
-          <p>Impossible de charger la demande</p>
-          <a routerLink="/repairer/requests" class="btn-link">Retour aux demandes</a>
+          <div class="error-icon">⚠️</div>
+          <h2>Impossible de charger la demande</h2>
+          <p class="error-hint">
+            Cette demande n'existe pas, n'est plus accessible, ou ne vous est pas attribuée.
+          </p>
+          <a routerLink="/repairer/requests" class="btn-link">← Retour aux demandes</a>
         </div>
       }
 
       <!-- Main Content -->
       @if (!isLoading() && request()) {
-        <div class="content">
+        <div class="quote-layout">
+        <div class="form-col">
           <!-- Request Info -->
           <section class="card request-card">
             <div class="request-card-header">
@@ -246,8 +252,10 @@ interface SelectedPart {
               ></textarea>
             </div>
           </section>
+        </div>
 
-          <!-- Summary -->
+        <!-- Summary column (sticky on desktop) -->
+        <aside class="summary-col">
           <section class="card summary-card">
             <h3>💳 Récapitulatif</h3>
             <div class="summary-line">
@@ -268,27 +276,48 @@ interface SelectedPart {
               <span>Total TTC</span>
               <span class="total-amount">{{ totalAmount() | number }} FCFA</span>
             </div>
+
+            <!-- Bouton submit dans le récap (desktop) -->
+            <div class="summary-actions">
+              @if (errorMessage()) {
+                <div class="error-banner">⚠️ {{ errorMessage() }}</div>
+              }
+              <ui-button
+                variant="primary"
+                size="lg"
+                [block]="true"
+                [disabled]="!canSubmit()"
+                [loading]="isSubmitting()"
+                icon="📤"
+                (onClick)="submitQuote()"
+              >
+                {{ isSubmitting() ? 'Envoi en cours...' : 'Envoyer le devis' }}
+              </ui-button>
+            </div>
           </section>
+        </aside>
         </div>
       }
 
-      <!-- Bottom Actions (Always visible) -->
-      <div class="bottom-actions">
-        @if (errorMessage()) {
-          <div class="error-banner">⚠️ {{ errorMessage() }}</div>
-        }
-        <ui-button
-          variant="primary"
-          size="lg"
-          [block]="true"
-          [disabled]="!canSubmit()"
-          [loading]="isSubmitting()"
-          icon="📤"
-          (onClick)="submitQuote()"
-        >
-          {{ isSubmitting() ? 'Envoi en cours...' : 'Envoyer le devis' }}
-        </ui-button>
-      </div>
+      <!-- Bottom Actions (mobile uniquement, et seulement si la demande est chargée) -->
+      @if (!isLoading() && request()) {
+        <div class="bottom-actions">
+          @if (errorMessage()) {
+            <div class="error-banner">⚠️ {{ errorMessage() }}</div>
+          }
+          <ui-button
+            variant="primary"
+            size="lg"
+            [block]="true"
+            [disabled]="!canSubmit()"
+            [loading]="isSubmitting()"
+            icon="📤"
+            (onClick)="submitQuote()"
+          >
+            {{ isSubmitting() ? 'Envoi en cours...' : 'Envoyer le devis' }}
+          </ui-button>
+        </div>
+      }
 
       <!-- Success Modal - Utilisation du composant partagé -->
       <ui-modal
@@ -320,25 +349,112 @@ interface SelectedPart {
 
     /* ==================== ERROR STATE ==================== */
     .error-container {
+      max-width: 480px;
+      margin: 3rem auto;
       text-align: center;
-      padding: 3rem 1rem;
-      color: var(--color-text-secondary, #6B7280);
+      padding: 2.5rem 1.5rem;
+      background: white;
+      border-radius: 1.25rem;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.06);
+      border: 1px solid #fde2e2;
+    }
+
+    .error-container .error-icon {
+      font-size: 3rem;
+      margin-bottom: 1rem;
+    }
+
+    .error-container h2 {
+      font-size: 1.25rem;
+      font-weight: 700;
+      color: #1F2937;
+      margin: 0 0 0.5rem;
+    }
+
+    .error-hint {
+      color: #6B7280;
+      font-size: 0.9375rem;
+      line-height: 1.5;
+      margin: 0 0 1.5rem;
     }
 
     .btn-link {
+      display: inline-block;
       color: var(--color-primary-500, #FF9800);
       text-decoration: none;
-      font-weight: 500;
+      font-weight: 600;
+      padding: 0.625rem 1rem;
+      border-radius: 0.75rem;
+      background: rgba(255, 152, 0, 0.08);
+      transition: background 0.15s;
     }
 
     .btn-link:hover {
-      text-decoration: underline;
+      background: rgba(255, 152, 0, 0.15);
     }
 
-    /* ==================== CONTENT ==================== */
-    .content {
+    /* ==================== LAYOUT ==================== */
+    .quote-layout {
+      max-width: 1200px;
+      margin: 0 auto;
       padding: 0 1rem;
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 1rem;
       position: relative;
+    }
+
+    .form-col {
+      min-width: 0; /* permet aux enfants flex/grid de rétrécir correctement */
+    }
+
+    .summary-col {
+      min-width: 0;
+    }
+
+    /* Sur desktop ≥ 1024px : 2 colonnes avec récap sticky à droite */
+    @media (min-width: 1024px) {
+      .quote-layout {
+        grid-template-columns: minmax(0, 1fr) 360px;
+        gap: 1.5rem;
+        align-items: start;
+      }
+      .summary-col {
+        position: sticky;
+        top: calc(var(--header-height, 100px) + 1rem);
+      }
+      /* Le bouton submit est dans le récap → on cache le bandeau bas */
+      .quote-create {
+        padding-bottom: 2rem;
+      }
+      .bottom-actions {
+        display: none;
+      }
+    }
+
+    /* Sur mobile : le bouton submit reste en bandeau bas, on cache celui du
+       récap pour ne pas le dupliquer */
+    @media (max-width: 1023px) {
+      .summary-actions {
+        display: none;
+      }
+    }
+
+    .summary-actions {
+      margin-top: 1.25rem;
+      padding-top: 1.25rem;
+      border-top: 1px solid rgba(255, 255, 255, 0.12);
+    }
+
+    .summary-actions .error-banner {
+      background: rgba(255, 235, 238, 0.95);
+      color: var(--color-terracotta, #C62828);
+      padding: 0.75rem;
+      border-radius: 0.5rem;
+      margin-bottom: 0.75rem;
+      text-align: center;
+      font-size: 0.8125rem;
+      font-weight: 500;
     }
 
     /* ==================== CARDS ==================== */
@@ -815,7 +931,7 @@ interface SelectedPart {
   `]
 })
 export class QuoteCreateComponent implements OnInit {
-  private readonly repairerService = inject(RepairerService);
+  private readonly repairerService = inject(RepairersService);
   private readonly quotesService = inject(QuotesService);
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);

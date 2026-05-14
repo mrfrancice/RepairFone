@@ -1,25 +1,8 @@
 import { Injectable, inject, signal } from '@angular/core';
-import { firstValueFrom, catchError, of } from 'rxjs';
+import { firstValueFrom } from 'rxjs';
 import { ApiService } from '../../../core/services/api.service';
 import { LoggerService } from '../../../core/services/logger.service';
-
-export interface Device {
-  id: string;
-  brand: string;
-  model: string;
-  category: string;
-  imageUrl?: string;
-  serviceTypes?: ServiceType[];
-}
-
-export interface ServiceType {
-  id: string;
-  deviceId: string;
-  name: string;
-  description?: string;
-  basePrice: number;
-  estimatedDuration: number;
-}
+import { GeolocationService } from '../../../core/services/geolocation.service';
 
 export interface RepairerProfile {
   id: string;
@@ -104,6 +87,7 @@ export interface SearchResult {
 export class SearchService {
   private readonly api = inject(ApiService);
   private readonly logger = inject(LoggerService);
+  private readonly geolocation = inject(GeolocationService);
 
   readonly isLoading = signal(false);
   readonly error = signal<string | null>(null);
@@ -111,38 +95,8 @@ export class SearchService {
   // ==========================================
   // API METHODS
   // ==========================================
-
-  async getDevices(params?: {
-    brand?: string;
-    category?: string;
-    search?: string;
-  }): Promise<{ data: Device[]; total: number }> {
-    return firstValueFrom(
-      this.api.get<{ data: Device[]; total: number }>('/devices', params)
-    );
-  }
-
-  async getDeviceBrands(category?: string): Promise<string[]> {
-    return firstValueFrom(
-      this.api.get<string[]>('/devices/brands', category ? { category } : undefined)
-    );
-  }
-
-  async getDeviceCategories(): Promise<string[]> {
-    return firstValueFrom(
-      this.api.get<string[]>('/devices/categories')
-    );
-  }
-
-  async getDevice(id: string): Promise<Device> {
-    return firstValueFrom(this.api.get<Device>(`/devices/${id}`));
-  }
-
-  async getServiceTypes(deviceId: string): Promise<ServiceType[]> {
-    return firstValueFrom(
-      this.api.get<ServiceType[]>(`/service-types/device/${deviceId}`)
-    );
-  }
+  // NB : getDevices/getDeviceBrands/getDeviceCategories/getDevice/getServiceTypes
+  // ont migre vers @app/domains/devices (DevicesService) — Phase 2.1 du refactor.
 
   async searchRepairers(params: SearchParams): Promise<SearchResult> {
     this.isLoading.set(true);
@@ -175,54 +129,29 @@ export class SearchService {
     );
   }
 
+  /**
+   * Wrapper retro-compatible autour de GeolocationService.getCurrentPosition.
+   * Retourne le format `GeolocationPosition` natif pour ne pas casser les
+   * appelants existants (search-home, new-request) qui accedent a
+   * `position.coords.latitude`. Pour du nouveau code, prefere injecter
+   * directement GeolocationService et utiliser `Coordinates`.
+   */
   async getCurrentPosition(): Promise<GeolocationPosition> {
-    return new Promise((resolve, reject) => {
-      if (!navigator.geolocation) {
-        reject(new Error('La géolocalisation n\'est pas supportée par votre navigateur'));
-        return;
-      }
-
-      // First try with high accuracy
-      navigator.geolocation.getCurrentPosition(
-        resolve,
-        (error) => {
-          // If high accuracy fails, try with low accuracy
-          if (error.code === error.TIMEOUT || error.code === error.POSITION_UNAVAILABLE) {
-            navigator.geolocation.getCurrentPosition(
-              resolve,
-              (fallbackError) => {
-                reject(this.getGeolocationError(fallbackError));
-              },
-              {
-                enableHighAccuracy: false,
-                timeout: 15000,
-                maximumAge: 300000, // Accept cached position up to 5 minutes
-              }
-            );
-          } else {
-            reject(this.getGeolocationError(error));
-          }
-        },
-        {
-          enableHighAccuracy: true,
-          timeout: 10000,
-          maximumAge: 60000,
-        }
-      );
-    });
-  }
-
-  private getGeolocationError(error: GeolocationPositionError): Error {
-    switch (error.code) {
-      case error.PERMISSION_DENIED:
-        return new Error('Accès à la position refusé. Veuillez autoriser la géolocalisation dans les paramètres de votre navigateur.');
-      case error.POSITION_UNAVAILABLE:
-        return new Error('Position indisponible. Vérifiez que le GPS est activé.');
-      case error.TIMEOUT:
-        return new Error('Délai d\'attente dépassé. Réessayez ou utilisez la position par défaut.');
-      default:
-        return new Error('Erreur de géolocalisation. Réessayez.');
-    }
+    const coords = await this.geolocation.getCurrentPosition();
+    return {
+      coords: {
+        latitude: coords.latitude,
+        longitude: coords.longitude,
+        accuracy: coords.accuracy ?? 0,
+        altitude: null,
+        altitudeAccuracy: null,
+        heading: null,
+        speed: null,
+        toJSON() { return this; },
+      },
+      timestamp: Date.now(),
+      toJSON() { return this; },
+    } as GeolocationPosition;
   }
 
   async reverseGeocode(latitude: number, longitude: number): Promise<LocationDetails> {

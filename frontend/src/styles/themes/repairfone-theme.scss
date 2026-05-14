@@ -269,7 +269,9 @@ $repairfone-light-theme: mat.define-theme((
   --header-height: 166px;
   --header-height-with-subtitle: 166px;
 
-  // Navigation
+  // Navigation — la bottom-nav est masquee sur desktop, donc la variable
+  // chute a 0 pour eviter le padding-bottom inutile applique par les pages.
+  // Garde la valeur mobile par defaut, override par media query plus bas.
   --bottom-nav-height: 80px;
 
   // Safe areas (iOS notch, Android gesture bar)
@@ -281,6 +283,16 @@ $repairfone-light-theme: mat.define-theme((
   // Content spacing (combines header + safe area)
   --content-top-offset: calc(var(--header-height) + var(--safe-area-top));
   --content-bottom-offset: calc(var(--bottom-nav-height) + var(--safe-area-bottom));
+}
+
+// Sur desktop, la bottom-nav est masquee (cf. bottom-nav.component.ts).
+// On remet --bottom-nav-height a 0 pour que toutes les pages qui calculent
+// leur padding-bottom via `calc(... + var(--bottom-nav-height) ...)` cessent
+// de reserver un espace inutile.
+@media (min-width: 1024px) {
+  :root {
+    --bottom-nav-height: 0px;
+  }
 }
 
 // ============================================================================

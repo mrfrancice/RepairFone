@@ -1,13 +1,12 @@
 import { Component, inject, signal, OnInit, ChangeDetectionStrategy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
-import { QuotesService, Quote } from '../../services/quotes.service';
-import { QuotesStore } from '../../stores/quotes.store';
+import { QuotesService, QuotesStore, type Quote } from '@app/domains/quotes';
 import { UiButtonComponent } from '../../../../shared/components/ui-button/ui-button.component';
 import { UiLoadingComponent } from '../../../../shared/components/ui-loading/ui-loading.component';
 import { FormatDatePipe } from '../../../../shared/pipes/format-date.pipe';
 import { LoggerService } from '../../../../core/services/logger.service';
-import { UiHeaderComponent } from '../../../../shared/components/ui-header/ui-header.component';
+import { UiHeaderComponent } from '@app/features/common/components';
 
 @Component({
   selector: 'app-quote-detail',

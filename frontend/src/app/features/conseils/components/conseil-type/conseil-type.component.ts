@@ -1,10 +1,8 @@
 import { Component, inject, signal, ChangeDetectionStrategy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
-import { ConseilsService } from '../../services/conseils.service';
-import { ConseilsStore } from '../../stores/conseils.store';
-import { ConseilType, ConseilFormat } from '../../../../shared/models';
-import { UiHeaderComponent } from '../../../../shared/components/ui-header/ui-header.component';
+import { ConseilsService, ConseilsStore, type ConseilType, type ConseilFormat } from '@app/domains/conseils';
+import { UiHeaderComponent } from '@app/features/common/components';
 
 @Component({
   selector: 'app-conseil-type',

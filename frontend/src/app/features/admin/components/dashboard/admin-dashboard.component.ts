@@ -5,7 +5,7 @@ import { AdminService, DashboardSummary, VerificationStats } from '../../service
 import { AuthStore } from '../../../../core/stores/auth.store';
 import { HeaderSearchComponent } from '../../../../shared/components/header-search/header-search.component';
 import { UiSkeletonComponent } from '../../../../shared/components/ui-skeleton/ui-skeleton.component';
-import { UiHeaderComponent } from '../../../../shared/components/ui-header/ui-header.component';
+import { UiHeaderComponent } from '@app/features/common/components';
 
 @Component({
   selector: 'app-admin-dashboard',

@@ -111,6 +111,26 @@ Options actives en Côte d'Ivoire :
 
 ---
 
+## 🛡️ RGPD — ✅ socle livré (commit `d88c17d`)
+
+- ✅ Pages légales publiques : `/terms`, `/privacy`, `/legal-notice`, `/repairer-terms`
+  (la dernière comble un lien cassé dans le formulaire register réparateur)
+- ✅ **Droit à l'effacement (Art. 17)** : `DELETE /users/me` anonymise email/phone/
+  noms/avatar/firebaseUid, révoque tous les refresh tokens, soft-delete.
+- ✅ **Droit à la portabilité (Art. 20)** : `GET /users/me/export` retourne
+  un JSON complet (profil, demandes, devis, paiements, messages, avis,
+  notifications).
+- ✅ UI dans `profile-edit` : section "Confidentialité et données" avec
+  bouton export + bouton suppression (modal "tapez SUPPRIMER").
+
+⏳ Reste à faire pour une conformité RGPD complète :
+- DPO/délégué à la protection des données nommé (réel, pas placeholder)
+- Bannière cookies (si on en utilise vraiment — analytics)
+- Registre des traitements documenté
+- Procédure de notification de violation < 72h
+- Vérification que l'hébergement (Resend, PayDunya, Sentry…) a un accord
+  de sous-traitance (DPA) ou est dans un pays adéquat
+
 ## 🐛 Bugs reportés de l'audit E2E (2026-05-10) — ✅ traités
 
 Voir `docs/audit/05_AUDIT_E2E_BROWSER_2026-05-10.md` pour le rapport complet.
@@ -179,15 +199,18 @@ Les 3 reportés ci-dessous ont été livrés dans le commit [`fe3df94`](https://
 
 ---
 
-#### Ticket #P4.1.3 — Appel masqué / chat repairer
-**Fichier impacté** : `frontend/src/app/features/search/components/repairer-detail/repairer-detail.component.ts:~600` (TODO marqué)
-**Effort** : 1-2 jours
-**Stratégie A (chat)** : rediriger vers `/chat` en créant une conversation entre client et réparateur si elle n'existe pas. Plus simple, déjà supporté par le backend.
-**Stratégie B (Twilio Programmable Voice)** : intégrer Twilio Proxy pour appel masqué via numéros virtuels. Plus complexe et payant, mais permet l'appel direct.
+#### ✅ Ticket #P4.1.3 — Bouton "Contacter" repairer-detail
+**Livré** (commit `d88c17d`).
 
-**Décision recommandée** : Stratégie A en MVP, B plus tard si demande forte du marché.
+Stratégie A retenue (chat). `contactRepairer()` dans
+`repairer-detail.component.ts` :
+1. User anonyme → `/auth/login` avec `returnUrl`.
+2. User auth → liste ses conversations, cherche celle attachée à ce
+   réparateur. Si présente, ouvre `/chat/:convId`.
+3. Sinon → toast info + redirection vers `/requests/new?repairerId=...`,
+   car le backend exige une `RepairRequest` pour créer une conversation.
 
-**Critère d'acceptation** : depuis la page d'un réparateur, le bouton "Contacter" ouvre la conversation existante ou en crée une.
+Stratégie B (Twilio appel masqué) restera ouverte si demande forte.
 
 ---
 
@@ -219,9 +242,13 @@ Les 3 reportés ci-dessous ont été livrés dans le commit [`fe3df94`](https://
 
 ### P4.3 — Mocks vs réel
 
-#### Ticket #P4.3.1 — Encadrer `simulate-success` payments
-**Effort** : 30 min
-**Action** : ajouter un guard `@Roles(UserRole.ADMIN)` ou `if (process.env.NODE_ENV !== 'production')` sur `POST /payments/:id/simulate-success` pour éviter l'usage en prod.
+#### ✅ Ticket #P4.3.1 — Encadrer `simulate-success` payments
+**État** : déjà couvert.
+- `backend/src/modules/payments/payments.controller.ts:127` : `NODE_ENV === 'production'` → `ForbiddenException`.
+- Autorisation owner/admin via `paymentsService.findOne(id, user.id, user.role)` avant exécution.
+- Endpoint debug similaire `_debug/seed-dispute-from-payment/:paymentId` (admin.controller.ts:477) protégé de la même façon.
+
+Pas de `@Roles(ADMIN)` ajouté : casserait le dev local (un client doit pouvoir simuler ses propres paiements). La double protection (env + ownership) est suffisante.
 
 #### Ticket #P4.3.2 — Intégrer un vrai gateway de paiement
 **Effort** : 3-5 jours
@@ -376,7 +403,7 @@ Index composites ajoutés via deux migrations idempotentes :
 | Couverture tests frontend | 2 specs squelettes | 40% | 60% |
 | Bugs critiques ouverts | 0 | 0 | 0 |
 | Composants > 1500 LOC | 4 | 1 | 0 |
-| Tests E2E | 0 | 5 parcours | 15 parcours |
+| Tests E2E | 1 actif + 4 fixme (Playwright) | 5 parcours actifs | 15 parcours |
 | Déploiement staging | Manuel via docker compose | Automatique sur push CI | Automatique + smoke tests |
 | Lighthouse Performance | À mesurer | > 80 mobile | > 90 mobile |
 | Sentry erreurs/jour prod | À installer | < 50 | < 10 |

@@ -1,15 +1,14 @@
 import { Component, inject, OnInit, signal, ChangeDetectionStrategy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
-import { ChatService, Conversation } from '../../services/chat.service';
-import { ChatStore } from '../../stores/chat.store';
+import { ChatService, ChatStore, type Conversation } from '@app/domains/chat';
 import { AuthStore } from '../../../../core/stores/auth.store';
 import { UiLoadingComponent } from '../../../../shared/components/ui-loading/ui-loading.component';
 import { UiEmptyStateComponent } from '../../../../shared/components/ui-empty-state/ui-empty-state.component';
 import { UiErrorStateComponent } from '../../../../shared/components/ui-error-state/ui-error-state.component';
 import { InitialsPipe } from '../../../../shared/pipes/initials.pipe';
 import { LoggerService } from '../../../../core/services/logger.service';
-import { UiHeaderComponent } from '../../../../shared/components/ui-header/ui-header.component';
+import { UiHeaderComponent } from '@app/features/common/components';
 
 @Component({
   selector: 'app-chat-list',

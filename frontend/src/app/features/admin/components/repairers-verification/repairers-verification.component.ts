@@ -5,7 +5,7 @@ import { FormsModule } from '@angular/forms';
 import { AdminService, RepairerForVerification, VerificationStats } from '../../services/admin.service';
 import { AuthStore } from '../../../../core/stores/auth.store';
 import { HeaderSearchComponent } from '../../../../shared/components/header-search/header-search.component';
-import { UiHeaderComponent } from '../../../../shared/components/ui-header/ui-header.component';
+import { UiHeaderComponent } from '@app/features/common/components';
 import {
   UiDataGridComponent,
   UiDataGridColumnComponent,

@@ -1,6 +1,3 @@
-// Shared Models
-export * from './models';
-
 // Shared Components - UI Kit
 export { UiButtonComponent } from './components/ui-button/ui-button.component';
 export { UiInputComponent } from './components/ui-input/ui-input.component';
@@ -28,7 +25,6 @@ export { UiSliderComponent } from './components/ui-slider/ui-slider.component';
 export { UiSkeletonComponent } from './components/ui-skeleton/ui-skeleton.component';
 export type { SkeletonVariant } from './components/ui-skeleton/ui-skeleton.component';
 export { ToastContainerComponent } from './components/toast/toast-container.component';
-export { NotificationBellComponent } from './components/notification-bell/notification-bell.component';
 export { NetworkStatusComponent } from './components/network-status/network-status.component';
 export { UiListContainerComponent } from './components/ui-list-container/ui-list-container.component';
 

@@ -44,18 +44,21 @@ export function formatPhoneWithCountryCode(phone: string): string {
 }
 
 /**
- * Format distance in km or m
+ * Format une distance exprimee en kilometres pour l'affichage.
+ * - < 1 km : arrondi au metre ("450 m")
+ * - < 10 km : 1 decimale ("3.4 km")
+ * - >= 10 km : entier ("12 km")
+ *
+ * NB : le backend renvoie les distances en km (Haversine / 1000), c'est
+ * pour ca que l'unite d'entree est km et non m.
  */
-export function formatDistance(meters: number): string {
-  if (meters < 1000) {
-    return `${Math.round(meters)} m`;
+export function formatDistanceKm(km: number): string {
+  if (km < 1) {
+    return `${Math.round(km * 1000)} m`;
   }
-
-  const km = meters / 1000;
   if (km < 10) {
     return `${km.toFixed(1)} km`;
   }
-
   return `${Math.round(km)} km`;
 }
 

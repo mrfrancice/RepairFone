@@ -4,226 +4,146 @@ export interface Coordinates {
   latitude: number;
   longitude: number;
   accuracy?: number;
-  // Alias for browser GeolocationPosition compatibility
-  coords?: {
-    latitude: number;
-    longitude: number;
-    accuracy?: number;
-  };
 }
 
-export interface GeocodedAddress {
-  address: string;
-  display_name?: string;
-  city?: string;
-  country?: string;
-  postalCode?: string;
+export type GeolocationErrorCode =
+  | 'PERMISSION_DENIED'
+  | 'POSITION_UNAVAILABLE'
+  | 'TIMEOUT'
+  | 'NOT_SUPPORTED';
+
+/**
+ * Erreur de geolocalisation avec un code stable et un message traduit FR.
+ * Etend Error pour rester compatible avec `throw`/`catch`/`logger.error`.
+ */
+export class GeolocationError extends Error {
+  constructor(public readonly code: GeolocationErrorCode, message: string) {
+    super(message);
+    this.name = 'GeolocationError';
+  }
 }
 
-export interface GeolocationError {
-  code: 'PERMISSION_DENIED' | 'POSITION_UNAVAILABLE' | 'TIMEOUT' | 'NOT_SUPPORTED';
-  message: string;
+export interface GetCurrentPositionOptions {
+  /** defaut: true — passe a false pour le retry interne. */
+  enableHighAccuracy?: boolean;
+  /** defaut: 10000 ms */
+  timeout?: number;
+  /** defaut: 60000 ms (cache 1 min) */
+  maximumAge?: number;
+  /**
+   * defaut: true — si la 1ere tentative high-accuracy echoue avec
+   * TIMEOUT ou POSITION_UNAVAILABLE, retente avec enableHighAccuracy:false
+   * et un cache plus large (5 min). Utile en zone a couverture GPS faible.
+   */
+  retryLowAccuracyOnFailure?: boolean;
 }
 
+/**
+ * Service unifie pour la geolocalisation navigateur.
+ *
+ * Remplace 9 implementations inline qui re-utilisaient
+ * `navigator.geolocation.getCurrentPosition()` avec des options et des
+ * messages d'erreur divergents (souvent par copy/paste, pas par design).
+ *
+ * Reste dans core/ : c'est de l'infra navigateur, sans dependance metier.
+ * Le reverse-geocoding (Nominatim) vit dans features/search/SearchService
+ * car couple a l'UX search ; un consommateur qui en a besoin peut soit
+ * injecter SearchService.reverseGeocode, soit appeler Nominatim
+ * directement.
+ */
 @Injectable({ providedIn: 'root' })
 export class GeolocationService {
-  private readonly _currentPosition = signal<Coordinates | null>(null);
-  private readonly _isLoading = signal(false);
-  private readonly _error = signal<GeolocationError | null>(null);
+  private readonly _lastPosition = signal<Coordinates | null>(null);
+  readonly lastPosition = this._lastPosition.asReadonly();
 
-  readonly currentPosition = this._currentPosition.asReadonly();
-  readonly isLoading = this._isLoading.asReadonly();
-  readonly error = this._error.asReadonly();
-
-  private watchId: number | null = null;
-
-  /**
-   * Check if geolocation is supported
-   */
   isSupported(): boolean {
-    return 'geolocation' in navigator;
+    // `'geolocation' in navigator` est vrai meme si la valeur est undefined
+    // (iframe sandboxed, polyfill, etc.). Tester la valeur reelle.
+    return typeof navigator !== 'undefined' && !!navigator.geolocation;
   }
 
   /**
-   * Get current position once
+   * Recupere la position courante. Retourne `Coordinates` (latitude,
+   * longitude, accuracy?) — pas le `GeolocationPosition` natif, pour
+   * isoler les consommateurs de l'API browser.
+   *
+   * @throws GeolocationError avec un message FR pret a afficher.
    */
-  async getCurrentPosition(options?: PositionOptions): Promise<Coordinates> {
+  async getCurrentPosition(options?: GetCurrentPositionOptions): Promise<Coordinates> {
     if (!this.isSupported()) {
-      const error: GeolocationError = {
-        code: 'NOT_SUPPORTED',
-        message: 'La géolocalisation n\'est pas supportée par votre navigateur',
-      };
-      this._error.set(error);
-      throw error;
+      throw new GeolocationError(
+        'NOT_SUPPORTED',
+        'La géolocalisation n\'est pas supportée par votre navigateur.',
+      );
     }
 
-    this._isLoading.set(true);
-    this._error.set(null);
+    const enableHighAccuracy = options?.enableHighAccuracy ?? true;
+    const timeout = options?.timeout ?? 10_000;
+    const maximumAge = options?.maximumAge ?? 60_000;
+    const retryLowAccuracy = options?.retryLowAccuracyOnFailure ?? true;
 
     try {
-      const position = await new Promise<GeolocationPosition>((resolve, reject) => {
-        navigator.geolocation.getCurrentPosition(resolve, reject, {
-          enableHighAccuracy: true,
-          timeout: 10000,
-          maximumAge: 60000,
-          ...options,
-        });
-      });
-
-      const coords: Coordinates = {
-        latitude: position.coords.latitude,
-        longitude: position.coords.longitude,
-        accuracy: position.coords.accuracy,
-      };
-
-      this._currentPosition.set(coords);
+      const coords = await this.requestPosition({ enableHighAccuracy, timeout, maximumAge });
+      this._lastPosition.set(coords);
       return coords;
-    } catch (err: any) {
-      const error = this.parseGeolocationError(err);
-      this._error.set(error);
-      throw error;
-    } finally {
-      this._isLoading.set(false);
-    }
-  }
+    } catch (err) {
+      if (!(err instanceof GeolocationError)) throw err;
 
-  /**
-   * Start watching position changes
-   */
-  watchPosition(
-    onSuccess: (coords: Coordinates) => void,
-    onError?: (error: GeolocationError) => void,
-    options?: PositionOptions
-  ): void {
-    if (!this.isSupported()) {
-      const error: GeolocationError = {
-        code: 'NOT_SUPPORTED',
-        message: 'La géolocalisation n\'est pas supportée',
-      };
-      onError?.(error);
-      return;
-    }
+      // Retry low-accuracy uniquement pour TIMEOUT/POSITION_UNAVAILABLE.
+      // PERMISSION_DENIED ne se retentera jamais (l'utilisateur a refuse).
+      const canRetry =
+        retryLowAccuracy &&
+        enableHighAccuracy &&
+        (err.code === 'TIMEOUT' || err.code === 'POSITION_UNAVAILABLE');
 
-    this.stopWatching();
+      if (!canRetry) throw err;
 
-    this.watchId = navigator.geolocation.watchPosition(
-      (position) => {
-        const coords: Coordinates = {
-          latitude: position.coords.latitude,
-          longitude: position.coords.longitude,
-          accuracy: position.coords.accuracy,
-        };
-        this._currentPosition.set(coords);
-        onSuccess(coords);
-      },
-      (err) => {
-        const error = this.parseGeolocationError(err);
-        this._error.set(error);
-        onError?.(error);
-      },
-      {
-        enableHighAccuracy: true,
-        timeout: 10000,
-        maximumAge: 5000,
-        ...options,
-      }
-    );
-  }
-
-  /**
-   * Stop watching position
-   */
-  stopWatching(): void {
-    if (this.watchId !== null) {
-      navigator.geolocation.clearWatch(this.watchId);
-      this.watchId = null;
-    }
-  }
-
-  /**
-   * Reverse geocode coordinates to address using Nominatim (OpenStreetMap)
-   */
-  async reverseGeocode(coords: Coordinates): Promise<GeocodedAddress> {
-    const url = `https://nominatim.openstreetmap.org/reverse?format=json&lat=${coords.latitude}&lon=${coords.longitude}&zoom=18&addressdetails=1`;
-
-    try {
-      const response = await fetch(url, {
-        headers: {
-          'Accept-Language': 'fr',
-        },
+      const coords = await this.requestPosition({
+        enableHighAccuracy: false,
+        timeout: 15_000,
+        maximumAge: 300_000,
       });
-
-      if (!response.ok) {
-        throw new Error('Geocoding failed');
-      }
-
-      const data = await response.json();
-
-      return {
-        address: data.display_name || '',
-        city: data.address?.city || data.address?.town || data.address?.village,
-        country: data.address?.country,
-        postalCode: data.address?.postcode,
-      };
-    } catch {
-      return {
-        address: `${coords.latitude.toFixed(6)}, ${coords.longitude.toFixed(6)}`,
-      };
+      this._lastPosition.set(coords);
+      return coords;
     }
   }
 
-  /**
-   * Calculate distance between two points in meters (Haversine formula)
-   */
-  calculateDistance(from: Coordinates, to: Coordinates): number {
-    const R = 6371e3; // Earth's radius in meters
-    const φ1 = (from.latitude * Math.PI) / 180;
-    const φ2 = (to.latitude * Math.PI) / 180;
-    const Δφ = ((to.latitude - from.latitude) * Math.PI) / 180;
-    const Δλ = ((to.longitude - from.longitude) * Math.PI) / 180;
-
-    const a =
-      Math.sin(Δφ / 2) * Math.sin(Δφ / 2) +
-      Math.cos(φ1) * Math.cos(φ2) * Math.sin(Δλ / 2) * Math.sin(Δλ / 2);
-
-    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-
-    return R * c;
+  private requestPosition(opts: PositionOptions): Promise<Coordinates> {
+    return new Promise((resolve, reject) => {
+      navigator.geolocation.getCurrentPosition(
+        (pos) => resolve({
+          latitude: pos.coords.latitude,
+          longitude: pos.coords.longitude,
+          accuracy: pos.coords.accuracy,
+        }),
+        (err) => reject(this.toGeolocationError(err)),
+        opts,
+      );
+    });
   }
 
-  /**
-   * Format distance for display
-   */
-  formatDistance(meters: number): string {
-    if (meters < 1000) {
-      return `${Math.round(meters)} m`;
-    }
-    const km = meters / 1000;
-    return km < 10 ? `${km.toFixed(1)} km` : `${Math.round(km)} km`;
-  }
-
-  private parseGeolocationError(err: GeolocationPositionError): GeolocationError {
+  private toGeolocationError(err: GeolocationPositionError): GeolocationError {
     switch (err.code) {
       case err.PERMISSION_DENIED:
-        return {
-          code: 'PERMISSION_DENIED',
-          message: 'L\'accès à la localisation a été refusé',
-        };
+        return new GeolocationError(
+          'PERMISSION_DENIED',
+          'Accès à la position refusé. Autorisez la géolocalisation dans les paramètres de votre navigateur.',
+        );
       case err.POSITION_UNAVAILABLE:
-        return {
-          code: 'POSITION_UNAVAILABLE',
-          message: 'La position n\'est pas disponible',
-        };
+        return new GeolocationError(
+          'POSITION_UNAVAILABLE',
+          'Position indisponible. Vérifiez que le GPS est activé.',
+        );
       case err.TIMEOUT:
-        return {
-          code: 'TIMEOUT',
-          message: 'La demande de localisation a expiré',
-        };
+        return new GeolocationError(
+          'TIMEOUT',
+          'Délai d\'attente dépassé. Réessayez.',
+        );
       default:
-        return {
-          code: 'POSITION_UNAVAILABLE',
-          message: 'Erreur de géolocalisation',
-        };
+        return new GeolocationError(
+          'POSITION_UNAVAILABLE',
+          'Erreur de géolocalisation. Réessayez.',
+        );
     }
   }
 }

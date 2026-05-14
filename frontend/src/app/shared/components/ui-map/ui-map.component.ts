@@ -16,6 +16,7 @@ import {
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { LoggerService } from '../../../core/services/logger.service';
+import { GeolocationService } from '../../../core/services/geolocation.service';
 
 // Declare Leaflet types
 declare const L: any;
@@ -173,6 +174,7 @@ export interface MapRoute {
 export class UiMapComponent implements OnInit, AfterViewInit, OnDestroy, OnChanges {
   @ViewChild('mapContainer') mapContainer!: ElementRef;
   private readonly logger = inject(LoggerService);
+  private readonly geolocation = inject(GeolocationService);
 
   @Input() height = '250px';
   @Input() zoom = 14;
@@ -378,21 +380,13 @@ export class UiMapComponent implements OnInit, AfterViewInit, OnDestroy, OnChang
     });
   }
 
-  centerOnUser(): void {
+  async centerOnUser(): Promise<void> {
     if (!this.map) return;
-
-    if (navigator.geolocation) {
-      navigator.geolocation.getCurrentPosition(
-        (position) => {
-          this.map.setView(
-            [position.coords.latitude, position.coords.longitude],
-            this.zoom
-          );
-        },
-        (error) => {
-          this.logger.error('UiMapComponent', 'Error getting location', error);
-        }
-      );
+    try {
+      const coords = await this.geolocation.getCurrentPosition();
+      this.map.setView([coords.latitude, coords.longitude], this.zoom);
+    } catch (err) {
+      this.logger.error('UiMapComponent', 'Error getting location', err);
     }
   }
 

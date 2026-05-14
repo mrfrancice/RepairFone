@@ -2,8 +2,7 @@ import { Component, inject, OnInit, signal, computed, ChangeDetectionStrategy } 
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
 import { environment } from '../../../../../environments/environment';
-import { DisputesService, Dispute, DisputeStatus } from '../../services/disputes.service';
-import { DisputesStore } from '../../stores/disputes.store';
+import { DisputesService, Dispute, DisputeStatus, DisputesStore } from '@app/domains/disputes';
 import { UiCardComponent } from '../../../../shared/components/ui-card/ui-card.component';
 import { UiButtonComponent } from '../../../../shared/components/ui-button/ui-button.component';
 import { UiLoadingComponent } from '../../../../shared/components/ui-loading/ui-loading.component';
@@ -15,7 +14,7 @@ import {
   UiDataGridColumnComponent,
 } from '../../../../shared/components/ui-data-grid';
 import { FormatDatePipe } from '../../../../shared/pipes/format-date.pipe';
-import { UiHeaderComponent } from '../../../../shared/components/ui-header/ui-header.component';
+import { UiHeaderComponent } from '@app/features/common/components';
 import { HeaderSearchComponent } from '../../../../shared/components/header-search/header-search.component';
 
 @Component({

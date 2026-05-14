@@ -1,8 +1,7 @@
 import { Component, inject, signal, computed, OnInit, ChangeDetectionStrategy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router, RouterLink } from '@angular/router';
-import { QuotesService, Quote, QuoteStatus } from '../../services/quotes.service';
-import { QuotesStore } from '../../stores/quotes.store';
+import { QuotesService, QuotesStore, type Quote, type QuoteStatus } from '@app/domains/quotes';
 import { UiButtonComponent } from '../../../../shared/components/ui-button/ui-button.component';
 import { UiTabsComponent } from '../../../../shared/components/ui-tabs/ui-tabs.component';
 import { UiBadgeComponent } from '../../../../shared/components/ui-badge/ui-badge.component';
@@ -13,9 +12,9 @@ import {
   UiDataGridColumnComponent,
 } from '../../../../shared/components/ui-data-grid';
 import { FormatDatePipe } from '../../../../shared/pipes/format-date.pipe';
-import { TabItem } from '../../../../shared/models';
+import { TabItem } from '@app/shared/models/ui';
 import { LoggerService } from '../../../../core/services/logger.service';
-import { UiHeaderComponent } from '../../../../shared/components/ui-header/ui-header.component';
+import { UiHeaderComponent } from '@app/features/common/components';
 import { HeaderSearchComponent } from '../../../../shared/components/header-search/header-search.component';
 
 @Component({

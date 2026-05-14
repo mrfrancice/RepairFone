@@ -1,9 +1,13 @@
 import { Component, inject, OnInit, signal, ChangeDetectionStrategy } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { NotificationService, NotificationPreferences, NotificationType } from '../../../../core/services/notification.service';
+import {
+  NotificationsService,
+  type NotificationPreferences,
+  type NotificationType,
+} from '@app/domains/notifications';
 import { ToastService } from '../../../../core/services/toast.service';
 import { UiLoadingComponent } from '../../../../shared/components/ui-loading/ui-loading.component';
-import { UiHeaderComponent } from '../../../../shared/components/ui-header/ui-header.component';
+import { UiHeaderComponent } from '@app/features/common/components';
 
 interface NotificationCategory {
   title: string;
@@ -254,7 +258,7 @@ interface NotificationCategory {
   `]
 })
 export class NotificationSettingsComponent implements OnInit {
-  readonly notificationService = inject(NotificationService);
+  readonly notificationService = inject(NotificationsService);
   private readonly toast = inject(ToastService);
 
   preferences = signal<NotificationPreferences | null>(null);

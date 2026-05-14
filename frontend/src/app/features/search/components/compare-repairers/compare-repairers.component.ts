@@ -6,7 +6,7 @@ import { SearchStore } from '../../stores/search.store';
 import { UiButtonComponent } from '../../../../shared/components/ui-button/ui-button.component';
 import { UiLoadingComponent } from '../../../../shared/components/ui-loading/ui-loading.component';
 import { InitialsPipe } from '../../../../shared/pipes/initials.pipe';
-import { UiHeaderComponent } from '../../../../shared/components/ui-header/ui-header.component';
+import { UiHeaderComponent } from '@app/features/common/components';
 
 interface CompareRepairer extends Repairer {
   qualityScores: {

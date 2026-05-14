@@ -2,14 +2,14 @@ import { Component, inject, signal, OnInit, ChangeDetectionStrategy } from '@ang
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
-import { ReviewsService, CreateReviewDto, SubRatings } from '../../services/reviews.service';
-import { RequestsService, RepairRequest } from '../../../requests/services/requests.service';
+import { ReviewsService, CreateReviewDto, SubRatings } from '@app/domains/reviews';
+import { RequestsService, type RepairRequest } from '@app/domains/requests';
 import { UiCardComponent } from '../../../../shared/components/ui-card/ui-card.component';
 import { UiButtonComponent } from '../../../../shared/components/ui-button/ui-button.component';
 import { UiLoadingComponent } from '../../../../shared/components/ui-loading/ui-loading.component';
 import { UiStepperComponent } from '../../../../shared/components/ui-stepper/ui-stepper.component';
 import { LoggerService } from '../../../../core/services/logger.service';
-import { UiHeaderComponent } from '../../../../shared/components/ui-header/ui-header.component';
+import { UiHeaderComponent } from '@app/features/common/components';
 
 @Component({
   selector: 'app-new-review',

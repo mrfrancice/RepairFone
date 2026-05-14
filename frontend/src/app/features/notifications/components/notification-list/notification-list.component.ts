@@ -1,10 +1,10 @@
 import { Component, inject, OnInit, signal, ChangeDetectionStrategy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
-import { NotificationService, AppNotification } from '../../../../core/services/notification.service';
+import { NotificationsService, type AppNotification } from '@app/domains/notifications';
 import { UiLoadingComponent } from '../../../../shared/components/ui-loading/ui-loading.component';
 import { UiEmptyStateComponent } from '../../../../shared/components/ui-empty-state/ui-empty-state.component';
-import { UiHeaderComponent } from '../../../../shared/components/ui-header/ui-header.component';
+import { UiHeaderComponent } from '@app/features/common/components';
 import { InfiniteScrollDirective } from '../../../../shared/directives/infinite-scroll.directive';
 
 @Component({
@@ -389,7 +389,7 @@ import { InfiniteScrollDirective } from '../../../../shared/directives/infinite-
   `]
 })
 export class NotificationListComponent implements OnInit {
-  readonly notificationService = inject(NotificationService);
+  readonly notificationService = inject(NotificationsService);
   private readonly router = inject(Router);
 
   currentFilter = signal<'all' | 'unread'>('all');

@@ -2,16 +2,18 @@ import { Component, inject, signal, OnInit, computed, ChangeDetectionStrategy } 
 import { CommonModule } from '@angular/common';
 import { Router, RouterLink } from '@angular/router';
 import { AuthStore } from '../../../../core/stores/auth.store';
-import { RequestsService } from '../../../requests/services/requests.service';
+import { RequestsService } from '@app/domains/requests';
 import { SettingsService } from '../../../../core/services/settings.service';
 import { SearchService } from '../../../search/services/search.service';
 import { UiSearchBarComponent } from '@app/shared';
 import { UiAvatarComponent } from '../../../../shared/components/ui-avatar/ui-avatar.component';
 import { UiSkeletonComponent } from '../../../../shared/components/ui-skeleton/ui-skeleton.component';
-import { UiHeaderComponent } from '../../../../shared/components/ui-header/ui-header.component';
+import { UiHeaderComponent } from '@app/features/common/components';
 import { StatusLabelsService, RequestStatus } from '../../../../shared/services/status-labels.service';
 import { UiErrorStateComponent } from '../../../../shared/components/ui-error-state/ui-error-state.component';
 import { LoggerService } from '../../../../core/services/logger.service';
+import { GeolocationService } from '../../../../core/services/geolocation.service';
+import { formatDistanceKm } from '../../../../shared/utils/format.utils';
 
 interface NearbyRepairer {
   id: string;
@@ -395,7 +397,7 @@ interface QuickService {
       min-height: 100vh;
       min-height: 100dvh;
       background: #FAFAFA;
-      padding-bottom: 80px;
+      padding-bottom: var(--bottom-nav-height, 80px);
     }
 
     /* ============================================
@@ -1082,6 +1084,7 @@ export class HomeComponent implements OnInit {
   private readonly searchService = inject(SearchService);
   readonly statusLabels = inject(StatusLabelsService);
   private readonly logger = inject(LoggerService);
+  private readonly geolocation = inject(GeolocationService);
 
   readonly locationStatus = signal<'idle' | 'loading' | 'success' | 'error'>('idle');
   readonly userAddress = signal<string>('Abidjan, Cote d\'Ivoire');
@@ -1131,21 +1134,10 @@ export class HomeComponent implements OnInit {
   async detectLocation(): Promise<void> {
     this.locationStatus.set('loading');
     try {
-      if ('geolocation' in navigator) {
-        navigator.geolocation.getCurrentPosition(
-          (position) => {
-            // In production, reverse geocode this position
-            this.userAddress.set('Cocody, Abidjan');
-            this.locationStatus.set('success');
-          },
-          () => {
-            this.locationStatus.set('error');
-          },
-          { timeout: 10000 }
-        );
-      } else {
-        this.locationStatus.set('error');
-      }
+      await this.geolocation.getCurrentPosition();
+      // In production, reverse geocode this position
+      this.userAddress.set('Cocody, Abidjan');
+      this.locationStatus.set('success');
     } catch {
       this.locationStatus.set('error');
     }
@@ -1287,12 +1279,7 @@ export class HomeComponent implements OnInit {
     this.router.navigate(['/auth/register'], { queryParams: { role: 'repairer' } });
   }
 
-  formatDistance(km: number): string {
-    if (km < 1) {
-      return `${Math.round(km * 1000)} m`;
-    }
-    return `${km.toFixed(1)} km`;
-  }
+  readonly formatDistance = formatDistanceKm;
 
   formatTime(dateStr: string): string {
     const date = new Date(dateStr);

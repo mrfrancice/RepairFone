@@ -3,10 +3,11 @@ import { CommonModule } from '@angular/common';
 import { FormsModule, ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
 import { AuthStore } from '../../../../core/stores/auth.store';
-import { ProfileService, UpdateProfileDto, UpdateRepairerProfileDto } from '../../services/profile.service';
+import { UsersService, type UpdateProfileDto, type UpdateRepairerProfileDto } from '@app/domains/users';
 import { LocationService, City, Commune, Quarter } from '../../../../core/services/location.service';
+import { GeolocationService } from '../../../../core/services/geolocation.service';
 import { SettingsService } from '../../../../core/services/settings.service';
-import { UiHeaderComponent } from '../../../../shared/components/ui-header/ui-header.component';
+import { UiHeaderComponent } from '@app/features/common/components';
 import { FormatDatePipe } from '../../../../shared/pipes/format-date.pipe';
 import { PhoneFormatPipe } from '../../../../shared/pipes/phone-format.pipe';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
@@ -613,7 +614,97 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
             </button>
           </div>
         </form>
+
+        <!-- Section Confidentialité & RGPD -->
+        <section class="section privacy-section">
+          <h2>
+            <span class="section-icon-wrapper">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <rect x="3" y="11" width="18" height="11" rx="2"/>
+                <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+              </svg>
+            </span>
+            Confidentialité et données
+          </h2>
+
+          <p class="privacy-intro">
+            Vous disposez de droits sur vos données personnelles (accès, rectification, portabilité,
+            effacement). Consultez notre
+            <a (click)="goToPrivacy()" class="privacy-link">politique de confidentialité</a>.
+          </p>
+
+          <div class="privacy-actions">
+            <button type="button" class="btn btn-outline-dark" (click)="onExportData()" [disabled]="isExporting()">
+              @if (isExporting()) {
+                <span class="spinner-small"></span>
+                Préparation...
+              } @else {
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                  <polyline points="7 10 12 15 17 10"/>
+                  <line x1="12" y1="15" x2="12" y2="3"/>
+                </svg>
+                Télécharger mes données (JSON)
+              }
+            </button>
+
+            <button type="button" class="btn btn-danger" (click)="openDeleteModal()">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <polyline points="3 6 5 6 21 6"/>
+                <path d="M19 6l-2 14a2 2 0 0 1-2 2H9a2 2 0 0 1-2-2L5 6"/>
+                <path d="M10 11v6M14 11v6"/>
+              </svg>
+              Supprimer mon compte
+            </button>
+          </div>
+        </section>
       </div>
+
+      <!-- Modal de confirmation suppression compte -->
+      @if (showDeleteModal()) {
+        <div class="delete-modal-backdrop" (click)="closeDeleteModal()">
+          <div class="delete-modal" (click)="$event.stopPropagation()">
+            <h3>⚠️ Supprimer définitivement votre compte&nbsp;?</h3>
+            <p class="delete-warning">
+              Cette action est <strong>irréversible</strong>. Vos données personnelles seront
+              anonymisées et vous serez déconnecté de tous vos appareils.
+            </p>
+            <ul class="delete-points">
+              <li>Vos demandes et paiements seront conservés (obligation légale)</li>
+              <li>Votre profil et messages seront anonymisés</li>
+              <li>Vous ne pourrez plus vous reconnecter</li>
+            </ul>
+            <label class="delete-confirm-label">
+              Tapez <strong>SUPPRIMER</strong> pour confirmer&nbsp;:
+            </label>
+            <input
+              type="text"
+              [(ngModel)]="deleteConfirmText"
+              class="delete-confirm-input"
+              autocomplete="off"
+              autocapitalize="characters"
+            />
+            <div class="delete-modal-actions">
+              <button type="button" class="btn btn-outline-dark" (click)="closeDeleteModal()" [disabled]="isDeleting()">
+                Annuler
+              </button>
+              <button
+                type="button"
+                class="btn btn-danger"
+                (click)="confirmDeleteAccount()"
+                [disabled]="deleteConfirmText !== 'SUPPRIMER' || isDeleting()"
+              >
+                @if (isDeleting()) {
+                  <span class="spinner-small"></span>
+                  Suppression...
+                } @else {
+                  Supprimer définitivement
+                }
+              </button>
+            </div>
+          </div>
+        </div>
+      }
     </div>
   `,
   styles: [`
@@ -1270,11 +1361,157 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
     @keyframes spin {
       to { transform: rotate(360deg); }
     }
+
+    /* Section Confidentialité / RGPD */
+    .privacy-section {
+      border: 1px solid #fde2e2;
+    }
+
+    .privacy-intro {
+      color: #4B5563;
+      line-height: 1.6;
+      margin: 0 0 1rem 0;
+    }
+
+    .privacy-link {
+      color: var(--color-primary-500, #FF9800);
+      text-decoration: underline;
+      cursor: pointer;
+    }
+
+    .privacy-actions {
+      display: flex;
+      flex-direction: column;
+      gap: 0.75rem;
+    }
+
+    .btn-outline-dark {
+      background: white;
+      color: #1f2937;
+      border: 1px solid #cbd5e1;
+      padding: 0.75rem 1rem;
+      border-radius: 12px;
+      font-weight: 500;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+      transition: background 0.15s;
+    }
+    .btn-outline-dark:hover:not(:disabled) {
+      background: #f8fafc;
+    }
+    .btn-outline-dark:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
+
+    .btn-danger {
+      background: var(--color-terracotta, #C62828);
+      color: white;
+      border: none;
+      padding: 0.75rem 1rem;
+      border-radius: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+      transition: background 0.15s, transform 0.1s;
+    }
+    .btn-danger:hover:not(:disabled) {
+      background: #991b1b;
+    }
+    .btn-danger:active:not(:disabled) {
+      transform: scale(0.98);
+    }
+    .btn-danger:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    /* Modal de suppression */
+    .delete-modal-backdrop {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.55);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 1rem;
+      z-index: 1000;
+    }
+
+    .delete-modal {
+      background: white;
+      border-radius: 16px;
+      padding: 1.5rem;
+      max-width: 480px;
+      width: 100%;
+      box-shadow: 0 20px 50px rgba(0, 0, 0, 0.3);
+    }
+
+    .delete-modal h3 {
+      margin: 0 0 0.75rem 0;
+      color: #991b1b;
+      font-size: 1.125rem;
+    }
+
+    .delete-warning {
+      color: #4B5563;
+      line-height: 1.5;
+      margin: 0 0 1rem 0;
+    }
+
+    .delete-points {
+      color: #6B7280;
+      font-size: 0.875rem;
+      line-height: 1.6;
+      padding-left: 1.25rem;
+      margin: 0 0 1rem 0;
+    }
+
+    .delete-confirm-label {
+      display: block;
+      color: #4B5563;
+      font-size: 0.875rem;
+      margin-bottom: 0.5rem;
+    }
+
+    .delete-confirm-input {
+      width: 100%;
+      padding: 0.625rem 0.875rem;
+      border: 1px solid #cbd5e1;
+      border-radius: 10px;
+      font-size: 1rem;
+      font-family: inherit;
+      letter-spacing: 0.05em;
+      margin-bottom: 1rem;
+      box-sizing: border-box;
+    }
+    .delete-confirm-input:focus {
+      outline: none;
+      border-color: var(--color-terracotta, #C62828);
+    }
+
+    .delete-modal-actions {
+      display: flex;
+      gap: 0.75rem;
+      justify-content: flex-end;
+    }
+
+    @media (max-width: 640px) {
+      .delete-modal-actions { flex-direction: column-reverse; }
+      .delete-modal-actions .btn { width: 100%; }
+    }
   `],
 })
 export class ProfileEditComponent implements OnInit {
   private readonly authStore = inject(AuthStore);
-  private readonly profileService = inject(ProfileService);
+  private readonly geolocation = inject(GeolocationService);
+  private readonly profileService = inject(UsersService);
   private readonly locationService = inject(LocationService);
   private readonly settingsService = inject(SettingsService);
   private readonly router = inject(Router);
@@ -1290,6 +1527,12 @@ export class ProfileEditComponent implements OnInit {
   readonly locationError = signal<string | null>(null);
   readonly error = signal<string | null>(null);
   readonly success = signal<string | null>(null);
+
+  // Confidentialité / RGPD
+  readonly showDeleteModal = signal(false);
+  readonly isDeleting = signal(false);
+  readonly isExporting = signal(false);
+  deleteConfirmText = '';
 
   // Location data
   readonly cities = signal<City[]>([]);
@@ -1580,42 +1823,21 @@ export class ProfileEditComponent implements OnInit {
   }
 
   // Location methods
-  getCurrentLocation(): void {
-    if (!navigator.geolocation) {
-      this.locationError.set('La géolocalisation n\'est pas supportée');
-      return;
-    }
-
+  async getCurrentLocation(): Promise<void> {
     this.isGettingLocation.set(true);
     this.locationError.set(null);
-
-    navigator.geolocation.getCurrentPosition(
-      (position) => {
-        this.profileForm.patchValue({
-          latitude: position.coords.latitude,
-          longitude: position.coords.longitude,
-        });
-        this.hasLocation.set(true);
-        this.isGettingLocation.set(false);
-      },
-      (error) => {
-        this.isGettingLocation.set(false);
-        switch (error.code) {
-          case error.PERMISSION_DENIED:
-            this.locationError.set('Accès à la position refusé');
-            break;
-          case error.POSITION_UNAVAILABLE:
-            this.locationError.set('Position non disponible');
-            break;
-          case error.TIMEOUT:
-            this.locationError.set('Délai dépassé');
-            break;
-          default:
-            this.locationError.set('Erreur de géolocalisation');
-        }
-      },
-      { enableHighAccuracy: true, timeout: 15000, maximumAge: 0 }
-    );
+    try {
+      const coords = await this.geolocation.getCurrentPosition({ maximumAge: 0 });
+      this.profileForm.patchValue({
+        latitude: coords.latitude,
+        longitude: coords.longitude,
+      });
+      this.hasLocation.set(true);
+    } catch (err: any) {
+      this.locationError.set(err?.message || 'Erreur de géolocalisation');
+    } finally {
+      this.isGettingLocation.set(false);
+    }
   }
 
   clearLocation(): void {
@@ -1712,6 +1934,69 @@ export class ProfileEditComponent implements OnInit {
       this.error.set(err.message || 'Erreur lors de la mise à jour');
     } finally {
       this.isSaving.set(false);
+    }
+  }
+
+  // ============================================================
+  // Confidentialité / RGPD
+  // ============================================================
+
+  goToPrivacy(): void {
+    this.router.navigate(['/privacy']);
+  }
+
+  openDeleteModal(): void {
+    this.deleteConfirmText = '';
+    this.showDeleteModal.set(true);
+  }
+
+  closeDeleteModal(): void {
+    if (this.isDeleting()) return;
+    this.deleteConfirmText = '';
+    this.showDeleteModal.set(false);
+  }
+
+  async confirmDeleteAccount(): Promise<void> {
+    if (this.deleteConfirmText !== 'SUPPRIMER' || this.isDeleting()) {
+      return;
+    }
+    this.isDeleting.set(true);
+    this.error.set(null);
+
+    try {
+      await this.profileService.deleteAccount();
+      // Backend a anonymisé + révoqué les refresh tokens.
+      // Côté client : purge la session locale et redirige vers la home publique.
+      this.authStore.logout();
+      this.router.navigate(['/onboarding']);
+    } catch (err: any) {
+      this.error.set(err?.error?.message || err?.message || 'Erreur lors de la suppression du compte');
+      this.isDeleting.set(false);
+    }
+  }
+
+  async onExportData(): Promise<void> {
+    if (this.isExporting()) return;
+    this.isExporting.set(true);
+    this.error.set(null);
+
+    try {
+      const blob = await this.profileService.exportMyData();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      const stamp = new Date().toISOString().slice(0, 10);
+      a.download = `repairfone-mes-donnees-${stamp}.json`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      URL.revokeObjectURL(url);
+      this.success.set('Téléchargement de vos données démarré');
+      setTimeout(() => this.success.set(null), 3000);
+    } catch (err: any) {
+      this.error.set(err?.error?.message || err?.message || "Erreur lors de l'export des données");
+    } finally {
+      this.isExporting.set(false);
     }
   }
 }

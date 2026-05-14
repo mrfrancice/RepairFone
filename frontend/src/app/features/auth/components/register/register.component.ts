@@ -8,6 +8,7 @@ import { CustomValidators, getErrorMessage } from '../../../../shared/validators
 import { LocationService, City, Commune, Quarter } from '../../../../core/services/location.service';
 import { SettingsService } from '../../../../core/services/settings.service';
 import { LoggerService } from '../../../../core/services/logger.service';
+import { GeolocationService } from '../../../../core/services/geolocation.service';
 import { AppLogoComponent } from '../../../../shared/components/app-logo/app-logo.component';
 
 @Component({
@@ -2109,6 +2110,7 @@ export class RegisterComponent implements OnInit {
   private readonly locationService = inject(LocationService);
   private readonly settingsService = inject(SettingsService);
   private readonly logger = inject(LoggerService);
+  private readonly geolocation = inject(GeolocationService);
   private readonly destroyRef = inject(DestroyRef);
 
   readonly currentStep = signal(1);
@@ -2414,55 +2416,25 @@ export class RegisterComponent implements OnInit {
     });
   }
 
-  getCurrentLocation(): void {
-    if (!navigator.geolocation) {
-      this.locationError.set('La géolocalisation n\'est pas supportée par votre navigateur');
-      this.logger.error('RegisterComponent', 'Geolocation not supported');
-      return;
-    }
-
-    // Check if we're on HTTPS or localhost
-    const isSecure = window.location.protocol === 'https:' || window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
-    if (!isSecure) {
-      this.locationError.set('La géolocalisation nécessite une connexion sécurisée (HTTPS)');
-      return;
-    }
-
+  async getCurrentLocation(): Promise<void> {
     this.isGettingLocation.set(true);
     this.locationError.set(null);
-
-    navigator.geolocation.getCurrentPosition(
-      (position) => {
-        this.registerForm.patchValue({
-          latitude: position.coords.latitude,
-          longitude: position.coords.longitude,
-        });
-        this.hasLocation.set(true);
-        this.isGettingLocation.set(false);
-      },
-      (error) => {
-        this.logger.error('RegisterComponent', 'Geolocation error', error);
-        this.isGettingLocation.set(false);
-        switch (error.code) {
-          case error.PERMISSION_DENIED:
-            this.locationError.set('Vous avez refusé l\'accès à votre position. Veuillez autoriser la géolocalisation dans les paramètres de votre navigateur.');
-            break;
-          case error.POSITION_UNAVAILABLE:
-            this.locationError.set('Position non disponible. Vérifiez que le GPS est activé sur votre appareil.');
-            break;
-          case error.TIMEOUT:
-            this.locationError.set('Délai dépassé. Veuillez réessayer.');
-            break;
-          default:
-            this.locationError.set('Erreur lors de la récupération de votre position: ' + error.message);
-        }
-      },
-      {
-        enableHighAccuracy: true,
-        timeout: 15000,
+    try {
+      const coords = await this.geolocation.getCurrentPosition({
+        timeout: 15_000,
         maximumAge: 0,
-      }
-    );
+      });
+      this.registerForm.patchValue({
+        latitude: coords.latitude,
+        longitude: coords.longitude,
+      });
+      this.hasLocation.set(true);
+    } catch (err: any) {
+      this.logger.error('RegisterComponent', 'Geolocation error', err);
+      this.locationError.set(err?.message || 'Erreur lors de la récupération de votre position');
+    } finally {
+      this.isGettingLocation.set(false);
+    }
   }
 
   clearLocation(): void {

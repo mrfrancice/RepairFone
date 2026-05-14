@@ -2,11 +2,10 @@ import { Component, inject, OnInit, signal, ChangeDetectionStrategy } from '@ang
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
-import { DisputesService, DisputeReason, CreateDisputeDto } from '../../services/disputes.service';
-import { DisputesStore } from '../../stores/disputes.store';
+import { DisputesService, DisputeReason, CreateDisputeDto, DisputesStore } from '@app/domains/disputes';
 import { UiButtonComponent } from '../../../../shared/components/ui-button/ui-button.component';
 import { UiStepperComponent } from '../../../../shared/components/ui-stepper/ui-stepper.component';
-import { UiHeaderComponent } from '../../../../shared/components/ui-header/ui-header.component';
+import { UiHeaderComponent } from '@app/features/common/components';
 import { LoggerService } from '../../../../core/services/logger.service';
 
 @Component({

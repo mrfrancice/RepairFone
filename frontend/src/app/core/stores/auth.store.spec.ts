@@ -1,71 +1,107 @@
 import { TestBed } from '@angular/core/testing';
-import { AuthStore } from './auth.store';
+import { AuthStore, User } from './auth.store';
 import { SecureStorageService, StorageKeys } from '../services/secure-storage.service';
 import { LoggerService } from '../services/logger.service';
 
-/**
- * Squelette de tests AuthStore.
- *
- * À étoffer avec :
- *   - Hydration depuis localStorage au démarrage
- *   - setAuth() / clearAuth() / setUser()
- *   - Computed selectors (isClient, isRepairer, isAdmin)
- *   - Effets de bord sur SecureStorage
- */
 describe('AuthStore', () => {
   let store: AuthStore;
-  let storageMock: jest.Mocked<SecureStorageService>;
+  let storageMock: jasmine.SpyObj<SecureStorageService>;
+  let loggerMock: jasmine.SpyObj<LoggerService>;
 
-  beforeEach(() => {
-    storageMock = {
-      get: jest.fn().mockReturnValue(null),
-      set: jest.fn(),
-      remove: jest.fn(),
-      clear: jest.fn(),
-    } as unknown as jest.Mocked<SecureStorageService>;
+  function createStore(): AuthStore {
+    storageMock = jasmine.createSpyObj<SecureStorageService>(
+      'SecureStorageService',
+      ['get', 'set', 'remove', 'clear', 'has'],
+    );
+    storageMock.get.and.returnValue(Promise.resolve(null));
+    storageMock.set.and.returnValue(Promise.resolve());
+
+    loggerMock = jasmine.createSpyObj<LoggerService>('LoggerService', [
+      'debug', 'info', 'warn', 'error',
+    ]);
 
     TestBed.configureTestingModule({
       providers: [
         AuthStore,
         { provide: SecureStorageService, useValue: storageMock },
-        { provide: LoggerService, useValue: { log: jest.fn(), error: jest.fn(), warn: jest.fn() } },
+        { provide: LoggerService, useValue: loggerMock },
       ],
     });
 
-    store = TestBed.inject(AuthStore);
+    return TestBed.inject(AuthStore);
+  }
+
+  beforeEach(() => {
+    store = createStore();
   });
 
   it('should be created', () => {
     expect(store).toBeTruthy();
   });
 
-  it('starts unauthenticated when storage is empty', () => {
+  it('starts unauthenticated when storage is empty', async () => {
+    await store.hydrate();
     expect(store.isAuthenticated()).toBe(false);
     expect(store.user()).toBeNull();
+    expect(store.token()).toBeNull();
   });
 
-  it('hydrates from storage when token + user are present', () => {
-    const fakeUser = { id: '1', phone: '0700000000', role: 'client' as const };
-    const fakeToken = 'jwt-token';
-    storageMock.get.mockImplementation((key: string) => {
-      if (key === StorageKeys.AUTH_TOKEN) return fakeToken;
-      if (key === StorageKeys.USER) return JSON.stringify(fakeUser);
-      return null;
-    });
+  it('hydrates from storage when AUTH key contains valid payload', async () => {
+    const fakeUser: User = {
+      id: '1',
+      phone: '0700000000',
+      role: 'client',
+      firstName: 'Test',
+    };
 
-    // Re-créer le store après avoir armé le storage
+    // Re-create the store with storage armed BEFORE injection
     TestBed.resetTestingModule();
-    TestBed.configureTestingModule({
-      providers: [
-        AuthStore,
-        { provide: SecureStorageService, useValue: storageMock },
-        { provide: LoggerService, useValue: { log: jest.fn(), error: jest.fn(), warn: jest.fn() } },
-      ],
-    });
-    const hydratedStore = TestBed.inject(AuthStore);
+    const hydratedStore = createStore();
+    storageMock.get.and.returnValue(
+      Promise.resolve({ token: 'jwt-token', user: fakeUser }),
+    );
+
+    await hydratedStore.hydrate();
 
     expect(hydratedStore.isAuthenticated()).toBe(true);
     expect(hydratedStore.user()?.phone).toBe('0700000000');
     expect(hydratedStore.isClient()).toBe(true);
+    expect(hydratedStore.isRepairer()).toBe(false);
+  });
+
+  it('exposes role-based selectors', async () => {
+    await store.hydrate();
+    store.loginSuccess(
+      { id: '1', phone: '0700000000', role: 'admin' },
+      'token',
+    );
+    expect(store.isAdmin()).toBe(true);
+    expect(store.isClient()).toBe(false);
+    expect(store.userRole()).toBe('admin');
+  });
+
+  it('clears state on logout', async () => {
+    await store.hydrate();
+    store.loginSuccess(
+      { id: '1', phone: '0700000000', role: 'client' },
+      'token',
+    );
+    expect(store.isAuthenticated()).toBe(true);
+
+    store.logout();
+    expect(store.isAuthenticated()).toBe(false);
+    expect(store.user()).toBeNull();
+    expect(store.token()).toBeNull();
+  });
+
+  it('returns the correct redirect URL per role', () => {
+    store.loginSuccess({ id: '1', phone: '0700000000', role: 'admin' }, 't');
+    expect(store.getDefaultRedirectUrl()).toBe('/admin');
+
+    store.loginSuccess({ id: '2', phone: '0711111111', role: 'repairer' }, 't');
+    expect(store.getDefaultRedirectUrl()).toBe('/repairer/requests');
+
+    store.loginSuccess({ id: '3', phone: '0722222222', role: 'client' }, 't');
+    expect(store.getDefaultRedirectUrl()).toBe('/home');
   });
 });

@@ -3,14 +3,18 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { Location } from '@angular/common';
-import { SearchService, Repairer, ServiceType, RepairerReview, Device } from '../../services/search.service';
+import { SearchService, Repairer, RepairerReview } from '../../services/search.service';
+import { DevicesService, type Device, type ServiceType } from '@app/domains/devices';
 import { SearchStore } from '../../stores/search.store';
 import { AuthStore } from '../../../../core/stores/auth.store';
-import { ReviewsService, StepRatingStats, RatingCategory } from '../../../reviews/services/reviews.service';
-import { RequestsService, CreateRequestDto } from '../../../requests/services/requests.service';
-import { UiHeaderComponent } from '../../../../shared/components/ui-header/ui-header.component';
+import { ReviewsService, StepRatingStats, RatingCategory } from '@app/domains/reviews';
+import { RequestsService, type CreateRequestDto } from '@app/domains/requests';
+import { ChatService } from '@app/domains/chat';
+import { UiHeaderComponent } from '@app/features/common/components';
 import { FormatDatePipe } from '../../../../shared/pipes/format-date.pipe';
 import { LoggerService } from '../../../../core/services/logger.service';
+import { ToastService } from '../../../../core/services/toast.service';
+import { formatDistanceKm } from '../../../../shared/utils/format.utils';
 
 interface QualityScore {
   label: string;
@@ -2261,14 +2265,17 @@ interface QualityScore {
 })
 export class RepairerDetailComponent implements OnInit {
   private readonly searchService = inject(SearchService);
+  private readonly devicesService = inject(DevicesService);
   private readonly searchStore = inject(SearchStore);
   readonly authStore = inject(AuthStore); // Public for template access
   private readonly requestsService = inject(RequestsService);
+  private readonly chatService = inject(ChatService);
   readonly reviewsService = inject(ReviewsService);
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
   private readonly location = inject(Location);
   private readonly logger = inject(LoggerService);
+  private readonly toast = inject(ToastService);
 
   readonly Math = Math; // Expose Math for template
 
@@ -2347,7 +2354,7 @@ export class RepairerDetailComponent implements OnInit {
 
   private async loadCategories(): Promise<void> {
     try {
-      const categories = await this.searchService.getDeviceCategories();
+      const categories = await this.devicesService.getDeviceCategories();
       if (categories && categories.length > 0) {
         this.categories.set(categories);
       }
@@ -2382,7 +2389,7 @@ export class RepairerDetailComponent implements OnInit {
 
         // Load brands for category
         try {
-          const brands = await this.searchService.getDeviceBrands(storeDevice.category || 'smartphone');
+          const brands = await this.devicesService.getDeviceBrands(storeDevice.category || 'smartphone');
           this.brands.set(brands);
         } catch {
           // Ignore brand loading errors
@@ -2390,7 +2397,7 @@ export class RepairerDetailComponent implements OnInit {
 
         // Load devices for brand
         try {
-          const result = await this.searchService.getDevices({
+          const result = await this.devicesService.getDevices({
             category: storeDevice.category,
             brand: storeDevice.brand,
           });
@@ -2400,7 +2407,7 @@ export class RepairerDetailComponent implements OnInit {
         }
 
         // Load service types for device
-        const services = await this.searchService.getServiceTypes(storeDevice.id);
+        const services = await this.devicesService.getServiceTypes(storeDevice.id);
         this.serviceTypes.set(services);
         this.formServiceTypes.set(services);
 
@@ -2450,8 +2457,50 @@ export class RepairerDetailComponent implements OnInit {
     }
   }
 
-  contactRepairer(): void {
-    // TODO: In production, would open a chat or make a masked call
+  /**
+   * Bouton "Contacter" — Stratégie A (chat only, pas d'appel masqué).
+   *
+   * Flow :
+   *   1. Si non authentifié → /auth/login (avec returnUrl)
+   *   2. Si authentifié, on liste les conversations du user et on cherche
+   *      celle qui implique ce réparateur.
+   *      - Trouvée → /chat/:convId
+   *      - Pas trouvée → toast info + /requests/new?repairerId=...
+   *        (une demande doit exister pour qu'une conversation soit créée
+   *        côté backend — c'est le modèle métier actuel).
+   */
+  async contactRepairer(): Promise<void> {
+    if (!this.authStore.isAuthenticated()) {
+      this.router.navigate(['/auth/login'], {
+        queryParams: { returnUrl: this.router.url },
+      });
+      return;
+    }
+
+    const repairerId = this.repairer()?.id;
+    if (!repairerId) {
+      return;
+    }
+
+    try {
+      const conversations = await this.chatService.getConversations();
+      const existing = conversations.find((c) => c.repairer?.id === repairerId);
+
+      if (existing) {
+        this.router.navigate(['/chat', existing.id]);
+        return;
+      }
+
+      this.toast.info(
+        'Créez d\'abord une demande pour pouvoir discuter avec ce réparateur.',
+      );
+      this.router.navigate(['/requests/new'], {
+        queryParams: { repairerId },
+      });
+    } catch (err) {
+      this.logger.error('RepairerDetail', 'contactRepairer failed', err);
+      this.toast.error('Impossible de joindre le réparateur pour le moment.');
+    }
   }
 
   requestRepair(): void {
@@ -2589,12 +2638,7 @@ export class RepairerDetailComponent implements OnInit {
     return 'R';
   }
 
-  formatDistance(km: number): string {
-    if (km < 1) {
-      return `${Math.round(km * 1000)} m`;
-    }
-    return `${km.toFixed(1)} km`;
-  }
+  readonly formatDistance = formatDistanceKm;
 
   // ==========================================
   // REPAIR REQUEST FORM METHODS
@@ -2639,7 +2683,7 @@ export class RepairerDetailComponent implements OnInit {
 
     this.isLoadingBrands.set(true);
     try {
-      const brands = await this.searchService.getDeviceBrands(category);
+      const brands = await this.devicesService.getDeviceBrands(category);
       this.brands.set(brands);
     } catch (err) {
       this.logger.error('RepairerDetailComponent', 'Error loading brands', err);
@@ -2655,7 +2699,7 @@ export class RepairerDetailComponent implements OnInit {
 
     this.isLoadingModels.set(true);
     try {
-      const result = await this.searchService.getDevices({
+      const result = await this.devicesService.getDevices({
         category: this.selectedCategory() || undefined,
         brand: brand,
       });
@@ -2688,7 +2732,7 @@ export class RepairerDetailComponent implements OnInit {
       // Load service types for step 2
       this.isLoadingServices.set(true);
       try {
-        const services = await this.searchService.getServiceTypes(this.selectedDevice()!.id);
+        const services = await this.devicesService.getServiceTypes(this.selectedDevice()!.id);
         this.formServiceTypes.set(services);
       } catch (err) {
         this.logger.error('RepairerDetailComponent', 'Error loading services', err);

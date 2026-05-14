@@ -187,6 +187,16 @@ import { AuthStore } from '../../../core/stores/auth.store';
       box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.08);
     }
 
+    /* Navigation mobile-only : sur desktop, la barre de bas recouvre le
+       contenu sans apporter de valeur (UX bureau différente). On la
+       masque ≥ 1024px ; les pages doivent prévoir leur propre nav
+       contextuelle (header, breadcrumbs, liens). */
+    @media (min-width: 1024px) {
+      .bottom-nav {
+        display: none;
+      }
+    }
+
     .nav-item {
       display: flex;
       flex-direction: column;
