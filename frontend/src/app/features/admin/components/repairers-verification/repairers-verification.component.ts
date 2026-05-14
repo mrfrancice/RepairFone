@@ -1,20 +1,10 @@
-import { Component, inject, signal, effect, OnInit, OnDestroy, DestroyRef, ChangeDetectionStrategy } from '@angular/core';
-import { CommonModule } from '@angular/common';
-import { ActivatedRoute, Router } from '@angular/router';
-import { FormsModule } from '@angular/forms';
-import { AdminService, RepairerForVerification, VerificationStats } from '../../services/admin.service';
-import { AuthStore } from '../../../../core/stores/auth.store';
-import { HeaderSearchComponent } from '../../../../shared/components/header-search/header-search.component';
-import { UiHeaderComponent } from '@app/features/common/components';
+import { getErrorMessage } from '../../../../shared/utils/error.utils';
 import {
   UiDataGridComponent,
   UiDataGridColumnComponent,
   DataGridPageEvent,
   DataGridSortEvent,
 } from '../../../../shared/components/ui-data-grid';
-import { InitialsPipe } from '../../../../shared/pipes/initials.pipe';
-import { StatusLabelsService, VerificationStatus } from '../../../../shared/services/status-labels.service';
-import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 
 type StatusFilter = 'all' | 'pending' | 'under_review' | 'verified' | 'rejected' | 'suspended';
 
@@ -1801,8 +1791,8 @@ export class RepairersVerificationComponent implements OnInit, OnDestroy {
       this.repairers.set(result.data);
       this.total.set(result.total);
       this.stats.set(result.stats);
-    } catch (err: any) {
-      this.error.set(err.message || 'Erreur lors du chargement');
+    } catch (err: unknown) {
+      this.error.set(getErrorMessage(err, 'Erreur lors du chargement'));
     } finally {
       this.isLoading.set(false);
     }
@@ -1865,7 +1855,7 @@ export class RepairersVerificationComponent implements OnInit, OnDestroy {
       await this.adminService.setRepairerUnderReview(id);
       this.closeDrawer();
       await this.loadRepairers();
-    } catch (err: any) {
+    } catch (err: unknown) {
       alert(err.message || 'Erreur');
     } finally {
       this.isProcessing.set(false);
@@ -1904,7 +1894,7 @@ export class RepairersVerificationComponent implements OnInit, OnDestroy {
       this.closeModals();
       this.closeDrawer();
       await this.loadRepairers();
-    } catch (err: any) {
+    } catch (err: unknown) {
       alert(err.message || 'Erreur');
     } finally {
       this.isProcessing.set(false);
@@ -1921,7 +1911,7 @@ export class RepairersVerificationComponent implements OnInit, OnDestroy {
       this.closeModals();
       this.closeDrawer();
       await this.loadRepairers();
-    } catch (err: any) {
+    } catch (err: unknown) {
       alert(err.message || 'Erreur');
     } finally {
       this.isProcessing.set(false);
@@ -1934,7 +1924,7 @@ export class RepairersVerificationComponent implements OnInit, OnDestroy {
       await this.adminService.reactivateRepairer(id);
       this.closeDrawer();
       await this.loadRepairers();
-    } catch (err: any) {
+    } catch (err: unknown) {
       alert(err.message || 'Erreur');
     } finally {
       this.isProcessing.set(false);

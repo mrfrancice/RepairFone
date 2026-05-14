@@ -1,3 +1,4 @@
+import { getErrorMessage } from '../../../../shared/utils/error.utils';
 import {
   Component,
   inject,
@@ -6,17 +7,11 @@ import {
   DestroyRef,
   ChangeDetectionStrategy,
 } from '@angular/core';
-import { CommonModule } from '@angular/common';
-import { ActivatedRoute, Router } from '@angular/router';
-import { FormsModule } from '@angular/forms';
-import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import {
   AdminService,
   DisputeForAdmin,
   DisputesAdminStats,
 } from '../../services/admin.service';
-import { UiHeaderComponent } from '@app/features/common/components';
-import { HeaderSearchComponent } from '../../../../shared/components/header-search/header-search.component';
 import {
   UiDataGridComponent,
   UiDataGridColumnComponent,
@@ -590,8 +585,8 @@ export class DisputesAdminComponent implements OnInit {
       });
       this.disputes.set(res.data);
       this.total.set(res.total);
-    } catch (err: any) {
-      this.error.set(err?.message || 'Erreur lors du chargement');
+    } catch (err: unknown) {
+      this.error.set(getErrorMessage(err, 'Erreur lors du chargement'));
     } finally {
       this.isLoading.set(false);
     }
@@ -645,8 +640,8 @@ export class DisputesAdminComponent implements OnInit {
     try {
       const full = await this.adminService.getDisputeDetail(dispute.id);
       this.selectedDispute.set(full);
-    } catch (err: any) {
-      this.error.set(err?.message || 'Erreur lors du chargement du détail');
+    } catch (err: unknown) {
+      this.error.set(getErrorMessage(err, 'Erreur lors du chargement du détail'));
     }
   }
 
@@ -665,8 +660,8 @@ export class DisputesAdminComponent implements OnInit {
       const refreshed = await this.adminService.getDisputeDetail(disputeId);
       this.selectedDispute.set(refreshed);
       this.newNote = '';
-    } catch (err: any) {
-      this.error.set(err?.error?.message || err?.message || 'Erreur publication note');
+    } catch (err: unknown) {
+      this.error.set(getErrorMessage(err, 'Erreur publication note'));
     } finally {
       this.processingAction.set(false);
     }
@@ -711,8 +706,8 @@ export class DisputesAdminComponent implements OnInit {
       // Refresh list + stats
       this.loadDisputes();
       this.loadStats();
-    } catch (err: any) {
-      this.resolveError.set(err?.error?.message || err?.message || 'Erreur lors de la résolution');
+    } catch (err: unknown) {
+      this.resolveError.set(getErrorMessage(err, 'Erreur lors de la résolution'));
     } finally {
       this.processingAction.set(false);
     }

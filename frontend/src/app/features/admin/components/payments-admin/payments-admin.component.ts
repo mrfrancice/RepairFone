@@ -1,3 +1,4 @@
+import { getErrorMessage } from '../../../../shared/utils/error.utils';
 import {
   Component,
   inject,
@@ -7,17 +8,11 @@ import {
   DestroyRef,
   ChangeDetectionStrategy,
 } from '@angular/core';
-import { CommonModule } from '@angular/common';
-import { ActivatedRoute, Router } from '@angular/router';
-import { FormsModule } from '@angular/forms';
-import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import {
   AdminService,
   PaymentForAdmin,
   PaymentsAdminStats,
 } from '../../services/admin.service';
-import { UiHeaderComponent } from '@app/features/common/components';
-import { HeaderSearchComponent } from '../../../../shared/components/header-search/header-search.component';
 import {
   UiDataGridComponent,
   UiDataGridColumnComponent,
@@ -613,8 +608,8 @@ export class PaymentsAdminComponent implements OnInit {
       });
       this.payments.set(res.data);
       this.total.set(res.total);
-    } catch (err: any) {
-      this.error.set(err?.message || 'Erreur lors du chargement');
+    } catch (err: unknown) {
+      this.error.set(getErrorMessage(err, 'Erreur lors du chargement'));
     } finally {
       this.isLoading.set(false);
     }
@@ -668,8 +663,8 @@ export class PaymentsAdminComponent implements OnInit {
     try {
       const full = await this.adminService.getPaymentDetail(payment.id);
       this.selectedPayment.set(full);
-    } catch (err: any) {
-      this.error.set(err?.message || 'Erreur lors du chargement du détail');
+    } catch (err: unknown) {
+      this.error.set(getErrorMessage(err, 'Erreur lors du chargement du détail'));
     }
   }
 
@@ -701,8 +696,8 @@ export class PaymentsAdminComponent implements OnInit {
       this.closeRefundModal();
       this.loadPayments();
       this.loadStats();
-    } catch (err: any) {
-      this.paymentActionError.set(err?.error?.message || err?.message || 'Erreur lors du remboursement');
+    } catch (err: unknown) {
+      this.paymentActionError.set(getErrorMessage(err, 'Erreur lors du remboursement'));
     } finally {
       this.processingAction.set(false);
     }
@@ -730,8 +725,8 @@ export class PaymentsAdminComponent implements OnInit {
       this.closeBlockModal();
       this.loadPayments();
       this.loadStats();
-    } catch (err: any) {
-      this.paymentActionError.set(err?.error?.message || err?.message || 'Erreur lors du blocage');
+    } catch (err: unknown) {
+      this.paymentActionError.set(getErrorMessage(err, 'Erreur lors du blocage'));
     } finally {
       this.processingAction.set(false);
     }
@@ -746,8 +741,8 @@ export class PaymentsAdminComponent implements OnInit {
       this.selectedPayment.set(updated);
       this.loadPayments();
       this.loadStats();
-    } catch (err: any) {
-      this.paymentActionError.set(err?.error?.message || err?.message || 'Erreur lors du déblocage');
+    } catch (err: unknown) {
+      this.paymentActionError.set(getErrorMessage(err, 'Erreur lors du déblocage'));
     } finally {
       this.processingAction.set(false);
     }

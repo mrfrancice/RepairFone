@@ -1,20 +1,10 @@
-import { Component, inject, signal, OnInit, DestroyRef, ChangeDetectionStrategy } from '@angular/core';
-import { CommonModule } from '@angular/common';
-import { RouterLink, ActivatedRoute, Router } from '@angular/router';
-import { FormsModule } from '@angular/forms';
-import { AdminService, UserForAdmin } from '../../services/admin.service';
-import { UiHeaderComponent } from '@app/features/common/components';
-import { HeaderSearchComponent } from '../../../../shared/components/header-search/header-search.component';
+import { getErrorMessage } from '../../../../shared/utils/error.utils';
 import {
   UiDataGridComponent,
   UiDataGridColumnComponent,
   DataGridPageEvent,
   DataGridSortEvent,
 } from '../../../../shared/components/ui-data-grid';
-import { InitialsPipe } from '../../../../shared/pipes/initials.pipe';
-import { RoleLabelPipe } from '../../../../shared/pipes/role-label.pipe';
-import { StatusLabelsService, UserStatus } from '../../../../shared/services/status-labels.service';
-import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 
 type RoleFilter = 'all' | 'client' | 'repairer';
 type StatusFilter = 'all' | 'pending' | 'active' | 'suspended' | 'deactivated';
@@ -1167,7 +1157,7 @@ export class UsersManagementComponent implements OnInit {
   searchQuery = '';
   suspendReason = '';
 
-  private searchTimeout: any;
+  private searchTimeout: ReturnType<typeof setTimeout> | undefined;
 
   ngOnInit(): void {
     this.route.queryParams
@@ -1199,8 +1189,8 @@ export class UsersManagementComponent implements OnInit {
       });
       this.users.set(result.data);
       this.total.set(result.total);
-    } catch (err: any) {
-      this.error.set(err.message || 'Erreur lors du chargement');
+    } catch (err: unknown) {
+      this.error.set(getErrorMessage(err, 'Erreur lors du chargement'));
     } finally {
       this.isLoading.set(false);
     }
@@ -1291,7 +1281,7 @@ export class UsersManagementComponent implements OnInit {
     try {
       await this.adminService.activateUser(id);
       await this.loadUsers();
-    } catch (err: any) {
+    } catch (err: unknown) {
       alert(err.message || 'Erreur');
     } finally {
       this.isProcessing.set(false);
@@ -1318,7 +1308,7 @@ export class UsersManagementComponent implements OnInit {
       await this.adminService.deactivateUser(user.id, this.suspendReason || undefined);
       this.closeModal();
       await this.loadUsers();
-    } catch (err: any) {
+    } catch (err: unknown) {
       alert(err.message || 'Erreur');
     } finally {
       this.isProcessing.set(false);
