@@ -2,34 +2,7 @@
 // QUOTES DOMAIN — Types
 // ============================================
 
-import type { Repairer } from '@app/domains/repairers';
-import type { RepairRequest } from '@app/domains/requests';
-
-export interface Quote {
-  id: string;
-  requestId: string;
-  request?: RepairRequest;
-  repairerId: string;
-  repairer?: Repairer;
-  status: QuoteStatus;
-  laborCost: number;
-  partsCost: number;
-  additionalCost?: number;
-  totalAmount: number;
-  currency: string;
-  estimatedDuration: number;
-  estimatedCompletionDate?: string;
-  partsDetails?: QuotePart[];
-  notes?: string;
-  validUntil: string;
-  acceptedAt?: string;
-  rejectedAt?: string;
-  rejectionReason?: string;
-  createdAt: string;
-  updatedAt: string;
-}
-
-export type QuoteStatus = 'pending' | 'accepted' | 'rejected' | 'expired' | 'revised';
+export type QuoteStatus = 'pending' | 'accepted' | 'rejected' | 'expired';
 
 export interface QuotePart {
   name: string;
@@ -38,14 +11,62 @@ export interface QuotePart {
   quantity: number;
 }
 
+export interface Quote {
+  id: string;
+  requestId: string;
+  repairerId: string;
+  laborCost: number;
+  partsCost: number;
+  totalAmount: number;
+  estimatedDuration: string;
+  validUntil: string;
+  status: QuoteStatus;
+  parts: QuotePart[];
+  notes?: string;
+  rejectionReason?: string;
+  clientProposedPrice?: number;
+  createdAt: string;
+  updatedAt: string;
+  rejectedAt?: string;
+  acceptedAt?: string;
+  request?: {
+    id: string;
+    description: string;
+    device?: {
+      brand: string;
+      model: string;
+    };
+    serviceType?: {
+      name: string;
+    };
+    urgency?: 'normal' | 'express';
+    urgencySupplement?: number;
+  };
+  repairer?: {
+    id: string;
+    firstName?: string;
+    lastName?: string;
+    avatarUrl?: string;
+    repairerProfile?: {
+      businessName?: string;
+      rating?: number;
+    };
+  };
+}
+
 export interface CreateQuoteDto {
   requestId: string;
   laborCost: number;
-  partsCost: number;
-  additionalCost?: number;
-  estimatedDuration: number;
-  estimatedCompletionDate?: string;
-  partsDetails?: QuotePart[];
-  notes?: string;
+  parts: QuotePart[];
+  estimatedDuration: string;
   validDays?: number;
+  notes?: string;
+}
+
+export interface UpdateQuoteDto {
+  status?: QuoteStatus;
+  laborCost?: number;
+  parts?: QuotePart[];
+  estimatedDuration?: string;
+  notes?: string;
 }

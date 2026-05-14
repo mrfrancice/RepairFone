@@ -1,8 +1,7 @@
 import { Component, inject, signal, computed, OnInit, ChangeDetectionStrategy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router, RouterLink } from '@angular/router';
-import { QuotesService, Quote, QuoteStatus } from '../../services/quotes.service';
-import { QuotesStore } from '../../stores/quotes.store';
+import { QuotesService, QuotesStore, type Quote, type QuoteStatus } from '@app/domains/quotes';
 import { UiButtonComponent } from '../../../../shared/components/ui-button/ui-button.component';
 import { UiTabsComponent } from '../../../../shared/components/ui-tabs/ui-tabs.component';
 import { UiBadgeComponent } from '../../../../shared/components/ui-badge/ui-badge.component';

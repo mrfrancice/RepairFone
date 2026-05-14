@@ -3,7 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { RepairerService, RepairerRequest, CreateQuoteDto, QuotePart } from '../../services/repairer.service';
-import { QuotesService, Quote } from '../../../quotes/services/quotes.service';
+import { QuotesService, type Quote } from '@app/domains/quotes';
 import {
   UiButtonComponent,
   UiLoadingComponent,

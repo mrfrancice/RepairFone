@@ -1,5 +1,5 @@
 import { Injectable, signal, computed } from '@angular/core';
-import { Quote, QuoteStatus } from '../services/quotes.service';
+import type { Quote, QuoteStatus } from './types';
 
 @Injectable({ providedIn: 'root' })
 export class QuotesStore {

@@ -3,7 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import { PaymentsService, PaymentsStore, type PaymentType, type PaymentMethod } from '@app/domains/payments';
-import { QuotesService } from '../../../quotes/services/quotes.service';
+import { QuotesService } from '@app/domains/quotes';
 import { UiButtonComponent } from '../../../../shared/components/ui-button/ui-button.component';
 import { UiLoadingComponent } from '../../../../shared/components/ui-loading/ui-loading.component';
 import { UiHeaderComponent } from '../../../../shared/components/ui-header/ui-header.component';
