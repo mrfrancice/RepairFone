@@ -1,8 +1,7 @@
 import { Component, inject, OnInit, signal, computed, ChangeDetectionStrategy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
-import { RepairerService, RepairerStats, RepairerRequest } from '../../services/repairer.service';
-import { RepairerStore } from '../../stores/repairer.store';
+import { RepairersService, RepairersStore, type RepairerStats, type RepairerRequest } from '@app/domains/repairers';
 import { AuthStore } from '../../../../core/stores/auth.store';
 import { LoggerService } from '../../../../core/services/logger.service';
 import { UiLoadingComponent } from '../../../../shared/components/ui-loading/ui-loading.component';
@@ -1018,8 +1017,8 @@ import { InitialsPipe } from '../../../../shared/pipes/initials.pipe';
   `]
 })
 export class RepairerDashboardComponent implements OnInit {
-  readonly repairerService = inject(RepairerService);
-  readonly store = inject(RepairerStore);
+  readonly repairerService = inject(RepairersService);
+  readonly store = inject(RepairersStore);
   readonly authStore = inject(AuthStore);
   private readonly logger = inject(LoggerService);
   readonly Math = Math;

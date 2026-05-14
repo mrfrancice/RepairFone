@@ -4,47 +4,7 @@
 
 import type { User } from '@app/domains/users';
 
-export interface RepairerProfile {
-  id: string;
-  userId: string;
-  businessName: string;
-  description?: string;
-  address: string;
-  city: string;
-  commune?: string;
-  latitude?: number;
-  longitude?: number;
-  verificationStatus: VerificationStatus;
-  verifiedAt?: string;
-  certifications: any[];
-  workingHours: WorkingHours;
-  rating: number;
-  ratingAvg: number;
-  ratingCount: number;
-  reviewCount: number;
-  totalRepairs: number;
-  completionRate: number;
-  acceptsHomeService: boolean;
-  homeServiceRadiusKm: number;
-  isAvailable: boolean;
-  specialties?: string[];
-  // Champs additionnels pour l'affichage UI
-  isVerified?: boolean;
-  responseTime?: number;
-  estimatedPrice?: number;
-  estimatedPriceMin?: number;
-  estimatedPriceMax?: number;
-  photos?: string[];
-  galleryImages?: string[];
-  badges?: RepairerBadge[];
-  phone?: string;
-  avatarUrl?: string;
-  distance?: number;
-  completedRepairs?: number;
-  yearsOfExperience?: number;
-  acceptanceRate?: number;
-  serviceRadius?: number;
-}
+export type RepairerType = 'shop' | 'independent';
 
 export type VerificationStatus =
   | 'pending'
@@ -53,71 +13,150 @@ export type VerificationStatus =
   | 'rejected'
   | 'suspended';
 
+export type RequestFilterStatus =
+  | 'new'
+  | 'accepted'
+  | 'in_progress'
+  | 'completed'
+  | 'delivered'
+  | 'rejected'
+  | 'all';
+
+export interface DaySchedule {
+  open: string;
+  close: string;
+  closed?: boolean;
+}
+
 export interface WorkingHours {
-  [day: string]: { open: string; close: string; closed?: boolean };
+  monday?: DaySchedule;
+  tuesday?: DaySchedule;
+  wednesday?: DaySchedule;
+  thursday?: DaySchedule;
+  friday?: DaySchedule;
+  saturday?: DaySchedule;
+  sunday?: DaySchedule;
 }
 
-export interface Repairer extends User {
-  repairerProfile: RepairerProfile;
-  distance?: number;
-}
-
-// === STATS & BADGES ===
-
-export interface RepairerStats {
-  newRequests: number;
-  activeRequests: number;
-  completedToday: number;
-  completedThisMonth: number;
-  totalRevenue: number;
-  monthlyRevenue: number;
-  averageRating: number;
-  responseRate: number;
-  completionRate: number;
-  qualityScore: number;
+export interface KycDocument {
+  id: string;
+  type: 'id_card' | 'business_license' | 'certification' | 'other';
+  fileUrl: string;
+  status: 'pending' | 'approved' | 'rejected';
+  rejectionReason?: string;
+  uploadedAt: string;
 }
 
 export interface RepairerBadge {
   id: string;
-  type: BadgeType;
+  type: 'verified' | 'fast_response' | 'top_rated' | 'expert';
   label: string;
   icon: string;
   earnedAt: string;
 }
 
-export type BadgeType = 'verified' | 'fast_response' | 'top_rated' | 'expert' | 'trusted';
-
-// === KYC (verification reparateur) ===
-
-export interface KycDocument {
+export interface RepairerProfile {
   id: string;
   userId: string;
-  type: KycDocumentType;
-  fileUrl: string;
-  status: KycDocumentStatus;
-  rejectionReason?: string;
+  type: RepairerType;
+  businessName?: string;
+  description?: string;
+  specialties: string[];
+  serviceArea: {
+    latitude: number;
+    longitude: number;
+    radius: number;
+  };
+  address?: string;
+  city?: string;
+  commune?: string;
+  quarter?: string;
+  landmark?: string;
+  latitude?: number;
+  longitude?: number;
+  workingHours?: WorkingHours;
+  photos?: string[];
+  verificationStatus: VerificationStatus;
   verifiedAt?: string;
+  kycDocuments?: KycDocument[];
+  badges: RepairerBadge[];
+  isAvailable: boolean;
+  rating?: number;
+  reviewCount?: number;
+  yearsOfExperience?: number;
+  totalRepairs?: number;
+  completionRate?: number;
   createdAt: string;
+  updatedAt: string;
 }
 
-export type KycDocumentType =
-  | 'identity_card'
-  | 'business_license'
-  | 'certificate'
-  | 'photo'
-  | 'other';
+export interface RepairerStats {
+  totalRequests: number;
+  completedRequests: number;
+  pendingRequests: number;
+  inProgressRequests: number;
+  totalRevenue: number;
+  monthlyRevenue: number;
+  averageRating: number;
+  totalReviews: number;
+  responseRate: number;
+  completionRate: number;
+  averageResponseTime: number;
+  qualityScore: number;
+}
 
-export type KycDocumentStatus = 'pending' | 'approved' | 'rejected';
+export interface RepairerRequest {
+  id: string;
+  clientId: string;
+  device?: {
+    brand?: string;
+    model?: string;
+    type?: string;
+  } | null;
+  serviceType?: {
+    id?: string;
+    name?: string;
+  } | null;
+  problemDescription?: string;
+  photos?: string[];
+  serviceMode: 'shop' | 'home';
+  urgency: 'normal' | 'express';
+  status: string;
+  distance?: number;
+  createdAt: string;
+  client?: {
+    firstName?: string;
+    lastName?: string;
+    phone?: string;
+  };
+  quote?: {
+    id: string;
+    status: string;
+    totalAmount: number;
+  };
+}
 
-// === SEARCH ===
+// Nomme `UpdateRepairerSettingsDto` (et non `UpdateProfileDto`) pour eviter
+// la collision avec `UpdateProfileDto` de `domains/users` qui cible un
+// endpoint different (PATCH /users/profile vs PATCH /repairers/profile/me).
+export interface UpdateRepairerSettingsDto {
+  type?: RepairerType;
+  businessName?: string;
+  description?: string;
+  specialties?: string[];
+  serviceArea?: {
+    latitude: number;
+    longitude: number;
+    radius: number;
+  };
+  address?: string;
+  workingHours?: WorkingHours;
+  photos?: string[];
+}
 
-export interface SearchParams {
-  latitude: number;
-  longitude: number;
-  radiusKm?: number;
-  deviceId?: string;
-  serviceTypeId?: string;
-  minRating?: number;
-  page?: number;
-  limit?: number;
+// Vue "Repairer en tant qu'utilisateur" : utilisee par conseils/types.ts
+// (expert?: Repairer). Garde une signature minimaliste compatible avec User.
+export interface Repairer extends User {
+  repairerProfile: RepairerProfile;
+  distance?: number;
 }

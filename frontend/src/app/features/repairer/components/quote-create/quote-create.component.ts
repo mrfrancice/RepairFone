@@ -2,7 +2,8 @@ import { Component, inject, OnInit, signal, computed, ChangeDetectionStrategy } 
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
-import { RepairerService, RepairerRequest, CreateQuoteDto, QuotePart } from '../../services/repairer.service';
+import { RepairersService, type RepairerRequest } from '@app/domains/repairers';
+import { type CreateQuoteDto, type QuotePart } from '@app/domains/quotes';
 import { QuotesService, type Quote } from '@app/domains/quotes';
 import {
   UiButtonComponent,
@@ -930,7 +931,7 @@ interface SelectedPart {
   `]
 })
 export class QuoteCreateComponent implements OnInit {
-  private readonly repairerService = inject(RepairerService);
+  private readonly repairerService = inject(RepairersService);
   private readonly quotesService = inject(QuotesService);
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);

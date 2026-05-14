@@ -1,158 +1,20 @@
 import { Injectable, inject, signal, computed } from '@angular/core';
 import { firstValueFrom } from 'rxjs';
-import { ApiService } from '../../../core/services/api.service';
-import { SettingsService } from '../../../core/services/settings.service';
-
-export type RepairerType = 'shop' | 'independent';
-export type VerificationStatus = 'pending' | 'under_review' | 'verified' | 'rejected' | 'suspended';
-export type RequestFilterStatus = 'new' | 'accepted' | 'in_progress' | 'completed' | 'delivered' | 'rejected' | 'all';
-
-export interface RepairerProfile {
-  id: string;
-  userId: string;
-  type: RepairerType;
-  businessName?: string;
-  description?: string;
-  specialties: string[];
-  serviceArea: {
-    latitude: number;
-    longitude: number;
-    radius: number; // km
-  };
-  address?: string;
-  city?: string;
-  commune?: string;
-  quarter?: string;
-  landmark?: string;
-  latitude?: number;
-  longitude?: number;
-  workingHours?: WorkingHours;
-  photos?: string[];
-  verificationStatus: VerificationStatus;
-  verifiedAt?: string;
-  kycDocuments?: KycDocument[];
-  badges: RepairerBadge[];
-  isAvailable: boolean;
-  rating?: number;
-  reviewCount?: number;
-  yearsOfExperience?: number;
-  totalRepairs?: number;
-  completionRate?: number;
-  createdAt: string;
-  updatedAt: string;
-}
-
-export interface WorkingHours {
-  monday?: DaySchedule;
-  tuesday?: DaySchedule;
-  wednesday?: DaySchedule;
-  thursday?: DaySchedule;
-  friday?: DaySchedule;
-  saturday?: DaySchedule;
-  sunday?: DaySchedule;
-}
-
-export interface DaySchedule {
-  open: string; // "08:00"
-  close: string; // "18:00"
-  closed?: boolean;
-}
-
-export interface KycDocument {
-  id: string;
-  type: 'id_card' | 'business_license' | 'certification' | 'other';
-  fileUrl: string;
-  status: 'pending' | 'approved' | 'rejected';
-  rejectionReason?: string;
-  uploadedAt: string;
-}
-
-export interface RepairerBadge {
-  id: string;
-  type: 'verified' | 'fast_response' | 'top_rated' | 'expert';
-  label: string;
-  icon: string;
-  earnedAt: string;
-}
-
-export interface RepairerStats {
-  totalRequests: number;
-  completedRequests: number;
-  pendingRequests: number;
-  inProgressRequests: number;
-  totalRevenue: number;
-  monthlyRevenue: number;
-  averageRating: number;
-  totalReviews: number;
-  responseRate: number; // percentage
-  completionRate: number; // percentage
-  averageResponseTime: number; // hours
-  qualityScore: number; // 0-100
-}
-
-export interface RepairerRequest {
-  id: string;
-  clientId: string;
-  device?: {
-    brand?: string;
-    model?: string;
-    type?: string;
-  } | null;
-  serviceType?: {
-    id?: string;
-    name?: string;
-  } | null;
-  problemDescription?: string;
-  photos?: string[];
-  serviceMode: 'shop' | 'home';
-  urgency: 'normal' | 'express';
-  status: string;
-  distance?: number;
-  createdAt: string;
-  client?: {
-    firstName?: string;
-    lastName?: string;
-    phone?: string;
-  };
-  quote?: {
-    id: string;
-    status: string;
-    totalAmount: number;
-  };
-}
-
-export interface CreateQuoteDto {
-  requestId: string;
-  laborCost: number;
-  parts: QuotePart[];
-  estimatedDuration: string;
-  notes?: string;
-  validDays?: number;
-}
-
-export interface QuotePart {
-  name: string;
-  quantity: number;
-  price: number;
-}
-
-export interface UpdateProfileDto {
-  type?: RepairerType;
-  businessName?: string;
-  description?: string;
-  specialties?: string[];
-  serviceArea?: {
-    latitude: number;
-    longitude: number;
-    radius: number;
-  };
-  address?: string;
-  workingHours?: WorkingHours;
-  photos?: string[];
-}
+import { ApiService } from '@app/core/services/api.service';
+import { SettingsService } from '@app/core/services/settings.service';
+import type { CreateQuoteDto } from '@app/domains/quotes';
+import type {
+  KycDocument,
+  RepairerBadge,
+  RepairerProfile,
+  RepairerRequest,
+  RepairerStats,
+  UpdateRepairerSettingsDto,
+  VerificationStatus,
+} from './types';
 
 @Injectable({ providedIn: 'root' })
-export class RepairerService {
+export class RepairersService {
   private readonly api = inject(ApiService);
   private readonly settingsService = inject(SettingsService);
 
@@ -170,7 +32,7 @@ export class RepairerService {
   }
 
   // Update profile
-  async updateProfile(dto: UpdateProfileDto): Promise<RepairerProfile> {
+  async updateProfile(dto: UpdateRepairerSettingsDto): Promise<RepairerProfile> {
     this.isLoading.set(true);
     this.error.set(null);
 

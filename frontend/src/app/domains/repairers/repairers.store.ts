@@ -1,11 +1,11 @@
 import { Injectable, signal, computed } from '@angular/core';
-import {
+import type {
   RepairerProfile,
   RepairerStats,
   RepairerRequest,
   RequestFilterStatus,
   WorkingHours,
-} from '../services/repairer.service';
+} from './types';
 
 export interface ProfileFormState {
   step: 'type' | 'info' | 'specialties' | 'area' | 'hours' | 'photos' | 'kyc';
@@ -24,7 +24,7 @@ export interface ProfileFormState {
 }
 
 @Injectable({ providedIn: 'root' })
-export class RepairerStore {
+export class RepairersStore {
   // Profile
   private readonly _profile = signal<RepairerProfile | null>(null);
   private readonly _stats = signal<RepairerStats | null>(null);

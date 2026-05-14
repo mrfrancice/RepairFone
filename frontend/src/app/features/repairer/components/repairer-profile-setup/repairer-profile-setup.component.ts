@@ -2,8 +2,7 @@ import { Component, inject, OnInit, signal, ChangeDetectionStrategy } from '@ang
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
-import { RepairerService, UpdateProfileDto } from '../../services/repairer.service';
-import { RepairerStore } from '../../stores/repairer.store';
+import { RepairersService, RepairersStore, type UpdateRepairerSettingsDto } from '@app/domains/repairers';
 import { UiCardComponent } from '../../../../shared/components/ui-card/ui-card.component';
 import { UiButtonComponent } from '../../../../shared/components/ui-button/ui-button.component';
 import { UiStepperComponent } from '../../../../shared/components/ui-stepper/ui-stepper.component';
@@ -893,8 +892,8 @@ import { UiHeaderComponent } from '../../../../shared/components/ui-header/ui-he
   `]
 })
 export class RepairerProfileSetupComponent implements OnInit {
-  readonly repairerService = inject(RepairerService);
-  readonly store = inject(RepairerStore);
+  readonly repairerService = inject(RepairersService);
+  readonly store = inject(RepairersStore);
   private readonly router = inject(Router);
   private readonly logger = inject(LoggerService);
 
@@ -1055,7 +1054,7 @@ export class RepairerProfileSetupComponent implements OnInit {
     this.isSubmitting.set(true);
 
     try {
-      const dto: UpdateProfileDto = {
+      const dto: UpdateRepairerSettingsDto = {
         type: form.type!,
         businessName: form.businessName,
         description: form.description || undefined,

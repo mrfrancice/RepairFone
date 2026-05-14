@@ -1,8 +1,7 @@
 import { Component, inject, OnInit, signal, computed, ChangeDetectionStrategy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, Router } from '@angular/router';
-import { RepairerService, RepairerRequest, RequestFilterStatus } from '../../services/repairer.service';
-import { RepairerStore } from '../../stores/repairer.store';
+import { RepairersService, RepairersStore, type RepairerRequest, type RequestFilterStatus } from '@app/domains/repairers';
 import { AuthStore } from '../../../../core/stores/auth.store';
 import { StatusLabelsService, RequestStatus } from '../../../../shared/services/status-labels.service';
 import { HeaderSearchComponent } from '../../../../shared/components/header-search/header-search.component';
@@ -1318,8 +1317,8 @@ import { LoggerService } from '../../../../core/services/logger.service';
   `]
 })
 export class RequestManagementComponent implements OnInit {
-  readonly repairerService = inject(RepairerService);
-  readonly store = inject(RepairerStore);
+  readonly repairerService = inject(RepairersService);
+  readonly store = inject(RepairersStore);
   readonly authStore = inject(AuthStore);
   readonly statusLabels = inject(StatusLabelsService);
   private readonly route = inject(ActivatedRoute);
