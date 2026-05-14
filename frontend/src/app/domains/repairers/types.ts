@@ -23,8 +23,9 @@ export type RequestFilterStatus =
   | 'all';
 
 export interface DaySchedule {
-  open: string;
-  close: string;
+  /** Optionnels car un jour ferme (`closed: true`) n'a pas d'horaires. */
+  open?: string;
+  close?: string;
   closed?: boolean;
 }
 

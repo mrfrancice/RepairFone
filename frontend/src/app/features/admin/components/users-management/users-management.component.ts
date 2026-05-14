@@ -12,6 +12,8 @@ import {
   DataGridSortEvent,
 } from '../../../../shared/components/ui-data-grid';
 import { InitialsPipe } from '../../../../shared/pipes/initials.pipe';
+import { RoleLabelPipe } from '../../../../shared/pipes/role-label.pipe';
+import { getErrorMessage } from '../../../../shared/utils/error.utils';
 import { StatusLabelsService, UserStatus } from '../../../../shared/services/status-labels.service';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 
@@ -40,6 +42,7 @@ const SORT_FIELD_MAP: Record<string, UsersSortField> = {
     UiDataGridComponent,
     UiDataGridColumnComponent,
     InitialsPipe,
+    RoleLabelPipe,
   ],
   template: `
     <div class="admin-page">
@@ -207,7 +210,7 @@ const SORT_FIELD_MAP: Record<string, UsersSortField> = {
 
             <ui-data-grid-column key="role" header="Rôle" field="role" [sortable]="true">
               <ng-template let-row>
-                <span class="role-badge" [class]="row.role">{{ getRoleLabel(row.role) }}</span>
+                <span class="role-badge" [class]="row.role">{{ row.role | roleLabel }}</span>
               </ng-template>
             </ui-data-grid-column>
 
@@ -1165,7 +1168,7 @@ export class UsersManagementComponent implements OnInit {
   searchQuery = '';
   suspendReason = '';
 
-  private searchTimeout: any;
+  private searchTimeout: ReturnType<typeof setTimeout> | undefined;
 
   ngOnInit(): void {
     this.route.queryParams
@@ -1197,8 +1200,8 @@ export class UsersManagementComponent implements OnInit {
       });
       this.users.set(result.data);
       this.total.set(result.total);
-    } catch (err: any) {
-      this.error.set(err.message || 'Erreur lors du chargement');
+    } catch (err: unknown) {
+      this.error.set(getErrorMessage(err, 'Erreur lors du chargement'));
     } finally {
       this.isLoading.set(false);
     }
@@ -1270,14 +1273,7 @@ export class UsersManagementComponent implements OnInit {
     return 'Utilisateur';
   }
 
-  getRoleLabel(role: string): string {
-    const labels: Record<string, string> = {
-      client: 'Client',
-      repairer: 'Reparateur',
-      admin: 'Admin',
-    };
-    return labels[role] || role;
-  }
+  // Remplace par le pipe roleLabel (reutilisable + cache automatique).
 
   previousPage(): void {
     if (this.page() > 1) {
@@ -1296,8 +1292,8 @@ export class UsersManagementComponent implements OnInit {
     try {
       await this.adminService.activateUser(id);
       await this.loadUsers();
-    } catch (err: any) {
-      alert(err.message || 'Erreur');
+    } catch (err: unknown) {
+      alert(getErrorMessage(err, 'Erreur'));
     } finally {
       this.isProcessing.set(false);
     }
@@ -1323,8 +1319,8 @@ export class UsersManagementComponent implements OnInit {
       await this.adminService.deactivateUser(user.id, this.suspendReason || undefined);
       this.closeModal();
       await this.loadUsers();
-    } catch (err: any) {
-      alert(err.message || 'Erreur');
+    } catch (err: unknown) {
+      alert(getErrorMessage(err, 'Erreur'));
     } finally {
       this.isProcessing.set(false);
     }

@@ -233,25 +233,25 @@ export class AdminService {
     );
   }
 
-  async verifyRepairer(id: string, decision: VerificationDecision): Promise<any> {
+  async verifyRepairer(id: string, decision: VerificationDecision): Promise<void> {
     return firstValueFrom(
       this.api.patch(`/admin/repairers/${id}/verify`, decision)
     );
   }
 
-  async setRepairerUnderReview(id: string, notes?: string): Promise<any> {
+  async setRepairerUnderReview(id: string, notes?: string): Promise<void> {
     return firstValueFrom(
       this.api.patch(`/admin/repairers/${id}/review`, { notes })
     );
   }
 
-  async suspendRepairer(id: string, reason: string): Promise<any> {
+  async suspendRepairer(id: string, reason: string): Promise<void> {
     return firstValueFrom(
       this.api.patch(`/admin/repairers/${id}/suspend`, { reason })
     );
   }
 
-  async reactivateRepairer(id: string): Promise<any> {
+  async reactivateRepairer(id: string): Promise<void> {
     return firstValueFrom(
       this.api.patch(`/admin/repairers/${id}/reactivate`, {})
     );
@@ -281,19 +281,19 @@ export class AdminService {
     );
   }
 
-  async activateUser(id: string): Promise<any> {
+  async activateUser(id: string): Promise<void> {
     return firstValueFrom(
       this.api.patch(`/admin/users/${id}/activate`, {})
     );
   }
 
-  async deactivateUser(id: string, reason?: string): Promise<any> {
+  async deactivateUser(id: string, reason?: string): Promise<void> {
     return firstValueFrom(
       this.api.patch(`/admin/users/${id}/deactivate`, { reason })
     );
   }
 
-  async deleteUser(id: string): Promise<any> {
+  async deleteUser(id: string): Promise<void> {
     return firstValueFrom(
       this.api.patch(`/admin/users/${id}/delete`, {})
     );
@@ -364,7 +364,7 @@ export class AdminService {
   // MODERATION ACTIONS
   // ==========================================
 
-  async addDisputeNote(disputeId: string, message: string): Promise<any> {
+  async addDisputeNote(disputeId: string, message: string): Promise<void> {
     return firstValueFrom(
       this.api.post(`/admin/disputes/${disputeId}/note`, { message })
     );

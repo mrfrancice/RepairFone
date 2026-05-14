@@ -61,14 +61,17 @@ npx playwright test --project=chromium
 
 | # | Parcours                          | État            |
 |---|-----------------------------------|-----------------|
-| 1 | Auth (anonyme + login + logout)   | ✅ partiel (login OK, logout à scripter) |
+| 1 | Auth (anonyme + login + logout)   | ✅ partiel (anonyme + login client OK, logout à scripter) |
 | 2 | Client : nouvelle demande         | ⏳ `test.fixme` |
 | 3 | Réparateur : envoi de devis       | ⏳ `test.fixme` |
 | 4 | Paiement + reçu PDF               | ⏳ `test.fixme` |
 | 5 | Chat client/réparateur            | ⏳ `test.fixme` |
+| 6 | Smoke navigation (routes principales) | ✅ 4 tests : onboarding, login, client (/home, /notifications, /quotes, /payments, /chat), repairer (/repairer) |
 
 Les tests `fixme` sont des squelettes documentant le scénario à scripter — ils
 ne sont **pas** exécutés tant qu'ils n'ont pas été convertis en `test(...)`.
+
+**État de la suite** : 6 tests actifs (6 PASS, 5 fixme skipped) en ~15 sec sur chromium.
 
 ## Stratégie
 

@@ -23,6 +23,7 @@ import {
   DataGridPageEvent,
   DataGridSortEvent,
 } from '../../../../shared/components/ui-data-grid';
+import { getErrorMessage } from '../../../../shared/utils/error.utils';
 
 type StatusFilter = 'all' | 'open' | 'in_review' | 'resolved' | 'closed' | 'rejected';
 type SortField = 'createdAt' | 'status' | 'resolvedAt';
@@ -590,8 +591,8 @@ export class DisputesAdminComponent implements OnInit {
       });
       this.disputes.set(res.data);
       this.total.set(res.total);
-    } catch (err: any) {
-      this.error.set(err?.message || 'Erreur lors du chargement');
+    } catch (err: unknown) {
+      this.error.set(getErrorMessage(err, 'Erreur lors du chargement'));
     } finally {
       this.isLoading.set(false);
     }
@@ -645,8 +646,8 @@ export class DisputesAdminComponent implements OnInit {
     try {
       const full = await this.adminService.getDisputeDetail(dispute.id);
       this.selectedDispute.set(full);
-    } catch (err: any) {
-      this.error.set(err?.message || 'Erreur lors du chargement du détail');
+    } catch (err: unknown) {
+      this.error.set(getErrorMessage(err, 'Erreur lors du chargement du détail'));
     }
   }
 
@@ -665,8 +666,8 @@ export class DisputesAdminComponent implements OnInit {
       const refreshed = await this.adminService.getDisputeDetail(disputeId);
       this.selectedDispute.set(refreshed);
       this.newNote = '';
-    } catch (err: any) {
-      this.error.set(err?.error?.message || err?.message || 'Erreur publication note');
+    } catch (err: unknown) {
+      this.error.set(getErrorMessage(err, 'Erreur publication note'));
     } finally {
       this.processingAction.set(false);
     }
@@ -711,8 +712,8 @@ export class DisputesAdminComponent implements OnInit {
       // Refresh list + stats
       this.loadDisputes();
       this.loadStats();
-    } catch (err: any) {
-      this.resolveError.set(err?.error?.message || err?.message || 'Erreur lors de la résolution');
+    } catch (err: unknown) {
+      this.resolveError.set(getErrorMessage(err, 'Erreur lors de la résolution'));
     } finally {
       this.processingAction.set(false);
     }

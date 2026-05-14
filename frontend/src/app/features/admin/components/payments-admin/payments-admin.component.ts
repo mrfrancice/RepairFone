@@ -24,6 +24,7 @@ import {
   DataGridPageEvent,
   DataGridSortEvent,
 } from '../../../../shared/components/ui-data-grid';
+import { getErrorMessage } from '../../../../shared/utils/error.utils';
 
 type StatusFilter = 'all' | 'pending' | 'processing' | 'completed' | 'failed' | 'refunded' | 'blocked';
 type SortField = 'createdAt' | 'amount' | 'status' | 'paidAt';
@@ -613,8 +614,8 @@ export class PaymentsAdminComponent implements OnInit {
       });
       this.payments.set(res.data);
       this.total.set(res.total);
-    } catch (err: any) {
-      this.error.set(err?.message || 'Erreur lors du chargement');
+    } catch (err: unknown) {
+      this.error.set(getErrorMessage(err, 'Erreur lors du chargement'));
     } finally {
       this.isLoading.set(false);
     }
@@ -668,8 +669,8 @@ export class PaymentsAdminComponent implements OnInit {
     try {
       const full = await this.adminService.getPaymentDetail(payment.id);
       this.selectedPayment.set(full);
-    } catch (err: any) {
-      this.error.set(err?.message || 'Erreur lors du chargement du détail');
+    } catch (err: unknown) {
+      this.error.set(getErrorMessage(err, 'Erreur lors du chargement du détail'));
     }
   }
 
@@ -701,8 +702,8 @@ export class PaymentsAdminComponent implements OnInit {
       this.closeRefundModal();
       this.loadPayments();
       this.loadStats();
-    } catch (err: any) {
-      this.paymentActionError.set(err?.error?.message || err?.message || 'Erreur lors du remboursement');
+    } catch (err: unknown) {
+      this.paymentActionError.set(getErrorMessage(err, 'Erreur lors du remboursement'));
     } finally {
       this.processingAction.set(false);
     }
@@ -730,8 +731,8 @@ export class PaymentsAdminComponent implements OnInit {
       this.closeBlockModal();
       this.loadPayments();
       this.loadStats();
-    } catch (err: any) {
-      this.paymentActionError.set(err?.error?.message || err?.message || 'Erreur lors du blocage');
+    } catch (err: unknown) {
+      this.paymentActionError.set(getErrorMessage(err, 'Erreur lors du blocage'));
     } finally {
       this.processingAction.set(false);
     }
@@ -746,8 +747,8 @@ export class PaymentsAdminComponent implements OnInit {
       this.selectedPayment.set(updated);
       this.loadPayments();
       this.loadStats();
-    } catch (err: any) {
-      this.paymentActionError.set(err?.error?.message || err?.message || 'Erreur lors du déblocage');
+    } catch (err: unknown) {
+      this.paymentActionError.set(getErrorMessage(err, 'Erreur lors du déblocage'));
     } finally {
       this.processingAction.set(false);
     }

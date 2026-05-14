@@ -2293,18 +2293,21 @@ export class RegisterComponent implements OnInit {
 
   private loadLocationData(): void {
     this.locationDataLoading.set(true);
-    this.locationService.loadLocationData().subscribe({
-      next: (data) => {
-        this.cities.set(data.cities);
-        // Set initial communes for default city (Abidjan)
-        const defaultCity = this.registerForm.get('city')?.value || 'Abidjan';
-        this.updateCommunesForCity(defaultCity);
-        this.locationDataLoading.set(false);
-      },
-      error: () => {
-        this.locationDataLoading.set(false);
-      }
-    });
+    this.locationService
+      .loadLocationData()
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: (data) => {
+          this.cities.set(data.cities);
+          // Set initial communes for default city (Abidjan)
+          const defaultCity = this.registerForm.get('city')?.value || 'Abidjan';
+          this.updateCommunesForCity(defaultCity);
+          this.locationDataLoading.set(false);
+        },
+        error: () => {
+          this.locationDataLoading.set(false);
+        },
+      });
   }
 
   private updateCommunesForCity(cityName: string): void {

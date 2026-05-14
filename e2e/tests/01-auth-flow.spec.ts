@@ -18,10 +18,12 @@ test.describe('01 — Auth flow', () => {
   test('login client (Awa Koné) → /home', async ({ page }) => {
     await page.goto('/auth/login');
 
-    await page.getByLabel('Numéro de téléphone').fill(SEED_USERS.client.phone);
-    await page.getByLabel('Mot de passe').fill(SEED_USERS.client.password);
+    // Les labels visuels ne sont pas des <label for> HTML, on utilise les
+    // placeholders/roles qui sont plus stables.
+    await page.locator('input[placeholder*="XX XX"]').first().fill(SEED_USERS.client.phone);
+    await page.locator('input[type="password"]').first().fill(SEED_USERS.client.password);
 
-    await page.getByRole('button', { name: /Continuer|Connexion/ }).click();
+    await page.getByRole('button', { name: /Continuer|Connexion/ }).first().click();
 
     // Le user peut être redirigé directement vers /home, ou passer par OTP en cas
     // de challenge. On accepte les deux mais on échoue si on reste sur /auth/login.
@@ -29,10 +31,10 @@ test.describe('01 — Auth flow', () => {
       timeout: 10_000,
     });
 
-    // Vérifie qu'une session est active (le token est en localStorage sous
-    // la clé `repairfone:auth` — cf. AuthStore).
+    // Vérifie qu'une session est active (le SecureStorageService prefixe les
+    // clés avec `rf_` — cf. core/services/secure-storage.service.ts).
     const hasAuth = await page.evaluate(() => {
-      return Object.keys(localStorage).some((k) => k.includes('auth'));
+      return Object.keys(localStorage).some((k) => k.startsWith('rf_'));
     });
     expect(hasAuth).toBe(true);
   });
