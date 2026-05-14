@@ -1,5 +1,5 @@
 import { Injectable, signal, computed } from '@angular/core';
-import { Payment, PaymentMethod, PaymentStatus, PaymentType, PaymentSummary } from '../services/payment.service';
+import type { Payment, PaymentMethod, PaymentStatus, PaymentType, PaymentSummary } from './types';
 
 export interface PaymentFlowState {
   requestId: string | null;
@@ -14,7 +14,7 @@ export interface PaymentFlowState {
 }
 
 @Injectable({ providedIn: 'root' })
-export class PaymentStore {
+export class PaymentsStore {
   // Payment history
   private readonly _payments = signal<Payment[]>([]);
   private readonly _totalPayments = signal(0);

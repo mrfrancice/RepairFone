@@ -2,36 +2,7 @@
 // PAYMENTS DOMAIN — Types
 // ============================================
 
-import type { RepairRequest } from '@app/domains/requests';
-import type { Quote } from '@app/domains/quotes';
-
-export interface Payment {
-  id: string;
-  requestId: string;
-  request?: RepairRequest;
-  quoteId?: string;
-  quote?: Quote;
-  clientId: string;
-  repairerId: string;
-  amount: number;
-  platformFee: number;
-  repairerAmount: number;
-  currency: string;
-  method: PaymentMethod;
-  status: PaymentStatus;
-  transactionRef?: string;
-  providerRef?: string;
-  depositAmount?: number;
-  balanceAmount?: number;
-  paidAt?: string;
-  refundedAt?: string;
-  refundReason?: string;
-  blockedReason?: string;
-  createdAt: string;
-  updatedAt: string;
-}
-
-export type PaymentMethod = 'orange_money' | 'mtn_money' | 'wave' | 'cash' | 'card';
+export type PaymentMethod = 'orange_money' | 'mtn_money' | 'wave' | 'card';
 
 export type PaymentStatus =
   | 'pending'
@@ -39,20 +10,71 @@ export type PaymentStatus =
   | 'completed'
   | 'failed'
   | 'refunded'
-  | 'blocked'
-  | 'cancelled';
+  | 'blocked';
 
-export interface CreatePaymentDto {
+export type PaymentType = 'deposit' | 'balance' | 'full';
+
+export interface Payment {
+  id: string;
   requestId: string;
-  quoteId?: string;
+  quoteId: string;
+  clientId: string;
+  repairerId: string;
   amount: number;
-  method: PaymentMethod;
-  isDeposit?: boolean;
+  platformFee: number;
+  repairerAmount: number;
+  paymentType: PaymentType;
+  paymentMethod?: PaymentMethod;
+  status: PaymentStatus;
+  transactionRef?: string;
+  phoneNumber?: string;
+  paidAt?: string;
+  createdAt: string;
+  updatedAt: string;
+  request?: {
+    id: string;
+    device?: { brand: string; model: string };
+    serviceType?: { name: string };
+  };
+  client?: {
+    id: string;
+    firstName?: string;
+    lastName?: string;
+    phone?: string;
+  };
+  repairer?: {
+    id: string;
+    firstName?: string;
+    lastName?: string;
+    repairerProfile?: { businessName?: string };
+  };
 }
 
-export interface PaymentInitResponse {
-  paymentId: string;
-  redirectUrl?: string;
-  ussdCode?: string;
-  instructions?: string;
+export interface PaymentSummary {
+  quoteAmount: number;
+  platformFee: number;
+  platformFeePercent: number;
+  totalAmount: number;
+  depositAmount?: number;
+  depositPercent?: number;
+  balanceAmount?: number;
+}
+
+export interface InitiatePaymentDto {
+  requestId: string;
+  quoteId: string;
+  paymentMethod: PaymentMethod;
+  paymentType: PaymentType;
+  phoneNumber: string;
+}
+
+export interface PaymentMethodInfo {
+  id: PaymentMethod;
+  name: string;
+  icon: string;
+  color: string;
+  description: string;
+  available: boolean;
+  minAmount?: number;
+  maxAmount?: number;
 }

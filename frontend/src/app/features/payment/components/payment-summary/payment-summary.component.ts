@@ -2,8 +2,7 @@ import { Component, inject, signal, computed, OnInit, ChangeDetectionStrategy } 
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
-import { PaymentService, PaymentType, PaymentMethod } from '../../services/payment.service';
-import { PaymentStore } from '../../stores/payment.store';
+import { PaymentsService, PaymentsStore, type PaymentType, type PaymentMethod } from '@app/domains/payments';
 import { QuotesService } from '../../../quotes/services/quotes.service';
 import { UiButtonComponent } from '../../../../shared/components/ui-button/ui-button.component';
 import { UiLoadingComponent } from '../../../../shared/components/ui-loading/ui-loading.component';
@@ -1124,8 +1123,8 @@ import { LoggerService } from '../../../../core/services/logger.service';
   `]
 })
 export class PaymentSummaryComponent implements OnInit {
-  readonly paymentService = inject(PaymentService);
-  readonly store = inject(PaymentStore);
+  readonly paymentService = inject(PaymentsService);
+  readonly store = inject(PaymentsStore);
   private readonly quotesService = inject(QuotesService);
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);

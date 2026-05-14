@@ -2,7 +2,7 @@ import { Component, inject, OnInit, signal, ChangeDetectionStrategy } from '@ang
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
-import { PaymentService, Payment } from '../../services/payment.service';
+import { PaymentsService, type Payment } from '@app/domains/payments';
 import { UiCardComponent } from '../../../../shared/components/ui-card/ui-card.component';
 import { UiButtonComponent } from '../../../../shared/components/ui-button/ui-button.component';
 import { UiLoadingComponent } from '../../../../shared/components/ui-loading/ui-loading.component';
@@ -499,7 +499,7 @@ import { UiHeaderComponent } from '../../../../shared/components/ui-header/ui-he
 export class PaymentDetailComponent implements OnInit {
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
-  readonly paymentService = inject(PaymentService);
+  readonly paymentService = inject(PaymentsService);
   private readonly logger = inject(LoggerService);
 
   readonly payment = signal<Payment | null>(null);
