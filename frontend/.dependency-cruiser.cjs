@@ -6,8 +6,8 @@
  *   features → shared (utils/pipes/ui)
  *   shared, core : ne dépendent PAS de domains ni features
  *
- * Toutes les règles sont en `severity: warn` pendant la migration.
- * Bascule en `error` à la Phase 4 (cf. ROADMAP refactor).
+ * Toutes les règles métier sont en `severity: error` depuis la Phase 4.
+ * `no-circular` et `no-orphans` restent en warn/info (recommandations).
  */
 module.exports = {
   forbidden: [
@@ -19,14 +19,14 @@ module.exports = {
       comment:
         "core/ contient l'infrastructure singleton et ne doit pas connaître les domaines métier. " +
         'Si un service core a besoin de types métier, déplace-le dans le domain concerné.',
-      severity: 'warn',
+      severity: 'error',
       from: { path: '^src/app/core/' },
       to: { path: '^src/app/domains/' },
     },
     {
       name: 'core-cannot-import-features',
       comment: "core/ est instancié avant les features et ne doit jamais en dépendre.",
-      severity: 'warn',
+      severity: 'error',
       from: { path: '^src/app/core/' },
       to: { path: '^src/app/features/' },
     },
@@ -34,20 +34,15 @@ module.exports = {
       name: 'shared-cannot-import-domains',
       comment:
         "shared/ est une boîte à outils générique sans métier. Si tu vois un import depuis " +
-        'domains/, c\'est que le code partagé est en réalité métier — déplace-le dans le domain. ' +
-        'EXCEPTION : shared/models/index.ts est un barrel de rétro-compatibilité temporaire ' +
-        '(supprimé en Phase 4). Tout nouveau code doit importer directement depuis @app/domains/*.',
-      severity: 'warn',
-      from: {
-        path: '^src/app/shared/',
-        pathNot: '^src/app/shared/models/index\\.ts$',
-      },
+        'domains/, c\'est que le code partagé est en réalité métier — déplace-le dans le domain.',
+      severity: 'error',
+      from: { path: '^src/app/shared/' },
       to: { path: '^src/app/domains/' },
     },
     {
       name: 'shared-cannot-import-features',
       comment: "shared/ ne dépend jamais d'une feature spécifique.",
-      severity: 'warn',
+      severity: 'error',
       from: { path: '^src/app/shared/' },
       to: { path: '^src/app/features/' },
     },
@@ -55,7 +50,7 @@ module.exports = {
       name: 'domains-cannot-import-features',
       comment:
         "Les domaines exposent la logique métier ; les features la consomment. L'inverse crée un cycle.",
-      severity: 'warn',
+      severity: 'error',
       from: { path: '^src/app/domains/' },
       to: { path: '^src/app/features/' },
     },
@@ -65,7 +60,7 @@ module.exports = {
         "Depuis l'extérieur de domains/, on accède à un domaine UNIQUEMENT par son index.ts. " +
         'Importer un fichier interne (types.ts, *.service.ts) court-circuite la surface publique. ' +
         'NB : on accepte volontairement que index.ts ré-exporte ses propres fichiers internes.',
-      severity: 'warn',
+      severity: 'error',
       from: { pathNot: '^src/app/domains/' },
       to: { path: '^src/app/domains/[^/]+/(?!index\\.ts$)[^/]+\\.ts$' },
     },

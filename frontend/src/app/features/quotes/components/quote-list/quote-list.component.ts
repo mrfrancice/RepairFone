@@ -12,7 +12,7 @@ import {
   UiDataGridColumnComponent,
 } from '../../../../shared/components/ui-data-grid';
 import { FormatDatePipe } from '../../../../shared/pipes/format-date.pipe';
-import { TabItem } from '../../../../shared/models';
+import { TabItem } from '@app/shared/models/ui';
 import { LoggerService } from '../../../../core/services/logger.service';
 import { UiHeaderComponent } from '@app/features/common/components';
 import { HeaderSearchComponent } from '../../../../shared/components/header-search/header-search.component';
