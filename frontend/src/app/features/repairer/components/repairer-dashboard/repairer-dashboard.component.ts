@@ -1079,7 +1079,10 @@ export class RepairerDashboardComponent implements OnInit {
       const [profile, stats, requests] = await Promise.all([
         this.repairerService.getMyProfile(),
         this.repairerService.getStats(),
-        this.repairerService.getRequests({ status: 'new', limit: 5 }),
+        // 'new' est un filtre UI (RequestFilterStatus) ; le backend attend
+        // un RequestStatus reel. Cf. mapFilterToBackendStatus dans
+        // request-management.component.ts.
+        this.repairerService.getRequests({ status: 'pending', limit: 5 }),
       ]);
 
       this.store.setProfile(profile);
