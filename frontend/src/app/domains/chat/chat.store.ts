@@ -1,5 +1,5 @@
 import { Injectable, signal, computed } from '@angular/core';
-import { Conversation, ChatMessage } from '../services/chat.service';
+import type { Conversation, ChatMessage } from './types';
 
 @Injectable({ providedIn: 'root' })
 export class ChatStore {

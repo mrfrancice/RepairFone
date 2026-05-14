@@ -1,8 +1,7 @@
 import { Component, inject, OnInit, signal, ChangeDetectionStrategy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
-import { ChatService, Conversation } from '../../services/chat.service';
-import { ChatStore } from '../../stores/chat.store';
+import { ChatService, ChatStore, type Conversation } from '@app/domains/chat';
 import { AuthStore } from '../../../../core/stores/auth.store';
 import { UiLoadingComponent } from '../../../../shared/components/ui-loading/ui-loading.component';
 import { UiEmptyStateComponent } from '../../../../shared/components/ui-empty-state/ui-empty-state.component';

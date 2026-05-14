@@ -2,8 +2,7 @@ import { Component, inject, OnInit, OnDestroy, signal, ElementRef, ViewChild, Af
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
-import { ChatService, ChatMessage, Conversation } from '../../services/chat.service';
-import { ChatStore } from '../../stores/chat.store';
+import { ChatService, ChatStore, type ChatMessage, type Conversation } from '@app/domains/chat';
 import { AuthStore } from '../../../../core/stores/auth.store';
 import { UiLoadingComponent } from '../../../../shared/components/ui-loading/ui-loading.component';
 import { UiHeaderComponent } from '../../../../shared/components/ui-header/ui-header.component';
