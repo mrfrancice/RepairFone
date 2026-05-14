@@ -16,7 +16,10 @@ import { RolesGuard } from '../../common/guards/roles.guard';
 import { Roles, UserRole } from '../../common/decorators/roles.decorator';
 import { Public } from '../../common/decorators/public.decorator';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
-import { RepairerProfile } from './entities/repairer-profile.entity';
+import {
+  RepairerProfile,
+  VerificationStatus,
+} from './entities/repairer-profile.entity';
 import { User } from './entities/user.entity';
 
 @ApiTags('Repairers')
@@ -134,7 +137,7 @@ export class RepairersController {
         reviewCount: profile.ratingCount || 0,
         isAvailable: profile.isAvailable,
         specialties: [],
-        isVerified: profile.verificationStatus === 'verified',
+        isVerified: profile.verificationStatus === VerificationStatus.VERIFIED,
         responseTime: 15,
         completedRepairs: profile.totalRepairs || 0,
         yearsOfExperience: 0,
