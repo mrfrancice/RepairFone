@@ -1,7 +1,7 @@
 import { Component, inject, signal, OnInit, computed, ChangeDetectionStrategy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
-import { RequestsService, RepairRequest, RequestStatus, RequestStats } from '../../services/requests.service';
+import { RequestsService, type RepairRequest, type RequestStatus, type RequestStats } from '@app/domains/requests';
 import { UiHeaderComponent } from '../../../../shared/components/ui-header/ui-header.component';
 import { UiSkeletonComponent } from '../../../../shared/components/ui-skeleton/ui-skeleton.component';
 import { UiErrorStateComponent } from '../../../../shared/components/ui-error-state/ui-error-state.component';

@@ -4,7 +4,7 @@ import { Router, RouterLink } from '@angular/router';
 import { AuthStore, User } from '../../../../core/stores/auth.store';
 import { AuthService } from '../../../auth/services/auth.service';
 import { UsersService } from '@app/domains/users';
-import { RequestsService, RequestStats } from '../../../requests/services/requests.service';
+import { RequestsService, type RequestStats } from '@app/domains/requests';
 import { ReviewsService, Review, SubRatings, StepRatingStats, StepRating } from '@app/domains/reviews';
 import { SecureStorageService } from '../../../../core/services/secure-storage.service';
 import { LoggerService } from '../../../../core/services/logger.service';

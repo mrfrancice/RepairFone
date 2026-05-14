@@ -4,7 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { Router, ActivatedRoute } from '@angular/router';
 import { Subject, debounceTime } from 'rxjs';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { RequestsService, CreateRequestDto, UrgencyLevel } from '../../services/requests.service';
+import { RequestsService, type CreateRequestDto, type UrgencyLevel } from '@app/domains/requests';
 import { SearchService, Repairer } from '../../../search/services/search.service';
 import { DevicesService, type Device, type ServiceType } from '@app/domains/devices';
 import { SearchStore } from '../../../search/stores/search.store';

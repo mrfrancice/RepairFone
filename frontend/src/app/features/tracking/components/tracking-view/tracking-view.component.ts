@@ -1,7 +1,7 @@
 import { Component, inject, signal, computed, OnInit, OnDestroy, ChangeDetectionStrategy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
-import { RequestsService, RepairRequest, RequestStatus } from '../../../requests/services/requests.service';
+import { RequestsService, type RepairRequest, type RequestStatus } from '@app/domains/requests';
 import { ReviewsService, RatingStep, StepRating } from '@app/domains/reviews';
 import { UiMapComponent, MapMarker, MapRoute } from '../../../../shared/components/ui-map/ui-map.component';
 import { UiTimelineComponent, TimelineStep } from '../../../../shared/components/ui-timeline/ui-timeline.component';

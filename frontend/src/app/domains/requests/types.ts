@@ -2,69 +2,85 @@
 // REQUESTS DOMAIN — Types
 // ============================================
 
-import type { User } from '@app/domains/users';
-import type { Repairer } from '@app/domains/repairers';
-import type { Device, ServiceType } from '@app/domains/devices';
+export type RequestStatus = 'pending' | 'accepted' | 'rejected' | 'completed' | 'delivered';
+export type UrgencyLevel = 'normal' | 'express';
+export type DeliveryMode = 'in_shop' | 'at_home' | 'postal';
 
 export interface RepairRequest {
   id: string;
-  requestNumber: string;
   clientId: string;
-  client?: User;
-  repairerId?: string;
-  repairer?: Repairer;
-  deviceId?: string;
-  device?: Device;
-  serviceTypeId?: string;
-  serviceType?: ServiceType;
+  repairerId: string;
+  deviceId: string;
+  serviceTypeId: string;
   status: RequestStatus;
-  deliveryMode: DeliveryMode;
   description: string;
-  deviceBrand?: string;
-  deviceModel?: string;
-  deviceSerialNumber?: string;
-  images: string[];
-  estimatedPrice?: number;
-  finalPrice?: number;
-  currency: string;
   preferredDate?: string;
   preferredTime?: string;
-  scheduledAt?: string;
-  serviceAddress?: string;
+  estimatedPrice?: number;
+  estimatedDuration?: number;
+  clientAddress?: string;
   clientLatitude?: number;
   clientLongitude?: number;
-  clientAddress?: string;
-  estimatedDuration?: number;
-  startedAt?: string;
-  completedAt?: string;
-  cancelledAt?: string;
-  cancelledBy?: string;
-  cancellationReason?: string;
-  statusHistory?: RequestStatusHistory[];
+  acceptedAt?: string;
+  rejectedAt?: string;
+  rejectionReason?: string;
   createdAt: string;
   updatedAt: string;
-}
-
-export type RequestStatus =
-  | 'pending'
-  | 'accepted'
-  | 'rejected'
-  | 'in_progress'
-  | 'awaiting_parts'
-  | 'completed'
-  | 'delivered'
-  | 'cancelled'
-  | 'disputed';
-
-export type DeliveryMode = 'in_shop' | 'at_home' | 'postal';
-
-export interface RequestStatusHistory {
-  id: string;
-  requestId: string;
-  status: RequestStatus;
-  comment?: string;
-  changedBy: string;
-  createdAt: string;
+  urgency: UrgencyLevel;
+  urgencySupplement?: number;
+  client?: {
+    id: string;
+    firstName?: string;
+    lastName?: string;
+    phone: string;
+  };
+  repairer?: {
+    id: string;
+    firstName?: string;
+    lastName?: string;
+    phone: string;
+    avatarUrl?: string;
+    repairerProfile?: {
+      businessName?: string;
+      rating?: number;
+      reviewCount?: number;
+      address?: string;
+      latitude?: number;
+      longitude?: number;
+      isAvailable?: boolean;
+    };
+  };
+  deliveryMode?: DeliveryMode;
+  images?: string[];
+  device?: {
+    id: string;
+    brand: string;
+    model: string;
+    category: string;
+  };
+  serviceType?: {
+    id: string;
+    name: string;
+    basePrice: number;
+    estimatedDuration: number;
+  };
+  quote?: {
+    id: string;
+    laborCost: number;
+    partsCost: number;
+    totalAmount: number;
+    estimatedDuration: string;
+    validUntil: string;
+    status: 'pending' | 'accepted' | 'rejected';
+    parts?: { name: string; price: number; quantity: number }[];
+    createdAt: string;
+  };
+  statusHistory?: {
+    id: string;
+    status: RequestStatus;
+    comment?: string;
+    createdAt: string;
+  }[];
 }
 
 export interface CreateRequestDto {
@@ -72,49 +88,27 @@ export interface CreateRequestDto {
   deviceId?: string;
   serviceTypeId?: string;
   description: string;
-  deviceBrand?: string;
-  deviceModel?: string;
   preferredDate?: string;
   preferredTime?: string;
-  deliveryMode?: DeliveryMode;
   clientLatitude?: number;
   clientLongitude?: number;
   clientAddress?: string;
+  deliveryMode?: DeliveryMode;
   images?: string[];
+  urgency?: UrgencyLevel;
 }
 
-export interface UpdateRequestStatusDto {
+export interface UpdateStatusDto {
   status: RequestStatus;
   comment?: string;
-  estimatedPrice?: number;
-  estimatedDuration?: number;
+  rejectionReason?: string;
 }
 
-// === URGENCY ===
-
-export type UrgencyLevel = 'normal' | 'express';
-
-export interface UrgencyOption {
-  level: UrgencyLevel;
-  label: string;
-  description: string;
-  additionalFee?: number;
-  estimatedTime?: string;
-}
-
-// === RECEIPT / PROOF ===
-
-export interface DepositReceipt {
-  id: string;
-  requestId: string;
-  receiptNumber: string;
-  deviceDescription: string;
-  deviceCondition: string;
-  accessories?: string[];
-  clientSignature?: string;
-  repairerSignature?: string;
-  depositDate: string;
-  expectedReturnDate?: string;
-  pdfUrl?: string;
-  createdAt: string;
+export interface RequestStats {
+  pending: number;
+  accepted: number;
+  rejected: number;
+  completed: number;
+  delivered: number;
+  total: number;
 }

@@ -2,7 +2,7 @@ import { Component, inject, signal, OnInit, computed, ChangeDetectionStrategy } 
 import { CommonModule } from '@angular/common';
 import { Router, RouterLink } from '@angular/router';
 import { AuthStore } from '../../../../core/stores/auth.store';
-import { RequestsService } from '../../../requests/services/requests.service';
+import { RequestsService } from '@app/domains/requests';
 import { SettingsService } from '../../../../core/services/settings.service';
 import { SearchService } from '../../../search/services/search.service';
 import { UiSearchBarComponent } from '@app/shared';

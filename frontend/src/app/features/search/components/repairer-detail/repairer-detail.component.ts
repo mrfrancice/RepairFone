@@ -8,7 +8,7 @@ import { DevicesService, type Device, type ServiceType } from '@app/domains/devi
 import { SearchStore } from '../../stores/search.store';
 import { AuthStore } from '../../../../core/stores/auth.store';
 import { ReviewsService, StepRatingStats, RatingCategory } from '@app/domains/reviews';
-import { RequestsService, CreateRequestDto } from '../../../requests/services/requests.service';
+import { RequestsService, type CreateRequestDto } from '@app/domains/requests';
 import { ChatService } from '@app/domains/chat';
 import { UiHeaderComponent } from '../../../../shared/components/ui-header/ui-header.component';
 import { FormatDatePipe } from '../../../../shared/pipes/format-date.pipe';
