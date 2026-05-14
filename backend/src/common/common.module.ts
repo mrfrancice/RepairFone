@@ -22,17 +22,7 @@ import { FirebaseService } from './services/firebase.service';
 @Global()
 @Module({
   imports: [ConfigModule],
-  providers: [
-    SmsService,
-    EmailService,
-    FileUploadService,
-    FirebaseService,
-  ],
-  exports: [
-    SmsService,
-    EmailService,
-    FileUploadService,
-    FirebaseService,
-  ],
+  providers: [SmsService, EmailService, FileUploadService, FirebaseService],
+  exports: [SmsService, EmailService, FileUploadService, FirebaseService],
 })
 export class CommonModule {}

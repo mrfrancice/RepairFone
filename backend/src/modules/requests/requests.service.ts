@@ -1,12 +1,26 @@
-import { Injectable, NotFoundException, BadRequestException, ForbiddenException, Logger } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  BadRequestException,
+  ForbiddenException,
+  Logger,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, In, DataSource } from 'typeorm';
 import { EventEmitter2 } from '@nestjs/event-emitter';
-import { RepairRequest, RequestStatus, DeliveryMode } from './entities/repair-request.entity';
+import {
+  RepairRequest,
+  RequestStatus,
+  DeliveryMode,
+} from './entities/repair-request.entity';
 import { RequestStatusHistory } from './entities/request-status-history.entity';
 import { RepairerProfile } from '../users/entities/repairer-profile.entity';
 import { Payment, PaymentStatus } from '../payments/entities/payment.entity';
-import { CreateRequestDto, UpdateRequestStatusDto, RequestFilters } from './dto';
+import {
+  CreateRequestDto,
+  UpdateRequestStatusDto,
+  RequestFilters,
+} from './dto';
 import { RequestStatusChangedEvent, EventNames } from '../../common/events';
 import {
   RequestResponse,
@@ -16,7 +30,11 @@ import {
 } from './interfaces/request-response.interface';
 
 // Re-export DTOs for backward compatibility
-export { CreateRequestDto, UpdateRequestStatusDto, RequestFilters } from './dto';
+export {
+  CreateRequestDto,
+  UpdateRequestStatusDto,
+  RequestFilters,
+} from './dto';
 
 @Injectable()
 export class RequestsService {
@@ -35,8 +53,13 @@ export class RequestsService {
     private readonly dataSource: DataSource,
   ) {}
 
-  async createRequest(clientId: string, dto: CreateRequestDto): Promise<RequestResponse> {
-    this.logger.log(`Creating repair request for client ${clientId} to repairer ${dto.repairerId}`);
+  async createRequest(
+    clientId: string,
+    dto: CreateRequestDto,
+  ): Promise<RequestResponse> {
+    this.logger.log(
+      `Creating repair request for client ${clientId} to repairer ${dto.repairerId}`,
+    );
 
     // Generate unique request number
     const requestNumber = await this.generateRequestNumber();
@@ -45,11 +68,15 @@ export class RequestsService {
     let repairerProfileId = dto.repairerId;
 
     // Vérifier si c'est un ID de profil existant
-    let profile = await this.repairerProfileRepository.findOne({ where: { id: dto.repairerId } });
+    let profile = await this.repairerProfileRepository.findOne({
+      where: { id: dto.repairerId },
+    });
 
     // Si non trouvé, chercher par userId
     if (!profile) {
-      profile = await this.repairerProfileRepository.findOne({ where: { userId: dto.repairerId } });
+      profile = await this.repairerProfileRepository.findOne({
+        where: { userId: dto.repairerId },
+      });
       if (profile) {
         repairerProfileId = profile.id;
       } else {
@@ -64,7 +91,9 @@ export class RequestsService {
       deviceId: dto.deviceId,
       serviceTypeId: dto.serviceTypeId,
       description: dto.description,
-      preferredDate: dto.preferredDate ? new Date(dto.preferredDate) : undefined,
+      preferredDate: dto.preferredDate
+        ? new Date(dto.preferredDate)
+        : undefined,
       preferredTime: dto.preferredTime,
       clientLatitude: dto.clientLatitude,
       clientLongitude: dto.clientLongitude,
@@ -76,10 +105,17 @@ export class RequestsService {
     });
 
     const savedRequest = await this.requestRepository.save(request);
-    this.logger.log(`Request created: ${savedRequest.requestNumber} (${savedRequest.id})`);
+    this.logger.log(
+      `Request created: ${savedRequest.requestNumber} (${savedRequest.id})`,
+    );
 
     // Create initial status history
-    await this.addStatusHistory(savedRequest.id, RequestStatus.PENDING, 'Demande creee', clientId);
+    await this.addStatusHistory(
+      savedRequest.id,
+      RequestStatus.PENDING,
+      'Demande creee',
+      clientId,
+    );
 
     return this.findOne(savedRequest.id);
   }
@@ -148,7 +184,10 @@ export class RequestsService {
     };
   }
 
-  async findByClient(clientId: string, filters: RequestFilters): Promise<PaginatedRequestResponse<ClientRequestResponse>> {
+  async findByClient(
+    clientId: string,
+    filters: RequestFilters,
+  ): Promise<PaginatedRequestResponse<ClientRequestResponse>> {
     const { status, page = 1, limit = 20 } = filters;
     const skip = (page - 1) * limit;
 
@@ -162,11 +201,15 @@ export class RequestsService {
 
     if (status) {
       // Handle comma-separated string or array
-      const statuses = Array.isArray(status) ? status : status.split(',').map(s => s.trim());
+      const statuses = Array.isArray(status)
+        ? status
+        : status.split(',').map((s) => s.trim());
       if (statuses.length > 1) {
         queryBuilder.andWhere('request.status IN (:...statuses)', { statuses });
       } else {
-        queryBuilder.andWhere('request.status = :status', { status: statuses[0] });
+        queryBuilder.andWhere('request.status = :status', {
+          status: statuses[0],
+        });
       }
     }
 
@@ -177,12 +220,16 @@ export class RequestsService {
       .getManyAndCount();
 
     // Transform data to match frontend expected format
-    const data = requests.map((request) => this.transformRequestForClient(request));
+    const data = requests.map((request) =>
+      this.transformRequestForClient(request),
+    );
 
     return { data, total };
   }
 
-  private transformRequestForClient(request: RepairRequest): ClientRequestResponse {
+  private transformRequestForClient(
+    request: RepairRequest,
+  ): ClientRequestResponse {
     const repairerProfile = request.repairer;
     const repairerUser = repairerProfile?.user;
 
@@ -208,7 +255,10 @@ export class RequestsService {
     };
   }
 
-  async findByRepairer(userId: string, filters: RequestFilters): Promise<PaginatedRequestResponse<RepairerRequestResponse>> {
+  async findByRepairer(
+    userId: string,
+    filters: RequestFilters,
+  ): Promise<PaginatedRequestResponse<RepairerRequestResponse>> {
     const { status, page = 1, limit = 20 } = filters;
     const skip = (page - 1) * limit;
 
@@ -227,15 +277,21 @@ export class RequestsService {
       .leftJoinAndSelect('request.device', 'device')
       .leftJoinAndSelect('request.serviceType', 'serviceType')
       .leftJoinAndSelect('request.repairer', 'repairer')
-      .where('request.repairerId = :repairerId', { repairerId: repairerProfile.id });
+      .where('request.repairerId = :repairerId', {
+        repairerId: repairerProfile.id,
+      });
 
     if (status) {
       // Handle comma-separated string or array
-      const statuses = Array.isArray(status) ? status : status.split(',').map(s => s.trim());
+      const statuses = Array.isArray(status)
+        ? status
+        : status.split(',').map((s) => s.trim());
       if (statuses.length > 1) {
         queryBuilder.andWhere('request.status IN (:...statuses)', { statuses });
       } else {
-        queryBuilder.andWhere('request.status = :status', { status: statuses[0] });
+        queryBuilder.andWhere('request.status = :status', {
+          status: statuses[0],
+        });
       }
     }
 
@@ -248,8 +304,14 @@ export class RequestsService {
     // Calcul de distance (Haversine JS post-fetch) — pagination 20 max
     // donc surcoût négligeable vs SQL natif. Si la perf devient un sujet
     // sur de plus gros volumes, déplacer en addSelect("...AS distance_km").
-    const repairerLat = repairerProfile.latitude != null ? Number(repairerProfile.latitude) : null;
-    const repairerLng = repairerProfile.longitude != null ? Number(repairerProfile.longitude) : null;
+    const repairerLat =
+      repairerProfile.latitude != null
+        ? Number(repairerProfile.latitude)
+        : null;
+    const repairerLng =
+      repairerProfile.longitude != null
+        ? Number(repairerProfile.longitude)
+        : null;
 
     const data = requests.map((request) =>
       this.transformRequestForRepairer(request, repairerLat, repairerLng),
@@ -268,7 +330,8 @@ export class RequestsService {
     lat2: number | null | string,
     lng2: number | null | string,
   ): number | undefined {
-    if (lat1 == null || lng1 == null || lat2 == null || lng2 == null) return undefined;
+    if (lat1 == null || lng1 == null || lat2 == null || lng2 == null)
+      return undefined;
     const lat2n = typeof lat2 === 'string' ? Number(lat2) : lat2;
     const lng2n = typeof lng2 === 'string' ? Number(lng2) : lng2;
     if (Number.isNaN(lat2n) || Number.isNaN(lng2n)) return undefined;
@@ -317,12 +380,14 @@ export class RequestsService {
     userRole: string,
     dto: UpdateRequestStatusDto,
   ): Promise<RequestResponse> {
-    this.logger.log(`Status update request: ${id} -> ${dto.status} by ${userRole} ${userId}`);
+    this.logger.log(
+      `Status update request: ${id} -> ${dto.status} by ${userRole} ${userId}`,
+    );
     const request = await this.findOneEntity(id);
 
     // Validate permission
     if (userRole === 'client' && request.clientId !== userId) {
-      throw new ForbiddenException('Vous n\'avez pas accès à cette demande');
+      throw new ForbiddenException("Vous n'avez pas accès à cette demande");
     }
 
     // BIZ-102: Vérification correcte que le réparateur est assigné à cette request
@@ -337,7 +402,7 @@ export class RequestsService {
 
       // Vérifier que ce réparateur est bien assigné à cette request
       if (!request.repairerId || request.repairerId !== repairerProfile.id) {
-        throw new ForbiddenException('Vous n\'êtes pas assigné à cette demande');
+        throw new ForbiddenException("Vous n'êtes pas assigné à cette demande");
       }
     }
 
@@ -350,7 +415,10 @@ export class RequestsService {
     }
 
     // Vérifier qu'un paiement a été effectué avant de passer en IN_PROGRESS
-    if (dto.status === RequestStatus.IN_PROGRESS && request.status === RequestStatus.ACCEPTED) {
+    if (
+      dto.status === RequestStatus.IN_PROGRESS &&
+      request.status === RequestStatus.ACCEPTED
+    ) {
       const payment = await this.paymentRepository.findOne({
         where: {
           requestId: id,
@@ -360,10 +428,12 @@ export class RequestsService {
 
       if (!payment) {
         throw new BadRequestException(
-          'Un paiement doit etre effectue avant de demarrer la reparation'
+          'Un paiement doit etre effectue avant de demarrer la reparation',
         );
       }
-      this.logger.log(`Payment verified for request ${request.requestNumber}: ${payment.paymentNumber}`);
+      this.logger.log(
+        `Payment verified for request ${request.requestNumber}: ${payment.paymentNumber}`,
+      );
     }
 
     // Store previous status for event
@@ -383,7 +453,9 @@ export class RequestsService {
     }
 
     await this.requestRepository.save(request);
-    this.logger.log(`Request ${request.requestNumber} status updated: ${previousStatus} -> ${dto.status}`);
+    this.logger.log(
+      `Request ${request.requestNumber} status updated: ${previousStatus} -> ${dto.status}`,
+    );
 
     // Add status history
     await this.addStatusHistory(id, dto.status, dto.comment, userId);
@@ -399,14 +471,24 @@ export class RequestsService {
       userId,
       dto.comment,
     );
-    this.eventEmitter.emit(EventNames.REQUEST_STATUS_CHANGED, statusChangedEvent);
+    this.eventEmitter.emit(
+      EventNames.REQUEST_STATUS_CHANGED,
+      statusChangedEvent,
+    );
 
     return this.findOne(id);
   }
 
-  private validateStatusTransition(currentStatus: RequestStatus, newStatus: RequestStatus, userRole: string): void {
+  private validateStatusTransition(
+    currentStatus: RequestStatus,
+    newStatus: RequestStatus,
+    userRole: string,
+  ): void {
     // Seul le réparateur peut changer le statut d'une demande
-    const validTransitions: Record<RequestStatus, { status: RequestStatus; roles: string[] }[]> = {
+    const validTransitions: Record<
+      RequestStatus,
+      { status: RequestStatus; roles: string[] }[]
+    > = {
       [RequestStatus.PENDING]: [
         { status: RequestStatus.ACCEPTED, roles: ['repairer'] },
         { status: RequestStatus.REJECTED, roles: ['repairer'] },
@@ -428,7 +510,7 @@ export class RequestsService {
         { status: RequestStatus.COMPLETED, roles: ['repairer'] },
         { status: RequestStatus.DISPUTED, roles: ['client'] },
       ],
-      [RequestStatus.REJECTED]: [],  // Statut final
+      [RequestStatus.REJECTED]: [], // Statut final
       [RequestStatus.COMPLETED]: [
         { status: RequestStatus.DELIVERED, roles: ['repairer'] },
         { status: RequestStatus.DISPUTED, roles: ['client'] },
@@ -436,7 +518,7 @@ export class RequestsService {
       [RequestStatus.DELIVERED]: [
         { status: RequestStatus.DISPUTED, roles: ['client'] },
       ],
-      [RequestStatus.CANCELLED]: [],  // Statut final
+      [RequestStatus.CANCELLED]: [], // Statut final
       // BIZ-112: DISPUTED est un statut géré par disputes.service.ts
       // Les transitions sont effectuées lors de la résolution du litige (BIZ-105)
       [RequestStatus.DISPUTED]: [],
@@ -469,7 +551,10 @@ export class RequestsService {
     await this.statusHistoryRepository.save(history);
   }
 
-  async getRequestStats(userId: string, role: string): Promise<{
+  async getRequestStats(
+    userId: string,
+    role: string,
+  ): Promise<{
     pending: number;
     accepted: number;
     rejected: number;
@@ -501,7 +586,9 @@ export class RequestsService {
         };
       }
 
-      queryBuilder.where('request.repairerId = :repairerId', { repairerId: repairerProfile.id });
+      queryBuilder.where('request.repairerId = :repairerId', {
+        repairerId: repairerProfile.id,
+      });
     }
 
     const results = await queryBuilder.groupBy('request.status').getRawMany();
@@ -540,7 +627,6 @@ export class RequestsService {
     return stats;
   }
 
-
   /**
    * BIZ-012: Generate unique request number using PostgreSQL sequence
    *
@@ -561,7 +647,7 @@ export class RequestsService {
 
     // BIZ-012: Use PostgreSQL sequence for thread-safe number generation
     const result = await this.dataSource.query(
-      "SELECT nextval('request_number_seq') as seq_value"
+      "SELECT nextval('request_number_seq') as seq_value",
     );
 
     const sequenceValue = result[0]?.seq_value || 1;

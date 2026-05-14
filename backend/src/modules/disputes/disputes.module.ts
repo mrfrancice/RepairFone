@@ -9,7 +9,12 @@ import { RepairerProfile } from '../users/entities/repairer-profile.entity';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([Dispute, DisputeMessage, RepairRequest, RepairerProfile]),
+    TypeOrmModule.forFeature([
+      Dispute,
+      DisputeMessage,
+      RepairRequest,
+      RepairerProfile,
+    ]),
   ],
   controllers: [DisputesController],
   providers: [DisputesService],

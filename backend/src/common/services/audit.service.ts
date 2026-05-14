@@ -141,27 +141,39 @@ export class AuditService {
     const queryBuilder = this.auditLogRepo.createQueryBuilder('audit');
 
     if (filters.userId) {
-      queryBuilder.andWhere('audit.userId = :userId', { userId: filters.userId });
+      queryBuilder.andWhere('audit.userId = :userId', {
+        userId: filters.userId,
+      });
     }
 
     if (filters.entityType) {
-      queryBuilder.andWhere('audit.entityType = :entityType', { entityType: filters.entityType });
+      queryBuilder.andWhere('audit.entityType = :entityType', {
+        entityType: filters.entityType,
+      });
     }
 
     if (filters.entityId) {
-      queryBuilder.andWhere('audit.entityId = :entityId', { entityId: filters.entityId });
+      queryBuilder.andWhere('audit.entityId = :entityId', {
+        entityId: filters.entityId,
+      });
     }
 
     if (filters.action) {
-      queryBuilder.andWhere('audit.action = :action', { action: filters.action });
+      queryBuilder.andWhere('audit.action = :action', {
+        action: filters.action,
+      });
     }
 
     if (filters.startDate) {
-      queryBuilder.andWhere('audit.createdAt >= :startDate', { startDate: filters.startDate });
+      queryBuilder.andWhere('audit.createdAt >= :startDate', {
+        startDate: filters.startDate,
+      });
     }
 
     if (filters.endDate) {
-      queryBuilder.andWhere('audit.createdAt <= :endDate', { endDate: filters.endDate });
+      queryBuilder.andWhere('audit.createdAt <= :endDate', {
+        endDate: filters.endDate,
+      });
     }
 
     queryBuilder.orderBy('audit.createdAt', 'DESC');

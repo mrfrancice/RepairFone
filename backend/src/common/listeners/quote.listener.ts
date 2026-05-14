@@ -28,7 +28,9 @@ export class QuoteListener {
     try {
       // Get repairer profile to find the user ID for notification
       // Use findByIdOrNull to avoid throwing NotFoundException
-      const repairerProfile = await this.repairersService.findByIdOrNull(event.repairerId);
+      const repairerProfile = await this.repairersService.findByIdOrNull(
+        event.repairerId,
+      );
 
       if (repairerProfile) {
         // Send notification to repairer
@@ -36,10 +38,15 @@ export class QuoteListener {
           repairerProfile.userId,
           event.quoteId,
         );
-        this.logger.debug(`Notification sent to repairer ${repairerProfile.userId} for accepted quote ${event.quoteId}`);
+        this.logger.debug(
+          `Notification sent to repairer ${repairerProfile.userId} for accepted quote ${event.quoteId}`,
+        );
       }
     } catch (error) {
-      this.logger.error(`Failed to handle quote accepted event: ${error.message}`, error.stack);
+      this.logger.error(
+        `Failed to handle quote accepted event: ${error.message}`,
+        error.stack,
+      );
     }
   }
 }

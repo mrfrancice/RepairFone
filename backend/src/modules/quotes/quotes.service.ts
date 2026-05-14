@@ -1,15 +1,33 @@
-import { Injectable, NotFoundException, BadRequestException, ForbiddenException, Logger } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  BadRequestException,
+  ForbiddenException,
+  Logger,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, FindOptionsWhere, DataSource } from 'typeorm';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { Quote, QuoteStatus, QuotePart } from './entities/quote.entity';
-import { RepairRequest, RequestStatus } from '../requests/entities/repair-request.entity';
+import {
+  RepairRequest,
+  RequestStatus,
+} from '../requests/entities/repair-request.entity';
 import { RepairerProfile } from '../users/entities/repairer-profile.entity';
 import { CreateQuoteDto, UpdateQuoteDto, QuoteFilters } from './dto';
-import { QuoteAcceptedEvent, QuoteCreatedEvent, EventNames } from '../../common/events';
+import {
+  QuoteAcceptedEvent,
+  QuoteCreatedEvent,
+  EventNames,
+} from '../../common/events';
 
 // Re-export DTOs for backward compatibility
-export { CreateQuotePartDto, CreateQuoteDto, UpdateQuoteDto, QuoteFilters } from './dto';
+export {
+  CreateQuotePartDto,
+  CreateQuoteDto,
+  UpdateQuoteDto,
+  QuoteFilters,
+} from './dto';
 
 @Injectable()
 export class QuotesService {
@@ -27,7 +45,9 @@ export class QuotesService {
   ) {}
 
   async createQuote(repairerId: string, dto: CreateQuoteDto): Promise<Quote> {
-    this.logger.log(`Creating quote for request ${dto.requestId} by repairer ${repairerId}`);
+    this.logger.log(
+      `Creating quote for request ${dto.requestId} by repairer ${repairerId}`,
+    );
 
     const request = await this.requestRepo.findOne({
       where: { id: dto.requestId },
@@ -35,7 +55,9 @@ export class QuotesService {
     });
 
     if (!request) {
-      this.logger.warn(`Quote creation failed: request ${dto.requestId} not found`);
+      this.logger.warn(
+        `Quote creation failed: request ${dto.requestId} not found`,
+      );
       throw new NotFoundException('Demande non trouvee');
     }
 
@@ -51,7 +73,9 @@ export class QuotesService {
     // BIZ-109: Vérifier que le réparateur peut créer un devis sur cette request
     // Il peut créer un devis si: pas de réparateur assigné OU c'est lui qui est assigné
     if (request.repairerId && request.repairerId !== repairerProfile.id) {
-      throw new ForbiddenException('Un autre réparateur est déjà assigné à cette demande');
+      throw new ForbiddenException(
+        'Un autre réparateur est déjà assigné à cette demande',
+      );
     }
 
     // Check if an active quote already exists (pending or accepted)
@@ -64,7 +88,9 @@ export class QuotesService {
     });
 
     if (existingActiveQuote) {
-      throw new BadRequestException('Un devis actif existe déjà pour cette demande');
+      throw new BadRequestException(
+        'Un devis actif existe déjà pour cette demande',
+      );
     }
 
     // Calculate totals
@@ -120,7 +146,14 @@ export class QuotesService {
   async findOne(id: string): Promise<Quote> {
     const quote = await this.quoteRepo.findOne({
       where: { id },
-      relations: ['request', 'request.client', 'request.device', 'request.serviceType', 'repairer', 'repairer.user'],
+      relations: [
+        'request',
+        'request.client',
+        'request.device',
+        'request.serviceType',
+        'repairer',
+        'repairer.user',
+      ],
     });
 
     if (!quote) {
@@ -148,7 +181,10 @@ export class QuotesService {
     });
   }
 
-  async findByClient(clientId: string, filters: QuoteFilters): Promise<{ data: Quote[]; total: number }> {
+  async findByClient(
+    clientId: string,
+    filters: QuoteFilters,
+  ): Promise<{ data: Quote[]; total: number }> {
     const page = filters.page || 1;
     const limit = filters.limit || 20;
     const skip = (page - 1) * limit;
@@ -163,7 +199,13 @@ export class QuotesService {
         ...where,
         request: { clientId },
       },
-      relations: ['request', 'request.device', 'request.serviceType', 'repairer', 'repairer.user'],
+      relations: [
+        'request',
+        'request.device',
+        'request.serviceType',
+        'repairer',
+        'repairer.user',
+      ],
       order: { createdAt: 'DESC' },
       skip,
       take: limit,
@@ -172,7 +214,10 @@ export class QuotesService {
     return { data, total };
   }
 
-  async findByRepairer(repairerId: string, filters: QuoteFilters): Promise<{ data: Quote[]; total: number }> {
+  async findByRepairer(
+    repairerId: string,
+    filters: QuoteFilters,
+  ): Promise<{ data: Quote[]; total: number }> {
     const page = filters.page || 1;
     const limit = filters.limit || 20;
     const skip = (page - 1) * limit;
@@ -192,7 +237,12 @@ export class QuotesService {
 
     const [data, total] = await this.quoteRepo.findAndCount({
       where,
-      relations: ['request', 'request.client', 'request.device', 'request.serviceType'],
+      relations: [
+        'request',
+        'request.client',
+        'request.device',
+        'request.serviceType',
+      ],
       order: { createdAt: 'DESC' },
       skip,
       take: limit,
@@ -200,7 +250,6 @@ export class QuotesService {
 
     return { data, total };
   }
-
 
   /**
    * BIZ-011: Accept a quote with pessimistic locking to prevent race conditions
@@ -239,10 +288,13 @@ export class QuotesService {
 
       // Load optional relations separately (device and serviceType can be NULL)
       if (quote.request) {
-        const requestWithOptional = await queryRunner.manager.findOne(RepairRequest, {
-          where: { id: quote.request.id },
-          relations: ['device', 'serviceType'],
-        });
+        const requestWithOptional = await queryRunner.manager.findOne(
+          RepairRequest,
+          {
+            where: { id: quote.request.id },
+            relations: ['device', 'serviceType'],
+          },
+        );
         if (requestWithOptional) {
           quote.request.device = requestWithOptional.device;
           quote.request.serviceType = requestWithOptional.serviceType;
@@ -255,7 +307,9 @@ export class QuotesService {
 
       // Re-check status after acquiring lock to handle race conditions
       if (quote.status !== QuoteStatus.PENDING) {
-        throw new BadRequestException('Ce devis ne peut plus etre accepte (deja traite)');
+        throw new BadRequestException(
+          'Ce devis ne peut plus etre accepte (deja traite)',
+        );
       }
 
       if (new Date() > new Date(quote.validUntil)) {
@@ -278,17 +332,25 @@ export class QuotesService {
 
       // BIZ-106: Protection contre double acceptation de quotes
       // Si la request est déjà ACCEPTED avec un réparateur différent, refuser
-      if (request.status === RequestStatus.ACCEPTED &&
-          request.repairerId &&
-          request.repairerId !== quote.repairerId) {
-        throw new BadRequestException('Cette demande a déjà un réparateur assigné');
+      if (
+        request.status === RequestStatus.ACCEPTED &&
+        request.repairerId &&
+        request.repairerId !== quote.repairerId
+      ) {
+        throw new BadRequestException(
+          'Cette demande a déjà un réparateur assigné',
+        );
       }
 
       // Check if request already has an accepted quote (only block if already IN_PROGRESS or beyond)
-      if (request.status === RequestStatus.IN_PROGRESS ||
-          request.status === RequestStatus.COMPLETED ||
-          request.status === RequestStatus.DELIVERED) {
-        throw new BadRequestException('Cette demande a deja un devis accepte et est en cours de traitement');
+      if (
+        request.status === RequestStatus.IN_PROGRESS ||
+        request.status === RequestStatus.COMPLETED ||
+        request.status === RequestStatus.DELIVERED
+      ) {
+        throw new BadRequestException(
+          'Cette demande a deja un devis accepte et est en cours de traitement',
+        );
       }
 
       quote.status = QuoteStatus.ACCEPTED;
@@ -314,11 +376,15 @@ export class QuotesService {
         })
         .where('requestId = :requestId', { requestId: quote.requestId })
         .andWhere('id != :quoteId', { quoteId: quote.id })
-        .andWhere('status = :pendingStatus', { pendingStatus: QuoteStatus.PENDING })
+        .andWhere('status = :pendingStatus', {
+          pendingStatus: QuoteStatus.PENDING,
+        })
         .execute();
 
       await queryRunner.commitTransaction();
-      this.logger.log(`Quote ${id} accepted successfully for ${quote.totalAmount} XOF`);
+      this.logger.log(
+        `Quote ${id} accepted successfully for ${quote.totalAmount} XOF`,
+      );
 
       // Emit quote accepted event
       const quoteAcceptedEvent = new QuoteAcceptedEvent(
@@ -335,7 +401,8 @@ export class QuotesService {
 
       return this.findOne(id);
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      const errorMessage =
+        error instanceof Error ? error.message : 'Unknown error';
       const errorStack = error instanceof Error ? error.stack : undefined;
       this.logger.error(`Quote acceptance failed for ${id}: ${errorMessage}`);
       if (errorStack) {
@@ -343,12 +410,16 @@ export class QuotesService {
       }
       await queryRunner.rollbackTransaction();
       // Re-throw known exceptions, wrap unknown ones
-      if (error instanceof NotFoundException ||
-          error instanceof ForbiddenException ||
-          error instanceof BadRequestException) {
+      if (
+        error instanceof NotFoundException ||
+        error instanceof ForbiddenException ||
+        error instanceof BadRequestException
+      ) {
         throw error;
       }
-      throw new BadRequestException(`Erreur lors de l'acceptation du devis: ${errorMessage}`);
+      throw new BadRequestException(
+        `Erreur lors de l'acceptation du devis: ${errorMessage}`,
+      );
     } finally {
       await queryRunner.release();
     }
@@ -384,7 +455,11 @@ export class QuotesService {
     return this.findOne(id);
   }
 
-  async updateQuote(id: string, repairerId: string, dto: UpdateQuoteDto): Promise<Quote> {
+  async updateQuote(
+    id: string,
+    repairerId: string,
+    dto: UpdateQuoteDto,
+  ): Promise<Quote> {
     const quote = await this.findOne(id);
 
     const repairerProfile = await this.repairerRepo.findOne({
@@ -411,7 +486,8 @@ export class QuotesService {
       );
     }
 
-    quote.totalAmount = quote.laborCost + quote.partsCost + quote.urgencySupplement;
+    quote.totalAmount =
+      quote.laborCost + quote.partsCost + quote.urgencySupplement;
 
     if (dto.estimatedDuration) {
       quote.estimatedDuration = dto.estimatedDuration;
@@ -426,7 +502,10 @@ export class QuotesService {
     return this.findOne(id);
   }
 
-  async acceptCounterProposal(quoteId: string, repairerId: string): Promise<Quote> {
+  async acceptCounterProposal(
+    quoteId: string,
+    repairerId: string,
+  ): Promise<Quote> {
     const rejectedQuote = await this.findOne(quoteId);
 
     const repairerProfile = await this.repairerRepo.findOne({
@@ -434,15 +513,22 @@ export class QuotesService {
     });
 
     if (!repairerProfile || rejectedQuote.repairerId !== repairerProfile.id) {
-      throw new ForbiddenException('Vous ne pouvez pas accepter cette contre-proposition');
+      throw new ForbiddenException(
+        'Vous ne pouvez pas accepter cette contre-proposition',
+      );
     }
 
     if (rejectedQuote.status !== QuoteStatus.REJECTED) {
-      throw new BadRequestException('Ce devis n\'a pas été refusé');
+      throw new BadRequestException("Ce devis n'a pas été refusé");
     }
 
-    if (!rejectedQuote.clientProposedPrice || rejectedQuote.clientProposedPrice <= 0) {
-      throw new BadRequestException('Aucune contre-proposition de prix trouvée');
+    if (
+      !rejectedQuote.clientProposedPrice ||
+      rejectedQuote.clientProposedPrice <= 0
+    ) {
+      throw new BadRequestException(
+        'Aucune contre-proposition de prix trouvée',
+      );
     }
 
     // Create a new accepted quote with the client's proposed price
@@ -486,7 +572,11 @@ export class QuotesService {
     return this.findOne(savedQuote.id);
   }
 
-  async cancelNegotiation(quoteId: string, userId: string, reason?: string): Promise<Quote> {
+  async cancelNegotiation(
+    quoteId: string,
+    userId: string,
+    reason?: string,
+  ): Promise<Quote> {
     const quote = await this.findOne(quoteId);
 
     const repairerProfile = await this.repairerRepo.findOne({
@@ -494,11 +584,14 @@ export class QuotesService {
     });
 
     // Allow both repairer and client to cancel
-    const isRepairer = repairerProfile && quote.repairerId === repairerProfile.id;
+    const isRepairer =
+      repairerProfile && quote.repairerId === repairerProfile.id;
     const isClient = quote.request.clientId === userId;
 
     if (!isRepairer && !isClient) {
-      throw new ForbiddenException('Vous ne pouvez pas annuler cette négociation');
+      throw new ForbiddenException(
+        'Vous ne pouvez pas annuler cette négociation',
+      );
     }
 
     if (quote.status === QuoteStatus.ACCEPTED) {

@@ -1,4 +1,12 @@
-import { IsNumber, IsString, IsOptional, IsArray, ValidateNested, IsEnum, Min } from 'class-validator';
+import {
+  IsNumber,
+  IsString,
+  IsOptional,
+  IsArray,
+  ValidateNested,
+  IsEnum,
+  Min,
+} from 'class-validator';
 import { Type } from 'class-transformer';
 import { QuoteStatus } from '../entities/quote.entity';
 import { CreateQuotePartDto } from './create-quote-part.dto';

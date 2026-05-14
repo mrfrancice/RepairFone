@@ -15,9 +15,7 @@ import { Public } from '../decorators/public.decorator';
 export class HealthController {
   private readonly startedAt = new Date();
 
-  constructor(
-    @InjectDataSource() private readonly dataSource: DataSource,
-  ) {}
+  constructor(@InjectDataSource() private readonly dataSource: DataSource) {}
 
   @Get()
   @Public()

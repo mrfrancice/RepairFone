@@ -37,7 +37,11 @@ async function bootstrap() {
           scriptSrc: isDev
             ? ["'self'", "'unsafe-inline'", "'unsafe-eval'"]
             : ["'self'"],
-          styleSrc: ["'self'", "'unsafe-inline'", 'https://fonts.googleapis.com'],
+          styleSrc: [
+            "'self'",
+            "'unsafe-inline'",
+            'https://fonts.googleapis.com',
+          ],
           fontSrc: ["'self'", 'https://fonts.gstatic.com'],
           imgSrc: ["'self'", 'data:', 'https:', 'blob:'],
           connectSrc: ["'self'", 'https://api.mapbox.com', 'wss:', 'ws:'],
@@ -63,7 +67,9 @@ async function bootstrap() {
   );
 
   // CORS - Permissif en dev, strict en production
-  const allowedOrigins = configService.get<string[]>('cors.allowedOrigins') || ['http://localhost:4200'];
+  const allowedOrigins = configService.get<string[]>('cors.allowedOrigins') || [
+    'http://localhost:4200',
+  ];
   app.enableCors({
     origin: (origin, callback) => {
       // Allow requests with no origin (mobile apps, curl, etc.)
@@ -102,10 +108,12 @@ async function bootstrap() {
   if (isDev) {
     const swaggerConfig = new DocumentBuilder()
       .setTitle('FastRepair API')
-      .setDescription('API pour la plateforme de réparation FastRepair - Côte d\'Ivoire')
+      .setDescription(
+        "API pour la plateforme de réparation FastRepair - Côte d'Ivoire",
+      )
       .setVersion('1.0')
       .addBearerAuth()
-      .addTag('Authentication', 'Endpoints d\'authentification')
+      .addTag('Authentication', "Endpoints d'authentification")
       .addTag('Users', 'Gestion des utilisateurs')
       .addTag('Repairers', 'Gestion des réparateurs')
       .addTag('Requests', 'Demandes de réparation')

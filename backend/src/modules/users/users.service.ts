@@ -1,11 +1,19 @@
-import { Injectable, NotFoundException, ConflictException, BadRequestException } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  ConflictException,
+  BadRequestException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, In, DataSource } from 'typeorm';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import * as bcrypt from 'bcrypt';
 import { User, UserStatus } from './entities/user.entity';
 import { RepairerProfile } from './entities/repairer-profile.entity';
-import { RepairRequest, RequestStatus } from '../requests/entities/repair-request.entity';
+import {
+  RepairRequest,
+  RequestStatus,
+} from '../requests/entities/repair-request.entity';
 import { RefreshToken } from '../auth/entities/refresh-token.entity';
 import { Quote } from '../quotes/entities/quote.entity';
 import { Payment } from '../payments/entities/payment.entity';
@@ -113,7 +121,11 @@ export class UsersService {
     await this.userRepository.update(id, { failedLoginAttempts: attempts });
   }
 
-  async lockAccount(id: string, lockedUntil: Date, attempts: number): Promise<void> {
+  async lockAccount(
+    id: string,
+    lockedUntil: Date,
+    attempts: number,
+  ): Promise<void> {
     await this.userRepository.update(id, {
       failedLoginAttempts: attempts,
       lockedUntil,
@@ -189,7 +201,9 @@ export class UsersService {
       where: { userId },
     });
 
-    const { passwordHash: _omit, ...userPublic } = user as User & { passwordHash: string };
+    const { passwordHash: _omit, ...userPublic } = user as User & {
+      passwordHash: string;
+    };
 
     return {
       meta: {
@@ -294,9 +308,12 @@ export class UsersService {
     await queryRunner.startTransaction();
 
     try {
-      const repairerProfile = await queryRunner.manager.findOne(RepairerProfile, {
-        where: { userId: repairerId },
-      });
+      const repairerProfile = await queryRunner.manager.findOne(
+        RepairerProfile,
+        {
+          where: { userId: repairerId },
+        },
+      );
 
       if (!repairerProfile) {
         throw new NotFoundException('Profil reparateur non trouve');
@@ -327,7 +344,8 @@ export class UsersService {
         request.status = RequestStatus.CANCELLED;
         request.cancelledAt = blockedAt;
         request.cancelledBy = repairerId;
-        request.cancellationReason = 'Demande annulee: reparateur bloque. Raison: ' + reason;
+        request.cancellationReason =
+          'Demande annulee: reparateur bloque. Raison: ' + reason;
 
         await queryRunner.manager.save(RepairRequest, request);
         cancelledRequestIds.push(request.id);
@@ -434,7 +452,9 @@ export class UsersService {
 
     if (activeRequestsInfo.hasActiveRequests && !forceBlock) {
       throw new BadRequestException(
-        'Le reparateur a ' + activeRequestsInfo.count + ' demandes actives. forceBlock=true requis.',
+        'Le reparateur a ' +
+          activeRequestsInfo.count +
+          ' demandes actives. forceBlock=true requis.',
       );
     }
 

@@ -52,9 +52,15 @@ export class CreateStepRatingsTable1736106000000 implements MigrationInterface {
     `);
 
     // Créer les index (if not exists)
-    await queryRunner.query(`CREATE INDEX IF NOT EXISTS "IDX_step_ratings_request_id" ON "step_ratings" ("request_id")`);
-    await queryRunner.query(`CREATE INDEX IF NOT EXISTS "IDX_step_ratings_repairer_id" ON "step_ratings" ("repairer_id")`);
-    await queryRunner.query(`CREATE INDEX IF NOT EXISTS "IDX_step_ratings_client_id" ON "step_ratings" ("client_id")`);
+    await queryRunner.query(
+      `CREATE INDEX IF NOT EXISTS "IDX_step_ratings_request_id" ON "step_ratings" ("request_id")`,
+    );
+    await queryRunner.query(
+      `CREATE INDEX IF NOT EXISTS "IDX_step_ratings_repairer_id" ON "step_ratings" ("repairer_id")`,
+    );
+    await queryRunner.query(
+      `CREATE INDEX IF NOT EXISTS "IDX_step_ratings_client_id" ON "step_ratings" ("client_id")`,
+    );
 
     // Ajouter les clés étrangères (if not exists)
     await queryRunner.query(`
@@ -106,19 +112,37 @@ export class CreateStepRatingsTable1736106000000 implements MigrationInterface {
 
   public async down(queryRunner: QueryRunner): Promise<void> {
     // Supprimer les colonnes de blocage
-    await queryRunner.query(`ALTER TABLE "repairer_profiles" DROP COLUMN IF EXISTS "blocked_reason"`);
-    await queryRunner.query(`ALTER TABLE "repairer_profiles" DROP COLUMN IF EXISTS "blocked_at"`);
-    await queryRunner.query(`ALTER TABLE "repairer_profiles" DROP COLUMN IF EXISTS "is_blocked"`);
+    await queryRunner.query(
+      `ALTER TABLE "repairer_profiles" DROP COLUMN IF EXISTS "blocked_reason"`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "repairer_profiles" DROP COLUMN IF EXISTS "blocked_at"`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "repairer_profiles" DROP COLUMN IF EXISTS "is_blocked"`,
+    );
 
     // Supprimer les clés étrangères
-    await queryRunner.query(`ALTER TABLE "step_ratings" DROP CONSTRAINT IF EXISTS "FK_step_ratings_repairer"`);
-    await queryRunner.query(`ALTER TABLE "step_ratings" DROP CONSTRAINT IF EXISTS "FK_step_ratings_client"`);
-    await queryRunner.query(`ALTER TABLE "step_ratings" DROP CONSTRAINT IF EXISTS "FK_step_ratings_request"`);
+    await queryRunner.query(
+      `ALTER TABLE "step_ratings" DROP CONSTRAINT IF EXISTS "FK_step_ratings_repairer"`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "step_ratings" DROP CONSTRAINT IF EXISTS "FK_step_ratings_client"`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "step_ratings" DROP CONSTRAINT IF EXISTS "FK_step_ratings_request"`,
+    );
 
     // Supprimer les index
-    await queryRunner.query(`DROP INDEX IF EXISTS "IDX_step_ratings_client_id"`);
-    await queryRunner.query(`DROP INDEX IF EXISTS "IDX_step_ratings_repairer_id"`);
-    await queryRunner.query(`DROP INDEX IF EXISTS "IDX_step_ratings_request_id"`);
+    await queryRunner.query(
+      `DROP INDEX IF EXISTS "IDX_step_ratings_client_id"`,
+    );
+    await queryRunner.query(
+      `DROP INDEX IF EXISTS "IDX_step_ratings_repairer_id"`,
+    );
+    await queryRunner.query(
+      `DROP INDEX IF EXISTS "IDX_step_ratings_request_id"`,
+    );
 
     // Supprimer la table
     await queryRunner.query(`DROP TABLE IF EXISTS "step_ratings"`);

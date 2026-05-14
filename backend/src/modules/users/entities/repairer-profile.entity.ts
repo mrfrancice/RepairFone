@@ -33,7 +33,7 @@ export interface Certification {
  */
 export interface DayWorkingHours {
   isOpen: boolean;
-  openTime?: string;  // Format: "HH:mm"
+  openTime?: string; // Format: "HH:mm"
   closeTime?: string; // Format: "HH:mm"
   breakStart?: string;
   breakEnd?: string;
@@ -65,13 +65,28 @@ export class RepairerProfile extends BaseEntity {
   @Column({ name: 'date_of_birth', type: 'date', nullable: true })
   dateOfBirth?: Date;
 
-  @Column({ name: 'national_id_number', type: 'varchar', length: 50, nullable: true })
+  @Column({
+    name: 'national_id_number',
+    type: 'varchar',
+    length: 50,
+    nullable: true,
+  })
   nationalIdNumber?: string;
 
-  @Column({ name: 'national_id_front_url', type: 'varchar', length: 500, nullable: true })
+  @Column({
+    name: 'national_id_front_url',
+    type: 'varchar',
+    length: 500,
+    nullable: true,
+  })
   nationalIdFrontUrl?: string;
 
-  @Column({ name: 'national_id_back_url', type: 'varchar', length: 500, nullable: true })
+  @Column({
+    name: 'national_id_back_url',
+    type: 'varchar',
+    length: 500,
+    nullable: true,
+  })
   nationalIdBackUrl?: string;
 
   @Column({ name: 'personal_address', type: 'text', nullable: true })
@@ -84,22 +99,42 @@ export class RepairerProfile extends BaseEntity {
   @Column({ type: 'text', nullable: true })
   description?: string;
 
-  @Column({ name: 'business_type', type: 'varchar', length: 100, nullable: true })
+  @Column({
+    name: 'business_type',
+    type: 'varchar',
+    length: 100,
+    nullable: true,
+  })
   businessType?: string; // 'individual', 'company', 'auto_entrepreneur'
 
   @Column({ name: 'rccm_number', type: 'varchar', length: 100, nullable: true })
   rccmNumber?: string; // Registre du Commerce et du Crédit Mobilier
 
-  @Column({ name: 'rccm_document_url', type: 'varchar', length: 500, nullable: true })
+  @Column({
+    name: 'rccm_document_url',
+    type: 'varchar',
+    length: 500,
+    nullable: true,
+  })
   rccmDocumentUrl?: string;
 
   @Column({ name: 'tax_id', type: 'varchar', length: 50, nullable: true })
   taxId?: string;
 
-  @Column({ name: 'business_phone', type: 'varchar', length: 20, nullable: true })
+  @Column({
+    name: 'business_phone',
+    type: 'varchar',
+    length: 20,
+    nullable: true,
+  })
   businessPhone?: string;
 
-  @Column({ name: 'business_email', type: 'varchar', length: 255, nullable: true })
+  @Column({
+    name: 'business_email',
+    type: 'varchar',
+    length: 255,
+    nullable: true,
+  })
   businessEmail?: string;
 
   // ===== SHOP LOCATION =====
@@ -128,7 +163,12 @@ export class RepairerProfile extends BaseEntity {
   locationVerified: boolean;
 
   // ===== SHOP DETAILS =====
-  @Column({ name: 'shop_photo_url', type: 'varchar', length: 500, nullable: true })
+  @Column({
+    name: 'shop_photo_url',
+    type: 'varchar',
+    length: 500,
+    nullable: true,
+  })
   shopPhotoUrl?: string;
 
   @Column({ type: 'jsonb', default: [] })

@@ -73,7 +73,9 @@ export class UsersController {
       | undefined,
   ): Promise<{ avatarUrl: string }> {
     if (!file) {
-      throw new BadRequestException('Fichier manquant (champ multipart "avatar")');
+      throw new BadRequestException(
+        'Fichier manquant (champ multipart "avatar")',
+      );
     }
 
     const result = await this.fileUploadService.uploadAvatar(
@@ -87,7 +89,7 @@ export class UsersController {
     );
 
     if (!result.success || !result.url) {
-      throw new BadRequestException(result.error || 'Échec de l\'upload');
+      throw new BadRequestException(result.error || "Échec de l'upload");
     }
 
     await this.usersService.update(user.id, { avatarUrl: result.url });
@@ -103,7 +105,9 @@ export class UsersController {
   ): Promise<RepairerProfile> {
     // Check if user is a repairer
     if (user.role !== 'repairer') {
-      throw new ForbiddenException('Seuls les réparateurs peuvent modifier leur profil réparateur');
+      throw new ForbiddenException(
+        'Seuls les réparateurs peuvent modifier leur profil réparateur',
+      );
     }
 
     // Find existing profile
@@ -119,7 +123,9 @@ export class UsersController {
   }
 
   @Patch('me/repairer-profile')
-  @ApiOperation({ summary: 'Partially update repairer profile for current user' })
+  @ApiOperation({
+    summary: 'Partially update repairer profile for current user',
+  })
   @ApiBody({ type: UpdateRepairerProfileDto })
   async patchRepairerProfile(
     @CurrentUser() user: User,
@@ -137,7 +143,9 @@ export class UsersController {
 
   @Get('me/export')
   @ApiOperation({ summary: 'Export user data (RGPD Art. 20 — portabilité)' })
-  async exportData(@CurrentUser() user: User): Promise<Record<string, unknown>> {
+  async exportData(
+    @CurrentUser() user: User,
+  ): Promise<Record<string, unknown>> {
     return this.usersService.exportUserData(user.id);
   }
 }

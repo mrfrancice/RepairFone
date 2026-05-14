@@ -11,7 +11,12 @@ import {
   ForbiddenException,
 } from '@nestjs/common';
 import type { Response } from 'express';
-import { ApiTags, ApiOperation, ApiBearerAuth, ApiQuery } from '@nestjs/swagger';
+import {
+  ApiTags,
+  ApiOperation,
+  ApiBearerAuth,
+  ApiQuery,
+} from '@nestjs/swagger';
 import { PaymentsService } from './payments.service';
 import { ReceiptService } from './receipt.service';
 import { InitiatePaymentDto, PaymentFilters } from './dto';
@@ -47,7 +52,7 @@ export class PaymentsController {
   }
 
   @Get('request/:requestId')
-  @ApiOperation({ summary: 'Paiement d\'une demande' })
+  @ApiOperation({ summary: "Paiement d'une demande" })
   async findByRequest(
     @Param('requestId', ParseUUIDPipe) requestId: string,
     @CurrentUser() user: User,
@@ -64,18 +69,15 @@ export class PaymentsController {
     const isAdmin = user.role === 'admin';
 
     if (!isClient && !isRepairer && !isAdmin) {
-      throw new ForbiddenException('Vous n\'avez pas accès à ce paiement');
+      throw new ForbiddenException("Vous n'avez pas accès à ce paiement");
     }
 
     return payment;
   }
 
   @Get(':id')
-  @ApiOperation({ summary: 'Détails d\'un paiement' })
-  findOne(
-    @CurrentUser() user: User,
-    @Param('id', ParseUUIDPipe) id: string,
-  ) {
+  @ApiOperation({ summary: "Détails d'un paiement" })
+  findOne(@CurrentUser() user: User, @Param('id', ParseUUIDPipe) id: string) {
     return this.paymentsService.findOne(id, user.id, user.role);
   }
 
@@ -118,7 +120,9 @@ export class PaymentsController {
   }
 
   @Post(':id/simulate-success')
-  @ApiOperation({ summary: 'Simuler un paiement réussi (demo, hors production)' })
+  @ApiOperation({
+    summary: 'Simuler un paiement réussi (demo, hors production)',
+  })
   async simulateSuccess(
     @Param('id', ParseUUIDPipe) id: string,
     @CurrentUser() user: User,

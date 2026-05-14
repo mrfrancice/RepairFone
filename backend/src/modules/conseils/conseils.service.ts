@@ -1,11 +1,29 @@
-import { Injectable, NotFoundException, ForbiddenException, BadRequestException } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  ForbiddenException,
+  BadRequestException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, FindOptionsWhere } from 'typeorm';
-import { IsOptional, IsEnum, IsBoolean, IsInt, Min, Max } from 'class-validator';
+import {
+  IsOptional,
+  IsEnum,
+  IsBoolean,
+  IsInt,
+  Min,
+  Max,
+} from 'class-validator';
 import { Type, Transform } from 'class-transformer';
 import { Expert, ConseilType, ConseilFormat } from './entities/expert.entity';
-import { ConseilSession, ConseilSessionStatus } from './entities/conseil-session.entity';
-import { ConseilMessage, ConseilMessageSenderType } from './entities/conseil-message.entity';
+import {
+  ConseilSession,
+  ConseilSessionStatus,
+} from './entities/conseil-session.entity';
+import {
+  ConseilMessage,
+  ConseilMessageSenderType,
+} from './entities/conseil-message.entity';
 import { User, UserRole } from '../users/entities/user.entity';
 
 export class CreateSessionDto {
@@ -85,7 +103,10 @@ export interface ExpertDto {
   isVerified: boolean;
 }
 
-function toNumber(value: number | string | null | undefined, fallback = 0): number {
+function toNumber(
+  value: number | string | null | undefined,
+  fallback = 0,
+): number {
   if (value === null || value === undefined) return fallback;
   const n = typeof value === 'number' ? value : parseFloat(value);
   return Number.isFinite(n) ? n : fallback;
@@ -132,7 +153,9 @@ export class ConseilsService {
     return `CON-${timestamp}-${random}`;
   }
 
-  async getExperts(filters: ExpertFilters): Promise<{ data: ExpertDto[]; total: number }> {
+  async getExperts(
+    filters: ExpertFilters,
+  ): Promise<{ data: ExpertDto[]; total: number }> {
     const page = filters.page || 1;
     const limit = filters.limit || 20;
     const skip = (page - 1) * limit;
@@ -143,21 +166,24 @@ export class ConseilsService {
       .where('1 = 1');
 
     if (filters.isAvailable !== undefined) {
-      queryBuilder.andWhere('expert.isAvailable = :isAvailable', { isAvailable: filters.isAvailable });
+      queryBuilder.andWhere('expert.isAvailable = :isAvailable', {
+        isAvailable: filters.isAvailable,
+      });
     }
 
     if (filters.type) {
-      queryBuilder.andWhere(':type = ANY(expert.conseilTypes)', { type: filters.type });
+      queryBuilder.andWhere(':type = ANY(expert.conseilTypes)', {
+        type: filters.type,
+      });
     }
 
     if (filters.format) {
-      queryBuilder.andWhere(':format = ANY(expert.conseilFormats)', { format: filters.format });
+      queryBuilder.andWhere(':format = ANY(expert.conseilFormats)', {
+        format: filters.format,
+      });
     }
 
-    queryBuilder
-      .orderBy('expert.ratingAvg', 'DESC')
-      .skip(skip)
-      .take(limit);
+    queryBuilder.orderBy('expert.ratingAvg', 'DESC').skip(skip).take(limit);
 
     const [data, total] = await queryBuilder.getManyAndCount();
 
@@ -183,19 +209,26 @@ export class ConseilsService {
     return expert;
   }
 
-  async createSession(clientId: string, dto: CreateSessionDto): Promise<ConseilSession> {
+  async createSession(
+    clientId: string,
+    dto: CreateSessionDto,
+  ): Promise<ConseilSession> {
     const expert = await this.findExpertEntity(dto.expertId);
 
     if (!expert.isAvailable) {
-      throw new BadRequestException('Cet expert n\'est pas disponible');
+      throw new BadRequestException("Cet expert n'est pas disponible");
     }
 
     if (!expert.conseilTypes.includes(dto.type)) {
-      throw new BadRequestException('Cet expert ne propose pas ce type de conseil');
+      throw new BadRequestException(
+        'Cet expert ne propose pas ce type de conseil',
+      );
     }
 
     if (!expert.conseilFormats.includes(dto.format)) {
-      throw new BadRequestException('Cet expert ne propose pas ce format de conseil');
+      throw new BadRequestException(
+        'Cet expert ne propose pas ce format de conseil',
+      );
     }
 
     const session = this.sessionRepo.create({
@@ -215,7 +248,11 @@ export class ConseilsService {
     return this.getSession(session.id, clientId, UserRole.CLIENT);
   }
 
-  async getSession(id: string, userId: string, userRole: UserRole): Promise<ConseilSession> {
+  async getSession(
+    id: string,
+    userId: string,
+    userRole: UserRole,
+  ): Promise<ConseilSession> {
     const session = await this.sessionRepo.findOne({
       where: { id },
       relations: ['client', 'expert', 'expert.user'],
@@ -233,7 +270,11 @@ export class ConseilsService {
     return session;
   }
 
-  async getMySessions(userId: string, userRole: UserRole, filters: SessionFilters): Promise<{ data: ConseilSession[]; total: number }> {
+  async getMySessions(
+    userId: string,
+    userRole: UserRole,
+    filters: SessionFilters,
+  ): Promise<{ data: ConseilSession[]; total: number }> {
     const page = filters.page || 1;
     const limit = filters.limit || 20;
     const skip = (page - 1) * limit;
@@ -264,10 +305,15 @@ export class ConseilsService {
     return { data, total };
   }
 
-  async acceptSession(sessionId: string, expertId: string): Promise<ConseilSession> {
-    const expert = await this.expertRepo.findOne({ where: { userId: expertId } });
+  async acceptSession(
+    sessionId: string,
+    expertId: string,
+  ): Promise<ConseilSession> {
+    const expert = await this.expertRepo.findOne({
+      where: { userId: expertId },
+    });
     if (!expert) {
-      throw new ForbiddenException('Vous n\'êtes pas un expert');
+      throw new ForbiddenException("Vous n'êtes pas un expert");
     }
 
     const session = await this.sessionRepo.findOne({
@@ -279,7 +325,7 @@ export class ConseilsService {
     }
 
     if (session.expertId !== expert.id) {
-      throw new ForbiddenException('Cette session n\'est pas pour vous');
+      throw new ForbiddenException("Cette session n'est pas pour vous");
     }
 
     if (session.status !== ConseilSessionStatus.PENDING) {
@@ -294,10 +340,15 @@ export class ConseilsService {
     return this.getSession(sessionId, expertId, UserRole.REPAIRER);
   }
 
-  async startSession(sessionId: string, expertId: string): Promise<ConseilSession> {
-    const expert = await this.expertRepo.findOne({ where: { userId: expertId } });
+  async startSession(
+    sessionId: string,
+    expertId: string,
+  ): Promise<ConseilSession> {
+    const expert = await this.expertRepo.findOne({
+      where: { userId: expertId },
+    });
     if (!expert) {
-      throw new ForbiddenException('Vous n\'êtes pas un expert');
+      throw new ForbiddenException("Vous n'êtes pas un expert");
     }
 
     const session = await this.sessionRepo.findOne({
@@ -309,7 +360,7 @@ export class ConseilsService {
     }
 
     if (session.expertId !== expert.id) {
-      throw new ForbiddenException('Cette session n\'est pas pour vous');
+      throw new ForbiddenException("Cette session n'est pas pour vous");
     }
 
     if (session.status !== ConseilSessionStatus.ACCEPTED) {
@@ -324,10 +375,15 @@ export class ConseilsService {
     return this.getSession(sessionId, expertId, UserRole.REPAIRER);
   }
 
-  async completeSession(sessionId: string, expertId: string): Promise<ConseilSession> {
-    const expert = await this.expertRepo.findOne({ where: { userId: expertId } });
+  async completeSession(
+    sessionId: string,
+    expertId: string,
+  ): Promise<ConseilSession> {
+    const expert = await this.expertRepo.findOne({
+      where: { userId: expertId },
+    });
     if (!expert) {
-      throw new ForbiddenException('Vous n\'êtes pas un expert');
+      throw new ForbiddenException("Vous n'êtes pas un expert");
     }
 
     const session = await this.sessionRepo.findOne({
@@ -339,7 +395,7 @@ export class ConseilsService {
     }
 
     if (session.expertId !== expert.id) {
-      throw new ForbiddenException('Cette session n\'est pas pour vous');
+      throw new ForbiddenException("Cette session n'est pas pour vous");
     }
 
     if (session.status !== ConseilSessionStatus.IN_PROGRESS) {
@@ -364,7 +420,12 @@ export class ConseilsService {
     return this.getSession(sessionId, expertId, UserRole.REPAIRER);
   }
 
-  async rateSession(sessionId: string, clientId: string, rating: number, comment?: string): Promise<ConseilSession> {
+  async rateSession(
+    sessionId: string,
+    clientId: string,
+    rating: number,
+    comment?: string,
+  ): Promise<ConseilSession> {
     const session = await this.sessionRepo.findOne({
       where: { id: sessionId },
     });
@@ -378,7 +439,7 @@ export class ConseilsService {
     }
 
     if (session.status !== ConseilSessionStatus.COMPLETED) {
-      throw new BadRequestException('Cette session n\'est pas terminée');
+      throw new BadRequestException("Cette session n'est pas terminée");
     }
 
     if (session.rating) {
@@ -408,7 +469,11 @@ export class ConseilsService {
     return this.getSession(sessionId, clientId, UserRole.CLIENT);
   }
 
-  async getMessages(sessionId: string, userId: string, userRole: UserRole): Promise<ConseilMessage[]> {
+  async getMessages(
+    sessionId: string,
+    userId: string,
+    userRole: UserRole,
+  ): Promise<ConseilMessage[]> {
     const session = await this.getSession(sessionId, userId, userRole);
 
     return this.messageRepo.find({
@@ -418,15 +483,26 @@ export class ConseilsService {
     });
   }
 
-  async sendMessage(sessionId: string, userId: string, userRole: UserRole, content: string, attachments?: string[]): Promise<ConseilMessage> {
+  async sendMessage(
+    sessionId: string,
+    userId: string,
+    userRole: UserRole,
+    content: string,
+    attachments?: string[],
+  ): Promise<ConseilMessage> {
     const session = await this.getSession(sessionId, userId, userRole);
 
-    if (session.status !== ConseilSessionStatus.IN_PROGRESS && session.status !== ConseilSessionStatus.ACCEPTED) {
-      throw new BadRequestException('Cette session n\'est pas active');
+    if (
+      session.status !== ConseilSessionStatus.IN_PROGRESS &&
+      session.status !== ConseilSessionStatus.ACCEPTED
+    ) {
+      throw new BadRequestException("Cette session n'est pas active");
     }
 
     const expert = await this.expertRepo.findOne({ where: { userId } });
-    const senderType = expert ? ConseilMessageSenderType.EXPERT : ConseilMessageSenderType.CLIENT;
+    const senderType = expert
+      ? ConseilMessageSenderType.EXPERT
+      : ConseilMessageSenderType.CLIENT;
 
     const message = this.messageRepo.create({
       sessionId: session.id,
@@ -439,7 +515,11 @@ export class ConseilsService {
     return this.messageRepo.save(message);
   }
 
-  private async hasSessionAccess(session: ConseilSession, userId: string, userRole: UserRole): Promise<boolean> {
+  private async hasSessionAccess(
+    session: ConseilSession,
+    userId: string,
+    userRole: UserRole,
+  ): Promise<boolean> {
     if (userRole === UserRole.ADMIN) {
       return true;
     }

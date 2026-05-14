@@ -8,8 +8,16 @@ import {
   UseGuards,
   ParseUUIDPipe,
 } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiBearerAuth, ApiQuery } from '@nestjs/swagger';
-import { NotificationsService, NotificationFilters } from './notifications.service';
+import {
+  ApiTags,
+  ApiOperation,
+  ApiBearerAuth,
+  ApiQuery,
+} from '@nestjs/swagger';
+import {
+  NotificationsService,
+  NotificationFilters,
+} from './notifications.service';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
 import { User } from '../users/entities/user.entity';
@@ -56,10 +64,7 @@ export class NotificationsController {
 
   @Delete(':id')
   @ApiOperation({ summary: 'Supprimer une notification' })
-  delete(
-    @CurrentUser() user: User,
-    @Param('id', ParseUUIDPipe) id: string,
-  ) {
+  delete(@CurrentUser() user: User, @Param('id', ParseUUIDPipe) id: string) {
     return this.notificationsService.delete(id, user.id);
   }
 }

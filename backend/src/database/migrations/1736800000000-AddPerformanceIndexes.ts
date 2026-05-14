@@ -54,12 +54,24 @@ export class AddPerformanceIndexes1736800000000 implements MigrationInterface {
   }
 
   public async down(queryRunner: QueryRunner): Promise<void> {
-    await queryRunner.query(`DROP INDEX IF EXISTS "idx_payments_repairer_created"`);
-    await queryRunner.query(`DROP INDEX IF EXISTS "idx_payments_client_created"`);
-    await queryRunner.query(`DROP INDEX IF EXISTS "idx_payments_status_created"`);
-    await queryRunner.query(`DROP INDEX IF EXISTS "idx_repair_requests_repairer_created"`);
-    await queryRunner.query(`DROP INDEX IF EXISTS "idx_repair_requests_client_created"`);
-    await queryRunner.query(`DROP INDEX IF EXISTS "idx_repair_requests_status_created"`);
+    await queryRunner.query(
+      `DROP INDEX IF EXISTS "idx_payments_repairer_created"`,
+    );
+    await queryRunner.query(
+      `DROP INDEX IF EXISTS "idx_payments_client_created"`,
+    );
+    await queryRunner.query(
+      `DROP INDEX IF EXISTS "idx_payments_status_created"`,
+    );
+    await queryRunner.query(
+      `DROP INDEX IF EXISTS "idx_repair_requests_repairer_created"`,
+    );
+    await queryRunner.query(
+      `DROP INDEX IF EXISTS "idx_repair_requests_client_created"`,
+    );
+    await queryRunner.query(
+      `DROP INDEX IF EXISTS "idx_repair_requests_status_created"`,
+    );
     await queryRunner.query(`DROP INDEX IF EXISTS "idx_users_created_at"`);
     await queryRunner.query(`DROP INDEX IF EXISTS "idx_users_role_status"`);
   }

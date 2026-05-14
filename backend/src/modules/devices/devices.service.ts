@@ -1,7 +1,19 @@
-import { Injectable, NotFoundException, Inject, forwardRef, Logger } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  Inject,
+  forwardRef,
+  Logger,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, Like, ILike } from 'typeorm';
-import { IsString, IsOptional, IsNumber, IsBoolean, Min } from 'class-validator';
+import {
+  IsString,
+  IsOptional,
+  IsNumber,
+  IsBoolean,
+  Min,
+} from 'class-validator';
 import { Type } from 'class-transformer';
 import { Device, DeviceCategory } from './entities/device.entity';
 import { ServiceTypesService } from './service-types.service';
@@ -90,7 +102,9 @@ export class DevicesService {
     return this.deviceRepository.save(device);
   }
 
-  async findAll(query: SearchDevicesDto): Promise<{ data: Device[]; total: number; page: number; limit: number }> {
+  async findAll(
+    query: SearchDevicesDto,
+  ): Promise<{ data: Device[]; total: number; page: number; limit: number }> {
     const { brand, category, search, page = 1, limit = 20 } = query;
     const skip = (page - 1) * limit;
 
@@ -137,7 +151,10 @@ export class DevicesService {
     return device;
   }
 
-  async findByBrandAndModel(brand: string, model: string): Promise<Device | null> {
+  async findByBrandAndModel(
+    brand: string,
+    model: string,
+  ): Promise<Device | null> {
     return this.deviceRepository.findOne({
       where: { brand, model },
       relations: ['serviceTypes'],
@@ -183,14 +200,20 @@ export class DevicesService {
     return result.map((r) => r.category);
   }
 
-  async seedDevices(force = false): Promise<{ created: number; message: string }> {
+  async seedDevices(
+    force = false,
+  ): Promise<{ created: number; message: string }> {
     if (force) {
       // Delete existing devices (cascade will delete service_types)
       await this.deviceRepository.delete({});
     } else {
       const count = await this.deviceRepository.count();
       if (count > 0) {
-        return { created: 0, message: 'Données déjà présentes. Utilisez force=true pour réinitialiser.' };
+        return {
+          created: 0,
+          message:
+            'Données déjà présentes. Utilisez force=true pour réinitialiser.',
+        };
       }
     }
 
@@ -458,8 +481,16 @@ export class DevicesService {
       { brand: 'Dell', model: 'Alienware x16', category: 'computer' },
 
       // Lenovo
-      { brand: 'Lenovo', model: 'ThinkPad X1 Carbon Gen 11', category: 'computer' },
-      { brand: 'Lenovo', model: 'ThinkPad X1 Yoga Gen 8', category: 'computer' },
+      {
+        brand: 'Lenovo',
+        model: 'ThinkPad X1 Carbon Gen 11',
+        category: 'computer',
+      },
+      {
+        brand: 'Lenovo',
+        model: 'ThinkPad X1 Yoga Gen 8',
+        category: 'computer',
+      },
       { brand: 'Lenovo', model: 'ThinkPad T14s Gen 4', category: 'computer' },
       { brand: 'Lenovo', model: 'ThinkPad T14 Gen 4', category: 'computer' },
       { brand: 'Lenovo', model: 'ThinkPad E14 Gen 5', category: 'computer' },
@@ -532,9 +563,21 @@ export class DevicesService {
       { brand: 'Huawei', model: 'MateBook D 14', category: 'computer' },
 
       // Microsoft Surface
-      { brand: 'Microsoft', model: 'Surface Laptop Studio 2', category: 'computer' },
-      { brand: 'Microsoft', model: 'Surface Laptop 5 15"', category: 'computer' },
-      { brand: 'Microsoft', model: 'Surface Laptop 5 13"', category: 'computer' },
+      {
+        brand: 'Microsoft',
+        model: 'Surface Laptop Studio 2',
+        category: 'computer',
+      },
+      {
+        brand: 'Microsoft',
+        model: 'Surface Laptop 5 15"',
+        category: 'computer',
+      },
+      {
+        brand: 'Microsoft',
+        model: 'Surface Laptop 5 13"',
+        category: 'computer',
+      },
       { brand: 'Microsoft', model: 'Surface Pro 9', category: 'computer' },
       { brand: 'Microsoft', model: 'Surface Go 3', category: 'computer' },
 
@@ -553,15 +596,23 @@ export class DevicesService {
       try {
         const device = await this.create(deviceDto);
         // Seed service types for this device
-        await this.serviceTypesService.seedServiceTypes(device.id, device.category);
+        await this.serviceTypesService.seedServiceTypes(
+          device.id,
+          device.category,
+        );
         created++;
       } catch (err) {
         // Skip duplicates
-        this.logger.debug(`Skipped duplicate: ${deviceDto.brand} ${deviceDto.model}`);
+        this.logger.debug(
+          `Skipped duplicate: ${deviceDto.brand} ${deviceDto.model}`,
+        );
       }
     }
 
-    return { created, message: `${created} appareils créés avec leurs types de services` };
+    return {
+      created,
+      message: `${created} appareils créés avec leurs types de services`,
+    };
   }
 
   async reseedDevices(): Promise<{ created: number; message: string }> {

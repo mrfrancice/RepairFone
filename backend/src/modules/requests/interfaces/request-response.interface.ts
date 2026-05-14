@@ -1,4 +1,8 @@
-import { RequestStatus, DeliveryMode, RepairRequest } from '../entities/repair-request.entity';
+import {
+  RequestStatus,
+  DeliveryMode,
+  RepairRequest,
+} from '../entities/repair-request.entity';
 
 /**
  * Repairer profile summary for request responses
@@ -108,14 +112,20 @@ export type RequestResponse = Omit<RepairRequest, 'client' | 'repairer'> & {
 /**
  * Client-facing request response (with repairer info)
  */
-export type ClientRequestResponse = Omit<RepairRequest, 'client' | 'repairer'> & {
+export type ClientRequestResponse = Omit<
+  RepairRequest,
+  'client' | 'repairer'
+> & {
   repairer: RepairerSummary | null;
 };
 
 /**
  * Repairer-facing request response (with client info)
  */
-export type RepairerRequestResponse = Omit<RepairRequest, 'client' | 'repairer'> & {
+export type RepairerRequestResponse = Omit<
+  RepairRequest,
+  'client' | 'repairer'
+> & {
   client: ClientSummary | null;
   /** Distance en km entre la boutique du réparateur et le lieu d'intervention (Haversine). Undefined si une coord manque. */
   distance?: number;

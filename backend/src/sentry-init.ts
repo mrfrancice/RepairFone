@@ -31,6 +31,6 @@ if (dsn) {
       return event;
     },
   });
-  // eslint-disable-next-line no-console
+
   console.log(`[Sentry] Initialisé (env=${process.env.NODE_ENV})`);
 }

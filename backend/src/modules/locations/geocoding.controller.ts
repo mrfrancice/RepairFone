@@ -1,4 +1,11 @@
-import { Controller, Get, Query, HttpException, HttpStatus, Logger } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Query,
+  HttpException,
+  HttpStatus,
+  Logger,
+} from '@nestjs/common';
 import { Public } from '../../common/decorators/public.decorator';
 
 interface GeocodingResult {
@@ -41,7 +48,7 @@ export class GeocodingController {
             'Accept-Language': 'fr',
             'User-Agent': 'RepairFone/1.0 (contact@repairfone.ci)',
           },
-        }
+        },
       );
 
       if (!response.ok) {
@@ -52,9 +59,11 @@ export class GeocodingController {
       const addr = data.address || {};
 
       // Extract address components for Côte d'Ivoire
-      const quarter = addr.suburb || addr.neighbourhood || addr.hamlet || addr.village || '';
+      const quarter =
+        addr.suburb || addr.neighbourhood || addr.hamlet || addr.village || '';
       const commune = addr.city_district || addr.suburb || '';
-      const city = addr.city || addr.town || addr.municipality || addr.state || 'Abidjan';
+      const city =
+        addr.city || addr.town || addr.municipality || addr.state || 'Abidjan';
       const country = addr.country || "Côte d'Ivoire";
       const road = addr.road || addr.street || '';
       const houseNumber = addr.house_number || '';
@@ -65,9 +74,10 @@ export class GeocodingController {
       if (commune && commune !== quarter) formattedParts.push(commune);
       if (city && city !== commune) formattedParts.push(city);
 
-      const formattedAddress = formattedParts.length > 0
-        ? formattedParts.join(', ')
-        : `${latitude.toFixed(4)}°N, ${Math.abs(longitude).toFixed(4)}°W`;
+      const formattedAddress =
+        formattedParts.length > 0
+          ? formattedParts.join(', ')
+          : `${latitude.toFixed(4)}°N, ${Math.abs(longitude).toFixed(4)}°W`;
 
       // Build street address
       let address = '';
@@ -90,7 +100,10 @@ export class GeocodingController {
         formattedAddress,
       };
     } catch (error) {
-      this.logger.error('Reverse geocoding error', error instanceof Error ? error.stack : String(error));
+      this.logger.error(
+        'Reverse geocoding error',
+        error instanceof Error ? error.stack : String(error),
+      );
       // Return fallback with coordinates
       return {
         address: 'Position détectée',

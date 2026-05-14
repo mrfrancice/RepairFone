@@ -1,4 +1,7 @@
-import { PaymentMethod, PaymentType } from '../../modules/payments/entities/payment.entity';
+import {
+  PaymentMethod,
+  PaymentType,
+} from '../../modules/payments/entities/payment.entity';
 
 /**
  * Event emitted when a payment is successfully completed

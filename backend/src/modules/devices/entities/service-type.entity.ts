@@ -7,7 +7,9 @@ export class ServiceType extends BaseEntity {
   @Column()
   deviceId: string;
 
-  @ManyToOne(() => Device, (device) => device.serviceTypes, { onDelete: 'CASCADE' })
+  @ManyToOne(() => Device, (device) => device.serviceTypes, {
+    onDelete: 'CASCADE',
+  })
   @JoinColumn({ name: 'device_id' })
   device: Device;
 

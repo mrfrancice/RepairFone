@@ -10,9 +10,18 @@ import {
   ParseUUIDPipe,
   ForbiddenException,
 } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiBearerAuth, ApiQuery } from '@nestjs/swagger';
+import {
+  ApiTags,
+  ApiOperation,
+  ApiBearerAuth,
+  ApiQuery,
+} from '@nestjs/swagger';
 import { RequestsService } from './requests.service';
-import { CreateRequestDto, UpdateRequestStatusDto, RequestFilters } from './dto';
+import {
+  CreateRequestDto,
+  UpdateRequestStatusDto,
+  RequestFilters,
+} from './dto';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
 import { User } from '../users/entities/user.entity';
@@ -49,7 +58,7 @@ export class RequestsController {
   }
 
   @Get(':id')
-  @ApiOperation({ summary: 'Détails d\'une demande' })
+  @ApiOperation({ summary: "Détails d'une demande" })
   async findOne(
     @Param('id', ParseUUIDPipe) id: string,
     @CurrentUser() user: User,
@@ -62,14 +71,14 @@ export class RequestsController {
     const isAdmin = user.role === 'admin';
 
     if (!isClient && !isRepairer && !isAdmin) {
-      throw new ForbiddenException('Vous n\'avez pas accès à cette demande');
+      throw new ForbiddenException("Vous n'avez pas accès à cette demande");
     }
 
     return request;
   }
 
   @Put(':id/status')
-  @ApiOperation({ summary: 'Mettre à jour le statut d\'une demande' })
+  @ApiOperation({ summary: "Mettre à jour le statut d'une demande" })
   updateStatus(
     @Param('id', ParseUUIDPipe) id: string,
     @CurrentUser() user: User,

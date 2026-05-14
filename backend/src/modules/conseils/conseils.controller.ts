@@ -8,8 +8,18 @@ import {
   UseGuards,
   ParseUUIDPipe,
 } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiBearerAuth, ApiQuery } from '@nestjs/swagger';
-import { ConseilsService, CreateSessionDto, SessionFilters, ExpertFilters } from './conseils.service';
+import {
+  ApiTags,
+  ApiOperation,
+  ApiBearerAuth,
+  ApiQuery,
+} from '@nestjs/swagger';
+import {
+  ConseilsService,
+  CreateSessionDto,
+  SessionFilters,
+  ExpertFilters,
+} from './conseils.service';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
 import { Public } from '../../common/decorators/public.decorator';
@@ -36,7 +46,7 @@ export class ConseilsController {
 
   @Get('experts/:id')
   @Public()
-  @ApiOperation({ summary: 'Détails d\'un expert' })
+  @ApiOperation({ summary: "Détails d'un expert" })
   getExpert(@Param('id', ParseUUIDPipe) id: string) {
     return this.conseilsService.getExpert(id);
   }
@@ -63,7 +73,7 @@ export class ConseilsController {
   @Get('sessions/:id')
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
-  @ApiOperation({ summary: 'Détails d\'une session' })
+  @ApiOperation({ summary: "Détails d'une session" })
   getSession(
     @CurrentUser() user: User,
     @Param('id', ParseUUIDPipe) id: string,
@@ -113,13 +123,18 @@ export class ConseilsController {
     @Param('id', ParseUUIDPipe) id: string,
     @Body() body: { rating: number; comment?: string },
   ) {
-    return this.conseilsService.rateSession(id, user.id, body.rating, body.comment);
+    return this.conseilsService.rateSession(
+      id,
+      user.id,
+      body.rating,
+      body.comment,
+    );
   }
 
   @Get('sessions/:id/messages')
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
-  @ApiOperation({ summary: 'Messages d\'une session' })
+  @ApiOperation({ summary: "Messages d'une session" })
   getMessages(
     @CurrentUser() user: User,
     @Param('id', ParseUUIDPipe) id: string,
@@ -136,6 +151,12 @@ export class ConseilsController {
     @Param('id', ParseUUIDPipe) id: string,
     @Body() body: { content: string; attachments?: string[] },
   ) {
-    return this.conseilsService.sendMessage(id, user.id, user.role, body.content, body.attachments);
+    return this.conseilsService.sendMessage(
+      id,
+      user.id,
+      user.role,
+      body.content,
+      body.attachments,
+    );
   }
 }

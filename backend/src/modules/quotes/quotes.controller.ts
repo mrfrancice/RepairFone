@@ -10,7 +10,12 @@ import {
   ParseUUIDPipe,
   ForbiddenException,
 } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiBearerAuth, ApiQuery } from '@nestjs/swagger';
+import {
+  ApiTags,
+  ApiOperation,
+  ApiBearerAuth,
+  ApiQuery,
+} from '@nestjs/swagger';
 import { QuotesService } from './quotes.service';
 import { CreateQuoteDto, UpdateQuoteDto, QuoteFilters } from './dto';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
@@ -44,7 +49,7 @@ export class QuotesController {
   }
 
   @Get('request/:requestId')
-  @ApiOperation({ summary: 'Dernier devis d\'une demande' })
+  @ApiOperation({ summary: "Dernier devis d'une demande" })
   async findByRequest(
     @Param('requestId', ParseUUIDPipe) requestId: string,
     @CurrentUser() user: User,
@@ -61,14 +66,14 @@ export class QuotesController {
     const isAdmin = user.role === 'admin';
 
     if (!isClient && !isRepairer && !isAdmin) {
-      throw new ForbiddenException('Vous n\'avez pas accès à ce devis');
+      throw new ForbiddenException("Vous n'avez pas accès à ce devis");
     }
 
     return quote;
   }
 
   @Get('request/:requestId/history')
-  @ApiOperation({ summary: 'Historique des devis d\'une demande (négociation)' })
+  @ApiOperation({ summary: "Historique des devis d'une demande (négociation)" })
   async findHistoryByRequest(
     @Param('requestId', ParseUUIDPipe) requestId: string,
     @CurrentUser() user: User,
@@ -86,14 +91,16 @@ export class QuotesController {
     const isAdmin = user.role === 'admin';
 
     if (!isClient && !isRepairer && !isAdmin) {
-      throw new ForbiddenException('Vous n\'avez pas accès à l\'historique de ces devis');
+      throw new ForbiddenException(
+        "Vous n'avez pas accès à l'historique de ces devis",
+      );
     }
 
     return quotes;
   }
 
   @Get(':id')
-  @ApiOperation({ summary: 'Détails d\'un devis' })
+  @ApiOperation({ summary: "Détails d'un devis" })
   async findOne(
     @Param('id', ParseUUIDPipe) id: string,
     @CurrentUser() user: User,
@@ -106,7 +113,7 @@ export class QuotesController {
     const isAdmin = user.role === 'admin';
 
     if (!isClient && !isRepairer && !isAdmin) {
-      throw new ForbiddenException('Vous n\'avez pas accès à ce devis');
+      throw new ForbiddenException("Vous n'avez pas accès à ce devis");
     }
 
     return quote;
@@ -129,17 +136,26 @@ export class QuotesController {
   }
 
   @Post(':id/reject')
-  @ApiOperation({ summary: 'Refuser un devis (client) avec contre-proposition optionnelle' })
+  @ApiOperation({
+    summary: 'Refuser un devis (client) avec contre-proposition optionnelle',
+  })
   reject(
     @Param('id', ParseUUIDPipe) id: string,
     @CurrentUser() user: User,
     @Body() body: { reason?: string; proposedPrice?: number },
   ) {
-    return this.quotesService.rejectQuote(id, user.id, body.reason, body.proposedPrice);
+    return this.quotesService.rejectQuote(
+      id,
+      user.id,
+      body.reason,
+      body.proposedPrice,
+    );
   }
 
   @Post(':id/accept-counter-proposal')
-  @ApiOperation({ summary: 'Accepter la contre-proposition du client (réparateur)' })
+  @ApiOperation({
+    summary: 'Accepter la contre-proposition du client (réparateur)',
+  })
   acceptCounterProposal(
     @Param('id', ParseUUIDPipe) id: string,
     @CurrentUser() user: User,
@@ -148,7 +164,9 @@ export class QuotesController {
   }
 
   @Post(':id/cancel-negotiation')
-  @ApiOperation({ summary: 'Annuler définitivement la négociation (client ou réparateur)' })
+  @ApiOperation({
+    summary: 'Annuler définitivement la négociation (client ou réparateur)',
+  })
   cancelNegotiation(
     @Param('id', ParseUUIDPipe) id: string,
     @CurrentUser() user: User,

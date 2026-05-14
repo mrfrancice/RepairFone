@@ -12,8 +12,19 @@ import {
   ParseUUIDPipe,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
-import { ApiTags, ApiOperation, ApiBearerAuth, ApiQuery, ApiConsumes } from '@nestjs/swagger';
-import { ChatService, CreateConversationDto, SendMessageDto, MessageFilters } from './chat.service';
+import {
+  ApiTags,
+  ApiOperation,
+  ApiBearerAuth,
+  ApiQuery,
+  ApiConsumes,
+} from '@nestjs/swagger';
+import {
+  ChatService,
+  CreateConversationDto,
+  SendMessageDto,
+  MessageFilters,
+} from './chat.service';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
 import { FileUploadService } from '../../common/services/file-upload.service';
@@ -37,12 +48,15 @@ export class ChatController {
 
   @Post('conversations')
   @ApiOperation({ summary: 'Créer ou récupérer une conversation' })
-  createConversation(@CurrentUser() user: User, @Body() dto: CreateConversationDto) {
+  createConversation(
+    @CurrentUser() user: User,
+    @Body() dto: CreateConversationDto,
+  ) {
     return this.chatService.getOrCreateConversation(user.id, user.role, dto);
   }
 
   @Get('conversations/:id')
-  @ApiOperation({ summary: 'Détails d\'une conversation' })
+  @ApiOperation({ summary: "Détails d'une conversation" })
   getConversation(
     @CurrentUser() user: User,
     @Param('id', ParseUUIDPipe) id: string,
@@ -51,7 +65,7 @@ export class ChatController {
   }
 
   @Get('conversations/:id/messages')
-  @ApiOperation({ summary: 'Messages d\'une conversation' })
+  @ApiOperation({ summary: "Messages d'une conversation" })
   @ApiQuery({ name: 'before', required: false })
   @ApiQuery({ name: 'limit', required: false })
   getMessages(
@@ -91,7 +105,9 @@ export class ChatController {
   @Post('conversations/:id/attachments')
   @UseInterceptors(FileInterceptor('file'))
   @ApiConsumes('multipart/form-data')
-  @ApiOperation({ summary: 'Uploader une pièce jointe (image/PDF) pour une conversation' })
+  @ApiOperation({
+    summary: 'Uploader une pièce jointe (image/PDF) pour une conversation',
+  })
   async uploadAttachment(
     @CurrentUser() user: User,
     @Param('id', ParseUUIDPipe) conversationId: string,
@@ -101,7 +117,9 @@ export class ChatController {
       | undefined,
   ): Promise<{ url: string }> {
     if (!file) {
-      throw new BadRequestException('Fichier manquant (champ multipart "file")');
+      throw new BadRequestException(
+        'Fichier manquant (champ multipart "file")',
+      );
     }
 
     // Vérifie que l'utilisateur a bien accès à cette conversation
@@ -118,7 +136,7 @@ export class ChatController {
     );
 
     if (!result.success || !result.url) {
-      throw new BadRequestException(result.error || 'Échec de l\'upload');
+      throw new BadRequestException(result.error || "Échec de l'upload");
     }
 
     return { url: result.url };
@@ -136,7 +154,10 @@ export class ChatController {
   @Get('unread-count')
   @ApiOperation({ summary: 'Nombre de messages non lus' })
   async getUnreadCount(@CurrentUser() user: User) {
-    const count = await this.chatService.getTotalUnreadCount(user.id, user.role);
+    const count = await this.chatService.getTotalUnreadCount(
+      user.id,
+      user.role,
+    );
     return { count };
   }
 }

@@ -32,7 +32,9 @@ export class PaymentListener {
 
     try {
       // Get repairer profile to find the user ID for notification
-      const repairerProfile = await this.repairersService.findByIdOrNull(event.repairerId);
+      const repairerProfile = await this.repairersService.findByIdOrNull(
+        event.repairerId,
+      );
 
       if (repairerProfile) {
         // Send notification to repairer about payment received
@@ -48,14 +50,21 @@ export class PaymentListener {
 
       // Log payment type specific information
       if (event.isDepositPayment()) {
-        this.logger.log(`Deposit payment received for request ${event.requestId}`);
+        this.logger.log(
+          `Deposit payment received for request ${event.requestId}`,
+        );
       } else if (event.isBalancePayment()) {
-        this.logger.log(`Balance payment received for request ${event.requestId} - Full payment complete`);
+        this.logger.log(
+          `Balance payment received for request ${event.requestId} - Full payment complete`,
+        );
       } else if (event.isFullPayment()) {
         this.logger.log(`Full payment received for request ${event.requestId}`);
       }
     } catch (error) {
-      this.logger.error(`Failed to handle payment completed event: ${error.message}`, error.stack);
+      this.logger.error(
+        `Failed to handle payment completed event: ${error.message}`,
+        error.stack,
+      );
     }
   }
 
@@ -78,7 +87,9 @@ export class PaymentListener {
       );
 
       // Notif réparateur (via son user_id)
-      const repairerProfile = await this.repairersService.findByIdOrNull(event.repairerId);
+      const repairerProfile = await this.repairersService.findByIdOrNull(
+        event.repairerId,
+      );
       if (repairerProfile) {
         await this.notificationsService.notifyPaymentRefunded(
           repairerProfile.userId,
@@ -89,7 +100,10 @@ export class PaymentListener {
         );
       }
     } catch (error) {
-      this.logger.error(`Failed to handle payment refunded event: ${error.message}`, error.stack);
+      this.logger.error(
+        `Failed to handle payment refunded event: ${error.message}`,
+        error.stack,
+      );
     }
   }
 
@@ -109,7 +123,9 @@ export class PaymentListener {
         event.reason,
       );
 
-      const repairerProfile = await this.repairersService.findByIdOrNull(event.repairerId);
+      const repairerProfile = await this.repairersService.findByIdOrNull(
+        event.repairerId,
+      );
       if (repairerProfile) {
         await this.notificationsService.notifyPaymentBlocked(
           repairerProfile.userId,
@@ -119,7 +135,10 @@ export class PaymentListener {
         );
       }
     } catch (error) {
-      this.logger.error(`Failed to handle payment blocked event: ${error.message}`, error.stack);
+      this.logger.error(
+        `Failed to handle payment blocked event: ${error.message}`,
+        error.stack,
+      );
     }
   }
 }

@@ -9,8 +9,18 @@ import {
   ParseUUIDPipe,
   ForbiddenException,
 } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiBearerAuth, ApiQuery } from '@nestjs/swagger';
-import { DisputesService, CreateDisputeDto, AddMessageDto, DisputeFilters } from './disputes.service';
+import {
+  ApiTags,
+  ApiOperation,
+  ApiBearerAuth,
+  ApiQuery,
+} from '@nestjs/swagger';
+import {
+  DisputesService,
+  CreateDisputeDto,
+  AddMessageDto,
+  DisputeFilters,
+} from './disputes.service';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
 import { User } from '../users/entities/user.entity';
@@ -39,7 +49,7 @@ export class DisputesController {
   }
 
   @Get('request/:requestId')
-  @ApiOperation({ summary: 'Litige d\'une demande' })
+  @ApiOperation({ summary: "Litige d'une demande" })
   async findByRequest(
     @Param('requestId', ParseUUIDPipe) requestId: string,
     @CurrentUser() user: User,
@@ -56,18 +66,15 @@ export class DisputesController {
     const isAdmin = user.role === 'admin';
 
     if (!isClient && !isRepairer && !isAdmin) {
-      throw new ForbiddenException('Vous n\'avez pas accès à ce litige');
+      throw new ForbiddenException("Vous n'avez pas accès à ce litige");
     }
 
     return dispute;
   }
 
   @Get(':id')
-  @ApiOperation({ summary: 'Détails d\'un litige' })
-  findOne(
-    @CurrentUser() user: User,
-    @Param('id', ParseUUIDPipe) id: string,
-  ) {
+  @ApiOperation({ summary: "Détails d'un litige" })
+  findOne(@CurrentUser() user: User, @Param('id', ParseUUIDPipe) id: string) {
     return this.disputesService.findOne(id, user.id, user.role);
   }
 
@@ -93,10 +100,7 @@ export class DisputesController {
 
   @Post(':id/cancel')
   @ApiOperation({ summary: 'Annuler un litige (client)' })
-  cancel(
-    @CurrentUser() user: User,
-    @Param('id', ParseUUIDPipe) id: string,
-  ) {
+  cancel(@CurrentUser() user: User, @Param('id', ParseUUIDPipe) id: string) {
     return this.disputesService.cancel(id, user.id);
   }
 }

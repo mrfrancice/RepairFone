@@ -27,7 +27,11 @@ class MockSmsProvider implements SmsProvider {
 // Twilio client interface (minimal type for dynamic import)
 interface TwilioClient {
   messages: {
-    create(options: { body: string; from: string; to: string }): Promise<{ sid: string }>;
+    create(options: {
+      body: string;
+      from: string;
+      to: string;
+    }): Promise<{ sid: string }>;
   };
 }
 
@@ -37,11 +41,7 @@ class TwilioSmsProvider implements SmsProvider {
   private client: TwilioClient | null = null;
   private fromNumber: string;
 
-  constructor(
-    accountSid: string,
-    authToken: string,
-    fromNumber: string,
-  ) {
+  constructor(accountSid: string, authToken: string, fromNumber: string) {
     // Dynamic import to avoid requiring twilio in dev
     try {
       const twilio = require('twilio');
@@ -69,7 +69,8 @@ class TwilioSmsProvider implements SmsProvider {
         messageId: result.sid,
       };
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      const errorMessage =
+        error instanceof Error ? error.message : 'Unknown error';
       this.logger.error(`Twilio error: ${errorMessage}`);
       return {
         success: false,
@@ -98,7 +99,7 @@ class OrangeSmsProvider implements SmsProvider {
         {
           method: 'POST',
           headers: {
-            'Authorization': `Bearer ${this.apiKey}`,
+            Authorization: `Bearer ${this.apiKey}`,
             'Content-Type': 'application/json',
           },
           body: JSON.stringify({
@@ -124,7 +125,8 @@ class OrangeSmsProvider implements SmsProvider {
         messageId: data.outboundSMSMessageRequest?.resourceURL,
       };
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      const errorMessage =
+        error instanceof Error ? error.message : 'Unknown error';
       this.logger.error(`Orange SMS error: ${errorMessage}`);
       return {
         success: false,
@@ -144,10 +146,12 @@ export class SmsService {
   }
 
   private initializeProvider(): void {
-    const providerName = this.configService.get<string>('SMS_PROVIDER') || 'mock';
+    const providerName =
+      this.configService.get<string>('SMS_PROVIDER') || 'mock';
     const apiKey = this.configService.get<string>('SMS_API_KEY');
     const apiSecret = this.configService.get<string>('SMS_API_SECRET');
-    const senderId = this.configService.get<string>('SMS_SENDER_ID') || 'RepairFone';
+    const senderId =
+      this.configService.get<string>('SMS_SENDER_ID') || 'RepairFone';
 
     switch (providerName.toLowerCase()) {
       case 'twilio':
@@ -183,17 +187,28 @@ export class SmsService {
     return this.sendSms(phone, message);
   }
 
-  async sendNotification(phone: string, title: string, body: string): Promise<SmsResult> {
+  async sendNotification(
+    phone: string,
+    title: string,
+    body: string,
+  ): Promise<SmsResult> {
     const message = `[RepairFone] ${title}: ${body}`;
     return this.sendSms(phone, message);
   }
 
-  async sendQuoteNotification(phone: string, repairerName: string, amount: number): Promise<SmsResult> {
+  async sendQuoteNotification(
+    phone: string,
+    repairerName: string,
+    amount: number,
+  ): Promise<SmsResult> {
     const message = `[RepairFone] Nouveau devis de ${repairerName}: ${amount.toLocaleString('fr-FR')} FCFA. Connectez-vous pour accepter.`;
     return this.sendSms(phone, message);
   }
 
-  async sendRepairStatusUpdate(phone: string, status: string): Promise<SmsResult> {
+  async sendRepairStatusUpdate(
+    phone: string,
+    status: string,
+  ): Promise<SmsResult> {
     const statusMessages: Record<string, string> = {
       accepted: 'Votre demande de réparation a été acceptée.',
       in_progress: 'Votre réparation est en cours.',

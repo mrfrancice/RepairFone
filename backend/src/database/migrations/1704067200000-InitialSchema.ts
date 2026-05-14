@@ -1,4 +1,10 @@
-import { MigrationInterface, QueryRunner, Table, TableForeignKey, TableIndex } from 'typeorm';
+import {
+  MigrationInterface,
+  QueryRunner,
+  Table,
+  TableForeignKey,
+  TableIndex,
+} from 'typeorm';
 
 export class InitialSchema1704067200000 implements MigrationInterface {
   name = 'InitialSchema1704067200000';
@@ -22,11 +28,32 @@ export class InitialSchema1704067200000 implements MigrationInterface {
             default: 'uuid_generate_v4()',
           },
           { name: 'phone', type: 'varchar', length: '20', isUnique: true },
-          { name: 'email', type: 'varchar', length: '255', isNullable: true, isUnique: true },
+          {
+            name: 'email',
+            type: 'varchar',
+            length: '255',
+            isNullable: true,
+            isUnique: true,
+          },
           { name: 'password_hash', type: 'varchar', length: '255' },
-          { name: 'first_name', type: 'varchar', length: '100', isNullable: true },
-          { name: 'last_name', type: 'varchar', length: '100', isNullable: true },
-          { name: 'avatar_url', type: 'varchar', length: '500', isNullable: true },
+          {
+            name: 'first_name',
+            type: 'varchar',
+            length: '100',
+            isNullable: true,
+          },
+          {
+            name: 'last_name',
+            type: 'varchar',
+            length: '100',
+            isNullable: true,
+          },
+          {
+            name: 'avatar_url',
+            type: 'varchar',
+            length: '500',
+            isNullable: true,
+          },
           {
             name: 'role',
             type: 'enum',
@@ -41,19 +68,41 @@ export class InitialSchema1704067200000 implements MigrationInterface {
           },
           { name: 'is_phone_verified', type: 'boolean', default: false },
           { name: 'is_email_verified', type: 'boolean', default: false },
-          { name: 'preferred_language', type: 'varchar', length: '5', default: "'fr'" },
+          {
+            name: 'preferred_language',
+            type: 'varchar',
+            length: '5',
+            default: "'fr'",
+          },
           { name: 'last_login_at', type: 'timestamp', isNullable: true },
-          { name: 'created_at', type: 'timestamp', default: 'CURRENT_TIMESTAMP' },
-          { name: 'updated_at', type: 'timestamp', default: 'CURRENT_TIMESTAMP' },
+          {
+            name: 'created_at',
+            type: 'timestamp',
+            default: 'CURRENT_TIMESTAMP',
+          },
+          {
+            name: 'updated_at',
+            type: 'timestamp',
+            default: 'CURRENT_TIMESTAMP',
+          },
           { name: 'deleted_at', type: 'timestamp', isNullable: true },
         ],
       }),
       true,
     );
 
-    await queryRunner.createIndex('users', new TableIndex({ name: 'IDX_users_phone', columnNames: ['phone'] }));
-    await queryRunner.createIndex('users', new TableIndex({ name: 'IDX_users_email', columnNames: ['email'] }));
-    await queryRunner.createIndex('users', new TableIndex({ name: 'IDX_users_role', columnNames: ['role'] }));
+    await queryRunner.createIndex(
+      'users',
+      new TableIndex({ name: 'IDX_users_phone', columnNames: ['phone'] }),
+    );
+    await queryRunner.createIndex(
+      'users',
+      new TableIndex({ name: 'IDX_users_email', columnNames: ['email'] }),
+    );
+    await queryRunner.createIndex(
+      'users',
+      new TableIndex({ name: 'IDX_users_role', columnNames: ['role'] }),
+    );
 
     // ========================================
     // 2. REPAIRER PROFILES TABLE
@@ -70,30 +119,73 @@ export class InitialSchema1704067200000 implements MigrationInterface {
             default: 'uuid_generate_v4()',
           },
           { name: 'user_id', type: 'uuid', isUnique: true },
-          { name: 'business_name', type: 'varchar', length: '255', isNullable: true },
+          {
+            name: 'business_name',
+            type: 'varchar',
+            length: '255',
+            isNullable: true,
+          },
           { name: 'description', type: 'text', isNullable: true },
           { name: 'address', type: 'varchar', length: '500', isNullable: true },
           { name: 'city', type: 'varchar', length: '100', isNullable: true },
           { name: 'commune', type: 'varchar', length: '100', isNullable: true },
-          { name: 'latitude', type: 'decimal', precision: 10, scale: 8, isNullable: true },
-          { name: 'longitude', type: 'decimal', precision: 11, scale: 8, isNullable: true },
+          {
+            name: 'latitude',
+            type: 'decimal',
+            precision: 10,
+            scale: 8,
+            isNullable: true,
+          },
+          {
+            name: 'longitude',
+            type: 'decimal',
+            precision: 11,
+            scale: 8,
+            isNullable: true,
+          },
           {
             name: 'verification_status',
             type: 'enum',
-            enum: ['pending', 'under_review', 'verified', 'rejected', 'suspended'],
+            enum: [
+              'pending',
+              'under_review',
+              'verified',
+              'rejected',
+              'suspended',
+            ],
             default: "'pending'",
           },
           { name: 'certifications', type: 'jsonb', isNullable: true },
           { name: 'working_hours', type: 'jsonb', isNullable: true },
-          { name: 'rating_avg', type: 'decimal', precision: 3, scale: 2, default: 0 },
+          {
+            name: 'rating_avg',
+            type: 'decimal',
+            precision: 3,
+            scale: 2,
+            default: 0,
+          },
           { name: 'rating_count', type: 'integer', default: 0 },
           { name: 'total_repairs', type: 'integer', default: 0 },
-          { name: 'completion_rate', type: 'decimal', precision: 5, scale: 2, default: 0 },
+          {
+            name: 'completion_rate',
+            type: 'decimal',
+            precision: 5,
+            scale: 2,
+            default: 0,
+          },
           { name: 'accepts_home_service', type: 'boolean', default: false },
           { name: 'home_service_radius_km', type: 'integer', default: 10 },
           { name: 'is_available', type: 'boolean', default: true },
-          { name: 'created_at', type: 'timestamp', default: 'CURRENT_TIMESTAMP' },
-          { name: 'updated_at', type: 'timestamp', default: 'CURRENT_TIMESTAMP' },
+          {
+            name: 'created_at',
+            type: 'timestamp',
+            default: 'CURRENT_TIMESTAMP',
+          },
+          {
+            name: 'updated_at',
+            type: 'timestamp',
+            default: 'CURRENT_TIMESTAMP',
+          },
           { name: 'deleted_at', type: 'timestamp', isNullable: true },
         ],
       }),
@@ -111,7 +203,13 @@ export class InitialSchema1704067200000 implements MigrationInterface {
       }),
     );
 
-    await queryRunner.createIndex('repairer_profiles', new TableIndex({ name: 'IDX_repairer_profiles_city', columnNames: ['city'] }));
+    await queryRunner.createIndex(
+      'repairer_profiles',
+      new TableIndex({
+        name: 'IDX_repairer_profiles_city',
+        columnNames: ['city'],
+      }),
+    );
 
     // ========================================
     // 3. DEVICES TABLE
@@ -132,21 +230,50 @@ export class InitialSchema1704067200000 implements MigrationInterface {
           {
             name: 'category',
             type: 'enum',
-            enum: ['smartphone', 'tablet', 'computer', 'laptop', 'smartwatch', 'other'],
+            enum: [
+              'smartphone',
+              'tablet',
+              'computer',
+              'laptop',
+              'smartwatch',
+              'other',
+            ],
           },
-          { name: 'image_url', type: 'varchar', length: '500', isNullable: true },
+          {
+            name: 'image_url',
+            type: 'varchar',
+            length: '500',
+            isNullable: true,
+          },
           { name: 'release_year', type: 'integer', isNullable: true },
           { name: 'is_active', type: 'boolean', default: true },
-          { name: 'created_at', type: 'timestamp', default: 'CURRENT_TIMESTAMP' },
-          { name: 'updated_at', type: 'timestamp', default: 'CURRENT_TIMESTAMP' },
+          {
+            name: 'created_at',
+            type: 'timestamp',
+            default: 'CURRENT_TIMESTAMP',
+          },
+          {
+            name: 'updated_at',
+            type: 'timestamp',
+            default: 'CURRENT_TIMESTAMP',
+          },
           { name: 'deleted_at', type: 'timestamp', isNullable: true },
         ],
       }),
       true,
     );
 
-    await queryRunner.createIndex('devices', new TableIndex({ name: 'IDX_devices_brand', columnNames: ['brand'] }));
-    await queryRunner.createIndex('devices', new TableIndex({ name: 'IDX_devices_category', columnNames: ['category'] }));
+    await queryRunner.createIndex(
+      'devices',
+      new TableIndex({ name: 'IDX_devices_brand', columnNames: ['brand'] }),
+    );
+    await queryRunner.createIndex(
+      'devices',
+      new TableIndex({
+        name: 'IDX_devices_category',
+        columnNames: ['category'],
+      }),
+    );
 
     // ========================================
     // 4. SERVICE TYPES TABLE
@@ -168,8 +295,16 @@ export class InitialSchema1704067200000 implements MigrationInterface {
           { name: 'base_price', type: 'decimal', precision: 10, scale: 2 },
           { name: 'estimated_duration', type: 'integer', default: 60 },
           { name: 'is_active', type: 'boolean', default: true },
-          { name: 'created_at', type: 'timestamp', default: 'CURRENT_TIMESTAMP' },
-          { name: 'updated_at', type: 'timestamp', default: 'CURRENT_TIMESTAMP' },
+          {
+            name: 'created_at',
+            type: 'timestamp',
+            default: 'CURRENT_TIMESTAMP',
+          },
+          {
+            name: 'updated_at',
+            type: 'timestamp',
+            default: 'CURRENT_TIMESTAMP',
+          },
           { name: 'deleted_at', type: 'timestamp', isNullable: true },
         ],
       }),
@@ -201,7 +336,12 @@ export class InitialSchema1704067200000 implements MigrationInterface {
             generationStrategy: 'uuid',
             default: 'uuid_generate_v4()',
           },
-          { name: 'request_number', type: 'varchar', length: '20', isUnique: true },
+          {
+            name: 'request_number',
+            type: 'varchar',
+            length: '20',
+            isUnique: true,
+          },
           { name: 'client_id', type: 'uuid' },
           { name: 'repairer_id', type: 'uuid', isNullable: true },
           { name: 'device_id', type: 'uuid', isNullable: true },
@@ -209,7 +349,16 @@ export class InitialSchema1704067200000 implements MigrationInterface {
           {
             name: 'status',
             type: 'enum',
-            enum: ['pending', 'accepted', 'rejected', 'in_progress', 'awaiting_parts', 'completed', 'cancelled', 'disputed'],
+            enum: [
+              'pending',
+              'accepted',
+              'rejected',
+              'in_progress',
+              'awaiting_parts',
+              'completed',
+              'cancelled',
+              'disputed',
+            ],
             default: "'pending'",
           },
           {
@@ -219,27 +368,84 @@ export class InitialSchema1704067200000 implements MigrationInterface {
             default: "'in_shop'",
           },
           { name: 'description', type: 'text', isNullable: true },
-          { name: 'device_brand', type: 'varchar', length: '100', isNullable: true },
-          { name: 'device_model', type: 'varchar', length: '150', isNullable: true },
-          { name: 'device_serial_number', type: 'varchar', length: '100', isNullable: true },
+          {
+            name: 'device_brand',
+            type: 'varchar',
+            length: '100',
+            isNullable: true,
+          },
+          {
+            name: 'device_model',
+            type: 'varchar',
+            length: '150',
+            isNullable: true,
+          },
+          {
+            name: 'device_serial_number',
+            type: 'varchar',
+            length: '100',
+            isNullable: true,
+          },
           { name: 'images', type: 'jsonb', isNullable: true },
-          { name: 'estimated_price', type: 'decimal', precision: 10, scale: 2, isNullable: true },
-          { name: 'final_price', type: 'decimal', precision: 10, scale: 2, isNullable: true },
+          {
+            name: 'estimated_price',
+            type: 'decimal',
+            precision: 10,
+            scale: 2,
+            isNullable: true,
+          },
+          {
+            name: 'final_price',
+            type: 'decimal',
+            precision: 10,
+            scale: 2,
+            isNullable: true,
+          },
           { name: 'currency', type: 'varchar', length: '3', default: "'XOF'" },
           { name: 'preferred_date', type: 'date', isNullable: true },
-          { name: 'preferred_time', type: 'varchar', length: '20', isNullable: true },
+          {
+            name: 'preferred_time',
+            type: 'varchar',
+            length: '20',
+            isNullable: true,
+          },
           { name: 'scheduled_at', type: 'timestamp', isNullable: true },
-          { name: 'client_address', type: 'varchar', length: '500', isNullable: true },
-          { name: 'client_latitude', type: 'decimal', precision: 10, scale: 8, isNullable: true },
-          { name: 'client_longitude', type: 'decimal', precision: 11, scale: 8, isNullable: true },
+          {
+            name: 'client_address',
+            type: 'varchar',
+            length: '500',
+            isNullable: true,
+          },
+          {
+            name: 'client_latitude',
+            type: 'decimal',
+            precision: 10,
+            scale: 8,
+            isNullable: true,
+          },
+          {
+            name: 'client_longitude',
+            type: 'decimal',
+            precision: 11,
+            scale: 8,
+            isNullable: true,
+          },
           { name: 'estimated_duration', type: 'integer', isNullable: true },
           { name: 'started_at', type: 'timestamp', isNullable: true },
           { name: 'completed_at', type: 'timestamp', isNullable: true },
           { name: 'cancelled_at', type: 'timestamp', isNullable: true },
           { name: 'cancelled_by', type: 'uuid', isNullable: true },
           { name: 'cancellation_reason', type: 'text', isNullable: true },
-          { name: 'created_at', type: 'timestamp', default: 'CURRENT_TIMESTAMP' },
-          { name: 'updated_at', type: 'timestamp', default: 'CURRENT_TIMESTAMP' },
+          {
+            name: 'created_at',
+            type: 'timestamp',
+            default: 'CURRENT_TIMESTAMP',
+          },
+          {
+            name: 'updated_at',
+            type: 'timestamp',
+            default: 'CURRENT_TIMESTAMP',
+          },
           { name: 'deleted_at', type: 'timestamp', isNullable: true },
         ],
       }),
@@ -290,9 +496,27 @@ export class InitialSchema1704067200000 implements MigrationInterface {
       }),
     );
 
-    await queryRunner.createIndex('repair_requests', new TableIndex({ name: 'IDX_repair_requests_status', columnNames: ['status'] }));
-    await queryRunner.createIndex('repair_requests', new TableIndex({ name: 'IDX_repair_requests_client', columnNames: ['client_id'] }));
-    await queryRunner.createIndex('repair_requests', new TableIndex({ name: 'IDX_repair_requests_repairer', columnNames: ['repairer_id'] }));
+    await queryRunner.createIndex(
+      'repair_requests',
+      new TableIndex({
+        name: 'IDX_repair_requests_status',
+        columnNames: ['status'],
+      }),
+    );
+    await queryRunner.createIndex(
+      'repair_requests',
+      new TableIndex({
+        name: 'IDX_repair_requests_client',
+        columnNames: ['client_id'],
+      }),
+    );
+    await queryRunner.createIndex(
+      'repair_requests',
+      new TableIndex({
+        name: 'IDX_repair_requests_repairer',
+        columnNames: ['repairer_id'],
+      }),
+    );
 
     // ========================================
     // 6. REQUEST STATUS HISTORY TABLE
@@ -312,11 +536,24 @@ export class InitialSchema1704067200000 implements MigrationInterface {
           {
             name: 'status',
             type: 'enum',
-            enum: ['pending', 'accepted', 'rejected', 'in_progress', 'awaiting_parts', 'completed', 'cancelled', 'disputed'],
+            enum: [
+              'pending',
+              'accepted',
+              'rejected',
+              'in_progress',
+              'awaiting_parts',
+              'completed',
+              'cancelled',
+              'disputed',
+            ],
           },
           { name: 'comment', type: 'text', isNullable: true },
           { name: 'changed_by', type: 'uuid', isNullable: true },
-          { name: 'created_at', type: 'timestamp', default: 'CURRENT_TIMESTAMP' },
+          {
+            name: 'created_at',
+            type: 'timestamp',
+            default: 'CURRENT_TIMESTAMP',
+          },
         ],
       }),
       true,
@@ -358,8 +595,16 @@ export class InitialSchema1704067200000 implements MigrationInterface {
           { name: 'response', type: 'text', isNullable: true },
           { name: 'response_at', type: 'timestamp', isNullable: true },
           { name: 'is_visible', type: 'boolean', default: true },
-          { name: 'created_at', type: 'timestamp', default: 'CURRENT_TIMESTAMP' },
-          { name: 'updated_at', type: 'timestamp', default: 'CURRENT_TIMESTAMP' },
+          {
+            name: 'created_at',
+            type: 'timestamp',
+            default: 'CURRENT_TIMESTAMP',
+          },
+          {
+            name: 'updated_at',
+            type: 'timestamp',
+            default: 'CURRENT_TIMESTAMP',
+          },
           { name: 'deleted_at', type: 'timestamp', isNullable: true },
         ],
       }),
@@ -399,7 +644,13 @@ export class InitialSchema1704067200000 implements MigrationInterface {
       }),
     );
 
-    await queryRunner.createIndex('reviews', new TableIndex({ name: 'IDX_reviews_repairer', columnNames: ['repairer_id'] }));
+    await queryRunner.createIndex(
+      'reviews',
+      new TableIndex({
+        name: 'IDX_reviews_repairer',
+        columnNames: ['repairer_id'],
+      }),
+    );
 
     // ========================================
     // 8. OTP CODES TABLE
@@ -420,13 +671,20 @@ export class InitialSchema1704067200000 implements MigrationInterface {
           { name: 'expires_at', type: 'timestamp' },
           { name: 'is_used', type: 'boolean', default: false },
           { name: 'attempts', type: 'integer', default: 0 },
-          { name: 'created_at', type: 'timestamp', default: 'CURRENT_TIMESTAMP' },
+          {
+            name: 'created_at',
+            type: 'timestamp',
+            default: 'CURRENT_TIMESTAMP',
+          },
         ],
       }),
       true,
     );
 
-    await queryRunner.createIndex('otp_codes', new TableIndex({ name: 'IDX_otp_codes_phone', columnNames: ['phone'] }));
+    await queryRunner.createIndex(
+      'otp_codes',
+      new TableIndex({ name: 'IDX_otp_codes_phone', columnNames: ['phone'] }),
+    );
 
     // ========================================
     // 9. REFRESH TOKENS TABLE
@@ -447,7 +705,11 @@ export class InitialSchema1704067200000 implements MigrationInterface {
           { name: 'expires_at', type: 'timestamp' },
           { name: 'is_revoked', type: 'boolean', default: false },
           { name: 'device_info', type: 'jsonb', isNullable: true },
-          { name: 'created_at', type: 'timestamp', default: 'CURRENT_TIMESTAMP' },
+          {
+            name: 'created_at',
+            type: 'timestamp',
+            default: 'CURRENT_TIMESTAMP',
+          },
         ],
       }),
       true,

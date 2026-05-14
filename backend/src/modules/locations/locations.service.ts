@@ -9,48 +9,128 @@ const IVORY_COAST_DATA = {
   cities: [
     {
       name: 'Abidjan',
-      latitude: 5.3600,
+      latitude: 5.36,
       longitude: -4.0083,
       communes: [
         {
           name: 'Abobo',
-          quarters: ['Abobo Gare', 'Abobo Baoulé', 'PK18', 'Sagbé', 'Avocatier', 'Anonkoua-Kouté', 'Abobo-Doumé', 'Kennedy'],
+          quarters: [
+            'Abobo Gare',
+            'Abobo Baoulé',
+            'PK18',
+            'Sagbé',
+            'Avocatier',
+            'Anonkoua-Kouté',
+            'Abobo-Doumé',
+            'Kennedy',
+          ],
         },
         {
           name: 'Adjamé',
-          quarters: ['Adjamé Liberté', 'Adjamé Bracodi', '220 Logements', 'Williamsville', 'Forum', 'Renault-Billard'],
+          quarters: [
+            'Adjamé Liberté',
+            'Adjamé Bracodi',
+            '220 Logements',
+            'Williamsville',
+            'Forum',
+            'Renault-Billard',
+          ],
         },
         {
           name: 'Attécoubé',
-          quarters: ['Attécoubé Centre', 'Locodjro', 'Agban Village', 'Santé 3', 'Mossikro'],
+          quarters: [
+            'Attécoubé Centre',
+            'Locodjro',
+            'Agban Village',
+            'Santé 3',
+            'Mossikro',
+          ],
         },
         {
           name: 'Cocody',
-          quarters: ['Angré', 'Riviera 1', 'Riviera 2', 'Riviera 3', 'Riviera Palmeraie', 'Riviera Faya', 'II Plateaux', 'Cocody Centre', 'Danga', 'Bonoumin', 'Ambassades', 'Riviera Golf'],
+          quarters: [
+            'Angré',
+            'Riviera 1',
+            'Riviera 2',
+            'Riviera 3',
+            'Riviera Palmeraie',
+            'Riviera Faya',
+            'II Plateaux',
+            'Cocody Centre',
+            'Danga',
+            'Bonoumin',
+            'Ambassades',
+            'Riviera Golf',
+          ],
         },
         {
           name: 'Koumassi',
-          quarters: ['Koumassi Centre', 'Remblais', 'Grand Campement', 'Sicogi', 'Zone Industrielle', 'Sopim'],
+          quarters: [
+            'Koumassi Centre',
+            'Remblais',
+            'Grand Campement',
+            'Sicogi',
+            'Zone Industrielle',
+            'Sopim',
+          ],
         },
         {
           name: 'Marcory',
-          quarters: ['Zone 4', 'Zone 4C', 'Biétry', 'Anoumabo', 'Sans Fil', 'Marcory Résidentiel'],
+          quarters: [
+            'Zone 4',
+            'Zone 4C',
+            'Biétry',
+            'Anoumabo',
+            'Sans Fil',
+            'Marcory Résidentiel',
+          ],
         },
         {
           name: 'Plateau',
-          quarters: ['Plateau Centre', 'Commerce', 'Indénié', 'Cité Administrative'],
+          quarters: [
+            'Plateau Centre',
+            'Commerce',
+            'Indénié',
+            'Cité Administrative',
+          ],
         },
         {
           name: 'Port-Bouët',
-          quarters: ['Vridi', 'Gonzagueville', 'Adjouffou', 'Jean Folly', 'Vridi Canal', 'Aéroport'],
+          quarters: [
+            'Vridi',
+            'Gonzagueville',
+            'Adjouffou',
+            'Jean Folly',
+            'Vridi Canal',
+            'Aéroport',
+          ],
         },
         {
           name: 'Treichville',
-          quarters: ['Treichville Centre', 'Habitat', 'Avenue 17', 'Nanan Yamousso', 'Belleville'],
+          quarters: [
+            'Treichville Centre',
+            'Habitat',
+            'Avenue 17',
+            'Nanan Yamousso',
+            'Belleville',
+          ],
         },
         {
           name: 'Yopougon',
-          quarters: ['Yopougon Maroc', 'Sideci', 'Wassakara', 'Niangon', 'Port-Bouët 2', 'Toits Rouges', 'Selmer', 'Banco', 'Kouté', 'Millionnaire', 'Ananeraie', 'Azito'],
+          quarters: [
+            'Yopougon Maroc',
+            'Sideci',
+            'Wassakara',
+            'Niangon',
+            'Port-Bouët 2',
+            'Toits Rouges',
+            'Selmer',
+            'Banco',
+            'Kouté',
+            'Millionnaire',
+            'Ananeraie',
+            'Azito',
+          ],
         },
       ],
     },
@@ -61,7 +141,13 @@ const IVORY_COAST_DATA = {
       communes: [
         {
           name: 'Bouaké Centre',
-          quarters: ['Commerce', 'Zone Industrielle', 'Air France', 'Koko', 'Broukro'],
+          quarters: [
+            'Commerce',
+            'Zone Industrielle',
+            'Air France',
+            'Koko',
+            'Broukro',
+          ],
         },
         {
           name: 'Dar-es-Salam',
@@ -69,7 +155,7 @@ const IVORY_COAST_DATA = {
         },
         {
           name: 'Sokoura',
-          quarters: ['Sokoura Centre', 'N\'Gattakro'],
+          quarters: ['Sokoura Centre', "N'Gattakro"],
         },
       ],
     },
@@ -80,7 +166,13 @@ const IVORY_COAST_DATA = {
       communes: [
         {
           name: 'Yamoussoukro Centre',
-          quarters: ['Centre-ville', 'Habitat', 'Millionnaire', 'Morofé', 'Dioulakro'],
+          quarters: [
+            'Centre-ville',
+            'Habitat',
+            'Millionnaire',
+            'Morofé',
+            'Dioulakro',
+          ],
         },
         {
           name: 'Assabou',
@@ -95,7 +187,13 @@ const IVORY_COAST_DATA = {
       communes: [
         {
           name: 'San-Pédro Centre',
-          quarters: ['Centre-ville', 'Zone Portuaire', 'Séwéké', 'Bardot', 'Lac'],
+          quarters: [
+            'Centre-ville',
+            'Zone Portuaire',
+            'Séwéké',
+            'Bardot',
+            'Lac',
+          ],
         },
         {
           name: 'Zimbabwe',
@@ -105,7 +203,7 @@ const IVORY_COAST_DATA = {
     },
     {
       name: 'Korhogo',
-      latitude: 9.4500,
+      latitude: 9.45,
       longitude: -5.6333,
       communes: [
         {
@@ -173,7 +271,11 @@ export class LocationsService implements OnModuleInit {
     await this.locationRepository.save(country);
 
     // Create cities, communes, and quarters
-    for (let cityIndex = 0; cityIndex < IVORY_COAST_DATA.cities.length; cityIndex++) {
+    for (
+      let cityIndex = 0;
+      cityIndex < IVORY_COAST_DATA.cities.length;
+      cityIndex++
+    ) {
       const cityData = IVORY_COAST_DATA.cities[cityIndex];
 
       const city = this.locationRepository.create({
@@ -186,7 +288,11 @@ export class LocationsService implements OnModuleInit {
       });
       await this.locationRepository.save(city);
 
-      for (let communeIndex = 0; communeIndex < cityData.communes.length; communeIndex++) {
+      for (
+        let communeIndex = 0;
+        communeIndex < cityData.communes.length;
+        communeIndex++
+      ) {
         const communeData = cityData.communes[communeIndex];
 
         const commune = this.locationRepository.create({
@@ -197,7 +303,11 @@ export class LocationsService implements OnModuleInit {
         });
         await this.locationRepository.save(commune);
 
-        for (let quarterIndex = 0; quarterIndex < communeData.quarters.length; quarterIndex++) {
+        for (
+          let quarterIndex = 0;
+          quarterIndex < communeData.quarters.length;
+          quarterIndex++
+        ) {
           const quarterName = communeData.quarters[quarterIndex];
 
           const quarter = this.locationRepository.create({
@@ -242,13 +352,25 @@ export class LocationsService implements OnModuleInit {
 
   async getQuartersByCommune(communeId: string): Promise<Location[]> {
     return this.locationRepository.find({
-      where: { type: LocationType.QUARTER, parentId: communeId, isActive: true },
+      where: {
+        type: LocationType.QUARTER,
+        parentId: communeId,
+        isActive: true,
+      },
       order: { sortOrder: 'ASC', name: 'ASC' },
     });
   }
 
-  async getQuartersByCommuneName(communeName: string, cityName?: string): Promise<Location[]> {
-    let communeQuery: { type: LocationType; name: string; isActive: boolean; parentId?: string } = { type: LocationType.COMMUNE, name: communeName, isActive: true };
+  async getQuartersByCommuneName(
+    communeName: string,
+    cityName?: string,
+  ): Promise<Location[]> {
+    const communeQuery: {
+      type: LocationType;
+      name: string;
+      isActive: boolean;
+      parentId?: string;
+    } = { type: LocationType.COMMUNE, name: communeName, isActive: true };
 
     // If cityName is provided, find the commune within that city
     if (cityName) {
@@ -290,7 +412,12 @@ export class LocationsService implements OnModuleInit {
       return {};
     }
 
-    const result: { country?: Location; city?: Location; commune?: Location; quarter?: Location } = {};
+    const result: {
+      country?: Location;
+      city?: Location;
+      commune?: Location;
+      quarter?: Location;
+    } = {};
 
     let current: Location | null = location;
     while (current) {
@@ -339,7 +466,11 @@ export class LocationsService implements OnModuleInit {
       name: string;
       latitude: number | null;
       longitude: number | null;
-      communes: Array<{ id: string; name: string; quarters: Array<{ id: string; name: string }> }>;
+      communes: Array<{
+        id: string;
+        name: string;
+        quarters: Array<{ id: string; name: string }>;
+      }>;
     };
     const result: { cities: CityData[] } = { cities: [] };
 

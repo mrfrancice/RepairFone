@@ -54,7 +54,9 @@ export class RepairersController {
   @Roles(UserRole.REPAIRER)
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Get own repairer profile' })
-  async getMyProfile(@CurrentUser() user: User): Promise<RepairerProfile | null> {
+  async getMyProfile(
+    @CurrentUser() user: User,
+  ): Promise<RepairerProfile | null> {
     return this.repairersService.findByUserId(user.id);
   }
 
@@ -91,7 +93,9 @@ export class RepairersController {
   @Roles(UserRole.REPAIRER)
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Toggle availability' })
-  async toggleAvailability(@CurrentUser() user: User): Promise<RepairerProfile> {
+  async toggleAvailability(
+    @CurrentUser() user: User,
+  ): Promise<RepairerProfile> {
     const profile = await this.repairersService.findByUserId(user.id);
     if (!profile) {
       throw new Error('Profil réparateur non trouvé');

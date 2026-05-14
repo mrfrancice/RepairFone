@@ -29,10 +29,21 @@ import { FirebaseService } from '../../common/services/firebase.service';
       }),
       inject: [ConfigService],
     }),
-    TypeOrmModule.forFeature([OtpCode, RefreshToken, PasswordResetToken, EmailVerificationToken]),
+    TypeOrmModule.forFeature([
+      OtpCode,
+      RefreshToken,
+      PasswordResetToken,
+      EmailVerificationToken,
+    ]),
   ],
   controllers: [AuthController],
-  providers: [AuthService, JwtStrategy, SmsService, EmailService, FirebaseService],
+  providers: [
+    AuthService,
+    JwtStrategy,
+    SmsService,
+    EmailService,
+    FirebaseService,
+  ],
   exports: [AuthService, FirebaseService],
 })
 export class AuthModule {}

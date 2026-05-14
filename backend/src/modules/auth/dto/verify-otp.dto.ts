@@ -20,6 +20,8 @@ export class VerifyOtpDto {
   @IsString()
   @IsNotEmpty()
   @Length(6, 6, { message: 'Le code OTP doit contenir exactement 6 chiffres' })
-  @Matches(/^\d{6}$/, { message: 'Le code OTP doit contenir uniquement des chiffres' })
+  @Matches(/^\d{6}$/, {
+    message: 'Le code OTP doit contenir uniquement des chiffres',
+  })
   code: string;
 }

@@ -1,10 +1,4 @@
-import {
-  Entity,
-  Column,
-  ManyToOne,
-  JoinColumn,
-  Index,
-} from 'typeorm';
+import { Entity, Column, ManyToOne, JoinColumn, Index } from 'typeorm';
 import { BaseEntity } from '../../../common/entities/base.entity';
 import { User } from '../../users/entities/user.entity';
 import { RepairerProfile } from '../../users/entities/repairer-profile.entity';
@@ -74,7 +68,13 @@ export class Payment extends BaseEntity {
   @Column({ name: 'platform_fee', type: 'decimal', precision: 10, scale: 2 })
   platformFee: number;
 
-  @Column({ name: 'platform_fee_percent', type: 'decimal', precision: 5, scale: 2, default: 5 })
+  @Column({
+    name: 'platform_fee_percent',
+    type: 'decimal',
+    precision: 5,
+    scale: 2,
+    default: 5,
+  })
   platformFeePercent: number;
 
   @Column({ name: 'repairer_amount', type: 'decimal', precision: 10, scale: 2 })
@@ -110,11 +110,21 @@ export class Payment extends BaseEntity {
   @Column({ name: 'phone_number', type: 'varchar', length: 20, nullable: true })
   phoneNumber?: string;
 
-  @Column({ name: 'transaction_ref', type: 'varchar', length: 100, nullable: true })
+  @Column({
+    name: 'transaction_ref',
+    type: 'varchar',
+    length: 100,
+    nullable: true,
+  })
   @Index()
   transactionRef?: string;
 
-  @Column({ name: 'external_ref', type: 'varchar', length: 100, nullable: true })
+  @Column({
+    name: 'external_ref',
+    type: 'varchar',
+    length: 100,
+    nullable: true,
+  })
   externalRef?: string;
 
   @Column({ name: 'paid_at', type: 'timestamptz', nullable: true })

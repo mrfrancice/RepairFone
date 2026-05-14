@@ -9,7 +9,12 @@ import { RepairerProfile } from '../users/entities/repairer-profile.entity';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([Conversation, Message, RepairRequest, RepairerProfile]),
+    TypeOrmModule.forFeature([
+      Conversation,
+      Message,
+      RepairRequest,
+      RepairerProfile,
+    ]),
   ],
   controllers: [ChatController],
   providers: [ChatService],

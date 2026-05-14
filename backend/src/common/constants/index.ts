@@ -58,24 +58,26 @@ export const HTTP_MESSAGES = {
   // Error messages - Forbidden
   FORBIDDEN: {
     ACCESS_DENIED: 'Acces non autorise',
-    NOT_YOUR_REQUEST: 'Vous n\'avez pas acces a cette demande',
-    NOT_YOUR_QUOTE: 'Vous n\'avez pas acces a ce devis',
-    NOT_YOUR_DISPUTE: 'Vous n\'avez pas acces a ce litige',
-    NOT_YOUR_SESSION: 'Cette session n\'est pas pour vous',
+    NOT_YOUR_REQUEST: "Vous n'avez pas acces a cette demande",
+    NOT_YOUR_QUOTE: "Vous n'avez pas acces a ce devis",
+    NOT_YOUR_DISPUTE: "Vous n'avez pas acces a ce litige",
+    NOT_YOUR_SESSION: "Cette session n'est pas pour vous",
     NOT_YOUR_CONVERSATION: 'Acces non autorise a cette conversation',
-    NOT_YOUR_PAYMENT: 'Vous n\'avez pas acces a ce paiement',
-    NOT_YOUR_REVIEW: 'Vous n\'avez pas acces a cet avis',
-    NOT_AN_EXPERT: 'Vous n\'etes pas un expert',
-    NO_REPAIRER_ASSIGNED: 'Cette demande n\'a pas encore de reparateur assigne',
+    NOT_YOUR_PAYMENT: "Vous n'avez pas acces a ce paiement",
+    NOT_YOUR_REVIEW: "Vous n'avez pas acces a cet avis",
+    NOT_AN_EXPERT: "Vous n'etes pas un expert",
+    NO_REPAIRER_ASSIGNED: "Cette demande n'a pas encore de reparateur assigne",
     CANNOT_MODIFY_ADMIN: 'Impossible de modifier un compte admin',
     CANNOT_DELETE_ADMIN: 'Impossible de supprimer un compte admin',
-    CANNOT_CREATE_DISPUTE: 'Vous ne pouvez pas creer un litige pour cette demande',
+    CANNOT_CREATE_DISPUTE:
+      'Vous ne pouvez pas creer un litige pour cette demande',
     CANNOT_ADD_EVIDENCE: 'Vous ne pouvez pas ajouter des preuves a ce litige',
     CANNOT_CANCEL_DISPUTE: 'Vous ne pouvez pas annuler ce litige',
     CANNOT_ACCEPT_QUOTE: 'Vous ne pouvez pas accepter ce devis',
     CANNOT_REJECT_QUOTE: 'Vous ne pouvez pas refuser ce devis',
     CANNOT_MODIFY_QUOTE: 'Vous ne pouvez pas modifier ce devis',
-    CANNOT_ACCEPT_COUNTER: 'Vous ne pouvez pas accepter cette contre-proposition',
+    CANNOT_ACCEPT_COUNTER:
+      'Vous ne pouvez pas accepter cette contre-proposition',
     CANNOT_CANCEL_NEGOTIATION: 'Vous ne pouvez pas annuler cette negociation',
     CANNOT_RATE_SESSION: 'Vous ne pouvez pas noter cette session',
   },
@@ -90,12 +92,12 @@ export const HTTP_MESSAGES = {
     ALREADY_REJECTED: 'Ce reparateur est deja rejete',
     ALREADY_ACTIVE: 'Ce compte est deja actif',
     ALREADY_SUSPENDED: 'Ce compte est deja suspendu',
-    NOT_SUSPENDED: 'Ce reparateur n\'est pas suspendu',
+    NOT_SUSPENDED: "Ce reparateur n'est pas suspendu",
     QUOTE_EXPIRED: 'Ce devis a expire',
     QUOTE_CANNOT_BE_ACCEPTED: 'Ce devis ne peut plus etre accepte',
     QUOTE_CANNOT_BE_REJECTED: 'Ce devis ne peut plus etre refuse',
     QUOTE_CANNOT_BE_MODIFIED: 'Ce devis ne peut plus etre modifie',
-    QUOTE_NOT_REJECTED: 'Ce devis n\'a pas ete refuse',
+    QUOTE_NOT_REJECTED: "Ce devis n'a pas ete refuse",
     QUOTE_ALREADY_ACCEPTED: 'Ce devis a deja ete accepte',
     NO_COUNTER_OFFER: 'Aucune contre-proposition de prix trouvee',
     DISPUTE_ALREADY_RESOLVED: 'Ce litige est deja resolu',
@@ -103,10 +105,10 @@ export const HTTP_MESSAGES = {
     SESSION_CANNOT_BE_ACCEPTED: 'Cette session ne peut plus etre acceptee',
     SESSION_CANNOT_BE_STARTED: 'Cette session ne peut pas etre demarree',
     SESSION_CANNOT_BE_COMPLETED: 'Cette session ne peut pas etre terminee',
-    SESSION_NOT_COMPLETED: 'Cette session n\'est pas terminee',
+    SESSION_NOT_COMPLETED: "Cette session n'est pas terminee",
     SESSION_ALREADY_RATED: 'Cette session a deja ete notee',
-    SESSION_NOT_ACTIVE: 'Cette session n\'est pas active',
-    EXPERT_NOT_AVAILABLE: 'Cet expert n\'est pas disponible',
+    SESSION_NOT_ACTIVE: "Cette session n'est pas active",
+    EXPERT_NOT_AVAILABLE: "Cet expert n'est pas disponible",
     EXPERT_NO_CONSEIL_TYPE: 'Cet expert ne propose pas ce type de conseil',
     EXPERT_NO_FORMAT: 'Cet expert ne propose pas ce format de conseil',
   },
@@ -116,7 +118,7 @@ export const HTTP_MESSAGES = {
     INVALID_CREDENTIALS: 'Identifiants incorrects',
     ACCOUNT_LOCKED: 'Compte temporairement verrouille',
     ACCOUNT_SUSPENDED: 'Votre compte est suspendu',
-    PHONE_NOT_VERIFIED: 'Veuillez d\'abord verifier votre numero de telephone',
+    PHONE_NOT_VERIFIED: "Veuillez d'abord verifier votre numero de telephone",
     INVALID_REFRESH_TOKEN: 'Token de rafraichissement invalide',
     USER_NOT_FOUND: 'Utilisateur non trouve',
   },
@@ -134,9 +136,11 @@ export const VALIDATION_MESSAGES = {
     UPPERCASE: 'Le mot de passe doit contenir au moins une lettre majuscule',
     LOWERCASE: 'Le mot de passe doit contenir au moins une lettre minuscule',
     DIGIT: 'Le mot de passe doit contenir au moins un chiffre',
-    SPECIAL_CHAR: 'Le mot de passe doit contenir au moins un caractere special (!@#$%^&*(),.?":{}|<>)',
+    SPECIAL_CHAR:
+      'Le mot de passe doit contenir au moins un caractere special (!@#$%^&*(),.?":{}|<>)',
     INVALID: 'Le mot de passe ne respecte pas les criteres de securite',
-    FULL_REQUIREMENTS: 'Le mot de passe doit contenir au moins 8 caracteres, une majuscule, une minuscule, un chiffre et un caractere special',
+    FULL_REQUIREMENTS:
+      'Le mot de passe doit contenir au moins 8 caracteres, une majuscule, une minuscule, un chiffre et un caractere special',
   },
 
   // Phone validation
@@ -148,8 +152,8 @@ export const VALIDATION_MESSAGES = {
 
   // Email validation
   EMAIL: {
-    REQUIRED: 'L\'adresse email est requise',
-    INVALID: 'L\'adresse email est invalide',
+    REQUIRED: "L'adresse email est requise",
+    INVALID: "L'adresse email est invalide",
   },
 
   // Generic validation
@@ -187,7 +191,8 @@ export const REGEX_PATTERNS = {
   /**
    * Password pattern: min 8 chars, 1 uppercase, 1 lowercase, 1 digit, 1 special char
    */
-  STRONG_PASSWORD: /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*(),.?":{}|<>])[A-Za-z\d!@#$%^&*(),.?":{}|<>]{8,}$/,
+  STRONG_PASSWORD:
+    /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*(),.?":{}|<>])[A-Za-z\d!@#$%^&*(),.?":{}|<>]{8,}$/,
 
   /**
    * UUID v4 pattern
@@ -238,7 +243,11 @@ export const FILE_UPLOAD = {
   /** Allowed image MIME types */
   ALLOWED_IMAGE_TYPES: ['image/jpeg', 'image/png', 'image/gif', 'image/webp'],
   /** Allowed document MIME types */
-  ALLOWED_DOCUMENT_TYPES: ['application/pdf', 'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'],
+  ALLOWED_DOCUMENT_TYPES: [
+    'application/pdf',
+    'application/msword',
+    'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+  ],
 } as const;
 
 // =============================================================================
@@ -247,7 +256,8 @@ export const FILE_UPLOAD = {
 
 export const SUCCESS_MESSAGES = {
   // Account management
-  ACCOUNT_CREATED: 'Compte cree. Veuillez verifier votre telephone avec le code OTP envoye.',
+  ACCOUNT_CREATED:
+    'Compte cree. Veuillez verifier votre telephone avec le code OTP envoye.',
   ACCOUNT_ACTIVATED: 'Compte active avec succes',
   ACCOUNT_SUSPENDED: 'Compte suspendu avec succes',
   ACCOUNT_DELETED: 'Compte supprime avec succes',

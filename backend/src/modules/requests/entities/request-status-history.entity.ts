@@ -7,7 +7,9 @@ export class RequestStatusHistory extends BaseEntity {
   @Column({ name: 'request_id', type: 'uuid' })
   requestId: string;
 
-  @ManyToOne(() => RepairRequest, (request) => request.statusHistory, { onDelete: 'CASCADE' })
+  @ManyToOne(() => RepairRequest, (request) => request.statusHistory, {
+    onDelete: 'CASCADE',
+  })
   @JoinColumn({ name: 'request_id' })
   request: RepairRequest;
 

@@ -3,7 +3,11 @@ import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
 import { getRepositoryToken } from '@nestjs/typeorm';
 import { Repository, MoreThan } from 'typeorm';
-import { UnauthorizedException, BadRequestException, ConflictException } from '@nestjs/common';
+import {
+  UnauthorizedException,
+  BadRequestException,
+  ConflictException,
+} from '@nestjs/common';
 import * as bcrypt from 'bcrypt';
 import { AuthService, RegisterDto, LoginDto } from './auth.service';
 import { UsersService } from '../users/users.service';
@@ -47,7 +51,9 @@ describe('AuthService', () => {
     preferredLanguage: 'fr',
     createdAt: new Date(),
     updatedAt: new Date(),
-    get fullName() { return `${this.firstName} ${this.lastName}`; },
+    get fullName() {
+      return `${this.firstName} ${this.lastName}`;
+    },
   } as User;
 
   const mockUnverifiedUser: User = {
@@ -225,8 +231,12 @@ describe('AuthService', () => {
       usersService.findByPhone.mockResolvedValue(mockUser);
 
       // Act & Assert
-      await expect(service.register(registerDto)).rejects.toThrow(ConflictException);
-      await expect(service.register(registerDto)).rejects.toThrow('Ce numero de telephone est deja utilise');
+      await expect(service.register(registerDto)).rejects.toThrow(
+        ConflictException,
+      );
+      await expect(service.register(registerDto)).rejects.toThrow(
+        'Ce numero de telephone est deja utilise',
+      );
     });
 
     it('should register a repairer with profile', async () => {
@@ -331,18 +341,27 @@ describe('AuthService', () => {
       usersService.findByPhone.mockResolvedValue(null);
 
       // Act & Assert
-      await expect(service.login(loginDto)).rejects.toThrow(UnauthorizedException);
-      await expect(service.login(loginDto)).rejects.toThrow('Identifiants incorrects');
+      await expect(service.login(loginDto)).rejects.toThrow(
+        UnauthorizedException,
+      );
+      await expect(service.login(loginDto)).rejects.toThrow(
+        'Identifiants incorrects',
+      );
     });
 
     it('should throw UnauthorizedException if password is invalid', async () => {
       // Arrange
-      usersService.findByPhone.mockResolvedValue({ ...mockUser, failedLoginAttempts: 0 } as User);
+      usersService.findByPhone.mockResolvedValue({
+        ...mockUser,
+        failedLoginAttempts: 0,
+      } as User);
       (bcrypt.compare as jest.Mock).mockResolvedValue(false);
       usersService.incrementFailedAttempts.mockResolvedValue(undefined);
 
       // Act & Assert
-      await expect(service.login(loginDto)).rejects.toThrow(UnauthorizedException);
+      await expect(service.login(loginDto)).rejects.toThrow(
+        UnauthorizedException,
+      );
     });
 
     it('should throw UnauthorizedException if phone not verified', async () => {
@@ -351,8 +370,12 @@ describe('AuthService', () => {
       (bcrypt.compare as jest.Mock).mockResolvedValue(true);
 
       // Act & Assert
-      await expect(service.login(loginDto)).rejects.toThrow(UnauthorizedException);
-      await expect(service.login(loginDto)).rejects.toThrow('Veuillez d\'abord verifier votre numero de telephone');
+      await expect(service.login(loginDto)).rejects.toThrow(
+        UnauthorizedException,
+      );
+      await expect(service.login(loginDto)).rejects.toThrow(
+        "Veuillez d'abord verifier votre numero de telephone",
+      );
     });
 
     it('should throw UnauthorizedException if account is suspended', async () => {
@@ -361,8 +384,12 @@ describe('AuthService', () => {
       (bcrypt.compare as jest.Mock).mockResolvedValue(true);
 
       // Act & Assert
-      await expect(service.login(loginDto)).rejects.toThrow(UnauthorizedException);
-      await expect(service.login(loginDto)).rejects.toThrow('Votre compte est suspendu');
+      await expect(service.login(loginDto)).rejects.toThrow(
+        UnauthorizedException,
+      );
+      await expect(service.login(loginDto)).rejects.toThrow(
+        'Votre compte est suspendu',
+      );
     });
 
     it('should throw UnauthorizedException if account is locked', async () => {
@@ -370,24 +397,34 @@ describe('AuthService', () => {
       usersService.findByPhone.mockResolvedValue(mockLockedUser);
 
       // Act & Assert
-      await expect(service.login(loginDto)).rejects.toThrow(UnauthorizedException);
+      await expect(service.login(loginDto)).rejects.toThrow(
+        UnauthorizedException,
+      );
     });
 
     it('should lock account after 5 failed attempts', async () => {
       // Arrange
-      const userWith4FailedAttempts = { ...mockUser, failedLoginAttempts: 4 } as User;
+      const userWith4FailedAttempts = {
+        ...mockUser,
+        failedLoginAttempts: 4,
+      } as User;
       usersService.findByPhone.mockResolvedValue(userWith4FailedAttempts);
       (bcrypt.compare as jest.Mock).mockResolvedValue(false);
       usersService.lockAccount.mockResolvedValue(undefined);
 
       // Act & Assert
-      await expect(service.login(loginDto)).rejects.toThrow(UnauthorizedException);
+      await expect(service.login(loginDto)).rejects.toThrow(
+        UnauthorizedException,
+      );
       expect(usersService.lockAccount).toHaveBeenCalled();
     });
 
     it('should reset failed attempts on successful login', async () => {
       // Arrange
-      const userWithFailedAttempts = { ...mockUser, failedLoginAttempts: 2 } as User;
+      const userWithFailedAttempts = {
+        ...mockUser,
+        failedLoginAttempts: 2,
+      } as User;
       usersService.findByPhone.mockResolvedValue(userWithFailedAttempts);
       (bcrypt.compare as jest.Mock).mockResolvedValue(true);
       usersService.resetLoginAttempts.mockResolvedValue(undefined);
@@ -427,7 +464,10 @@ describe('AuthService', () => {
       expect(otpRepository.delete).toHaveBeenCalledWith({ phone });
       expect(otpRepository.create).toHaveBeenCalled();
       expect(otpRepository.save).toHaveBeenCalled();
-      expect(smsService.sendOtp).toHaveBeenCalledWith(phone, expect.any(String));
+      expect(smsService.sendOtp).toHaveBeenCalledWith(
+        phone,
+        expect.any(String),
+      );
     });
 
     it('should return devCode in development mode', async () => {
@@ -464,7 +504,9 @@ describe('AuthService', () => {
       smsService.sendOtp.mockResolvedValue({ success: false });
 
       // Act & Assert
-      await expect(service.generateOtp(phone)).rejects.toThrow(BadRequestException);
+      await expect(service.generateOtp(phone)).rejects.toThrow(
+        BadRequestException,
+      );
     });
   });
 
@@ -509,32 +551,50 @@ describe('AuthService', () => {
       otpRepository.findOne.mockResolvedValue(null);
 
       // Act & Assert
-      await expect(service.verifyOtp(phone, code)).rejects.toThrow(BadRequestException);
-      await expect(service.verifyOtp(phone, code)).rejects.toThrow('Code OTP invalide ou expiré');
+      await expect(service.verifyOtp(phone, code)).rejects.toThrow(
+        BadRequestException,
+      );
+      await expect(service.verifyOtp(phone, code)).rejects.toThrow(
+        'Code OTP invalide ou expiré',
+      );
     });
 
     it('should throw BadRequestException if code does not match', async () => {
       // Arrange
       const otpWithDifferentCode = { ...mockOtp, code: '654321' };
       otpRepository.findOne.mockResolvedValue(otpWithDifferentCode);
-      otpRepository.save.mockResolvedValue({ ...otpWithDifferentCode, attempts: 1 });
+      otpRepository.save.mockResolvedValue({
+        ...otpWithDifferentCode,
+        attempts: 1,
+      });
       configService.get.mockReturnValue(3);
 
       // Act & Assert
-      await expect(service.verifyOtp(phone, code)).rejects.toThrow(BadRequestException);
-      await expect(service.verifyOtp(phone, code)).rejects.toThrow('Code OTP invalide');
+      await expect(service.verifyOtp(phone, code)).rejects.toThrow(
+        BadRequestException,
+      );
+      await expect(service.verifyOtp(phone, code)).rejects.toThrow(
+        'Code OTP invalide',
+      );
     });
 
     it('should throw BadRequestException if max attempts exceeded', async () => {
       // Arrange
       const otpWithMaxAttempts = { ...mockOtp, attempts: 3 };
       otpRepository.findOne.mockResolvedValue(otpWithMaxAttempts);
-      otpRepository.save.mockResolvedValue({ ...otpWithMaxAttempts, attempts: 4 });
+      otpRepository.save.mockResolvedValue({
+        ...otpWithMaxAttempts,
+        attempts: 4,
+      });
       configService.get.mockReturnValue(3);
 
       // Act & Assert
-      await expect(service.verifyOtp(phone, code)).rejects.toThrow(BadRequestException);
-      await expect(service.verifyOtp(phone, code)).rejects.toThrow('Nombre maximum de tentatives atteint');
+      await expect(service.verifyOtp(phone, code)).rejects.toThrow(
+        BadRequestException,
+      );
+      await expect(service.verifyOtp(phone, code)).rejects.toThrow(
+        'Nombre maximum de tentatives atteint',
+      );
     });
 
     it('should throw BadRequestException if user not found', async () => {
@@ -545,8 +605,12 @@ describe('AuthService', () => {
       configService.get.mockReturnValue(3);
 
       // Act & Assert
-      await expect(service.verifyOtp(phone, code)).rejects.toThrow(BadRequestException);
-      await expect(service.verifyOtp(phone, code)).rejects.toThrow('Utilisateur non trouvé');
+      await expect(service.verifyOtp(phone, code)).rejects.toThrow(
+        BadRequestException,
+      );
+      await expect(service.verifyOtp(phone, code)).rejects.toThrow(
+        'Utilisateur non trouvé',
+      );
     });
   });
 
@@ -585,8 +649,12 @@ describe('AuthService', () => {
       refreshTokenRepository.find.mockResolvedValue([]);
 
       // Act & Assert
-      await expect(service.refreshToken(refreshTokenString)).rejects.toThrow(UnauthorizedException);
-      await expect(service.refreshToken(refreshTokenString)).rejects.toThrow('Token de rafraîchissement invalide');
+      await expect(service.refreshToken(refreshTokenString)).rejects.toThrow(
+        UnauthorizedException,
+      );
+      await expect(service.refreshToken(refreshTokenString)).rejects.toThrow(
+        'Token de rafraîchissement invalide',
+      );
     });
 
     it('should throw UnauthorizedException if token does not match any stored hash', async () => {
@@ -595,7 +663,9 @@ describe('AuthService', () => {
       (bcrypt.compare as jest.Mock).mockResolvedValue(false);
 
       // Act & Assert
-      await expect(service.refreshToken(refreshTokenString)).rejects.toThrow(UnauthorizedException);
+      await expect(service.refreshToken(refreshTokenString)).rejects.toThrow(
+        UnauthorizedException,
+      );
     });
   });
 
@@ -606,7 +676,11 @@ describe('AuthService', () => {
     it('should revoke all refresh tokens for user', async () => {
       // Arrange
       const userId = 'user-uuid-1';
-      refreshTokenRepository.update.mockResolvedValue({ affected: 1, raw: {}, generatedMaps: [] });
+      refreshTokenRepository.update.mockResolvedValue({
+        affected: 1,
+        raw: {},
+        generatedMaps: [],
+      });
 
       // Act
       await service.logout(userId);

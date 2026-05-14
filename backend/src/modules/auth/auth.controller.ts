@@ -80,7 +80,10 @@ export class AuthController {
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'Authenticate with Firebase Phone Auth' })
   async firebaseAuth(@Body() dto: FirebaseAuthDto) {
-    return this.authService.authenticateWithFirebase(dto.idToken, dto.displayName);
+    return this.authService.authenticateWithFirebase(
+      dto.idToken,
+      dto.displayName,
+    );
   }
 
   @Get('firebase/status')
@@ -116,9 +119,12 @@ export class AuthController {
   @ApiOperation({
     summary: 'Demander un email de réinitialisation de mot de passe',
     description:
-      'Retourne toujours un message générique pour éviter l\'énumération de comptes.',
+      "Retourne toujours un message générique pour éviter l'énumération de comptes.",
   })
-  async forgotPassword(@Body() body: { identifier: string }, @Req() req: Request) {
+  async forgotPassword(
+    @Body() body: { identifier: string },
+    @Req() req: Request,
+  ) {
     const ip = req.ip || req.socket.remoteAddress;
     return this.authService.requestPasswordReset(body.identifier, ip);
   }
@@ -127,7 +133,9 @@ export class AuthController {
   @Public()
   @HttpCode(HttpStatus.OK)
   @Throttle({ default: { limit: 5, ttl: 60000 } })
-  @ApiOperation({ summary: 'Réinitialiser le mot de passe avec un token reçu par email' })
+  @ApiOperation({
+    summary: 'Réinitialiser le mot de passe avec un token reçu par email',
+  })
   async resetPassword(@Body() body: { token: string; newPassword: string }) {
     return this.authService.resetPassword(body.token, body.newPassword);
   }
@@ -149,7 +157,9 @@ export class AuthController {
   @Post('verify-email')
   @Public()
   @HttpCode(HttpStatus.OK)
-  @ApiOperation({ summary: "Valider un token de vérification d'email reçu par lien" })
+  @ApiOperation({
+    summary: "Valider un token de vérification d'email reçu par lien",
+  })
   async verifyEmail(@Body() body: { token: string }) {
     return this.authService.verifyEmail(body.token);
   }

@@ -45,7 +45,10 @@ export class QuotesScheduler {
         `Successfully expired ${expiredQuotes.length} quote(s): [${expiredQuoteIds.join(', ')}]`,
       );
     } catch (error) {
-      this.logger.error('Failed to expire quotes', error instanceof Error ? error.stack : error);
+      this.logger.error(
+        'Failed to expire quotes',
+        error instanceof Error ? error.stack : error,
+      );
     }
   }
 }

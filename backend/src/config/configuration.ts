@@ -36,7 +36,9 @@ export default () => ({
   },
 
   cors: {
-    allowedOrigins: process.env.ALLOWED_ORIGINS?.split(',') || ['http://localhost:4200'],
+    allowedOrigins: process.env.ALLOWED_ORIGINS?.split(',') || [
+      'http://localhost:4200',
+    ],
   },
 
   throttle: {

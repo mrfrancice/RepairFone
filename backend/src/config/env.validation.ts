@@ -49,14 +49,18 @@ export class EnvironmentVariables {
 
   // JWT (required, with minimum length)
   @IsString()
-  @MinLength(32, { message: 'JWT_SECRET must be at least 32 characters for security' })
+  @MinLength(32, {
+    message: 'JWT_SECRET must be at least 32 characters for security',
+  })
   JWT_SECRET: string;
 
   @IsString()
   JWT_EXPIRATION: string = '15m';
 
   @IsString()
-  @MinLength(32, { message: 'JWT_REFRESH_SECRET must be at least 32 characters for security' })
+  @MinLength(32, {
+    message: 'JWT_REFRESH_SECRET must be at least 32 characters for security',
+  })
   JWT_REFRESH_SECRET: string;
 
   @IsString()
@@ -135,9 +139,7 @@ export function validate(config: Record<string, unknown>) {
     );
 
     if (missing.length > 0) {
-      throw new Error(
-        `Production environment requires: ${missing.join(', ')}`,
-      );
+      throw new Error(`Production environment requires: ${missing.join(', ')}`);
     }
   }
 
