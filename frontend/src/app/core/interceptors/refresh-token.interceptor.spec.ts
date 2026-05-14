@@ -2,7 +2,6 @@ import { TestBed } from '@angular/core/testing';
 import { HttpClient, provideHttpClient, withInterceptors } from '@angular/common/http';
 import { provideHttpClientTesting, HttpTestingController } from '@angular/common/http/testing';
 import { Router } from '@angular/router';
-import { of } from 'rxjs';
 import { refreshTokenInterceptor } from './refresh-token.interceptor';
 import { AuthStore } from '../stores/auth.store';
 import { LoggerService } from '../services/logger.service';
@@ -10,11 +9,14 @@ import { SecureStorageService } from '../services/secure-storage.service';
 import { environment } from '../../../environments/environment';
 
 /**
- * Tests refreshTokenInterceptor. Cible 4 scenarios :
- *   1. Endpoints /auth/* sont bypasses (pas de tentative de refresh sur eux).
- *   2. 401 sans refresh token stocke → erreur propagee.
- *   3. 401 avec refresh OK → POST /auth/refresh + retry de la requete originale.
- *   4. 401 mais refresh fail → logout + redirect /auth/login.
+ * Tests refreshTokenInterceptor. Cible les 4 scenarios principaux + le
+ * happy path (401 → refresh → retry).
+ *
+ * NB : `isRefreshing` et `refreshTokenSubject` sont du state global au
+ * module (module-level let/const). En theorie ca peut polluer entre
+ * tests, mais l'interceptor remet `isRefreshing = false` dans tous les
+ * chemins (succes + erreur + handleRefreshError), donc l'isolation est
+ * correcte en pratique tant qu'on attend la fin de chaque flow.
  */
 describe('refreshTokenInterceptor', () => {
   let http: HttpClient;
@@ -104,5 +106,67 @@ describe('refreshTokenInterceptor', () => {
     });
     const req = httpTesting.expectOne(`${environment.apiUrl}/anything`);
     req.flush('boom', { status: 500, statusText: 'Internal Server Error' });
+  });
+
+  // ─────────────────────────────────────────────────────────────────────
+  // Happy path : 401 → POST /auth/refresh → setToken + retry
+  // ─────────────────────────────────────────────────────────────────────
+
+  it('401 avec refresh token OK → POST /auth/refresh → retry requete avec nouveau token', (done) => {
+    authStoreMock.getRefreshToken.and.returnValue(Promise.resolve('old-refresh'));
+
+    http.get<{ ok: boolean }>(`${environment.apiUrl}/users/me`).subscribe({
+      next: (body) => {
+        // Le retry a reussi : on recoit le body final
+        expect(body.ok).toBe(true);
+        // Le nouveau access token a ete propage dans le store
+        expect(authStoreMock.setToken).toHaveBeenCalledWith('new-access');
+        expect(authStoreMock.setRefreshToken).toHaveBeenCalledWith('new-refresh');
+        done();
+      },
+      error: (err) => fail(`should retry successfully, got error: ${err.message}`),
+    });
+
+    // 1. La requete originale est interceptee, le backend repond 401
+    const original = httpTesting.expectOne(`${environment.apiUrl}/users/me`);
+    original.flush('unauthorized', { status: 401, statusText: 'Unauthorized' });
+
+    // 2. L'interceptor lit le refresh token (async via Promise) puis appelle
+    //    POST /auth/refresh. setTimeout(0) laisse la microtask Promise se
+    //    resoudre avant qu'on flush la requete suivante.
+    setTimeout(() => {
+      const refresh = httpTesting.expectOne(`${environment.apiUrl}/auth/refresh`);
+      expect(refresh.request.method).toBe('POST');
+      expect(refresh.request.body).toEqual({ refreshToken: 'old-refresh' });
+      refresh.flush({ accessToken: 'new-access', refreshToken: 'new-refresh' });
+
+      // 3. La requete originale est rejouee avec le nouveau token
+      setTimeout(() => {
+        const retry = httpTesting.expectOne(`${environment.apiUrl}/users/me`);
+        expect(retry.request.headers.get('Authorization')).toBe('Bearer new-access');
+        retry.flush({ ok: true });
+      }, 0);
+    }, 0);
+  });
+
+  it('refresh fail → logout + redirect /auth/login', (done) => {
+    authStoreMock.getRefreshToken.and.returnValue(Promise.resolve('old-refresh'));
+
+    http.get(`${environment.apiUrl}/users/me`).subscribe({
+      next: () => fail('should not succeed'),
+      error: () => {
+        expect(authStoreMock.logout).toHaveBeenCalled();
+        expect(routerMock.navigate).toHaveBeenCalledWith(['/auth/login']);
+        done();
+      },
+    });
+
+    const original = httpTesting.expectOne(`${environment.apiUrl}/users/me`);
+    original.flush('unauthorized', { status: 401, statusText: 'Unauthorized' });
+
+    setTimeout(() => {
+      const refresh = httpTesting.expectOne(`${environment.apiUrl}/auth/refresh`);
+      refresh.flush('refresh expired', { status: 401, statusText: 'Unauthorized' });
+    }, 0);
   });
 });
