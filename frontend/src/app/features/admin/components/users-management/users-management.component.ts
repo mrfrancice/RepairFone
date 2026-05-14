@@ -1,10 +1,21 @@
-import { getErrorMessage } from '../../../../shared/utils/error.utils';
+import { Component, inject, signal, OnInit, DestroyRef, ChangeDetectionStrategy } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { RouterLink, ActivatedRoute, Router } from '@angular/router';
+import { FormsModule } from '@angular/forms';
+import { AdminService, UserForAdmin } from '../../services/admin.service';
+import { UiHeaderComponent } from '@app/features/common/components';
+import { HeaderSearchComponent } from '../../../../shared/components/header-search/header-search.component';
 import {
   UiDataGridComponent,
   UiDataGridColumnComponent,
   DataGridPageEvent,
   DataGridSortEvent,
 } from '../../../../shared/components/ui-data-grid';
+import { InitialsPipe } from '../../../../shared/pipes/initials.pipe';
+import { RoleLabelPipe } from '../../../../shared/pipes/role-label.pipe';
+import { getErrorMessage } from '../../../../shared/utils/error.utils';
+import { StatusLabelsService, UserStatus } from '../../../../shared/services/status-labels.service';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 
 type RoleFilter = 'all' | 'client' | 'repairer';
 type StatusFilter = 'all' | 'pending' | 'active' | 'suspended' | 'deactivated';
@@ -1282,7 +1293,7 @@ export class UsersManagementComponent implements OnInit {
       await this.adminService.activateUser(id);
       await this.loadUsers();
     } catch (err: unknown) {
-      alert(err.message || 'Erreur');
+      alert(getErrorMessage(err, 'Erreur'));
     } finally {
       this.isProcessing.set(false);
     }
@@ -1309,7 +1320,7 @@ export class UsersManagementComponent implements OnInit {
       this.closeModal();
       await this.loadUsers();
     } catch (err: unknown) {
-      alert(err.message || 'Erreur');
+      alert(getErrorMessage(err, 'Erreur'));
     } finally {
       this.isProcessing.set(false);
     }

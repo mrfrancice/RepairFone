@@ -8,9 +8,13 @@ import { environment } from '../../../environments/environment';
  * serialisable JSON ou FormData. `unknown` plutot que `any` pour empecher
  * les acces non typés cote caller (le caller doit toujours typer
  * explicitement ce qu'il envoie).
+ *
+ * `ApiParams` reste large car les domaines passent leurs propres shapes
+ * (RequestStatus[], filtres complexes, etc.) ; le filtrage des valeurs
+ * non-serialisables a lieu dans cleanParams.
  */
 type ApiBody = unknown;
-type ApiParams = Record<string, string | number | boolean | null | undefined>;
+type ApiParams = Record<string, unknown>;
 
 @Injectable({ providedIn: 'root' })
 export class ApiService {

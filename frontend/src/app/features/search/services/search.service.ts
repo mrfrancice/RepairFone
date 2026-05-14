@@ -104,7 +104,7 @@ export class SearchService {
 
     try {
       const result = await firstValueFrom(
-        this.api.get<SearchResult>('/repairers', params)
+        this.api.get<SearchResult>('/repairers', params as unknown as Record<string, unknown>)
       );
       return result;
     } finally {

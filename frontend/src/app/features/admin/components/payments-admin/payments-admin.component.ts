@@ -1,4 +1,3 @@
-import { getErrorMessage } from '../../../../shared/utils/error.utils';
 import {
   Component,
   inject,
@@ -8,17 +7,24 @@ import {
   DestroyRef,
   ChangeDetectionStrategy,
 } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { ActivatedRoute, Router } from '@angular/router';
+import { FormsModule } from '@angular/forms';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import {
   AdminService,
   PaymentForAdmin,
   PaymentsAdminStats,
 } from '../../services/admin.service';
+import { UiHeaderComponent } from '@app/features/common/components';
+import { HeaderSearchComponent } from '../../../../shared/components/header-search/header-search.component';
 import {
   UiDataGridComponent,
   UiDataGridColumnComponent,
   DataGridPageEvent,
   DataGridSortEvent,
 } from '../../../../shared/components/ui-data-grid';
+import { getErrorMessage } from '../../../../shared/utils/error.utils';
 
 type StatusFilter = 'all' | 'pending' | 'processing' | 'completed' | 'failed' | 'refunded' | 'blocked';
 type SortField = 'createdAt' | 'amount' | 'status' | 'paidAt';
