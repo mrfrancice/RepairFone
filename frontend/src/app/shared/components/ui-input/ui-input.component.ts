@@ -2,6 +2,8 @@ import { Component, Input, Output, EventEmitter, forwardRef, ChangeDetectionStra
 import { CommonModule } from '@angular/common';
 import { ControlValueAccessor, NG_VALUE_ACCESSOR, FormsModule } from '@angular/forms';
 
+export type UiInputValue = string | number | null;
+
 @Component({
   selector: 'ui-input',
   standalone: true,
@@ -378,9 +380,9 @@ export class UiInputComponent implements ControlValueAccessor {
 
   readonly inputId = `ui-input-${UiInputComponent.nextId++}`;
 
-  value: any = '';
+  value: UiInputValue = '';
   showPassword = false;
-  onChange: (value: any) => void = () => {};
+  onChange: (value: UiInputValue) => void = () => {};
   onTouched: () => void = () => {};
 
   get inputType(): string {
@@ -390,15 +392,15 @@ export class UiInputComponent implements ControlValueAccessor {
     return this.type;
   }
 
-  writeValue(value: any): void {
-    this.value = value || '';
+  writeValue(value: UiInputValue): void {
+    this.value = value ?? '';
   }
 
-  registerOnChange(fn: any): void {
+  registerOnChange(fn: (value: UiInputValue) => void): void {
     this.onChange = fn;
   }
 
-  registerOnTouched(fn: any): void {
+  registerOnTouched(fn: () => void): void {
     this.onTouched = fn;
   }
 
@@ -406,7 +408,7 @@ export class UiInputComponent implements ControlValueAccessor {
     this.disabled = isDisabled;
   }
 
-  onValueChange(value: any): void {
+  onValueChange(value: UiInputValue): void {
     this.value = value;
     this.onChange(value);
   }
