@@ -20,7 +20,7 @@ import { RepairersService } from './repairers.service';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
 import { FileUploadService } from '../../common/services/file-upload.service';
-import { User } from './entities/user.entity';
+import { User, UserRole } from './entities/user.entity';
 import { RepairerProfile } from './entities/repairer-profile.entity';
 import { UpdateUserDto, UpdateRepairerProfileDto } from './dto';
 import { BadRequestException } from '@nestjs/common';
@@ -104,7 +104,7 @@ export class UsersController {
     @Body() data: UpdateRepairerProfileDto,
   ): Promise<RepairerProfile> {
     // Check if user is a repairer
-    if (user.role !== 'repairer') {
+    if (user.role !== UserRole.REPAIRER) {
       throw new ForbiddenException(
         'Seuls les réparateurs peuvent modifier leur profil réparateur',
       );

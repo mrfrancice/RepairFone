@@ -21,7 +21,7 @@ import { RatingStep } from './entities/step-rating.entity';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
 import { Public } from '../../common/decorators/public.decorator';
-import { User } from '../users/entities/user.entity';
+import { User, UserRole } from '../users/entities/user.entity';
 
 @ApiTags('Reviews')
 @Controller('reviews')
@@ -43,7 +43,7 @@ export class ReviewsController {
   @ApiQuery({ name: 'page', required: false })
   @ApiQuery({ name: 'limit', required: false })
   findMy(@CurrentUser() user: User, @Query() filters: ReviewFilters) {
-    if (user.role === 'repairer') {
+    if (user.role === UserRole.REPAIRER) {
       return this.reviewsService.findByRepairer(user.id, filters);
     }
     return this.reviewsService.findByClient(user.id, filters);
@@ -86,7 +86,7 @@ export class ReviewsController {
     // Need to fetch the request to check ownership
     const isClient = review.clientId === user.id;
     const isRepairer = review.repairer?.userId === user.id;
-    const isAdmin = user.role === 'admin';
+    const isAdmin = user.role === UserRole.ADMIN;
 
     if (!isClient && !isRepairer && !isAdmin) {
       throw new ForbiddenException("Vous n'avez pas accès à cet avis");
@@ -134,7 +134,7 @@ export class ReviewsController {
     const firstRating = result.ratings[0];
     const isClient = firstRating.clientId === user.id;
     const isRepairer = firstRating.repairerId === user.id;
-    const isAdmin = user.role === 'admin';
+    const isAdmin = user.role === UserRole.ADMIN;
 
     if (!isClient && !isRepairer && !isAdmin) {
       throw new ForbiddenException("Vous n'avez pas accès à ces notes");

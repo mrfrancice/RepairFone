@@ -3,6 +3,7 @@ import { PassportStrategy } from '@nestjs/passport';
 import { ExtractJwt, Strategy } from 'passport-jwt';
 import { ConfigService } from '@nestjs/config';
 import { UsersService } from '../../users/users.service';
+import { UserStatus } from '../../users/entities/user.entity';
 
 export interface JwtPayload {
   sub: string;
@@ -30,7 +31,7 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
       throw new UnauthorizedException('Utilisateur non trouvé');
     }
 
-    if (user.status === 'suspended') {
+    if (user.status === UserStatus.SUSPENDED) {
       throw new UnauthorizedException('Compte suspendu');
     }
 

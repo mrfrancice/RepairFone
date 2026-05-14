@@ -23,7 +23,7 @@ import {
 } from './disputes.service';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
-import { User } from '../users/entities/user.entity';
+import { User, UserRole } from '../users/entities/user.entity';
 import { DisputeStatus } from './entities/dispute.entity';
 
 @ApiTags('Disputes')
@@ -63,7 +63,7 @@ export class DisputesController {
     // Authorization: User must be the client, the repairer, or an admin
     const isClient = dispute.clientId === user.id;
     const isRepairer = dispute.repairer?.userId === user.id;
-    const isAdmin = user.role === 'admin';
+    const isAdmin = user.role === UserRole.ADMIN;
 
     if (!isClient && !isRepairer && !isAdmin) {
       throw new ForbiddenException("Vous n'avez pas accès à ce litige");

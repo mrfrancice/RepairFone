@@ -111,7 +111,7 @@ export class AuditInterceptor implements NestInterceptor {
     );
   }
 
-  private getActionFromMethod(method: string): string {
+  private getActionFromMethod(method: string): AuditAction {
     switch (method) {
       case 'POST':
         return AuditAction.CREATE;
@@ -121,7 +121,8 @@ export class AuditInterceptor implements NestInterceptor {
       case 'DELETE':
         return AuditAction.DELETE;
       default:
-        return method;
+        // Methods are pre-filtered (POST/PUT/PATCH/DELETE), default unreachable.
+        return AuditAction.UPDATE;
     }
   }
 

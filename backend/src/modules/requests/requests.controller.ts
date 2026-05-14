@@ -24,7 +24,7 @@ import {
 } from './dto';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
-import { User } from '../users/entities/user.entity';
+import { User, UserRole } from '../users/entities/user.entity';
 
 @ApiTags('Repair Requests')
 @Controller('requests')
@@ -45,7 +45,7 @@ export class RequestsController {
   @ApiQuery({ name: 'page', required: false })
   @ApiQuery({ name: 'limit', required: false })
   findMy(@CurrentUser() user: User, @Query() filters: RequestFilters) {
-    if (user.role === 'repairer') {
+    if (user.role === UserRole.REPAIRER) {
       return this.requestsService.findByRepairer(user.id, filters);
     }
     return this.requestsService.findByClient(user.id, filters);
@@ -68,7 +68,7 @@ export class RequestsController {
     // Authorization: User must be the client, the repairer, or an admin
     const isClient = request.clientId === user.id;
     const isRepairer = request.repairer?.userId === user.id;
-    const isAdmin = user.role === 'admin';
+    const isAdmin = user.role === UserRole.ADMIN;
 
     if (!isClient && !isRepairer && !isAdmin) {
       throw new ForbiddenException("Vous n'avez pas accès à cette demande");

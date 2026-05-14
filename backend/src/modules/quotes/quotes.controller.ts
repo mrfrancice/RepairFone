@@ -20,7 +20,7 @@ import { QuotesService } from './quotes.service';
 import { CreateQuoteDto, UpdateQuoteDto, QuoteFilters } from './dto';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
-import { User } from '../users/entities/user.entity';
+import { User, UserRole } from '../users/entities/user.entity';
 import { QuoteStatus } from './entities/quote.entity';
 
 @ApiTags('Quotes')
@@ -42,7 +42,7 @@ export class QuotesController {
   @ApiQuery({ name: 'page', required: false })
   @ApiQuery({ name: 'limit', required: false })
   findMy(@CurrentUser() user: User, @Query() filters: QuoteFilters) {
-    if (user.role === 'repairer') {
+    if (user.role === UserRole.REPAIRER) {
       return this.quotesService.findByRepairer(user.id, filters);
     }
     return this.quotesService.findByClient(user.id, filters);
@@ -63,7 +63,7 @@ export class QuotesController {
     // Authorization: User must be the client, the repairer, or an admin
     const isClient = quote.request.clientId === user.id;
     const isRepairer = quote.repairer?.userId === user.id;
-    const isAdmin = user.role === 'admin';
+    const isAdmin = user.role === UserRole.ADMIN;
 
     if (!isClient && !isRepairer && !isAdmin) {
       throw new ForbiddenException("Vous n'avez pas accès à ce devis");
@@ -88,7 +88,7 @@ export class QuotesController {
     const firstQuote = quotes[0];
     const isClient = firstQuote.request.clientId === user.id;
     const isRepairer = firstQuote.repairer?.userId === user.id;
-    const isAdmin = user.role === 'admin';
+    const isAdmin = user.role === UserRole.ADMIN;
 
     if (!isClient && !isRepairer && !isAdmin) {
       throw new ForbiddenException(
@@ -110,7 +110,7 @@ export class QuotesController {
     // Authorization: User must be the client, the repairer, or an admin
     const isClient = quote.request.clientId === user.id;
     const isRepairer = quote.repairer?.userId === user.id;
-    const isAdmin = user.role === 'admin';
+    const isAdmin = user.role === UserRole.ADMIN;
 
     if (!isClient && !isRepairer && !isAdmin) {
       throw new ForbiddenException("Vous n'avez pas accès à ce devis");

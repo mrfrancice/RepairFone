@@ -14,7 +14,7 @@ import * as bcrypt from 'bcrypt';
 import * as crypto from 'crypto';
 import { UsersService } from '../users/users.service';
 import { RepairersService } from '../users/repairers.service';
-import { User, UserRole } from '../users/entities/user.entity';
+import { User, UserRole, UserStatus } from '../users/entities/user.entity';
 import { OtpCode } from './entities/otp.entity';
 import { RefreshToken } from './entities/refresh-token.entity';
 import { PasswordResetToken } from './entities/password-reset-token.entity';
@@ -216,7 +216,7 @@ export class AuthService {
       );
     }
 
-    if (user.status === 'suspended') {
+    if (user.status === UserStatus.SUSPENDED) {
       this.logger.warn(`Login failed: account suspended for user ${user.id}`);
       throw new UnauthorizedException('Votre compte est suspendu');
     }

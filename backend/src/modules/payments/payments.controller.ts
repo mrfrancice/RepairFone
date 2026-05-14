@@ -22,7 +22,7 @@ import { ReceiptService } from './receipt.service';
 import { InitiatePaymentDto, PaymentFilters } from './dto';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
-import { User } from '../users/entities/user.entity';
+import { User, UserRole } from '../users/entities/user.entity';
 import { PaymentStatus, PaymentType } from './entities/payment.entity';
 
 @ApiTags('Payments')
@@ -66,7 +66,7 @@ export class PaymentsController {
     // Authorization: User must be the client, the repairer, or an admin
     const isClient = payment.clientId === user.id;
     const isRepairer = payment.repairer?.userId === user.id;
-    const isAdmin = user.role === 'admin';
+    const isAdmin = user.role === UserRole.ADMIN;
 
     if (!isClient && !isRepairer && !isAdmin) {
       throw new ForbiddenException("Vous n'avez pas accès à ce paiement");
