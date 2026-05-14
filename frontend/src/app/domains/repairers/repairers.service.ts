@@ -2,7 +2,8 @@ import { Injectable, inject, signal, computed } from '@angular/core';
 import { firstValueFrom } from 'rxjs';
 import { ApiService } from '@app/core/services/api.service';
 import { SettingsService } from '@app/core/services/settings.service';
-import type { CreateQuoteDto } from '@app/domains/quotes';
+import type { CreateQuoteDto, Quote } from '@app/domains/quotes';
+import { getErrorMessage } from '@app/shared/utils/error.utils';
 import type {
   KycDocument,
   RepairerBadge,
@@ -41,8 +42,8 @@ export class RepairersService {
         this.api.patch<RepairerProfile>('/repairers/profile/me', dto)
       );
       return result;
-    } catch (err: any) {
-      this.error.set(err.message || 'Erreur lors de la mise à jour du profil');
+    } catch (err: unknown) {
+      this.error.set(getErrorMessage(err, 'Erreur lors de la mise à jour du profil'));
       throw err;
     } finally {
       this.isLoading.set(false);
@@ -92,9 +93,9 @@ export class RepairersService {
   }
 
   // Create a quote for a request
-  async createQuote(dto: CreateQuoteDto): Promise<any> {
+  async createQuote(dto: CreateQuoteDto): Promise<Quote> {
     return firstValueFrom(
-      this.api.post('/quotes', dto)
+      this.api.post<Quote>('/quotes', dto)
     );
   }
 
@@ -122,28 +123,6 @@ export class RepairersService {
   }> {
     // Stub : à remplacer quand l'endpoint existera. Voir ROADMAP P4.2.
     return { labels: [], values: [], total: 0 };
-  }
-
-  // Get payment history (as repairer) — utilise /payments/my qui adapte selon le rôle
-  async getPayments(params?: {
-    status?: string;
-    page?: number;
-    limit?: number;
-  }): Promise<{ data: any[]; total: number }> {
-    return firstValueFrom(
-      this.api.get('/payments/my', params)
-    );
-  }
-
-  // Get disputes (as repairer) — utilise /disputes/my qui adapte selon le rôle
-  async getDisputes(params?: {
-    status?: string;
-    page?: number;
-    limit?: number;
-  }): Promise<{ data: any[]; total: number }> {
-    return firstValueFrom(
-      this.api.get('/disputes/my', params)
-    );
   }
 
   // Update availability status

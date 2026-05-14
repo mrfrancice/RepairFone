@@ -11,6 +11,7 @@ import { UiHeaderComponent } from '@app/features/common/components';
 import { FormatDatePipe } from '../../../../shared/pipes/format-date.pipe';
 import { PhoneFormatPipe } from '../../../../shared/pipes/phone-format.pipe';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { getErrorMessage } from '../../../../shared/utils/error.utils';
 
 @Component({
   selector: 'app-profile-edit',
@@ -1783,8 +1784,8 @@ export class ProfileEditComponent implements OnInit {
       this.success.set('Photo de profil mise à jour.');
       // Remplace le preview base64 par l'URL serveur définitive
       this.avatarPreview.set(avatarUrl);
-    } catch (err: any) {
-      this.error.set(err?.error?.message || err?.message || 'Échec de l\'envoi de la photo');
+    } catch (err: unknown) {
+      this.error.set(getErrorMessage(err, 'Échec de l\'envoi de la photo'));
       // Annule le preview en cas d'erreur
       this.avatarPreview.set(null);
     } finally {
@@ -1833,8 +1834,8 @@ export class ProfileEditComponent implements OnInit {
         longitude: coords.longitude,
       });
       this.hasLocation.set(true);
-    } catch (err: any) {
-      this.locationError.set(err?.message || 'Erreur de géolocalisation');
+    } catch (err: unknown) {
+      this.locationError.set(getErrorMessage(err, 'Erreur de géolocalisation'));
     } finally {
       this.isGettingLocation.set(false);
     }
@@ -1930,8 +1931,8 @@ export class ProfileEditComponent implements OnInit {
       setTimeout(() => {
         this.router.navigate(['/profile']);
       }, 1500);
-    } catch (err: any) {
-      this.error.set(err.message || 'Erreur lors de la mise à jour');
+    } catch (err: unknown) {
+      this.error.set(getErrorMessage(err, 'Erreur lors de la mise à jour'));
     } finally {
       this.isSaving.set(false);
     }
@@ -1969,8 +1970,8 @@ export class ProfileEditComponent implements OnInit {
       // Côté client : purge la session locale et redirige vers la home publique.
       this.authStore.logout();
       this.router.navigate(['/onboarding']);
-    } catch (err: any) {
-      this.error.set(err?.error?.message || err?.message || 'Erreur lors de la suppression du compte');
+    } catch (err: unknown) {
+      this.error.set(getErrorMessage(err, 'Erreur lors de la suppression du compte'));
       this.isDeleting.set(false);
     }
   }
@@ -1993,8 +1994,8 @@ export class ProfileEditComponent implements OnInit {
       URL.revokeObjectURL(url);
       this.success.set('Téléchargement de vos données démarré');
       setTimeout(() => this.success.set(null), 3000);
-    } catch (err: any) {
-      this.error.set(err?.error?.message || err?.message || "Erreur lors de l'export des données");
+    } catch (err: unknown) {
+      this.error.set(getErrorMessage(err, "Erreur lors de l'export des données"));
     } finally {
       this.isExporting.set(false);
     }
