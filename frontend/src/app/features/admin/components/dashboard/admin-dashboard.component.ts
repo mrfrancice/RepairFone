@@ -1,4 +1,4 @@
-import { Component, inject, signal, OnInit, ChangeDetectionStrategy } from '@angular/core';
+import { Component, inject, signal, computed, OnInit, ChangeDetectionStrategy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router, RouterLink } from '@angular/router';
 import { AdminService, DashboardSummary, VerificationStats } from '../../services/admin.service';
@@ -17,7 +17,7 @@ import { UiHeaderComponent } from '@app/features/common/components';
       <!-- Header unifié (charte sombre via ui-header) -->
       <ui-header
         title="RepairFone"
-        [subtitle]="getGreeting() + ', ' + getUserName()"
+        [subtitle]="greeting() + ', ' + userName()"
         [showIcon]="true"
         [showStatus]="true"
         [showRoleBadge]="true"
@@ -900,18 +900,14 @@ export class AdminDashboardComponent implements OnInit {
     this.loadData();
   }
 
-  // Header methods
-  getGreeting(): string {
+  readonly greeting = computed<string>(() => {
     const hour = new Date().getHours();
     if (hour < 12) return 'Bonjour';
     if (hour < 18) return 'Bon apres-midi';
     return 'Bonsoir';
-  }
+  });
 
-  getUserName(): string {
-    const user = this.authStore.user();
-    return user?.firstName || 'Admin';
-  }
+  readonly userName = computed(() => this.authStore.user()?.firstName || 'Admin');
 
   async loadData(): Promise<void> {
     this.isLoading.set(true);

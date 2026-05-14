@@ -1,4 +1,5 @@
-import { Component, inject, signal, OnInit, ChangeDetectionStrategy } from '@angular/core';
+import { Component, inject, signal, OnInit, DestroyRef, ChangeDetectionStrategy } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router, ActivatedRoute } from '@angular/router';
@@ -864,6 +865,7 @@ export class SearchHomeComponent implements OnInit {
   private readonly route = inject(ActivatedRoute);
   readonly store = inject(SearchStore);
   private readonly logger = inject(LoggerService);
+  private readonly destroyRef = inject(DestroyRef);
 
   readonly categories = signal<string[]>([]);
   readonly brands = signal<string[]>([]);
@@ -897,7 +899,7 @@ export class SearchHomeComponent implements OnInit {
     }
 
     // Handle query parameters from home page navigation
-    this.route.queryParams.subscribe(params => {
+    this.route.queryParams.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(params => {
       // Pre-select problem if passed from home page
       if (params['problem']) {
         const problemName = params['problem'].toLowerCase();
