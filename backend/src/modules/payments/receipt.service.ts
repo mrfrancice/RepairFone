@@ -1,16 +1,12 @@
 import { Injectable, BadRequestException } from '@nestjs/common';
 import { Readable } from 'stream';
+import PDFDocument from 'pdfkit';
 import {
   Payment,
   PaymentStatus,
   PaymentMethod,
   PaymentType,
 } from './entities/payment.entity';
-
-// pdfkit n'expose pas un default export ESM compatible : on charge via require()
-// pour rester compatible avec isolatedModules + emitDecoratorMetadata.
-
-const PDFDocument = require('pdfkit');
 
 /**
  * Génère un reçu PDF à partir d'un Payment complété.
@@ -198,7 +194,7 @@ export class ReceiptService {
       );
 
     doc.end();
-    return doc as unknown as Readable;
+    return doc as Readable;
   }
 
   // ===== Helpers de formatage =====
