@@ -31,6 +31,41 @@ export interface StorageProvider {
   getUrl(key: string): string;
 }
 
+// Types minimaux pour les SDK charges dynamiquement (non installes par defaut).
+// Voir S3StorageProvider / CloudinaryStorageProvider qui utilisent require()
+// dans un try/catch pour permettre une activation optionnelle.
+interface S3ClientLike {
+  send(command: unknown): Promise<unknown>;
+}
+
+interface CloudinaryUploadResponse {
+  secure_url: string;
+  public_id: string;
+}
+
+interface CloudinaryUploadStream {
+  end(buffer: Buffer): void;
+}
+
+interface CloudinaryLike {
+  config(options: {
+    cloud_name: string;
+    api_key: string;
+    api_secret: string;
+  }): void;
+  uploader: {
+    upload_stream(
+      options: {
+        public_id: string;
+        folder: string;
+        resource_type: 'auto';
+      },
+      callback: (error: unknown, result?: CloudinaryUploadResponse) => void,
+    ): CloudinaryUploadStream;
+    destroy(publicId: string): Promise<unknown>;
+  };
+}
+
 // Local storage provider (development)
 class LocalStorageProvider implements StorageProvider {
   private readonly logger = new Logger('LocalStorageProvider');
@@ -47,7 +82,7 @@ class LocalStorageProvider implements StorageProvider {
     }
   }
 
-  async upload(file: FileInfo, key: string): Promise<UploadResult> {
+  upload(file: FileInfo, key: string): Promise<UploadResult> {
     try {
       const filePath = path.join(this.uploadDir, key);
       const dir = path.dirname(filePath);
@@ -60,32 +95,32 @@ class LocalStorageProvider implements StorageProvider {
       // Write file
       fs.writeFileSync(filePath, file.buffer);
 
-      return {
+      return Promise.resolve({
         success: true,
         url: this.getUrl(key),
         key,
-      };
+      });
     } catch (error) {
       const errorMessage =
         error instanceof Error ? error.message : 'Unknown error';
       this.logger.error(`Local upload error: ${errorMessage}`);
-      return {
+      return Promise.resolve({
         success: false,
         error: errorMessage,
-      };
+      });
     }
   }
 
-  async delete(key: string): Promise<boolean> {
+  delete(key: string): Promise<boolean> {
     try {
       const filePath = path.join(this.uploadDir, key);
       if (fs.existsSync(filePath)) {
         fs.unlinkSync(filePath);
       }
-      return true;
+      return Promise.resolve(true);
     } catch (error) {
-      this.logger.error(`Delete error: ${error}`);
-      return false;
+      this.logger.error(`Delete error: ${String(error)}`);
+      return Promise.resolve(false);
     }
   }
 
@@ -95,9 +130,11 @@ class LocalStorageProvider implements StorageProvider {
 }
 
 // AWS S3 storage provider
+// SDK charge dynamiquement via require() pour permettre une activation
+// optionnelle sans ajouter @aws-sdk/client-s3 aux dependencies de base.
 class S3StorageProvider implements StorageProvider {
   private readonly logger = new Logger('S3StorageProvider');
-  private s3Client: any = null;
+  private s3Client: S3ClientLike | null = null;
   private bucket: string;
   private region: string;
 
@@ -112,13 +149,16 @@ class S3StorageProvider implements StorageProvider {
     this.initializeClient(accessKeyId, secretAccessKey);
   }
 
-  private async initializeClient(
-    accessKeyId: string,
-    secretAccessKey: string,
-  ): Promise<void> {
+  private initializeClient(accessKeyId: string, secretAccessKey: string): void {
     try {
-      const { S3Client } = require('@aws-sdk/client-s3');
-      this.s3Client = new S3Client({
+      // eslint-disable-next-line @typescript-eslint/no-require-imports
+      const aws = require('@aws-sdk/client-s3') as {
+        S3Client: new (config: {
+          region: string;
+          credentials: { accessKeyId: string; secretAccessKey: string };
+        }) => S3ClientLike;
+      };
+      this.s3Client = new aws.S3Client({
         region: this.region,
         credentials: {
           accessKeyId,
@@ -139,10 +179,19 @@ class S3StorageProvider implements StorageProvider {
     }
 
     try {
-      const { PutObjectCommand } = require('@aws-sdk/client-s3');
+      // eslint-disable-next-line @typescript-eslint/no-require-imports
+      const aws = require('@aws-sdk/client-s3') as {
+        PutObjectCommand: new (input: {
+          Bucket: string;
+          Key: string;
+          Body: Buffer;
+          ContentType: string;
+          ACL: string;
+        }) => unknown;
+      };
 
       await this.s3Client.send(
-        new PutObjectCommand({
+        new aws.PutObjectCommand({
           Bucket: this.bucket,
           Key: key,
           Body: file.buffer,
@@ -171,17 +220,23 @@ class S3StorageProvider implements StorageProvider {
     if (!this.s3Client) return false;
 
     try {
-      const { DeleteObjectCommand } = require('@aws-sdk/client-s3');
+      // eslint-disable-next-line @typescript-eslint/no-require-imports
+      const aws = require('@aws-sdk/client-s3') as {
+        DeleteObjectCommand: new (input: {
+          Bucket: string;
+          Key: string;
+        }) => unknown;
+      };
 
       await this.s3Client.send(
-        new DeleteObjectCommand({
+        new aws.DeleteObjectCommand({
           Bucket: this.bucket,
           Key: key,
         }),
       );
       return true;
     } catch (error) {
-      this.logger.error(`S3 delete error: ${error}`);
+      this.logger.error(`S3 delete error: ${String(error)}`);
       return false;
     }
   }
@@ -192,9 +247,11 @@ class S3StorageProvider implements StorageProvider {
 }
 
 // Cloudinary storage provider
+// SDK charge dynamiquement via require() pour permettre une activation
+// optionnelle sans ajouter cloudinary aux dependencies de base.
 class CloudinaryStorageProvider implements StorageProvider {
   private readonly logger = new Logger('CloudinaryStorageProvider');
-  private cloudinary: any = null;
+  private cloudinary: CloudinaryLike | null = null;
   private cloudName: string;
 
   constructor(cloudName: string, apiKey: string, apiSecret: string) {
@@ -204,13 +261,15 @@ class CloudinaryStorageProvider implements StorageProvider {
 
   private initializeClient(apiKey: string, apiSecret: string): void {
     try {
-      const cloudinary = require('cloudinary').v2;
-      cloudinary.config({
+      // eslint-disable-next-line @typescript-eslint/no-require-imports
+      const sdk = require('cloudinary') as { v2: CloudinaryLike };
+      const client = sdk.v2;
+      client.config({
         cloud_name: this.cloudName,
         api_key: apiKey,
         api_secret: apiSecret,
       });
-      this.cloudinary = cloudinary;
+      this.cloudinary = client;
       this.logger.log('Cloudinary client initialized');
     } catch {
       this.logger.error(
@@ -220,26 +279,38 @@ class CloudinaryStorageProvider implements StorageProvider {
   }
 
   async upload(file: FileInfo, key: string): Promise<UploadResult> {
-    if (!this.cloudinary) {
+    const client = this.cloudinary;
+    if (!client) {
       return { success: false, error: 'Cloudinary client not initialized' };
     }
 
     try {
-      const result = await new Promise<any>((resolve, reject) => {
-        const uploadStream = this.cloudinary.uploader.upload_stream(
-          {
-            public_id: key.replace(/\.[^/.]+$/, ''), // Remove extension
-            folder: path.dirname(key),
-            resource_type: 'auto',
-          },
-          (error: any, result: any) => {
-            if (error) reject(error);
-            else resolve(result);
-          },
-        );
+      const result = await new Promise<CloudinaryUploadResponse>(
+        (resolve, reject) => {
+          const uploadStream = client.uploader.upload_stream(
+            {
+              public_id: key.replace(/\.[^/.]+$/, ''), // Remove extension
+              folder: path.dirname(key),
+              resource_type: 'auto',
+            },
+            (error, uploadResult) => {
+              if (error) {
+                reject(
+                  error instanceof Error
+                    ? error
+                    : new Error('Cloudinary upload failed'),
+                );
+              } else if (uploadResult) {
+                resolve(uploadResult);
+              } else {
+                reject(new Error('Cloudinary returned no result'));
+              }
+            },
+          );
 
-        uploadStream.end(file.buffer);
-      });
+          uploadStream.end(file.buffer);
+        },
+      );
 
       return {
         success: true,
@@ -264,7 +335,7 @@ class CloudinaryStorageProvider implements StorageProvider {
       await this.cloudinary.uploader.destroy(key);
       return true;
     } catch (error) {
-      this.logger.error(`Cloudinary delete error: ${error}`);
+      this.logger.error(`Cloudinary delete error: ${String(error)}`);
       return false;
     }
   }
@@ -305,7 +376,7 @@ export class FileUploadService {
 
     switch (providerName.toLowerCase()) {
       case 's3':
-      case 'aws':
+      case 'aws': {
         const awsKey = this.configService.get<string>('AWS_ACCESS_KEY_ID');
         const awsSecret = this.configService.get<string>(
           'AWS_SECRET_ACCESS_KEY',
@@ -327,8 +398,9 @@ export class FileUploadService {
           this.logger.log('Storage provider: AWS S3 initialized');
         }
         break;
+      }
 
-      case 'cloudinary':
+      case 'cloudinary': {
         const cloudName = this.configService.get<string>(
           'CLOUDINARY_CLOUD_NAME',
         );
@@ -351,6 +423,7 @@ export class FileUploadService {
           this.logger.log('Storage provider: Cloudinary initialized');
         }
         break;
+      }
 
       case 'local':
       default:
