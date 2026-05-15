@@ -40,41 +40,63 @@ export interface PaymentGateway {
   refund(transactionId: string, amount?: number): Promise<PaymentRefundResult>;
 }
 
+type InitiateParams = Parameters<PaymentGateway['initiate']>[0];
+
+// Shape minimale des reponses HTTP CinetPay (uniquement les champs lus).
+interface CinetPayResponse {
+  code: string;
+  message?: string;
+  data?: {
+    payment_url?: string;
+    status?: string;
+    payment_method?: string;
+  };
+}
+
+// Shape minimale des reponses HTTP PayDunya (uniquement les champs lus).
+interface PayDunyaResponse {
+  response_code: string;
+  response_text: string;
+  token?: string;
+  refund_token?: string;
+  invoice?: {
+    status?: string;
+    receipt_url?: string;
+  };
+}
+
 // Mock provider for development
 class MockPaymentGateway implements PaymentGateway {
   private readonly logger = new Logger('MockPaymentGateway');
 
-  async initiate(params: any): Promise<PaymentInitResult> {
+  initiate(params: InitiateParams): Promise<PaymentInitResult> {
     this.logger.log(
       `[MOCK] Initiating payment: ${params.amount} ${params.currency}`,
     );
-    return {
+    return Promise.resolve({
       success: true,
       paymentUrl: `http://localhost:3000/mock-payment/${params.transactionId}`,
       transactionId: params.transactionId,
-    };
+    });
   }
 
-  async verify(transactionId: string): Promise<PaymentVerifyResult> {
+  verify(transactionId: string): Promise<PaymentVerifyResult> {
     this.logger.log(`[MOCK] Verifying payment: ${transactionId}`);
-    return {
+    return Promise.resolve({
       success: true,
       status: 'completed',
       transactionRef: `MOCK-${Date.now()}`,
-    };
+    });
   }
 
-  async refund(
-    transactionId: string,
-    amount?: number,
-  ): Promise<PaymentRefundResult> {
+  refund(transactionId: string, amount?: number): Promise<PaymentRefundResult> {
     this.logger.log(
       `[MOCK] Refunding payment: ${transactionId}, amount: ${amount}`,
     );
-    return {
+    return Promise.resolve({
       success: true,
       refundId: `MOCK-REFUND-${Date.now()}`,
-    };
+    });
   }
 }
 
@@ -92,7 +114,7 @@ class CinetPayGateway implements PaymentGateway {
     this.secretKey = secretKey;
   }
 
-  async initiate(params: any): Promise<PaymentInitResult> {
+  async initiate(params: InitiateParams): Promise<PaymentInitResult> {
     try {
       const response = await fetch(`${this.baseUrl}/payment`, {
         method: 'POST',
@@ -115,12 +137,12 @@ class CinetPayGateway implements PaymentGateway {
         }),
       });
 
-      const data = await response.json();
+      const data = (await response.json()) as CinetPayResponse;
 
       if (data.code === '201') {
         return {
           success: true,
-          paymentUrl: data.data.payment_url,
+          paymentUrl: data.data?.payment_url,
           transactionId: params.transactionId,
         };
       }
@@ -154,19 +176,19 @@ class CinetPayGateway implements PaymentGateway {
         }),
       });
 
-      const data = await response.json();
+      const data = (await response.json()) as CinetPayResponse;
 
       if (data.code === '00') {
         const status =
-          data.data.status === 'ACCEPTED'
+          data.data?.status === 'ACCEPTED'
             ? 'completed'
-            : data.data.status === 'REFUSED'
+            : data.data?.status === 'REFUSED'
               ? 'failed'
               : 'pending';
         return {
           success: true,
           status,
-          transactionRef: data.data.payment_method,
+          transactionRef: data.data?.payment_method,
         };
       }
 
@@ -187,19 +209,19 @@ class CinetPayGateway implements PaymentGateway {
     }
   }
 
-  async refund(
+  refund(
     _transactionId: string,
     _amount?: number,
   ): Promise<PaymentRefundResult> {
     // CinetPay refund requires contacting support
     this.logger.warn('CinetPay refunds require manual processing');
-    return {
+    return Promise.resolve({
       success: false,
       error: 'Les remboursements CinetPay nécessitent un traitement manuel',
-    };
+    });
   }
 
-  verifyWebhookSignature(body: any, signature: string): boolean {
+  verifyWebhookSignature(body: unknown, signature: string): boolean {
     const expectedSignature = crypto
       .createHmac('sha256', this.secretKey)
       .update(JSON.stringify(body))
@@ -233,7 +255,7 @@ class PayDunyaGateway implements PaymentGateway {
         : 'https://app.paydunya.com/sandbox-api/v1';
   }
 
-  async initiate(params: any): Promise<PaymentInitResult> {
+  async initiate(params: InitiateParams): Promise<PaymentInitResult> {
     try {
       // First, create an invoice
       const invoiceResponse = await fetch(
@@ -265,7 +287,7 @@ class PayDunyaGateway implements PaymentGateway {
         },
       );
 
-      const data = await invoiceResponse.json();
+      const data = (await invoiceResponse.json()) as PayDunyaResponse;
 
       if (data.response_code === '00') {
         return {
@@ -304,19 +326,19 @@ class PayDunyaGateway implements PaymentGateway {
         },
       );
 
-      const data = await response.json();
+      const data = (await response.json()) as PayDunyaResponse;
 
       if (data.response_code === '00') {
         const status =
-          data.invoice.status === 'completed'
+          data.invoice?.status === 'completed'
             ? 'completed'
-            : data.invoice.status === 'cancelled'
+            : data.invoice?.status === 'cancelled'
               ? 'failed'
               : 'pending';
         return {
           success: true,
           status,
-          transactionRef: data.invoice.receipt_url,
+          transactionRef: data.invoice?.receipt_url,
         };
       }
 
@@ -357,7 +379,7 @@ class PayDunyaGateway implements PaymentGateway {
         }),
       });
 
-      const data = await response.json();
+      const data = (await response.json()) as PayDunyaResponse;
 
       if (data.response_code === '00') {
         return {
@@ -406,7 +428,7 @@ export class PaymentGatewayService {
       this.configService.get<string>('PAYMENT_PROVIDER') || 'mock';
 
     switch (providerName.toLowerCase()) {
-      case 'cinetpay':
+      case 'cinetpay': {
         const cinetApiKey = this.configService.get<string>('CINETPAY_API_KEY');
         const cinetSiteId = this.configService.get<string>('CINETPAY_SITE_ID');
         const cinetSecretKey = this.configService.get<string>(
@@ -427,8 +449,9 @@ export class PaymentGatewayService {
           this.logger.log('Payment gateway: CinetPay initialized');
         }
         break;
+      }
 
-      case 'paydunya':
+      case 'paydunya': {
         const pdMasterKey = this.configService.get<string>(
           'PAYDUNYA_MASTER_KEY',
         );
@@ -458,6 +481,7 @@ export class PaymentGatewayService {
           );
         }
         break;
+      }
 
       case 'mock':
       default:
