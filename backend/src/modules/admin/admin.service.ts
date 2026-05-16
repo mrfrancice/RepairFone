@@ -24,6 +24,21 @@ import {
 // Re-export interfaces for backward compatibility
 export type { VerificationDecisionDto, RepairerListParams } from './interfaces';
 
+// Formes des lignes brutes renvoyées par getRawMany().
+// pg renvoie COUNT(*) (bigint) en string ; les colonnes enum en string.
+interface VerificationStatusCountRow {
+  status: VerificationStatus;
+  count: string;
+}
+interface RoleCountRow {
+  role: string;
+  count: string;
+}
+interface UserStatusCountRow {
+  status: string;
+  count: string;
+}
+
 @Injectable()
 export class AdminService {
   constructor(
@@ -312,7 +327,7 @@ export class AdminService {
       .select('repairer.verificationStatus', 'status')
       .addSelect('COUNT(*)', 'count')
       .groupBy('repairer.verificationStatus')
-      .getRawMany();
+      .getRawMany<VerificationStatusCountRow>();
 
     const stats = {
       pending: 0,
@@ -369,14 +384,14 @@ export class AdminService {
       .select('user.role', 'role')
       .addSelect('COUNT(*)', 'count')
       .groupBy('user.role')
-      .getRawMany();
+      .getRawMany<RoleCountRow>();
 
     const statusCounts = await this.userRepository
       .createQueryBuilder('user')
       .select('user.status', 'status')
       .addSelect('COUNT(*)', 'count')
       .groupBy('user.status')
-      .getRawMany();
+      .getRawMany<UserStatusCountRow>();
 
     const users = {
       total: 0,
