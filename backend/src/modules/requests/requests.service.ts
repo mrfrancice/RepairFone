@@ -36,6 +36,16 @@ export {
   RequestFilters,
 } from './dto';
 
+// Ligne brute renvoyée par getRawMany() (COUNT bigint -> string en pg)
+// et par dataSource.query() sur la séquence de numérotation.
+interface RequestStatusCountRow {
+  status: RequestStatus;
+  count: string;
+}
+interface SequenceRow {
+  seq_value: string;
+}
+
 @Injectable()
 export class RequestsService {
   private readonly logger = new Logger(RequestsService.name);
@@ -591,7 +601,9 @@ export class RequestsService {
       });
     }
 
-    const results = await queryBuilder.groupBy('request.status').getRawMany();
+    const results = await queryBuilder
+      .groupBy('request.status')
+      .getRawMany<RequestStatusCountRow>();
 
     const stats = {
       pending: 0,
@@ -646,11 +658,11 @@ export class RequestsService {
     const month = (date.getMonth() + 1).toString().padStart(2, '0');
 
     // BIZ-012: Use PostgreSQL sequence for thread-safe number generation
-    const result = await this.dataSource.query(
+    const result = await this.dataSource.query<SequenceRow[]>(
       "SELECT nextval('request_number_seq') as seq_value",
     );
 
-    const sequenceValue = result[0]?.seq_value || 1;
+    const sequenceValue: string | number = result[0]?.seq_value || 1;
     const sequence = sequenceValue.toString().padStart(4, '0');
 
     return prefix + year + month + sequence;
