@@ -20,28 +20,49 @@ export interface EmailProvider {
   sendEmail(options: EmailOptions): Promise<EmailResult>;
 }
 
+// nodemailer est feature-gated (absent de package.json, chargé via require()
+// conditionnel). Surface minimale réellement consommée ici.
+interface NodemailerTransporter {
+  sendMail(options: {
+    from: string;
+    to: string;
+    subject: string;
+    text?: string;
+    html?: string;
+    replyTo?: string;
+  }): Promise<{ messageId: string }>;
+}
+interface NodemailerModule {
+  createTransport(options: {
+    host: string;
+    port: number;
+    secure: boolean;
+    auth: { user: string; pass: string };
+  }): NodemailerTransporter;
+}
+
 // Mock provider for development
 class MockEmailProvider implements EmailProvider {
   private readonly logger = new Logger('MockEmailProvider');
 
-  async sendEmail(options: EmailOptions): Promise<EmailResult> {
+  sendEmail(options: EmailOptions): Promise<EmailResult> {
     this.logger.log(
       `[MOCK EMAIL] To: ${options.to}, Subject: ${options.subject}`,
     );
     this.logger.debug(
       `Content: ${options.text || options.html?.substring(0, 100)}`,
     );
-    return {
+    return Promise.resolve({
       success: true,
       messageId: `mock-${Date.now()}`,
-    };
+    });
   }
 }
 
 // Nodemailer SMTP provider
 class SmtpEmailProvider implements EmailProvider {
   private readonly logger = new Logger('SmtpEmailProvider');
-  private transporter: any = null;
+  private transporter: NodemailerTransporter | null = null;
 
   constructor(
     private readonly host: string,
@@ -53,9 +74,10 @@ class SmtpEmailProvider implements EmailProvider {
     this.initializeTransporter();
   }
 
-  private async initializeTransporter(): Promise<void> {
+  private initializeTransporter(): void {
     try {
-      const nodemailer = require('nodemailer');
+      // eslint-disable-next-line @typescript-eslint/no-require-imports
+      const nodemailer = require('nodemailer') as NodemailerModule;
       this.transporter = nodemailer.createTransport({
         host: this.host,
         port: this.port,
@@ -231,7 +253,7 @@ export class EmailService {
 
     switch (providerName.toLowerCase()) {
       case 'smtp':
-      case 'nodemailer':
+      case 'nodemailer': {
         const host = this.configService.get<string>('SMTP_HOST');
         const port = this.configService.get<number>('SMTP_PORT') || 587;
         const user = this.configService.get<string>('SMTP_USER');
@@ -251,8 +273,9 @@ export class EmailService {
           this.logger.log('Email provider: SMTP initialized');
         }
         break;
+      }
 
-      case 'sendgrid':
+      case 'sendgrid': {
         const apiKey = this.configService.get<string>('SENDGRID_API_KEY');
         if (!apiKey) {
           this.logger.warn('SendGrid API key missing, falling back to mock');
@@ -262,8 +285,9 @@ export class EmailService {
           this.logger.log('Email provider: SendGrid initialized');
         }
         break;
+      }
 
-      case 'resend':
+      case 'resend': {
         const resendKey = this.configService.get<string>('RESEND_API_KEY');
         if (!resendKey) {
           this.logger.warn('Resend API key missing, falling back to mock');
@@ -273,6 +297,7 @@ export class EmailService {
           this.logger.log('Email provider: Resend initialized');
         }
         break;
+      }
 
       case 'mock':
       default:
