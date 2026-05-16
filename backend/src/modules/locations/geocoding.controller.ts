@@ -8,6 +8,27 @@ import {
 } from '@nestjs/common';
 import { Public } from '../../common/decorators/public.decorator';
 
+// Sous-ensemble de la réponse Nominatim/OSM réellement consommé ici.
+interface NominatimAddress {
+  suburb?: string;
+  neighbourhood?: string;
+  hamlet?: string;
+  village?: string;
+  city_district?: string;
+  city?: string;
+  town?: string;
+  municipality?: string;
+  state?: string;
+  country?: string;
+  road?: string;
+  street?: string;
+  house_number?: string;
+}
+interface NominatimReverseResponse {
+  address?: NominatimAddress;
+  display_name?: string;
+}
+
 interface GeocodingResult {
   address: string;
   city: string;
@@ -55,8 +76,8 @@ export class GeocodingController {
         throw new Error('Nominatim request failed');
       }
 
-      const data = await response.json();
-      const addr = data.address || {};
+      const data = (await response.json()) as NominatimReverseResponse;
+      const addr: NominatimAddress = data.address ?? {};
 
       // Extract address components for Côte d'Ivoire
       const quarter =
