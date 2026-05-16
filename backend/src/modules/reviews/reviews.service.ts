@@ -23,6 +23,34 @@ export {
   CreateStepRatingDto,
 } from './dto';
 
+// Formes des lignes brutes renvoyées par getRawOne/getRawMany.
+// pg renvoie AVG/COUNT (numeric/bigint) en string ; rating (smallint) en number.
+interface AvgRow {
+  average: string | null;
+}
+interface AvgCountRow {
+  average: string | null;
+  count: string | null;
+}
+interface AvgTotalRow {
+  average: string | null;
+  total: string | null;
+}
+interface RatingDistributionRow {
+  rating: number;
+  count: string | null;
+}
+interface CategoryStatRow {
+  category: string;
+  average: string | null;
+  count: string | null;
+}
+interface StepStatRow {
+  step: string;
+  average: string | null;
+  count: string | null;
+}
+
 @Injectable()
 export class ReviewsService {
   constructor(
@@ -137,9 +165,9 @@ export class ReviewsService {
       .createQueryBuilder('review')
       .select('AVG(review.rating)', 'average')
       .where('review.repairerId = :repairerId', { repairerId: profileId })
-      .getRawOne();
+      .getRawOne<AvgRow>();
 
-    const average = parseFloat(avgResult?.average) || 0;
+    const average = parseFloat(avgResult?.average ?? '') || 0;
 
     return { data, total, average: Math.round(average * 10) / 10 };
   }
@@ -180,10 +208,10 @@ export class ReviewsService {
       .select('AVG(review.rating)', 'average')
       .addSelect('COUNT(*)', 'count')
       .where('review.repairerId = :repairerId', { repairerId })
-      .getRawOne();
+      .getRawOne<AvgCountRow>();
 
-    const rating = parseFloat(result?.average) || 0;
-    const reviewCount = parseInt(result?.count, 10) || 0;
+    const rating = parseFloat(result?.average ?? '') || 0;
+    const reviewCount = parseInt(result?.count ?? '', 10) || 0;
 
     await this.repairersService.updateRating(repairerId, rating, reviewCount);
   }
@@ -206,7 +234,7 @@ export class ReviewsService {
       .select('AVG(review.rating)', 'average')
       .addSelect('COUNT(*)', 'total')
       .where('review.repairerId = :repairerId', { repairerId: profileId })
-      .getRawOne();
+      .getRawOne<AvgTotalRow>();
 
     const distribution = await this.reviewRepository
       .createQueryBuilder('review')
@@ -215,14 +243,15 @@ export class ReviewsService {
       .where('review.repairerId = :repairerId', { repairerId: profileId })
       .groupBy('review.rating')
       .orderBy('review.rating', 'DESC')
-      .getRawMany();
+      .getRawMany<RatingDistributionRow>();
 
     return {
-      average: Math.round((parseFloat(avgResult?.average) || 0) * 10) / 10,
-      total: parseInt(avgResult?.total, 10) || 0,
+      average:
+        Math.round((parseFloat(avgResult?.average ?? '') || 0) * 10) / 10,
+      total: parseInt(avgResult?.total ?? '', 10) || 0,
       distribution: distribution.map((d) => ({
         rating: d.rating,
-        count: parseInt(d.count, 10),
+        count: parseInt(d.count ?? '', 10),
       })),
     };
   }
@@ -395,7 +424,7 @@ export class ReviewsService {
       .select('AVG(sr.rating)', 'average')
       .addSelect('COUNT(*)', 'count')
       .where('sr.repairerId = :repairerId', { repairerId: profileId })
-      .getRawOne();
+      .getRawOne<AvgCountRow>();
 
     // Par catégorie
     const byCategoryResult = await this.stepRatingRepository
@@ -405,7 +434,7 @@ export class ReviewsService {
       .addSelect('COUNT(*)', 'count')
       .where('sr.repairerId = :repairerId', { repairerId: profileId })
       .groupBy('sr.category')
-      .getRawMany();
+      .getRawMany<CategoryStatRow>();
 
     // Par étape
     const byStepResult = await this.stepRatingRepository
@@ -415,7 +444,7 @@ export class ReviewsService {
       .addSelect('COUNT(*)', 'count')
       .where('sr.repairerId = :repairerId', { repairerId: profileId })
       .groupBy('sr.step')
-      .getRawMany();
+      .getRawMany<StepStatRow>();
 
     // Notes récentes
     const recentRatings = await this.stepRatingRepository.find({
@@ -428,24 +457,24 @@ export class ReviewsService {
     const byCategory: Record<string, { average: number; count: number }> = {};
     for (const item of byCategoryResult) {
       byCategory[item.category] = {
-        average: Math.round((parseFloat(item.average) || 0) * 10) / 10,
-        count: parseInt(item.count, 10) || 0,
+        average: Math.round((parseFloat(item.average ?? '') || 0) * 10) / 10,
+        count: parseInt(item.count ?? '', 10) || 0,
       };
     }
 
     const byStep: Record<string, { average: number; count: number }> = {};
     for (const item of byStepResult) {
       byStep[item.step] = {
-        average: Math.round((parseFloat(item.average) || 0) * 10) / 10,
-        count: parseInt(item.count, 10) || 0,
+        average: Math.round((parseFloat(item.average ?? '') || 0) * 10) / 10,
+        count: parseInt(item.count ?? '', 10) || 0,
       };
     }
 
     return {
       overall: {
         average:
-          Math.round((parseFloat(overallResult?.average) || 0) * 10) / 10,
-        count: parseInt(overallResult?.count, 10) || 0,
+          Math.round((parseFloat(overallResult?.average ?? '') || 0) * 10) / 10,
+        count: parseInt(overallResult?.count ?? '', 10) || 0,
       },
       byCategory,
       byStep,
@@ -464,10 +493,10 @@ export class ReviewsService {
       .select('AVG(sr.rating)', 'average')
       .addSelect('COUNT(*)', 'count')
       .where('sr.repairerId = :repairerId', { repairerId })
-      .getRawOne();
+      .getRawOne<AvgCountRow>();
 
-    const avgRating = parseFloat(result?.average) || 0;
-    const ratingCount = parseInt(result?.count, 10) || 0;
+    const avgRating = parseFloat(result?.average ?? '') || 0;
+    const ratingCount = parseInt(result?.count ?? '', 10) || 0;
 
     // Mettre à jour le profil du réparateur
     await this.repairersService.updateRating(
