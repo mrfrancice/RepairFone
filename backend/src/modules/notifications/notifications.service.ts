@@ -90,9 +90,11 @@ export class NotificationsService {
         tag: dto.type,
         data: { notificationId: saved.id, ...dto.data },
       })
-      .catch((err) =>
+      .catch((err: unknown) =>
         this.logger.error(
-          `Push échec pour user ${dto.userId}: ${err?.message ?? err}`,
+          `Push échec pour user ${dto.userId}: ${
+            err instanceof Error ? err.message : String(err)
+          }`,
         ),
       );
 

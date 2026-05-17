@@ -61,9 +61,11 @@ export class PaymentListener {
         this.logger.log(`Full payment received for request ${event.requestId}`);
       }
     } catch (error) {
+      const msg = error instanceof Error ? error.message : String(error);
+      const stack = error instanceof Error ? error.stack : undefined;
       this.logger.error(
-        `Failed to handle payment completed event: ${error.message}`,
-        error.stack,
+        `Failed to handle payment completed event: ${msg}`,
+        stack,
       );
     }
   }
@@ -100,9 +102,11 @@ export class PaymentListener {
         );
       }
     } catch (error) {
+      const msg = error instanceof Error ? error.message : String(error);
+      const stack = error instanceof Error ? error.stack : undefined;
       this.logger.error(
-        `Failed to handle payment refunded event: ${error.message}`,
-        error.stack,
+        `Failed to handle payment refunded event: ${msg}`,
+        stack,
       );
     }
   }
@@ -135,9 +139,11 @@ export class PaymentListener {
         );
       }
     } catch (error) {
+      const msg = error instanceof Error ? error.message : String(error);
+      const stack = error instanceof Error ? error.stack : undefined;
       this.logger.error(
-        `Failed to handle payment blocked event: ${error.message}`,
-        error.stack,
+        `Failed to handle payment blocked event: ${msg}`,
+        stack,
       );
     }
   }

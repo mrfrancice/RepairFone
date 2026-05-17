@@ -15,16 +15,17 @@ export interface SmsProvider {
 class MockSmsProvider implements SmsProvider {
   private readonly logger = new Logger('MockSmsProvider');
 
-  async sendSms(phone: string, message: string): Promise<SmsResult> {
+  sendSms(phone: string, message: string): Promise<SmsResult> {
     this.logger.log(`[MOCK SMS] To: ${phone}, Message: ${message}`);
-    return {
+    return Promise.resolve({
       success: true,
       messageId: `mock-${Date.now()}`,
-    };
+    });
   }
 }
 
-// Twilio client interface (minimal type for dynamic import)
+// Twilio client interface (minimal type for dynamic import).
+// twilio est feature-gated (absent de package.json, chargé via require()).
 interface TwilioClient {
   messages: {
     create(options: {
@@ -34,6 +35,7 @@ interface TwilioClient {
     }): Promise<{ sid: string }>;
   };
 }
+type TwilioFactory = (accountSid: string, authToken: string) => TwilioClient;
 
 // Twilio provider
 class TwilioSmsProvider implements SmsProvider {
@@ -44,7 +46,8 @@ class TwilioSmsProvider implements SmsProvider {
   constructor(accountSid: string, authToken: string, fromNumber: string) {
     // Dynamic import to avoid requiring twilio in dev
     try {
-      const twilio = require('twilio');
+      // eslint-disable-next-line @typescript-eslint/no-require-imports
+      const twilio = require('twilio') as TwilioFactory;
       this.client = twilio(accountSid, authToken);
       this.fromNumber = fromNumber;
     } catch {
@@ -78,6 +81,11 @@ class TwilioSmsProvider implements SmsProvider {
       };
     }
   }
+}
+
+// Sous-ensemble de la réponse de l'API Orange SMS réellement consommé.
+interface OrangeSmsResponse {
+  outboundSMSMessageRequest?: { resourceURL?: string };
 }
 
 // Orange SMS API provider (Côte d'Ivoire)
@@ -119,7 +127,7 @@ class OrangeSmsProvider implements SmsProvider {
         throw new Error(`Orange API error: ${response.status} - ${errorData}`);
       }
 
-      const data = await response.json();
+      const data = (await response.json()) as OrangeSmsResponse;
       return {
         success: true,
         messageId: data.outboundSMSMessageRequest?.resourceURL,

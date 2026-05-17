@@ -27,7 +27,7 @@ export class CreateRequestNumberSequence1736200000000 implements MigrationInterf
 
     // Get the current maximum request number to initialize the sequence properly
     // This ensures we do not generate duplicate numbers for existing requests
-    const result = await queryRunner.query(`
+    const result = (await queryRunner.query(`
       SELECT COALESCE(
         MAX(
           CASE
@@ -40,7 +40,7 @@ export class CreateRequestNumberSequence1736200000000 implements MigrationInterf
       ) as max_seq
       FROM repair_requests
       WHERE request_number IS NOT NULL
-    `);
+    `)) as Array<{ max_seq: number }>;
 
     const maxSeq = result[0]?.max_seq || 0;
 

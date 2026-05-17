@@ -59,10 +59,9 @@ export class ReviewListener {
         this.logger.debug(`Review ${event.reviewId} includes a comment`);
       }
     } catch (error) {
-      this.logger.error(
-        `Failed to handle review created event: ${error.message}`,
-        error.stack,
-      );
+      const msg = error instanceof Error ? error.message : String(error);
+      const stack = error instanceof Error ? error.stack : undefined;
+      this.logger.error(`Failed to handle review created event: ${msg}`, stack);
     }
   }
 }

@@ -1,7 +1,7 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { Cron, CronExpression } from '@nestjs/schedule';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository, LessThan } from 'typeorm';
+import { Repository, LessThan, In } from 'typeorm';
 import { Quote, QuoteStatus } from './entities/quote.entity';
 
 @Injectable()
@@ -37,7 +37,7 @@ export class QuotesScheduler {
       const expiredQuoteIds = expiredQuotes.map((quote) => quote.id);
 
       await this.quoteRepository.update(
-        { id: expiredQuoteIds as any },
+        { id: In(expiredQuoteIds) },
         { status: QuoteStatus.EXPIRED },
       );
 
