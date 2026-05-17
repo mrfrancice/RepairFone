@@ -48,9 +48,11 @@ export class RequestListener {
         await this.handleAwaitingParts(event);
       }
     } catch (error) {
+      const msg = error instanceof Error ? error.message : String(error);
+      const stack = error instanceof Error ? error.stack : undefined;
       this.logger.error(
-        `Failed to handle request status changed event: ${error.message}`,
-        error.stack,
+        `Failed to handle request status changed event: ${msg}`,
+        stack,
       );
     }
   }

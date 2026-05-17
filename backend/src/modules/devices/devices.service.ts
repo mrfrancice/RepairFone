@@ -184,7 +184,7 @@ export class DevicesService {
 
     const result = await queryBuilder
       .orderBy('device.brand', 'ASC')
-      .getRawMany();
+      .getRawMany<{ brand: string }>();
 
     return result.map((r) => r.brand);
   }
@@ -195,7 +195,7 @@ export class DevicesService {
       .select('DISTINCT device.category', 'category')
       .where('device.isActive = :isActive', { isActive: true })
       .orderBy('device.category', 'ASC')
-      .getRawMany();
+      .getRawMany<{ category: string }>();
 
     return result.map((r) => r.category);
   }

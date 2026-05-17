@@ -39,7 +39,9 @@ export class MonitoringService {
       release: this.config.get<string>('APP_VERSION'),
       // Filtre des erreurs : on n'envoie pas les HTTP 4xx (ce sont des erreurs utilisateur)
       beforeSend(event, hint) {
-        const error = hint?.originalException as any;
+        const error = hint?.originalException as
+          | { status?: number }
+          | undefined;
         if (error?.status && error.status >= 400 && error.status < 500) {
           return null;
         }

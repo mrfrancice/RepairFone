@@ -268,9 +268,11 @@ export class AuthService {
     if (user?.email) {
       this.emailService
         .sendOtpEmail(user.email, code)
-        .catch((err) =>
+        .catch((err: unknown) =>
           this.logger.error(
-            `OTP email fallback échoué pour ${user.email}: ${err?.message ?? err}`,
+            `OTP email fallback échoué pour ${user.email}: ${
+              err instanceof Error ? err.message : String(err)
+            }`,
           ),
         );
     }
@@ -569,9 +571,11 @@ export class AuthService {
       const resetLink = `${frontUrl}/auth/reset-password?token=${rawToken}`;
       this.emailService
         .sendPasswordResetEmail(user.email, resetLink)
-        .catch((err) =>
+        .catch((err: unknown) =>
           this.logger.error(
-            `Reset email failed for ${user.email}: ${err?.message ?? err}`,
+            `Reset email failed for ${user.email}: ${
+              err instanceof Error ? err.message : String(err)
+            }`,
           ),
         );
     } else {
@@ -693,9 +697,11 @@ export class AuthService {
     const verifyLink = `${frontUrl}/auth/verify-email?token=${rawToken}`;
     this.emailService
       .sendEmailVerificationEmail(user.email, verifyLink)
-      .catch((err) =>
+      .catch((err: unknown) =>
         this.logger.error(
-          `Verification email failed for ${user.email}: ${err?.message ?? err}`,
+          `Verification email failed for ${user.email}: ${
+            err instanceof Error ? err.message : String(err)
+          }`,
         ),
       );
 

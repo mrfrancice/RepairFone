@@ -206,6 +206,6 @@ export class AuditService {
     if (!this.request) return undefined;
 
     const userAgent = this.request.headers['user-agent'];
-    return Array.isArray(userAgent) ? userAgent[0] : userAgent;
+    return typeof userAgent === 'string' ? userAgent : undefined;
   }
 }

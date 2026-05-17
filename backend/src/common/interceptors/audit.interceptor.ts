@@ -46,7 +46,8 @@ export class AuditInterceptor implements NestInterceptor {
     const entityType = this.getEntityTypeFromRoute(request);
     const entityId = this.getEntityIdFromRoute(request);
     const ipAddress = this.getIpAddress(request);
-    const userAgent = request.headers['user-agent'];
+    const uaHeader = request.headers['user-agent'];
+    const userAgent = typeof uaHeader === 'string' ? uaHeader : undefined;
 
     // Resolve AuditService dynamically for request-scoped service
     const contextId = ContextIdFactory.create();
@@ -54,54 +55,58 @@ export class AuditInterceptor implements NestInterceptor {
 
     return next.handle().pipe(
       tap({
-        next: async (responseData) => {
-          try {
-            // Resolve the request-scoped AuditService
-            const auditService = await this.moduleRef.resolve(
-              AuditService,
-              contextId,
-              { strict: false },
-            );
-
-            if (!auditService) {
-              this.logger.warn(
-                'AuditService not available, skipping audit log',
+        next: (responseData) => {
+          void (async () => {
+            try {
+              // Resolve the request-scoped AuditService
+              const auditService = await this.moduleRef.resolve<AuditService>(
+                AuditService,
+                contextId,
+                { strict: false },
               );
-              return;
+
+              if (!auditService) {
+                this.logger.warn(
+                  'AuditService not available, skipping audit log',
+                );
+                return;
+              }
+
+              // Log after successful response
+              const metadata: Record<string, unknown> = {
+                path: request.path,
+                method: request.method,
+              };
+
+              // Include request body (sanitize sensitive data)
+              const body = request.body as Record<string, unknown> | undefined;
+              if (body && Object.keys(body).length > 0) {
+                metadata.body = this.sanitizeBody(body);
+              }
+
+              // Extract entity ID from response if it's a CREATE action
+              const data = responseData as { id?: string } | undefined;
+              let finalEntityId = entityId;
+              if (action === AuditAction.CREATE && data?.id) {
+                finalEntityId = data.id;
+              }
+
+              // Log the audit event (don't block the response)
+              await auditService.logWithContext({
+                action,
+                entityType,
+                entityId: finalEntityId,
+                userId: user.id,
+                ipAddress,
+                userAgent,
+                metadata,
+              });
+            } catch (error) {
+              // Log error but don't fail the request
+              const err = error as Error;
+              this.logger.error('Failed to log audit event', err.stack);
             }
-
-            // Log after successful response
-            const metadata: Record<string, any> = {
-              path: request.path,
-              method: request.method,
-            };
-
-            // Include request body (sanitize sensitive data)
-            if (request.body && Object.keys(request.body).length > 0) {
-              metadata.body = this.sanitizeBody(request.body);
-            }
-
-            // Extract entity ID from response if it's a CREATE action
-            let finalEntityId = entityId;
-            if (action === AuditAction.CREATE && responseData?.id) {
-              finalEntityId = responseData.id;
-            }
-
-            // Log the audit event asynchronously (don't block the response)
-            await auditService.logWithContext({
-              action,
-              entityType,
-              entityId: finalEntityId,
-              userId: user.id,
-              ipAddress,
-              userAgent: Array.isArray(userAgent) ? userAgent[0] : userAgent,
-              metadata,
-            });
-          } catch (error) {
-            // Log error but don't fail the request
-            const err = error as Error;
-            this.logger.error('Failed to log audit event', err.stack);
-          }
+          })();
         },
         error: () => {
           // Optionally log failed requests
@@ -203,7 +208,7 @@ export class AuditInterceptor implements NestInterceptor {
     return request.ip || request.socket?.remoteAddress;
   }
 
-  private sanitizeBody(body: Record<string, any>): Record<string, any> {
+  private sanitizeBody(body: Record<string, unknown>): Record<string, unknown> {
     // List of sensitive fields to redact
     const sensitiveFields = [
       'password',
@@ -222,7 +227,7 @@ export class AuditInterceptor implements NestInterceptor {
       'otp',
     ];
 
-    const sanitized: Record<string, any> = {};
+    const sanitized: Record<string, unknown> = {};
 
     for (const [key, value] of Object.entries(body)) {
       if (
@@ -236,7 +241,7 @@ export class AuditInterceptor implements NestInterceptor {
         value !== null &&
         !Array.isArray(value)
       ) {
-        sanitized[key] = this.sanitizeBody(value);
+        sanitized[key] = this.sanitizeBody(value as Record<string, unknown>);
       } else {
         sanitized[key] = value;
       }

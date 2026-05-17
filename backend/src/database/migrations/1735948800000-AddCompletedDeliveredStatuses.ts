@@ -21,12 +21,13 @@ export class AddCompletedDeliveredStatuses1735948800000 implements MigrationInte
     `);
   }
 
-  public async down(_queryRunner: QueryRunner): Promise<void> {
+  public down(_queryRunner: QueryRunner): Promise<void> {
     // Note: PostgreSQL doesn't allow removing values from enums directly
     // To revert, you would need to recreate the enum and update all references
     // This is intentionally left empty as removing enum values is complex
     console.warn(
       'Removing enum values is not supported. Manual intervention required.',
     );
+    return Promise.resolve();
   }
 }

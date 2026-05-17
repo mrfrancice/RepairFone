@@ -5,6 +5,13 @@ import { Repository, In } from 'typeorm';
 import * as webpush from 'web-push';
 import { PushSubscription } from './entities/push-subscription.entity';
 
+// web-push rejette avec une erreur portant statusCode (code HTTP du
+// push service) ; non typé par la lib.
+interface WebPushError {
+  statusCode?: number;
+  message?: string;
+}
+
 export interface PushPayload {
   title: string;
   body: string;
@@ -119,17 +126,20 @@ export class PushService implements OnModuleInit {
             JSON.stringify(payload),
           );
           sent++;
-        } catch (err: any) {
+        } catch (err) {
           failed++;
+          const e = err as WebPushError;
           // 410 Gone / 404 Not Found = abonnement périmé → cleanup
-          if (err?.statusCode === 410 || err?.statusCode === 404) {
+          if (e.statusCode === 410 || e.statusCode === 404) {
             this.logger.debug(
               `Abonnement périmé supprimé: ${sub.endpoint.slice(-30)}`,
             );
             await this.subRepo.delete({ id: sub.id });
           } else {
             this.logger.error(
-              `Push échec (status=${err?.statusCode}): ${err?.message ?? err}`,
+              `Push échec (status=${e.statusCode}): ${
+                e.message ?? String(err)
+              }`,
             );
           }
         }

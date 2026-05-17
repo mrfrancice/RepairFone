@@ -92,7 +92,7 @@ export class FirebaseService implements OnModuleInit {
         uid: decodedToken.uid,
         phoneNumber: decodedToken.phone_number,
         email: decodedToken.email,
-        displayName: decodedToken.name,
+        displayName: decodedToken.name as string | undefined,
       };
     } catch (error) {
       this.logger.error(
@@ -120,7 +120,7 @@ export class FirebaseService implements OnModuleInit {
       };
     } catch (error) {
       // User not found is expected for new users
-      if (error.code === 'auth/user-not-found') {
+      if ((error as { code?: string }).code === 'auth/user-not-found') {
         return null;
       }
       this.logger.error(

@@ -41,11 +41,13 @@ export class HealthController {
         database: 'up',
         timestamp: new Date().toISOString(),
       };
-    } catch (error: any) {
+    } catch (error) {
+      const message =
+        error instanceof Error ? error.message : 'Database connection failed';
       throw new ServiceUnavailableException({
         status: 'error',
         database: 'down',
-        message: error?.message ?? 'Database connection failed',
+        message,
         timestamp: new Date().toISOString(),
       });
     }
