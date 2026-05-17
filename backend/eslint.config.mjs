@@ -45,6 +45,15 @@ export default tseslint.config(
     files: ['**/*.spec.ts', '**/*.test.ts'],
     rules: {
       '@typescript-eslint/unbound-method': 'off',
+      // Les mocks Jest (jest.fn(), mockImplementation, `this` des callbacks)
+      // produisent structurellement du `any` : typer finement ces surfaces
+      // a un rapport valeur/effort defavorable et n'affecte pas le runtime.
+      // On desactive la famille no-unsafe-* uniquement sur les fichiers de test.
+      '@typescript-eslint/no-unsafe-member-access': 'off',
+      '@typescript-eslint/no-unsafe-argument': 'off',
+      '@typescript-eslint/no-unsafe-assignment': 'off',
+      '@typescript-eslint/no-unsafe-call': 'off',
+      '@typescript-eslint/no-unsafe-return': 'off',
     },
   },
 );
